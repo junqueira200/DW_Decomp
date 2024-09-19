@@ -41,8 +41,8 @@ namespace MNFP
 
     MNFP_Inst criaToyInstance();
 
-    void criaSubProb(MNFP_Inst &mnfp, GRBModel &model, int k);
-    void criaMestre(MNFP::MNFP_Inst &mnfp, GRBModel &model);
+    void criaSubProb(const MNFP_Inst &mnfp, GRBModel &model, int k);
+    void criaMestre(const MNFP::MNFP_Inst &mnfp, GRBModel &model);
 
     int getId(int i, int j, int n);
 }

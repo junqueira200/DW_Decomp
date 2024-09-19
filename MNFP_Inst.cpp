@@ -50,10 +50,10 @@ MNFP::MNFP_Inst MNFP::criaToyInstance()
     return std::move(mnfp);
 }
 
-void MNFP::criaSubProb(MNFP_Inst &mnfp, GRBModel &model, int k)
+void MNFP::criaSubProb(const MNFP_Inst &mnfp, GRBModel &model, int k)
 {
     const int N = mnfp.N;
-    const int K = mnfp.K;
+    std::cout<<"N*N: "<<N*N<<"\n";
 
     model.reset(1);
     GRBVar* vetX;
@@ -111,7 +111,7 @@ void MNFP::criaSubProb(MNFP_Inst &mnfp, GRBModel &model, int k)
 
 }
 
-void MNFP::criaMestre(MNFP::MNFP_Inst &mnfp, GRBModel &model)
+void MNFP::criaMestre(const MNFP::MNFP_Inst &mnfp, GRBModel &model)
 {
 
 
