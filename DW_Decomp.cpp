@@ -157,7 +157,6 @@ void DW_Decomp::dwDecomp(GRBEnv &env,
     Eigen::VectorX<char> vetMestreSense = getConstSenseModel(mestre);
     Eigen::VectorXd vetMestreRhs        = getRhsModel(mestre);
     const int numConstrsMestre          = mestre.get(GRB_IntAttr_NumConstrs);
-    // TODO fix
     int numConstrsRmlp                  = numConstrsMestre;// + int(vetSubProb.size());
     const int numVarMestre              = mestre.get(GRB_IntAttr_NumVars);
 
@@ -267,7 +266,6 @@ void DW_Decomp::dwDecomp(GRBEnv &env,
         const int iniVarSubProbK = vetPairSubProb.at(k).first;
         const int numVarSubProbK = vetPairSubProb.at(k).second;
 
-        // TODO Pq as variaveis duais estao no range (0;numVarSubProbK)
         subProbCooef.segment(0, numVarSubProbK) =
                                                        (vetC.segment(iniVarSubProbK, numVarSubProbK) -
                                                        (vetRmlpDuals.segment(0, numVarSubProbK).transpose()*vetSubMatA[k]).transpose()).transpose();
