@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 #include "MNFP_Inst.h"
-#include "DW_Decomp.h"
+#include "DW_Decomp/include/DW_Decomp.h"
 
 class MySubProb : public DW_Decomp::SubProb
 {
