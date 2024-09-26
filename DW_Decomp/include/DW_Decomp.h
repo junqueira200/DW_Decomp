@@ -34,7 +34,7 @@ namespace DW_DecompNS
         virtual ~SubProb(){};
 
         // Responsavel por adicionar as restricoes de convexidade
-        virtual void iniConvConstr(GRBModel &master, void *data, const double custoVarA) =0;
+        virtual void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) =0;
 
         /** ************************************************************************
          *  ************************************************************************
@@ -42,7 +42,7 @@ namespace DW_DecompNS
          *  Resolve o subproblema e add cooef das restricoes de conv
          *
          *  @param subProbCooef
-         *  @param mestre
+         *  @param rmlp
          *  @param vetX
          *  @param itCG
          *  @param custoRedNeg
@@ -55,7 +55,7 @@ namespace DW_DecompNS
          *  ************************************************************************
          */
         virtual int resolveSubProb(Eigen::VectorXd &subProbCooef,
-                                   GRBModel &mestre,
+                                   GRBModel &rmlp,
                                    Eigen::VectorXd &vetX,
                                    int itCG,
                                    bool &custoRedNeg,

@@ -16,7 +16,7 @@ namespace MNFP
         int N = 0;
 
         Eigen::VectorX<Eigen::MatrixXi> vetArcCost;
-        Eigen::MatrixXi matVertexDem;
+        Eigen::MatrixXi matVertexDem;               // (k,n)
         Eigen::MatrixXi matCapacidade;
 
         MNFP_Inst() = default;
@@ -41,8 +41,8 @@ namespace MNFP
 
     MNFP_Inst criaToyInstance();
 
-    void criaSubProb(const MNFP_Inst &mnfp, GRBModel &model, int k);
-    void criaMestre(const MNFP::MNFP_Inst &mnfp, GRBModel &model);
+    //void criaSubProbFlow(const MNFP_Inst &mnfp, GRBModel &model, int k);
+    //void criaMestreFlow(const MNFP::MNFP_Inst &mnfp, GRBModel &model);
 
     int getId(int i, int j, int n);
 }

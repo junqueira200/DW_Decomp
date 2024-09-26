@@ -22,7 +22,7 @@ MNFP::MNFP_Inst MNFP::criaToyInstance()
     (mnfp.vetArcCost(1))(1, 3) = (mnfp.vetArcCost(1))(3, 1) = 2;
     (mnfp.vetArcCost(1))(2, 3) = (mnfp.vetArcCost(1))(3, 2) = 5;
 
-    std::cout<<mnfp.vetArcCost(0)<<"\n\n"<<mnfp.vetArcCost(1)<<"\n";
+    //std::cout<<mnfp.vetArcCost(0)<<"\n\n"<<mnfp.vetArcCost(1)<<"\n";
 
 
     mnfp.matVertexDem(0, 0) = -6;
@@ -36,7 +36,7 @@ MNFP::MNFP_Inst MNFP::criaToyInstance()
     mnfp.matVertexDem(1, 2) =  3;
     mnfp.matVertexDem(1, 3) =  4;
 
-    std::cout<<mnfp.matVertexDem<<"\n";
+    //std::cout<<mnfp.matVertexDem<<"\n";
 
 
     mnfp.matCapacidade(0, 1) = 10;
@@ -45,12 +45,13 @@ MNFP::MNFP_Inst MNFP::criaToyInstance()
     mnfp.matCapacidade(1, 3) = 6;
     mnfp.matCapacidade(2, 3) = 7;
 
-    std::cout<<"\n\n"<<mnfp.matCapacidade<<"\n\n";
+    //std::cout<<"\n\n"<<mnfp.matCapacidade<<"\n\n";
 
     return std::move(mnfp);
 }
 
-void MNFP::criaSubProb(const MNFP_Inst &mnfp, GRBModel &model, int k)
+/*
+void MNFP::criaSubProbFlow(const MNFP_Inst &mnfp, GRBModel &model, int k)
 {
     const int N = mnfp.N;
     std::cout<<"N*N: "<<N*N<<"\n";
@@ -111,7 +112,7 @@ void MNFP::criaSubProb(const MNFP_Inst &mnfp, GRBModel &model, int k)
 
 }
 
-void MNFP::criaMestre(const MNFP::MNFP_Inst &mnfp, GRBModel &model)
+void MNFP::criaMestreFlow(const MNFP::MNFP_Inst &mnfp, GRBModel &model)
 {
 
 
@@ -190,5 +191,6 @@ void MNFP::criaMestre(const MNFP::MNFP_Inst &mnfp, GRBModel &model)
     }
 
 }
+*/
 
 int MNFP::getId(int i, int j, int n){return (i*n+j);}

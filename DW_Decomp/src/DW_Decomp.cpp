@@ -247,6 +247,7 @@ void DW_DecompNS::dwDecomp(GRBEnv &env,
     rmlp.update();
 
     subProb->iniConvConstr(rmlp, data, custoVarA);
+    return;
 
     rmlp.update();
     rmlpConstrs = rmlp.getConstrs();

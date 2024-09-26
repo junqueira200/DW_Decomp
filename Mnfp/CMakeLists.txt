@@ -28,6 +28,7 @@ target_sources(${PROJECT_NAME}
     PRIVATE
     src/MNFP_Inst.cpp
     src/main.cpp
+    src/MnfpDecomp.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE DwDecomp Grafo Eigen3::Eigen gurobi_c++ gurobi)

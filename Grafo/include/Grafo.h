@@ -60,7 +60,7 @@ namespace GraphNS
 
     //private:
 
-        const int64_t numVertices;
+        int64_t numVertices;
         int64_t numArcs      = 0;
         Eigen::VectorX<std::map<int, T>> arcs;
 
@@ -70,6 +70,14 @@ namespace GraphNS
         {
             arcs = Eigen::VectorX<std::map<int,T>>(numVertices);
 
+        }
+
+        Graph(){}
+        void reset(int64_t numV)
+        {
+            numVertices = numV;
+            numArcs = 0;
+            arcs = Eigen::VectorX<std::map<int,T>>(numVertices);
         }
 
         void addArc(int64_t i, int64_t j, T val)
@@ -129,7 +137,7 @@ namespace GraphNS
     };
 
     template<typename T>
-    void bellmanFord(Graph<T> &graph, int src)
+    void bellmanFord(Graph<T> &graph, int src, Eigen::VectorXd &vet, int64_t &tam)
     {
 
 
@@ -160,8 +168,6 @@ namespace GraphNS
 
         std::cout<<vetDist.transpose()<<"\n";
     }
-
-
 }
 
 #endif //MNFP_GRAFO_H
