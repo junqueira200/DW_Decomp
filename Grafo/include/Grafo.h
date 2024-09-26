@@ -12,6 +12,7 @@
 #include <Eigen/Eigen>
 #include <ranges>
 #include <exception>
+#include <limits>
 
 namespace GraphNS
 {
@@ -53,6 +54,7 @@ namespace GraphNS
 
 
     template<typename T>
+    requires std::is_arithmetic_v<T>
     struct Graph
     {
 
@@ -116,7 +118,50 @@ namespace GraphNS
 
             return std::ranges::subrange(arcs[i].begin(), arcs[i].end());
         }
+
+        int64_t getNumArcs(int64_t i)
+        {
+            if(i >= numVertices || i < 0)
+                throw OutOfRange();
+
+            return arcs[i].size();
+        }
     };
+
+    template<typename T>
+    void bellmanFord(Graph<T> &graph, int src)
+    {
+
+
+        T Inf = std::numeric_limits<T>::infinity();
+
+        if(!std::numeric_limits<T>::has_infinity)
+            Inf = std::numeric_limits<T>::max();
+
+        int64_t numArcs = graph.getNumArcs(src);
+        Eigen::VectorX<T> vetDist(graph.numVertices);
+        vetDist.setConstant(Inf);
+        vetDist[src] = T(0);
+
+        for(int i=0; i < graph.numVertices; ++i)
+        {
+
+            for(auto &it: graph.getArcsRange(i))
+            {
+                int j = it.first;
+                T distJ = it.second;
+                T sum = vetDist[i]+distJ;
+
+                if(vetDist[i] != Inf && sum < vetDist[j])
+                    vetDist[j] = sum;
+            }
+
+        }
+
+        std::cout<<vetDist.transpose()<<"\n";
+    }
+
+
 }
 
 #endif //MNFP_GRAFO_H

@@ -240,8 +240,19 @@ int main()
 {
 
     GraphNS::Graph<int> graph(5);
-    graph.addArc(0, 1, 1);
-    graph.addArc(0, 2, 1);
+
+    graph.addArc(0, 1, -1);
+    graph.addArc(0, 2, 4);
+
+    graph.addArc(1, 2, 3);
+    graph.addArc(1, 3, 2);
+    graph.addArc(1, 4, 2);
+
+    graph.addArc(3, 2, 5);
+    graph.addArc(3, 1, 1);
+
+    graph.addArc(4, 3, -3);
+
 
     for(int i=0; i < 5; ++i)
     {
@@ -256,10 +267,10 @@ int main()
     if(graph.arcExist(0, 1))
         std::cout<<"(0, 1) exist!\n";
 
-    int val = graph.getArc(0, 1);
+    float val = graph.getArc(0, 1);
     std::cout<<"val: "<<val<<"\n\n";
 
-    std::cout << "arcExist(0,0): " << graph.arcExist(0, -1) << "\n";
+    std::cout << "arcExist(0,0): " << graph.arcExist(0, 1) << "\n";
 
 
     for(int i=0; i < 5; ++i)
@@ -271,6 +282,8 @@ int main()
         }
     }
 
+
+    GraphNS::bellmanFord(graph, 0);
 
 
     return 0;
