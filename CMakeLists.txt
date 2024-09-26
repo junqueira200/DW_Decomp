@@ -15,6 +15,9 @@ link_directories($ENV{GUROBI_HOME}/lib)
 add_subdirectory(DW_Decomp)
 include_directories(DW_Decomp/include)
 
+add_subdirectory(Grafo)
+include_directories(Grafo/include)
+
 add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -22,5 +25,5 @@ target_sources(${PROJECT_NAME}
     main.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE DwDecomp Eigen3::Eigen gurobi_c++ gurobi)
+target_link_libraries(${PROJECT_NAME} PRIVATE DwDecomp Grafo Eigen3::Eigen gurobi_c++ gurobi)
 

@@ -2,8 +2,9 @@
 #include <memory>
 #include "MNFP_Inst.h"
 #include "DW_Decomp.h"
+#include "Grafo.h"
 
-class MySubProb : public DW_Decomp::SubProb
+class MySubProb : public DW_DecompNS::SubProb
 {
 public:
 
@@ -97,7 +98,7 @@ public:
         std::cout<<"subProbCooef: "<<subProbCooef.segment(0, (pairSubProb.second+1)).transpose()<<"\n\n";
         std::cout<<"vetX.size(): "<<vetX.size()<<"\n";
 
-        DW_Decomp::StatusSubProb status = DW_Decomp::StatusSubProb_Otimo;
+        DW_DecompNS::StatusSubProb status = DW_DecompNS::StatusSubProb_Otimo;
         custoRedNeg = false;
 
         GRBModel &model = (*vetSubProb[k]);
@@ -118,9 +119,9 @@ public:
             int s = model.get(GRB_IntAttr_Status);
             if(s == GRB_OPTIMAL)
             {
-                status = DW_Decomp::StatusSubProb_Otimo;
+                status = DW_DecompNS::StatusSubProb_Otimo;
 
-                if(model.get(GRB_DoubleAttr_ObjVal) < -DW_Decomp::TolObjSubProb)
+                if(model.get(GRB_DoubleAttr_ObjVal) < -DW_DecompNS::TolObjSubProb)
                 {
                     std::cout<<"ini for\n";
 
@@ -148,12 +149,12 @@ public:
 
                 if(s == GRB_UNBOUNDED)
                 {
-                    status = DW_Decomp::StatusSubProb_Unbounded;
+                    status = DW_DecompNS::StatusSubProb_Unbounded;
                 } else if(s == GRB_INFEASIBLE)
                 {
-                    status = DW_Decomp::StatusSubProb_Inviavel;
+                    status = DW_DecompNS::StatusSubProb_Inviavel;
                 } else
-                    status = DW_Decomp::StatusSubProb_Outro;
+                    status = DW_DecompNS::StatusSubProb_Outro;
             }
 
             std::cout<<"FIM resolveSubProb\n\n\n";
@@ -183,7 +184,7 @@ int resolveSubProb(const Eigen::VectorXd &subProbCooef, int k, void *data, Eigen
         std::cout << "Funcao resolveSubProb\n\n\n";
         std::cout<<"subProbCooef: "<<subProbCooef.transpose()<<"\n\n";
 
-        DW_Decomp::StatusSubProb status = DW_Decomp::StatusSubProb_Otimo;
+        DW_DecompNS::StatusSubProb status = DW_DecompNS::StatusSubProb_Otimo;
         custoRedNeg = false;
 
         GRBModel &model = (*(GRBModel *) data);
@@ -198,9 +199,9 @@ int resolveSubProb(const Eigen::VectorXd &subProbCooef, int k, void *data, Eigen
         int s = model.get(GRB_IntAttr_Status);
         if(s == GRB_OPTIMAL)
         {
-            status = DW_Decomp::StatusSubProb_Otimo;
+            status = DW_DecompNS::StatusSubProb_Otimo;
 
-            if(model.get(GRB_DoubleAttr_ObjVal) < -DW_Decomp::TolObjSubProb)
+            if(model.get(GRB_DoubleAttr_ObjVal) < -DW_DecompNS::TolObjSubProb)
             {
                 custoRedNeg = true;
                 for(int i = 0; i < model.get(GRB_IntAttr_NumVars)-1; ++i)
@@ -213,12 +214,12 @@ int resolveSubProb(const Eigen::VectorXd &subProbCooef, int k, void *data, Eigen
 
             if(s == GRB_UNBOUNDED)
             {
-                status = DW_Decomp::StatusSubProb_Unbounded;
+                status = DW_DecompNS::StatusSubProb_Unbounded;
             } else if(s == GRB_INFEASIBLE)
             {
-                status = DW_Decomp::StatusSubProb_Inviavel;
+                status = DW_DecompNS::StatusSubProb_Inviavel;
             } else
-                status = DW_Decomp::StatusSubProb_Outro;
+                status = DW_DecompNS::StatusSubProb_Outro;
         }
 
         std::cout<<"FIM resolveSubProb\n\n\n";
@@ -237,6 +238,46 @@ int resolveSubProb(const Eigen::VectorXd &subProbCooef, int k, void *data, Eigen
 
 int main()
 {
+
+    GraphNS::Graph<int> graph(5);
+    graph.addArc(0, 1, 1);
+    graph.addArc(0, 2, 1);
+
+    for(int i=0; i < 5; ++i)
+    {
+        auto pair = graph.getArcs(i);
+
+        for(auto it=pair.first; it != pair.second; ++it)
+        {
+            std::cout<<"("<<i<<", "<<it->first<<"): "<<it->second<<"\n";
+        }
+    }
+
+    if(graph.arcExist(0, 1))
+        std::cout<<"(0, 1) exist!\n";
+
+    int val = graph.getArc(0, 1);
+    std::cout<<"val: "<<val<<"\n\n";
+
+    std::cout << "arcExist(0,0): " << graph.arcExist(0, -1) << "\n";
+
+
+    for(int i=0; i < 5; ++i)
+    {
+
+        for(auto &it:graph.getArcsRange(i))
+        {
+            std::cout<<"("<<i<<", "<<it.first<<"): "<<it.second<<"\n";
+        }
+    }
+
+
+
+    return 0;
+
+
+
+
 
     MNFP::MNFP_Inst mnfp = MNFP::criaToyInstance();
     const int K = mnfp.K;
@@ -265,14 +306,14 @@ int main()
     mestre.write("mestre.lp");
     auto vetPairSubProb = std::vector<std::pair<int,int>>{std::make_pair(0, N*N), std::make_pair(N*N, N*N)};
 
-    DW_Decomp::dwDecomp(env,
-                        mestre,
-                        99999.0,
-                        std::forward<std::vector<std::pair<int,int>>>(vetPairSubProb),
-                        (DW_Decomp::SubProb*)&subProb,
-                        (void*)&mnfp,
-                        2,
-                        2);
+    DW_DecompNS::dwDecomp(env,
+                          mestre,
+                          99999.0,
+                          std::forward<std::vector<std::pair<int,int>>>(vetPairSubProb),
+                          (DW_DecompNS::SubProb*)&subProb,
+                          (void*)&mnfp,
+                          2,
+                          2);
 
 
     return 0;

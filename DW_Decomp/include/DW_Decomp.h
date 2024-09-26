@@ -7,7 +7,7 @@
 #define DW_DECOMP_DW_DECOMP_H
 
 
-namespace DW_Decomp
+namespace DW_DecompNS
 {
     inline const double TolObjSubProb = 1E-5;
 

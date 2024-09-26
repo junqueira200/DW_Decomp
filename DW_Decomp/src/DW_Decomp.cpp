@@ -1,6 +1,6 @@
 #include "DW_Decomp.h"
 
-Eigen::MatrixXd DW_Decomp::getMatA_Model(GRBModel &mestre)
+Eigen::MatrixXd DW_DecompNS::getMatA_Model(GRBModel &mestre)
 {
 
 
@@ -34,7 +34,7 @@ Eigen::MatrixXd DW_Decomp::getMatA_Model(GRBModel &mestre)
 
 }
 
-Eigen::VectorXd DW_Decomp::getVetC_Model(GRBModel &mestre)
+Eigen::VectorXd DW_DecompNS::getVetC_Model(GRBModel &mestre)
 {
 
     const int numVar = mestre.get(GRB_IntAttr_NumVars);
@@ -57,7 +57,7 @@ Eigen::VectorXd DW_Decomp::getVetC_Model(GRBModel &mestre)
 
 }
 
-Eigen::VectorX<char> DW_Decomp::getConstSenseModel(GRBModel &model)
+Eigen::VectorX<char> DW_DecompNS::getConstSenseModel(GRBModel &model)
 {
 
     const int NumConstrs = model.get(GRB_IntAttr_NumConstrs);
@@ -76,7 +76,7 @@ Eigen::VectorX<char> DW_Decomp::getConstSenseModel(GRBModel &model)
 
 }
 
-Eigen::VectorXd DW_Decomp::getRhsModel(GRBModel &model)
+Eigen::VectorXd DW_DecompNS::getRhsModel(GRBModel &model)
 {
 
 
@@ -97,7 +97,7 @@ Eigen::VectorXd DW_Decomp::getRhsModel(GRBModel &model)
 }
 
 
-void DW_Decomp::recuperaX(GRBVar* var, Eigen::VectorXd &vetX, int numVar)
+void DW_DecompNS::recuperaX(GRBVar* var, Eigen::VectorXd &vetX, int numVar)
 {
 
 
@@ -140,14 +140,14 @@ static void funcGetSubMatrix(const Eigen::MatrixXd &matA,
  *
  * ****************************************************************************************************
  * *****************************************************************************************************/
-void DW_Decomp::dwDecomp(GRBEnv &env,
-              GRBModel &mestre,
-              double custoVarA,
-              const std::vector<std::pair<int,int>> &&vetPairSubProb,
-              SubProb *subProb,
-              void *data,
-              const int numConstrsConv,
-              const int numSubProb)
+void DW_DecompNS::dwDecomp(GRBEnv &env,
+                           GRBModel &mestre,
+                           double custoVarA,
+                           const std::vector<std::pair<int,int>> &&vetPairSubProb,
+                           SubProb *subProb,
+                           void *data,
+                           const int numConstrsConv,
+                           const int numSubProb)
 {
 
     std::cout<<"********************************DW DECOMP********************************\n";
