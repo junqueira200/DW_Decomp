@@ -301,14 +301,12 @@ void MnfpDecompNS::MySubProbPath::iniConvConstr(GRBModel &rmlp, void *data, cons
             {
                 try
                 {
-                    matVerticeType(k, i) = TypeSource;
-
                     int neg = 1;
                     if(mnfp.matVertexDem(k, i) < 0)
                     {
                         neg = -1;
-                        matVerticeType(k, i) = TypeSink;
                     }
+
 
                     std::string name = std::to_string(k) + "_" + std::to_string(i);
 
@@ -338,11 +336,23 @@ void MnfpDecompNS::MySubProbPath::iniConvConstr(GRBModel &rmlp, void *data, cons
 
 }
 
-void MnfpDecompNS::MySubProbPath::restoreGraphModCost()
+void MnfpDecompNS::MySubProbPath::restoreGraphModCost(int64_t k)
 {
 
+    for(int64_t i=0; i < vetGraphCost[k].numVertices; ++i)
+    {
+        for(auto &it:vetGraphCost[k].getArcsRange(i))
+            vetGraphModCost[k].addArc(i, it.first, it.second);
+    }
 }
 
+
+
+/**
+ *
+ *
+ * @param pairSubProb pair representa o indice do inicio das variaveis do sub problema e o seu tamanho
+ */
 int MnfpDecompNS::MySubProbPath::resolveSubProb(Eigen::VectorXd &subProbCooef,
                                                 GRBModel &rmlp,
                                                 Eigen::VectorXd &vetX,
@@ -356,30 +366,83 @@ int MnfpDecompNS::MySubProbPath::resolveSubProb(Eigen::VectorXd &subProbCooef,
 
 {
 
+    const int k = indSubProb;
+
+    std::cout<<"resolveSubProb: "<<k<<"\n";
+
+    restoreGraphModCost(k);
+    GraphNS::Graph<double> &graphM = vetGraphModCost[k];
+    GRBConstr *constr = rmlp.getConstrs();
+
+
+    for(int64_t i=0; i < mnfp.N; ++i)
+    {
+        for(auto &it:graphM.getArcsRange(i))
+        {
+            if(it.first == idT)
+                continue;
+
+            //graphM.addArc(i, it.first, it.second- constr[getId(i, it.first, (int64_t)mnfp.N)].get(GRB_DoubleAttr_Pi));
+            graphM.addArc(i, it.first, subProbCooef[getId(i, it.first, (int64_t)mnfp.N)]);
+        }
+
+        if(matVerticeType(k, i) == TypeSource)
+        {
+            int64_t idK_I = matCovConst(k, i);
+            graphM.addArc(idS, i, -constr[matCovConst(k, i)].get(GRB_DoubleAttr_Pi));
+        }
+    }
+
+    std::cout<<GraphNS::printGraph(graphM);
+
+    Eigen::VectorXd vetDist(graphM.numVertices);
+    Eigen::VectorX<int64_t> vetPredecessor(graphM.numVertices);
+    int64_t verticeNegCycle;
+
+    GraphNS::bellmanFord(graphM, idS, vetDist, vetPredecessor, verticeNegCycle);
+
+    exit(-1);
+
+    delete constr;
     return 0;
 
 }
 
 MnfpDecompNS::MySubProbPath::MySubProbPath(GRBEnv &e, const MNFP::MNFP_Inst &mnfp_):mnfp(mnfp_), numSubProb(mnfp_.K)
 {
-    std::cout<<"MySubProbPath:\n\n";
-    std::cout<<mnfp.matVertexDem<<"\n";
+    std::cout << "MySubProbPath:\n\n";
+    std::cout << mnfp.matVertexDem << "\n";
 
     matCovConst = Eigen::MatrixX<int64_t>(mnfp.K, mnfp.N);
     matCovConst.setConstant(-1);
-    std::cout<<"vetCovConst: \n"<<matCovConst<<"\n\n";
+    std::cout << "vetCovConst: \n" << matCovConst << "\n\n";
 
     matVerticeType = Eigen::MatrixX<VerticeType>(mnfp.K, mnfp.N);
     matVerticeType.setConstant(TypeZero);
 
     vetGraphCost = Eigen::VectorX<GraphNS::Graph<double>>(mnfp.K);
-    for(int64_t k=0; k < mnfp.K; ++k)
+    vetGraphModCost = Eigen::VectorX<GraphNS::Graph<double>>(mnfp.K);
+
+    // Start vetGraphCost
+    for(int64_t k = 0; k < mnfp.K; ++k)
     {
         vetGraphCost[k].reset(mnfp.N);
 
-        for(int i=0; i < mnfp.N; ++i)
+        for(int i = 0; i < mnfp.N; ++i)
         {
-            for(int j=0; j < mnfp.N; ++j)
+
+            if(mnfp.matVertexDem(k, i) != 0)
+            {
+
+
+                matVerticeType(k, i) = TypeSink;
+
+                if(mnfp.matVertexDem(k, i) < 0)
+                    matVerticeType(k, i) = TypeSource;
+
+            }
+
+            for(int j = 0; j < mnfp.N; ++j)
             {
                 if(i == j)
                     continue;
@@ -389,8 +452,42 @@ MnfpDecompNS::MySubProbPath::MySubProbPath(GRBEnv &e, const MNFP::MNFP_Inst &mnf
                 {
                     vetGraphCost[k].addArc(i, j, val);
                 }
+
             }
         }
     }
 
+
+    idS = mnfp.N;
+    idT = mnfp.N+1;
+
+    std::cout<<"N: "<<mnfp.N<<"\n\n";
+    std::cout<<"idS: "<<idS<<"\nidT: "<<idT<<"\n\n";
+
+
+    for(int64_t k = 0; k < mnfp.K; ++k)
+    {
+        GraphNS::copyGraph(vetGraphCost[k], vetGraphModCost[k]);
+
+        std::cout<<"antes("<<k<<"): "<<vetGraphModCost[k].numVertices<<"\n";
+
+        vetGraphModCost[k].addVertice();
+        vetGraphModCost[k].addVertice();
+
+
+        std::cout<<"antes("<<k<<"): "<<vetGraphModCost[k].numVertices<<"\n";
+
+        for(int64_t i=0; i < mnfp.N; ++i)
+        {
+            if(matVerticeType(k, i) == TypeSource)
+                vetGraphModCost[k].addArc(idS, i, 0.0);
+            else if(matVerticeType(k, i) == TypeSink)
+                vetGraphModCost[k].addArc(i, idT, 0.0);
+        }
+
+        restoreGraphModCost(k);
+        vetGraphModCost[k].loadVetArcs();
+        std::cout<<vetGraphModCost[k].printVetArcs()<<"\n";
+
+    }
 }

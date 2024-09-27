@@ -10,30 +10,17 @@
 int main()
 {
 
-/*    GraphNS::Graph<int> graph(5);
+    /*
 
-    graph.addArc(0, 1, -1);
-    graph.addArc(0, 2, 4);
+    GraphNS::Graph<int> graph(4);
 
-    graph.addArc(1, 2, 3);
-    graph.addArc(1, 3, 2);
-    graph.addArc(1, 4, 2);
-
-    graph.addArc(3, 2, 5);
-    graph.addArc(3, 1, 1);
-
-    graph.addArc(4, 3, -3);
+    graph.addArc(0, 1, 0);
+    graph.addArc(1, 2, -4);
+    graph.addArc(2, 3, -1);
+    graph.addArc(3, 1, -1);
 
 
-    for(int i=0; i < 5; ++i)
-    {
-        auto pair = graph.getArcs(i);
-
-        for(auto it=pair.first; it != pair.second; ++it)
-        {
-            std::cout<<"("<<i<<", "<<it->first<<"): "<<it->second<<"\n";
-        }
-    }
+    std::cout<<GraphNS::printGraph(graph);
 
     if(graph.arcExist(0, 1))
         std::cout<<"(0, 1) exist!\n";
@@ -44,21 +31,16 @@ int main()
     std::cout << "arcExist(0,0): " << graph.arcExist(0, 1) << "\n";
 
 
-    for(int i=0; i < 5; ++i)
-    {
+    Eigen::VectorXd vetDist(graph.numVertices);
+    Eigen::VectorX<int64_t> vetPredecessor(graph.numVertices);
+    int64_t verticeNegCycle;
 
-        for(auto &it:graph.getArcsRange(i))
-        {
-            std::cout<<"("<<i<<", "<<it.first<<"): "<<it.second<<"\n";
-        }
-    }
+    GraphNS::bellmanFord(graph, 0, vetDist, vetPredecessor, verticeNegCycle);
 
 
-    GraphNS::bellmanFord(graph, 0);
 
-
-    return 0;*/
-
+    return 0;
+    */
 
 
 
@@ -96,7 +78,7 @@ int main()
 
     DW_DecompNS::dwDecomp(env,
                           mestre,
-                          99999.0,
+                          9999.0,
                           std::forward<std::vector<std::pair<int,int>>>(vetPairSubProb),
                           (DW_DecompNS::SubProb*)&subProbPath,
                           (void*)&mnfp,

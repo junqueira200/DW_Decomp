@@ -194,3 +194,4 @@ void MNFP::criaMestreFlow(const MNFP::MNFP_Inst &mnfp, GRBModel &model)
 */
 
 int MNFP::getId(int i, int j, int n){return (i*n+j);}
+int64_t MNFP::getId(int64_t i, int64_t j, int64_t n){return (i*n+j);}

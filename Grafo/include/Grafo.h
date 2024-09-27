@@ -51,7 +51,12 @@ namespace GraphNS
         }
     };
 
-
+    struct Arc
+    {
+        int64_t src    = -1;
+        int64_t dest   = -1;
+        std::reference_wrapper<double> weight;
+    };
 
     template<typename T>
     requires std::is_arithmetic_v<T>
@@ -60,24 +65,62 @@ namespace GraphNS
 
     //private:
 
-        int64_t numVertices;
-        int64_t numArcs      = 0;
-        Eigen::VectorX<std::map<int, T>> arcs;
+        int64_t numVertices    = 0;
+        //int64_t numArcs      = 0;
+        std::vector<std::map<int64_t , T>> arcs;       // Arcs of vertice i
+        std::vector<Arc> vetArcs;                      // All arcs of G
 
     //public:
 
         explicit Graph(int64_t numV):numVertices(numV)
         {
-            arcs = Eigen::VectorX<std::map<int,T>>(numVertices);
+            arcs = std::vector<std::map<int64_t ,T>>(numVertices);
 
         }
 
-        Graph(){}
+        Graph()=default;
+
+        // Remove all arcs from the graph
         void reset(int64_t numV)
         {
             numVertices = numV;
-            numArcs = 0;
-            arcs = Eigen::VectorX<std::map<int,T>>(numVertices);
+            arcs = std::vector<std::map<int64_t ,T>>(numVertices);
+        }
+
+        void loadVetArcs()
+        {
+            vetArcs = std::vector<Arc>();
+
+            int pos = 0;
+            for(int64_t i=0; i < numVertices; ++i)
+            {
+                for(auto &it: arcs[i])
+                {
+                    vetArcs.push_back(Arc(i, it.first, it.second));
+                    std::cout<<i<<" "<<it.first<<" "<<(it.second)<<"\n";
+                }
+            }
+
+        }
+
+        std::string printVetArcs()
+        {
+            std::cout<<"printVetArcs\n";
+
+            std::string str;
+            for(auto &it:vetArcs)
+            {
+                str += "(" + std::to_string(it.src) + ", " + std::to_string(it.dest) + "): " +
+                        std::to_string(it.weight.get());
+            }
+
+            return str;
+        }
+
+        void addVertice()
+        {
+            numVertices += 1;
+            arcs.push_back(std::map<int64_t ,T>());
         }
 
         void addArc(int64_t i, int64_t j, T val)
@@ -89,6 +132,7 @@ namespace GraphNS
         }
 
 
+        // Get the arcs that starts with i, of the form (i,_); Returns a pair of begin and end
         auto getArcs(int64_t i)
         {
 
@@ -107,6 +151,7 @@ namespace GraphNS
             return arcs[i].count(j) == 1;
         }
 
+        // Get the value storaged in (i,j)
         T getArc(int64_t i, int64_t j)
         {
             if(i >= numVertices || i < 0 || j >= numVertices || j < 0)
@@ -118,6 +163,8 @@ namespace GraphNS
             return (arcs[i])[j];
         }
 
+
+        // Get the arcs that starts with i, of the form (i,_); Returns range
         auto getArcsRange(int64_t i)
         {
 
@@ -127,18 +174,36 @@ namespace GraphNS
             return std::ranges::subrange(arcs[i].begin(), arcs[i].end());
         }
 
-        int64_t getNumArcs(int64_t i)
+        // Get the number of arcs that starts with i, of the form (i,_)
+        int64_t getNumArcsI(int64_t i)
         {
             if(i >= numVertices || i < 0)
                 throw OutOfRange();
 
             return arcs[i].size();
         }
+
+        int64_t calculateNumArcs()
+        {
+            int64_t numArcs = 0;
+            for(auto &it:arcs)
+                numArcs += it.size();
+
+            return numArcs;
+        }
+
+        int64_t getNumVertices(){return numVertices;}
     };
 
     template<typename T>
-    void bellmanFord(Graph<T> &graph, int src, Eigen::VectorXd &vet, int64_t &tam)
+    void bellmanFord(Graph<T> &graph,
+                     int64_t src,
+                     Eigen::VectorXd &vetDist,
+                     Eigen::VectorX<int64_t> &vetPredecessor,
+                     int64_t &verticeNegCycle)
     {
+        std::cout<<"**************************************\n";
+        std::cout<<"*************BELLMAN FORD*************\n\n";
 
 
         T Inf = std::numeric_limits<T>::infinity();
@@ -146,27 +211,88 @@ namespace GraphNS
         if(!std::numeric_limits<T>::has_infinity)
             Inf = std::numeric_limits<T>::max();
 
-        int64_t numArcs = graph.getNumArcs(src);
-        Eigen::VectorX<T> vetDist(graph.numVertices);
+
         vetDist.setConstant(Inf);
+        vetPredecessor.setConstant(-1);
         vetDist[src] = T(0);
 
-        for(int i=0; i < graph.numVertices; ++i)
+
+        // Relax all edges |V| - 1 times.
+        for(int i=0; i < graph.numVertices-1; ++i)
         {
-
-            for(auto &it: graph.getArcsRange(i))
+            for(int j=0; j < graph.numVertices; ++j)
             {
-                int j = it.first;
-                T distJ = it.second;
-                T sum = vetDist[i]+distJ;
+                for(auto &it: graph.getArcsRange(j))
+                {
+                    int64_t u = j;
+                    int64_t v = it.first;
+                    double weight = it.second;
+                    double sum = vetDist[u] + weight;
 
-                if(vetDist[i] != Inf && sum < vetDist[j])
-                    vetDist[j] = sum;
+                    if(vetDist[u] != Inf && sum < vetDist[v])
+                    {
+                        vetDist[v] = sum;
+                        vetPredecessor[v] = u;
+                    }
+                }
             }
-
         }
 
+        bool negCycle = false;
+        verticeNegCycle = -1;
+
+        // Check for negative cycles
+        for(int j=0; j < graph.numVertices; ++j)
+        {
+            for(auto &it: graph.getArcsRange(j))
+            {
+                int64_t u = j;
+                int64_t v = it.first;
+                double weight = it.second;
+                double sum = vetDist[u] + weight;
+
+                if(vetDist[u] != Inf && sum < vetDist[v])
+                {
+                    negCycle = true;
+                    verticeNegCycle = u;
+                    break;
+
+                }
+            }
+
+            if(negCycle)
+                break;
+        }
+
+
+
+        std::cout<<"negCycle: "<<negCycle<<"\n";
+        std::cout<<"id: "<<verticeNegCycle<<"\n";
         std::cout<<vetDist.transpose()<<"\n";
+        std::cout<<vetPredecessor.transpose()<<"\n";
+    }
+
+    template<typename T>
+    void copyGraph(const Graph<T> &src, Graph<T> &dest)
+    {
+        dest.numVertices = src.numVertices;
+        dest.reset(src.numVertices);
+        dest.arcs = src.arcs;
+    }
+
+    template<typename T>
+    std::string printGraph(const Graph<T> &graph)
+    {
+        std::string str;
+        auto p = std::make_pair(0,0);
+
+        for(int64_t i=0; i < graph.numVertices; ++i)
+        {
+            for(const auto &it:graph.arcs[i])
+                str += "("+std::to_string(i)+", " + std::to_string(it.first)+"): "+std::to_string(it.second)+"\n";
+        }
+
+        return str;
     }
 }
 

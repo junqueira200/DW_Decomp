@@ -60,9 +60,10 @@ namespace MnfpDecompNS
         bool convConstIni = false;
         MNFP::MNFP_Inst mnfp;
         Eigen::VectorX<GraphNS::Graph<double>> vetGraphCost;
-        GraphNS::Graph<double> vetGraphModCost;             // Armazena os custos modificados para cada aresta
+        Eigen::VectorX<GraphNS::Graph<double>> vetGraphModCost;             // Armazena os custos modificados para cada aresta
         Eigen::MatrixX<int64_t> matCovConst;                // Armazenam para cada (k, vertice) o indice da const de conv
         Eigen::MatrixX<VerticeType> matVerticeType;         // Armazenam para cada (k, vertice) o seu tipo
+        int64_t idS=-1, idT=-1;
 
 
         MySubProbPath(GRBEnv &e, const MNFP::MNFP_Inst &mnfp_);
@@ -79,7 +80,7 @@ namespace MnfpDecompNS
                            Eigen::VectorXd &vetCooefRestConv,
                            const std::pair<int, int> &pairSubProb) override;
 
-        void restoreGraphModCost();
+        void restoreGraphModCost(int64_t k);
 
     }; // FIM MySubProb
 }

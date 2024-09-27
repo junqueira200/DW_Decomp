@@ -50,6 +50,7 @@ namespace DW_DecompNS
          *  @param iniConv
          *  @param indSubProb
          *  @param vetCooefRestConv
+         *  @param pairSubProb           pair representa o indice do inicio das variaveis do sub problema e o seu tamanho
          *
          *  ************************************************************************
          *  ************************************************************************

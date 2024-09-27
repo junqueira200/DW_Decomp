@@ -45,6 +45,7 @@ namespace MNFP
     //void criaMestreFlow(const MNFP::MNFP_Inst &mnfp, GRBModel &model);
 
     int getId(int i, int j, int n);
+    int64_t getId(int64_t i, int64_t j, int64_t n);
 }
 
 #endif //DW_DECOMP_MNFP_INST_H
