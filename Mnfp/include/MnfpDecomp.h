@@ -15,16 +15,28 @@ namespace MnfpDecompNS
     void criaSubProbFlow(const MNFP::MNFP_Inst &mnfp, GRBModel &model, int k);
     void criaMestre(const MNFP::MNFP_Inst &mnfp, GRBModel &model);
 
+    template<typename T>
+    void invertVector(Eigen::VectorX<T> &vet, int64_t size)
+    {
+        const int64_t half = size/2;
+        for(int64_t i=0; i < half; ++i)
+        {
+            std::swap(vet[i], vet[size-1-i]);
+        }
+    }
+
     class MySubProbFlow : public DW_DecompNS::SubProb
     {
     public:
 
         Eigen::VectorX<std::unique_ptr<GRBModel>> vetSubProb;
-        const int numSubProb = 2;
+        int numSubProb = 2;
         bool convConstIni = false;
 
         MySubProbFlow(GRBEnv &e, const MNFP::MNFP_Inst &mnfp)
         {
+            numSubProb = mnfp.K;
+
             vetSubProb = Eigen::VectorX<std::unique_ptr<GRBModel>>(numSubProb);
             for(int i=0; i < numSubProb; ++i)
             {
@@ -33,6 +45,7 @@ namespace MnfpDecompNS
             }
         }
 
+        int64_t getNumberOfConvConstr() override;// {return numSubProb;}
 
         ~MySubProbFlow() override {};
         void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
@@ -81,6 +94,7 @@ namespace MnfpDecompNS
                            const std::pair<int, int> &pairSubProb) override;
 
         void restoreGraphModCost(int64_t k);
+        int64_t getNumberOfConvConstr() override;
 
     }; // FIM MySubProb
 }

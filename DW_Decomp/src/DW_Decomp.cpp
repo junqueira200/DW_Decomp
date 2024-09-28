@@ -143,12 +143,13 @@ static void funcGetSubMatrix(const Eigen::MatrixXd &matA,
 void DW_DecompNS::dwDecomp(GRBEnv &env,
                            GRBModel &mestre,
                            double custoVarA,
-                           const std::vector<std::pair<int,int>> &&vetPairSubProb,
+                           const std::vector<std::pair<int, int>> &&vetPairSubProb,
                            SubProb *subProb,
                            void *data,
-                           const int numConstrsConv,
                            const int numSubProb)
 {
+
+    const int64_t numConstrsConv = subProb->getNumberOfConvConstr();
 
     std::cout<<"********************************DW DECOMP********************************\n";
 
@@ -330,6 +331,7 @@ void DW_DecompNS::dwDecomp(GRBEnv &env,
         rmlp.optimize();
 
 
+
         funcUpdateRmlpDuals();
 
         GRBVar *vetVar = rmlp.getVars();
@@ -344,6 +346,10 @@ void DW_DecompNS::dwDecomp(GRBEnv &env,
             std::cout<<vetRmlpLambda[i]<<" ";
 
         std::cout<<"\n\n";
+
+
+        if(itCG == 8)
+            exit(-1);
 
         Eigen::VectorXd cgCooef(numConstrsRmlp+numConstrsConv);
         subProbCustR_neg = false;

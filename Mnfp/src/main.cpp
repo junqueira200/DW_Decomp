@@ -76,14 +76,8 @@ int main()
     mestre.write("mestre.lp");
     auto vetPairSubProb = std::vector<std::pair<int,int>>{std::make_pair(0, N*N), std::make_pair(N*N, N*N)};
 
-    DW_DecompNS::dwDecomp(env,
-                          mestre,
-                          9999.0,
-                          std::forward<std::vector<std::pair<int,int>>>(vetPairSubProb),
-                          (DW_DecompNS::SubProb*)&subProbPath,
-                          (void*)&mnfp,
-                          2,
-                          2);
+    DW_DecompNS::dwDecomp(env, mestre, 9999.0, std::forward<std::vector<std::pair<int, int>>>(vetPairSubProb),
+                          (DW_DecompNS::SubProb *) &subProbPath, (void *) &mnfp, 2);
 
 
     return 0;

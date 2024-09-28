@@ -65,17 +65,14 @@ namespace DW_DecompNS
                                    int indSubProb,
                                    Eigen::VectorXd &vetCooefRestConv,
                                    const std::pair<int, int> &pairSubProb)=0;
+
+        virtual int64_t getNumberOfConvConstr() = 0;
     };
 
 
-    void dwDecomp(GRBEnv &env,
-                  GRBModel &mestre,
-                  double custoVarA,
-                  const std::vector<std::pair<int,int>> &&vetPairSubProb,
-                  SubProb *subProb,
-                  void *data,
-                  const int numConstrsConv,
-                  const int numSubProb);
+    void
+    dwDecomp(GRBEnv &env, GRBModel &mestre, double custoVarA, const std::vector<std::pair<int, int>> &&vetPairSubProb,
+             SubProb *subProb, void *data, const int numSubProb);
 }
 
 

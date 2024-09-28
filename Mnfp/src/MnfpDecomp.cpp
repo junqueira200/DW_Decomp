@@ -249,7 +249,7 @@ int MnfpDecompNS::MySubProbFlow::resolveSubProb(Eigen::VectorXd &subProbCooef,
                 std::cout<<"FIM resolve sub prob.\n";
 
                 delete []varX;
-                return s;
+                return DW_DecompNS::StatusSubProb_Otimo;
             }
         }
         else
@@ -365,10 +365,11 @@ int MnfpDecompNS::MySubProbPath::resolveSubProb(Eigen::VectorXd &subProbCooef,
                                                 const std::pair<int, int> &pairSubProb)
 
 {
+    custoRedNeg = false;
 
     const int k = indSubProb;
-
-    std::cout<<"resolveSubProb: "<<k<<"\n";
+    std::cout<<"********************************\n";
+    std::cout<<"*******RESOLVE SUB_PROB "<<k<<"*******\n\n";
 
     restoreGraphModCost(k);
     GraphNS::Graph<double> &graphM = vetGraphModCost[k];
@@ -391,20 +392,71 @@ int MnfpDecompNS::MySubProbPath::resolveSubProb(Eigen::VectorXd &subProbCooef,
             int64_t idK_I = matCovConst(k, i);
             graphM.addArc(idS, i, -constr[matCovConst(k, i)].get(GRB_DoubleAttr_Pi));
         }
+
+        else if(matVerticeType(k, i) == TypeSink)
+        {
+            int64_t idK_I = matCovConst(k, i);
+            graphM.addArc(i, idT, -constr[matCovConst(k, i)].get(GRB_DoubleAttr_Pi));
+        }
+
     }
 
     std::cout<<GraphNS::printGraph(graphM);
 
     Eigen::VectorXd vetDist(graphM.numVertices);
+    Eigen::VectorX<int64_t> vetPath(graphM.numVertices);
     Eigen::VectorX<int64_t> vetPredecessor(graphM.numVertices);
-    int64_t verticeNegCycle;
+    int64_t verticeNegCycle = -1;
+    int64_t prox = 0;
 
     GraphNS::bellmanFord(graphM, idS, vetDist, vetPredecessor, verticeNegCycle);
 
-    exit(-1);
+    if(vetDist[idT] > -DW_DecompNS::TolObjSubProb)
+        return DW_DecompNS::StatusSubProb_Outro;
+
+    custoRedNeg = true;
+
+    if(verticeNegCycle == -1)
+    {
+        vetPath[prox] = idT;
+        prox += 1;
+
+        while(vetPredecessor[vetPath[prox-1]] != -1)
+        {
+            vetPath[prox] = vetPredecessor[vetPath[prox-1]];
+            prox += 1;
+        }
+
+        std::cout<<vetPath.segment(0, prox).transpose()<<"\n";
+        invertVector(vetPath, prox);
+        std::cout<<vetPath.segment(0, prox).transpose()<<"\n";
+    }
+    else
+    {
+        // TODO recovey path when exite is a negative cycle
+
+        std::cout<<"neg cycle!";
+        exit(-1);
+    }
+
+    // Write the path in X; path contains vertices s and t, so those aren't written in X
+    for(int64_t i=1; i < (prox-2); ++i)
+    {
+        vetX[getId(vetPath[i], vetPath[i+1], (int64_t)mnfp.N)] = 1;
+        //std::cout<<"\t"<<vetPath[i]<<", "<<vetPath[i+1]<<"\n";
+    }
+
+
+    vetCooefRestConv[matCovConst(k, vetPath[1])-iniConv] = 1;
+    vetCooefRestConv[matCovConst(k, vetPath[prox-2])-iniConv] = 1;
+
+    std::cout<<"X: "<<vetX.transpose()<<"\n\n";
+    std::cout<<"vetCooefRestConv: "<<vetCooefRestConv.transpose()<<"\n";
+
+    //exit(-1);
 
     delete constr;
-    return 0;
+    return DW_DecompNS::StatusSubProb_Otimo;
 
 }
 
@@ -491,3 +543,21 @@ MnfpDecompNS::MySubProbPath::MySubProbPath(GRBEnv &e, const MNFP::MNFP_Inst &mnf
 
     }
 }
+
+int64_t MnfpDecompNS::MySubProbPath::getNumberOfConvConstr()
+{
+    int64_t num = 0;
+
+    for(int64_t k = 0; k < mnfp.K; ++k)
+    {
+        for(int64_t i = 0; i < mnfp.N; ++i)
+        {
+            if(mnfp.matVertexDem(k, i) != 0)
+                num += 1;
+        }
+    }
+
+    return num;
+}
+
+int64_t MnfpDecompNS::MySubProbFlow::getNumberOfConvConstr(){return numSubProb;}
