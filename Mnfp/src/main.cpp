@@ -4,45 +4,27 @@
 #include "DW_Decomp.h"
 #include "Grafo.h"
 #include "MnfpDecomp.h"
-
+#include "Aux.h"
 
 
 int main()
 {
 
-    /*
 
-    GraphNS::Graph<int> graph(4);
+    SparseMatNS::SparseMatLin<double> sparseMat(3, 3);
+    sparseMat(0, 1) = 2.0;
+    sparseMat(0, 0) = 1.0;
 
-    graph.addArc(0, 1, 0);
-    graph.addArc(1, 2, -4);
-    graph.addArc(2, 3, -1);
-    graph.addArc(3, 1, -1);
+    std::cout<<sparseMat<<"\n";
 
+    sparseMat.addCollums(1);
 
-    std::cout<<GraphNS::printGraph(graph);
+    std::cout<<sparseMat<<"\n";
 
-    if(graph.arcExist(0, 1))
-        std::cout<<"(0, 1) exist!\n";
-
-    float val = graph.getArc(0, 1);
-    std::cout<<"val: "<<val<<"\n\n";
-
-    std::cout << "arcExist(0,0): " << graph.arcExist(0, 1) << "\n";
-
-
-    Eigen::VectorXd vetDist(graph.numVertices);
-    Eigen::VectorX<int64_t> vetPredecessor(graph.numVertices);
-    int64_t verticeNegCycle;
-
-    GraphNS::bellmanFord(graph, 0, vetDist, vetPredecessor, verticeNegCycle);
-
-
+    std::cout<<"sizeof: "<<sizeof(DW_DecompNS::DW_DecompNode)<<"\n";
+    std::cout<<"alignof: "<< alignof(DW_DecompNS::DW_DecompNode)<<"\n";
 
     return 0;
-    */
-
-
 
 
     MNFP::MNFP_Inst mnfp = MNFP::criaToyInstance();

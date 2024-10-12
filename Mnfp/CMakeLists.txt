@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project("Mnfp")
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -12,6 +12,9 @@ include_directories(${GUROBI_INCLUDE_DIRS})
 include_directories(include)
 link_directories($ENV{GUROBI_HOME}/lib)
 
+
+add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
+message("set vector_sanity_check=1")
 
 #add_library(DW_Decomp SHARED)
 #find_package(DW_Decomp CONFIG REQUIRED)

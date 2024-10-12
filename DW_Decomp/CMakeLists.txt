@@ -11,8 +11,11 @@ else()
     message(STATUS "This project is a top-level one")
 endif()
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
+message("set vector_sanity_check=1")
+
 
 message(CMAKE_MODULE_PATH="${CMAKE_SOURCE_DIR}")
 
@@ -73,7 +76,10 @@ file(GENERATE
 # without it public headers won't get installed
 set(public_headers
     include/DW_Decomp.h
-    include/DAux.h
+    include/Aux.h
+    include/SparseMat.h
+    include/safe_matrix.h
+    include/safe_vector.h
 )
 
 # not for MSVC

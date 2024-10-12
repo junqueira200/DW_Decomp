@@ -206,7 +206,7 @@ int MnfpDecompNS::MySubProbFlow::resolveSubProb(Eigen::VectorXd &subProbCooef,
     std::cout<<"subProbCooef: "<<subProbCooef.segment(0, (pairSubProb.second+1)).transpose()<<"\n\n";
     std::cout<<"vetX.size(): "<<vetX.size()<<"\n";
 
-    DW_DecompNS::StatusSubProb status = DW_DecompNS::StatusSubProb_Otimo;
+    DW_DecompNS::StatusProb status = DW_DecompNS::StatusSubProb_Otimo;
     custoRedNeg = false;
 
     GRBModel &model = (*vetSubProb[k]);
@@ -433,7 +433,7 @@ int MnfpDecompNS::MySubProbPath::resolveSubProb(Eigen::VectorXd &subProbCooef,
     }
     else
     {
-        // TODO recovey path when exite is a negative cycle
+        // TODO recovey path when exite a negative cycle
 
         std::cout<<"neg cycle!";
         exit(-1);

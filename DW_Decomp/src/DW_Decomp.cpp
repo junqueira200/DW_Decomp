@@ -439,3 +439,15 @@ void DW_DecompNS::dwDecomp(GRBEnv &env,
 
 } // FIM DW_Decomp::dwDecomp
 
+
+DW_DecompNS::DW_DecompNode::DW_DecompNode(GRBEnv &env,
+                                          GRBModel &mestre,
+                                          double custoVarA_,
+                                          const std::vector<std::pair<int, int>> &&vetPairSubProb_,
+                                          SubProb *subProb_,
+                                          void *data_,
+                                          const int numSubProb_)
+{
+
+
+}
