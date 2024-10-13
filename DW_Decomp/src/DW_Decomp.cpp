@@ -34,17 +34,43 @@ Eigen::MatrixXd DW_DecompNS::getMatA_Model(GRBModel &mestre)
 
 }
 
+void DW_DecompNS::getSparseMatLinModel(GRBModel &model, SparseNS::SparseMatLin<double> &matA)
+{
+
+    const int numVar   = model.get(GRB_IntAttr_NumVars);
+    const int numConst = model.get(GRB_IntAttr_NumConstrs);
+
+    matA = SparseNS::SparseMatLin<double>(numConst, numVar);
+    model.update();
+
+    GRBVar *vetVar = model.getVars();
+    GRBConstr *vetConstr = model.getConstrs();
+
+
+    for(int i=0; i < numVar; ++i)
+    {
+
+        for(int c=0; c < numConst; ++c)
+        {
+            double coeff = model.getCoeff(vetConstr[c], vetVar[i]);
+
+            if(coeff != 0.0)
+                matA(c, i) = coeff;
+        }
+    }
+
+
+    delete []vetVar;
+    delete []vetConstr;
+
+}
+
 Eigen::VectorXd DW_DecompNS::getVetC_Model(GRBModel &mestre)
 {
 
     const int numVar = mestre.get(GRB_IntAttr_NumVars);
     Eigen::VectorXd vetC(numVar);
-
-    GRBQuadExpr obj = mestre.getObjective();
-    //std::cout<<"\n\nObj: "<<obj<<"\n";
-
     GRBVar *vetVar = mestre.getVars();
-
 
     for(int i=0; i < numVar; ++i)
         vetC[i] = vetVar[i].get(GRB_DoubleAttr_Obj);
@@ -55,6 +81,19 @@ Eigen::VectorXd DW_DecompNS::getVetC_Model(GRBModel &mestre)
 
     return std::move(vetC);
 
+}
+
+void DW_DecompNS::getVetC_Model(GRBModel &model, VectorD &vetC)
+{
+    GRBVar *vetVar = model.getVars();
+    const int numVar = model.get(GRB_IntAttr_NumVars);
+    if(vetC.size() != numVar)
+        vetC = VectorD(numVar);
+
+    for(int i=0; i < numVar; ++i)
+        vetC[i] = vetVar[i].get(GRB_DoubleAttr_Obj);
+
+    delete []vetVar;
 }
 
 Eigen::VectorX<char> DW_DecompNS::getConstSenseModel(GRBModel &model)
@@ -100,10 +139,8 @@ Eigen::VectorXd DW_DecompNS::getRhsModel(GRBModel &model)
 void DW_DecompNS::recuperaX(GRBVar* var, Eigen::VectorXd &vetX, int numVar)
 {
 
-
-        for(int i = 0; i < numVar; ++i)
-            vetX[i] = var[i].get(GRB_DoubleAttr_X);
-
+    for(int i = 0; i < numVar; ++i)
+        vetX[i] = var[i].get(GRB_DoubleAttr_X);
 
 }
 
@@ -440,14 +477,22 @@ void DW_DecompNS::dwDecomp(GRBEnv &env,
 } // FIM DW_Decomp::dwDecomp
 
 
-DW_DecompNS::DW_DecompNode::DW_DecompNode(GRBEnv &env,
-                                          GRBModel &mestre,
-                                          double custoVarA_,
-                                          const std::vector<std::pair<int, int>> &&vetPairSubProb_,
-                                          SubProb *subProb_,
-                                          void *data_,
-                                          const int numSubProb_)
+DW_DecompNS::DW_DecompNode::DW_DecompNode(GRBEnv &env_,
+                                          GRBModel &master_,
+                                          double costA_Var_,
+                                          const Vector<std::pair<int, int>> &&vetPairSubProb_,
+                                          SubProb *ptrSubProb_,
+                                          const int numSubProb_): ptrEnv(&env_),
+                                                                  ptrMaster(&master_),
+                                                                  costA_Var(costA_Var_),
+                                                                  vetPairSubProb(vetPairSubProb_),
+                                                                  ptrSubProb(ptrSubProb_),
+                                                                  numSubProb(numSubProb_)
 {
+    numConstrsConv = ptrSubProb->getNumberOfConvConstr();
+
+    getSparseMatLinModel(*ptrMaster, matA);
+    getVetC_Model(*ptrMaster, vetC);
 
 
 }

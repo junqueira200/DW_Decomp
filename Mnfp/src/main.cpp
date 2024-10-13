@@ -5,24 +5,40 @@
 #include "Grafo.h"
 #include "MnfpDecomp.h"
 #include "Aux.h"
+#include "SparseOp.h"
 
 
 int main()
 {
 
 
-    SparseMatNS::SparseMatLin<double> sparseMat(3, 3);
-    sparseMat(0, 1) = 2.0;
-    sparseMat(0, 0) = 1.0;
+    SparseNS::SparseMatLin<double> sparseMat(3, 3);
+    int val = 1;
+
+    for(int i=0; i < 3; ++i)
+    {
+        for(int j=0; j < 3; ++j)
+        {
+            sparseMat(i, j) = val;
+            val += 1;
+        }
+    }
+
 
     std::cout<<sparseMat<<"\n";
 
-    sparseMat.addCollums(1);
+    SparseNS::SparseMatLin<double> sparseMat2(sparseMat);
+    std::cout<<sparseMat2<<"\n";
 
-    std::cout<<sparseMat<<"\n";
 
     std::cout<<"sizeof: "<<sizeof(DW_DecompNS::DW_DecompNode)<<"\n";
     std::cout<<"alignof: "<< alignof(DW_DecompNS::DW_DecompNode)<<"\n";
+
+    Vector<double> vetCol(3, 1.0);
+    Vector<double> vetColResult(3, 0.0);
+    SparseOpNS::multSparseMatCol(sparseMat, vetCol, vetColResult);
+
+    std::cout<<"result: "<<vetColResult<<"\n";
 
     return 0;
 
