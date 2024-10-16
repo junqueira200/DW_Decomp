@@ -1,5 +1,8 @@
 #include "DW_Decomp.h"
 
+#include <memory>
+#include <utility>
+
 Eigen::MatrixXd DW_DecompNS::getMatA_Model(GRBModel &mestre)
 {
 
@@ -37,6 +40,8 @@ Eigen::MatrixXd DW_DecompNS::getMatA_Model(GRBModel &mestre)
 void DW_DecompNS::getSparseMatLinModel(GRBModel &model, SparseNS::SparseMatLin<double> &matA)
 {
 
+    std::cout<<"ini getSparseMatLinModel\n";
+
     const int numVar   = model.get(GRB_IntAttr_NumVars);
     const int numConst = model.get(GRB_IntAttr_NumConstrs);
 
@@ -62,6 +67,8 @@ void DW_DecompNS::getSparseMatLinModel(GRBModel &model, SparseNS::SparseMatLin<d
 
     delete []vetVar;
     delete []vetConstr;
+
+    std::cout<<"fim getSparseMatLinModel\n";
 
 }
 
@@ -160,6 +167,34 @@ static void funcGetSubMatrix(const Eigen::MatrixXd &matA,
             matSaida(i-iniLin, j-iniCol) = matA(i, j);
         }
     }
+};
+
+
+static void funcGetSubMatrix(const SparseNS::SparseMatLin<double> &matA,
+                             SparseNS::SparseMatLin<double> &matSaida,
+                             size_t numLin,
+                             size_t numCol,
+                             size_t iniCol,
+                             size_t iniLin=0)
+{
+    std::cout<<"\tini funcGetSubMatrix\n";
+    std::cout<<matA.numLin<<" x "<<matA.numCol<<"\n";
+
+    for(size_t i=iniLin; (i-iniLin) < numLin; ++i)
+    {
+        for(size_t j = iniCol; (j-iniCol) < numCol; ++j)
+        {
+            //std::cout<<"\t\tA("<<i<<", "<<j<<")\n";
+            double val = matA.getVal(i, j);
+            //std::cout<<"\t\t\tget\n";
+            if(val != 0.0)
+            {   //std::cout<<"\t\t\t\tacess: ("<<i-iniLin<<", "<<j-iniCol<<")\n";
+                matSaida(i - iniLin, j - iniCol) = val;
+            }
+        }
+    }
+
+    std::cout<<matSaida<<"\n";
 };
 
 
@@ -480,19 +515,96 @@ void DW_DecompNS::dwDecomp(GRBEnv &env,
 DW_DecompNS::DW_DecompNode::DW_DecompNode(GRBEnv &env_,
                                           GRBModel &master_,
                                           double costA_Var_,
-                                          const Vector<std::pair<int, int>> &&vetPairSubProb_,
+                                          Vector<std::pair<int, int>> vetPairSubProb_,
                                           SubProb *ptrSubProb_,
                                           const int numSubProb_): ptrEnv(&env_),
                                                                   ptrMaster(&master_),
                                                                   costA_Var(costA_Var_),
-                                                                  vetPairSubProb(vetPairSubProb_),
+                                                                  vetPairSubProb(std::move(vetPairSubProb_)),
                                                                   ptrSubProb(ptrSubProb_),
                                                                   numSubProb(numSubProb_)
 {
     numConstrsConv = ptrSubProb->getNumberOfConvConstr();
-
     getSparseMatLinModel(*ptrMaster, matA);
     getVetC_Model(*ptrMaster, vetC);
+    const int numConstrsMestre          = ptrMaster->get(GRB_IntAttr_NumConstrs);
+    int numConstrsRmlp                  = numConstrsMestre;// + int(vetSubProb.size());
+    const int numVarMaster              = ptrMaster->get(GRB_IntAttr_NumVars);
+
+    int temp = 0;
+    for(const auto &it:vetPairSubProb)
+    {
+        if(it.second > temp)
+            temp = it.second;
+    }
+
+    const int maxNumVarSubProb          = temp;
 
 
+    vetSubMatA = Vector<SparseNS::SparseMatLin<double>>(numSubProb);
+    for(int i=0; i < numSubProb; ++i)
+    {   std::cout<<"ini for it: "<<i<<"\n";
+        vetSubMatA[i] = SparseNS::SparseMatLin<double>(numConstrsMestre, vetPairSubProb.at(i).second);
+        std::cout<<"antes funcGetSubMatrix\n";
+
+        funcGetSubMatrix(matA, vetSubMatA[i], numConstrsMestre, vetPairSubProb.at(i).second,
+                         vetPairSubProb.at(i).first, 0);
+    }
+
+    uRmlp = std::make_unique<GRBModel>(env_);
+    GRBLinExpr objRmlp;
+    vetVarArtifRmlp = uRmlp->addVars(numConstrsMestre);
+    vetLinExprRmlp = Vector<GRBLinExpr>(numConstrsMestre);
+
+    vetRmlpDuals = VectorD(numConstrsMestre, 0.0);
+    vetSubProbCooef = VectorD(maxNumVarSubProb+1, 0.0);
+    vetX_solSubProb = VectorD(maxNumVarSubProb, 0.0);
+    vetConvCooef    = VectorD(numConstrsConv, 0.0);
+
+    GRBLinExpr linExprObjRmlp;
+
+    uRmlp->setObjective(linExprObjRmlp, ptrMaster->get(GRB_IntAttr_ModelSense));
+
+    // Add the artificial variables to vetVarLambda
+    for(int i=0; i < numConstrsMestre+numConstrsConv; ++i)
+        vetVarLambda.emplace_back(std::make_unique<VectorD>(numVarMaster, 0.0));
+
+    // Creates the artificial variables to the RMLP
+    char* vetRmlpConstrsSense      = new char[numConstrsMestre];
+    double* vetRmlpRhs             = new double[numConstrsMestre];
+    std::string* vetStrConstrs     = new std::string[numConstrsMestre];
+
+    auto vetConstr = ptrMaster->getConstrs();
+
+    for(int i=0; i < numConstrsMestre; ++i)
+    {
+        vetVarArtifRmlp[i].set(GRB_DoubleAttr_Obj, costA_Var);
+        vetLinExprRmlp[i] = vetVarArtifRmlp[i];
+
+        //if(i < numConstrsMestre)
+
+        vetRmlpConstrsSense[i] = vetConstr[i].get(GRB_CharAttr_Sense);
+        vetRmlpRhs[i]          = vetConstr[i].get(GRB_DoubleAttr_RHS);
+        vetStrConstrs[i]       = "master_" + std::to_string(i);
+    }
+
+    delete []vetConstr;
+
+    // Adiciona as restricoes do RMLP
+    auto rmlpConstrs = uRmlp->addConstrs(&vetLinExprRmlp[0], vetRmlpConstrsSense, vetRmlpRhs, vetStrConstrs, numConstrsMestre);
+    delete []rmlpConstrs;
+    uRmlp->update();
+
+
+    ptrSubProb->iniConvConstr(*uRmlp, nullptr, costA_Var);
+    //return;
+
+    uRmlp->update();
+    rmlpConstrs = uRmlp->getConstrs();
+
+    std::cout<<"ini del!\n";
+    delete []vetRmlpConstrsSense;
+    delete []vetRmlpRhs;
+    delete []vetStrConstrs;
+    std::cout<<"fim del!\n";
 }

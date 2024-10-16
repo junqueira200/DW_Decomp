@@ -12,37 +12,6 @@ int main()
 {
 
 
-    SparseNS::SparseMatLin<double> sparseMat(3, 3);
-    int val = 1;
-
-    for(int i=0; i < 3; ++i)
-    {
-        for(int j=0; j < 3; ++j)
-        {
-            sparseMat(i, j) = val;
-            val += 1;
-        }
-    }
-
-
-    std::cout<<sparseMat<<"\n";
-
-    SparseNS::SparseMatLin<double> sparseMat2(sparseMat);
-    std::cout<<sparseMat2<<"\n";
-
-
-    std::cout<<"sizeof: "<<sizeof(DW_DecompNS::DW_DecompNode)<<"\n";
-    std::cout<<"alignof: "<< alignof(DW_DecompNS::DW_DecompNode)<<"\n";
-
-    Vector<double> vetCol(3, 1.0);
-    Vector<double> vetColResult(3, 0.0);
-    SparseOpNS::multSparseMatCol(sparseMat, vetCol, vetColResult);
-
-    std::cout<<"result: "<<vetColResult<<"\n";
-
-    return 0;
-
-
     MNFP::MNFP_Inst mnfp = MNFP::criaToyInstance();
     const int K = mnfp.K;
     const int N = mnfp.N;
@@ -50,8 +19,8 @@ int main()
     GRBEnv env;
     GRBModel mestre(env);
     MnfpDecompNS::MySubProbFlow subProb(env, mnfp);
-    std::cout<<"subProbFlow\n";
-    MnfpDecompNS::MySubProbPath subProbPath(env, mnfp);
+    //std::cout<<"subProbFlow\n";
+    //MnfpDecompNS::MySubProbPath subProbPath(env, mnfp);
 
     //return 0;
 
@@ -74,8 +43,15 @@ int main()
     mestre.write("mestre.lp");
     auto vetPairSubProb = std::vector<std::pair<int,int>>{std::make_pair(0, N*N), std::make_pair(N*N, N*N)};
 
-    DW_DecompNS::dwDecomp(env, mestre, 9999.0, std::forward<std::vector<std::pair<int, int>>>(vetPairSubProb),
-                          (DW_DecompNS::SubProb *) &subProbPath, (void *) &mnfp, 2);
+//    DW_DecompNS::dwDecomp(env, mestre, 9999.0, std::forward<std::vector<std::pair<int, int>>>(vetPairSubProb),(DW_DecompNS::SubProb *) &subProbPath, (void *) &mnfp, 2);
+
+    auto vectorPairSubProb = Vector<std::pair<int,int>>();
+    vectorPairSubProb.push_back(std::make_pair(0, N*N));
+    vectorPairSubProb.push_back(std::make_pair(N*N, N*N));
+
+
+    DW_DecompNS::DW_DecompNode decompNode(env, mestre, 99999.0, std::forward<Vector<std::pair<int, int>>>(vectorPairSubProb),
+                                          (DW_DecompNS::SubProb*) &subProb, 2);
 
 
     return 0;

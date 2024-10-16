@@ -92,7 +92,7 @@ namespace SparseNS
             if(id >= 0)
             {
                 Vector<T>* vetData = vetVetData[i];
-                return (*vetData)[(*vetInd)[id]];
+                return (*vetData)[id];
             }
 
             Vector<T>* vetData = vetVetData[i];
@@ -135,7 +135,7 @@ namespace SparseNS
                     return (*vetData)[id];
                 }
             }
-
+            //std::cout<<"ret\n";
             return (*vetData)[vetNumElem[i]-1];
         }
 
@@ -148,10 +148,11 @@ namespace SparseNS
 
             Vector<int64_t> *vetInd = vetVetInd[i];
             int64_t id = binarySearch(*vetInd, j, vetNumElem[i]);
+            //std::cout<<"\t\t\tvetInd: "<<*vetInd<<"\n";
             if(id >= 0)
             {
                 Vector<T>* vetData = vetVetData[i];
-                return (*vetData)[(*vetInd)[id]];
+                return (*vetData)[id];
             }
 
             return T(0);
@@ -260,7 +261,32 @@ namespace SparseNS
         // TODO
         SparseMatLin<T>& operator=(const SparseMatLin<T> &mat)
         {
-            assertm(1, "NAO IMPLEMENTADO");
+            //std::cout<<"operator =\n";
+            //assertm(1, "NAO IMPLEMENTADO");
+            for(int64_t i=0; i < capLin; ++i)
+            {
+                delete vetVetData[i];
+                delete vetVetInd[i];
+            }
+
+            numLin = mat.numLin;
+            numCol = mat.numCol;
+            capLin = mat.capLin;
+
+            vetVetData = Vector<Vector<T>*>(numLin);
+            vetVetInd  = Vector<Vector<int64_t>*>(numLin);
+            vetNumElem = Vector<int64_t>(mat.vetNumElem);
+
+            for(int64_t i=0; i < numLin; ++i)
+            {
+                vetVetData[i] = new Vector<T>(*mat.vetVetData[i]);
+                vetVetInd[i]  = new Vector<int64_t>(*mat.vetVetInd[i]);
+            }
+
+            //std::cout<<"FIM operator =\n";
+
+            return *this;
+
         }
 
         ~SparseMatLin()
