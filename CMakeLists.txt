@@ -21,6 +21,10 @@ include_directories(Grafo/include)
 add_subdirectory(Mnfp)
 include_directories(Mnfp/include)
 
+
+add_subdirectory(SparseTeste)
+include_directories(SparseTeste/include)
+
 #add_executable(${PROJECT_NAME})
 #target_sources(${PROJECT_NAME}
 #    PRIVATE

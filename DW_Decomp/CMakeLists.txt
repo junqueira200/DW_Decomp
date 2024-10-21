@@ -77,7 +77,8 @@ file(GENERATE
 set(public_headers
     include/DW_Decomp.h
     include/Aux.h
-        include/Sparse.h
+    include/Sparse.h
+    include/SparseOp.h
     include/safe_matrix.h
     include/safe_vector.h
 )
