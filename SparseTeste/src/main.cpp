@@ -60,6 +60,7 @@ int main()
 
     Eigen::SparseVector<double, Eigen::ColMajor> spVet(2);
     Eigen::SparseVector<double, Eigen::RowMajor> spVet2(2);
+    spVet.coeffRef(0) = 1;
     //Eigen::VectorXd spVet2(2);
 
     //spVet.coeffRef(0) = 1.0;
@@ -67,13 +68,16 @@ int main()
     //spVet2 = spMat*spVet;
 
     Eigen::SparseMatrix<double, Eigen::ColMajor> r0(3, 1);
+    Eigen::SparseVector<double, Eigen::ColMajor> r0l(3, 1);
     r0 = (spMat*spVet).pruned();
+    r0l = (spMat*spVet);
 
     std::cout<<spMat*spVet<<"\n";
     std::cout<<spVet2*spMat<<"\n";
 
     //std::cout<<"r0: \n"<<r0<<"\n\n";
     std::cout<<"r0: \n"<<TempSpMatPrint(r0)<<"\n";//<<static_cast<const Eigen::SparseMatrixBase<Eigen::SparseMatrix<double>>&>(r0);
+    std::cout<<"r0l: \n"<<TempSpVetPrint(r0l)<<"\n";
     //std::cout<<spVet<<"\n";
 
 

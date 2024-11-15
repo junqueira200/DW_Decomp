@@ -20,7 +20,7 @@ int main()
     GRBModel mestre(env);
     MnfpDecompNS::MySubProbFlow subProb(env, mnfp);
     //std::cout<<"subProbFlow\n";
-    //MnfpDecompNS::MySubProbPath subProbPath(env, mnfp);
+    MnfpDecompNS::MySubProbPath subProbPath(env, mnfp);
 
     //return 0;
 
@@ -43,16 +43,28 @@ int main()
     mestre.write("mestre.lp");
     auto vetPairSubProb = std::vector<std::pair<int,int>>{std::make_pair(0, N*N), std::make_pair(N*N, N*N)};
 
-//    DW_DecompNS::dwDecomp(env, mestre, 9999.0, std::forward<std::vector<std::pair<int, int>>>(vetPairSubProb),(DW_DecompNS::SubProb *) &subProbPath, (void *) &mnfp, 2);
-
-    auto vectorPairSubProb = Vector<std::pair<int,int>>();
-    vectorPairSubProb.push_back(std::make_pair(0, N*N));
-    vectorPairSubProb.push_back(std::make_pair(N*N, N*N));
+    DW_DecompNS::dwDecomp(env, mestre, 9999.0, std::forward<std::vector<std::pair<int, int>>>(vetPairSubProb),(DW_DecompNS::SubProb *) &subProbPath, (void *) &mnfp, 2);
 
 
-    DW_DecompNS::DW_DecompNode decompNode(env, mestre, 99999.0, std::forward<Vector<std::pair<int, int>>>(vectorPairSubProb),
-                                          (DW_DecompNS::SubProb*) &subProb, 2);
 
+    DW_DecompNS::AuxVectors auxVectors;
+    auxVectors.vetPairSubProb.push_back(std::make_pair(0, N*N));
+    auxVectors.vetPairSubProb.push_back(std::make_pair(N*N, N*N));
+
+    DW_DecompNS::Info info;
+
+    DW_DecompNS::DW_DecompNode decompNode(env,
+                                          mestre,
+                                          99999.0,
+                                          (DW_DecompNS::SubProb*) &subProb,
+                                          2,
+                                          auxVectors,
+                                          info);
+
+
+    decompNode.columnGeneration(auxVectors, info);
+
+    std::cout<<sizeof(decompNode)<<"\n";
 
     return 0;
 } // FIM main

@@ -39,13 +39,17 @@ Eigen::MatrixXd DW_DecompNS::getMatA_Model(GRBModel &mestre)
 
 }
 
-void DW_DecompNS::getSparseMatColModel(GRBModel &model, SparseMatColD &matA)
+void DW_DecompNS::getSparseMatModel(GRBModel &model, Eigen::SparseMatrix<double, Eigen::RowMajor> &matA)
 {
+std::cout<<"getSparseMatModel ini\n\n";
 
     const int numVar   = model.get(GRB_IntAttr_NumVars);
     const int numConst = model.get(GRB_IntAttr_NumConstrs);
 
-    matA = SparseMatColD(numConst, numVar);
+    //matA = SparseMatColD(numConst, numVar);
+    matA.resize(numConst, numVar);
+    matA.setZero();
+
     //std::cout<<"matA.vetVetInd[0].size("<<matA.vetVetInd[0]->size()<<")\n";
     model.update();
 
@@ -61,7 +65,7 @@ void DW_DecompNS::getSparseMatColModel(GRBModel &model, SparseMatColD &matA)
 
             if(coeff != 0.0)
             {   std::cout<<"("<<c<<","<<i<<")\n";
-                matA(c, i) = coeff;
+                matA.coeffRef(c, i) = coeff;
             }
         }
     }
@@ -71,6 +75,7 @@ void DW_DecompNS::getSparseMatColModel(GRBModel &model, SparseMatColD &matA)
     delete []vetConstr;
 
 
+std::cout<<"getSparseMatModel fim\n\n";
 
 }
 
@@ -92,20 +97,26 @@ Eigen::VectorXd DW_DecompNS::getVetC_Model(GRBModel &mestre)
 
 }
 
-void DW_DecompNS::getVetC_Model(GRBModel &model, SparseVectorD &vetC)
+void DW_DecompNS::getVetC_Model(GRBModel &model, Eigen::RowVectorXd &vetC)
 {
+    model.update();
+
     GRBVar *vetVar = model.getVars();
     const int numVar = model.get(GRB_IntAttr_NumVars);
-    if(vetC.n != numVar)
-        vetC = SparseVectorD(numVar);
+
+    vetC = Eigen::RowVectorXd(numVar);
+    vetC.setZero();
 
     for(int i=0; i < numVar; ++i)
     {
         double val = vetVar[i].get(GRB_DoubleAttr_Obj);
         if(val != 0.0)
-            vetC(i) = val;
+        {
+            std::cout<<i<<"("<<val<<"); ";
+            vetC.coeffRef(0, i) = val;
+        }
     }
-
+    //std::cout<<"\n"<<vetC<<"\n\n";
     delete []vetVar;
 }
 
@@ -176,30 +187,32 @@ static void funcGetSubMatrix(const Eigen::MatrixXd &matA,
 };
 
 
-static void funcGetSubMatrix(const SparseMatColD &matA,
-                             SparseMatColD &matSaida,
+static void funcGetSubMatrix(const Eigen::SparseMatrix<double, Eigen::RowMajor> &matA,
+                             Eigen::SparseMatrix<double, Eigen::RowMajor> &matSaida,
                              int64_t numLin,
                              int64_t numCol,
                              int64_t iniCol,
                              int64_t iniLin=0)
 {
-    matSaida = SparseMatColD(numLin, numCol);
+    std::cout<<"funcGetSubMatrix\n";
 
+    //matSaida = SparseMatColD(numLin, numCol);
+    matSaida.resize(numLin, numCol);
     for(int64_t i=iniLin; (i-iniLin) < numLin; ++i)
     {
         for(int64_t j = iniCol; (j-iniCol) < numCol; ++j)
         {
             //std::cout<<"\t\tA("<<i<<", "<<j<<")\n";
-            double val = matA.getVal(i, j);
+            double val = matA.coeff(i, j);
             //std::cout<<"\t\t\tget\n";
             if(val != 0.0)
             {   //std::cout<<"\t\t\t\tacess: ("<<i-iniLin<<", "<<j-iniCol<<")\n";
-                matSaida(i - iniLin, j - iniCol) = val;
+                matSaida.coeffRef(i-iniLin, j-iniCol) = val;
             }
         }
     }
 
-    std::cout<<matSaida<<"\n";
+    std::cout<<TempSpMatPrint(matSaida)<<"\n";
 };
 
 
@@ -440,7 +453,8 @@ void DW_DecompNS::dwDecomp(GRBEnv &env,
 
             vetX_solSubProb.setZero();
             vetConvCooef.setZero();
-            subProb->resolveSubProb(subProbCooef,
+/*            subProb->resolveSubProb(vetC,
+                                    vetRmlpDuals,
                                     rmlp,
                                     vetX_solSubProb,
                                     itCG,
@@ -449,7 +463,7 @@ void DW_DecompNS::dwDecomp(GRBEnv &env,
                                     numConstrsMestre,
                                     k,
                                     vetConvCooef,
-                                    vetPairSubProb[k]);
+                                    vetPairSubProb[k]);*/
 
 
             subProbCustR_neg = subProbCustR_neg || subProbK_CustoR_neg;
@@ -518,80 +532,110 @@ void DW_DecompNS::dwDecomp(GRBEnv &env,
 
 
 DW_DecompNS::DW_DecompNode::DW_DecompNode(GRBEnv &env_,
-                                          GRBModel &master_,
+                                          GRBModel &master,
                                           double costA_Var_,
-                                          Vector<std::pair<int, int>> vetPairSubProb_,
                                           SubProb *ptrSubProb_,
-                                          const int numSubProb_): ptrEnv(&env_),
-                                                                  ptrMaster(&master_),
-                                                                  costA_Var(costA_Var_),
-                                                                  vetPairSubProb(std::move(vetPairSubProb_)),
-                                                                  ptrSubProb(ptrSubProb_),
-                                                                  numSubProb(numSubProb_)
+                                          const int numSubProb_,
+                                          AuxVectors &auxVect,
+                                          Info &info):
+                                                                         ptrSubProb(ptrSubProb_)
 {
-    numConstrsConv = ptrSubProb->getNumberOfConvConstr();
-    getSparseMatColModel(*ptrMaster, matA);
 
-std::cout<<matA<<"\n";
+std::cout<<"ini DW_DecompNode\n";
 
-    getVetC_Model(*ptrMaster, vetC);
+    info.costA_Var  = costA_Var_;
+    info.numSubProb = numSubProb_;
+std::cout<<"antes\n";
+    info.numConstrsConv = ptrSubProb->getNumberOfConvConstr();
+std::cout<<"depois\n";
 
-std::cout<<"vetC: "    <<vetC<<"\n";
+    info.numConstrsMaster = master.get(GRB_IntAttr_NumConstrs);
+    info.numVarMaster     = master.get(GRB_IntAttr_NumVars);
+
+std::cout<<"info set\n";
+
+    getSparseMatModel(master, matA);
+
+//std::cout<<TempSpMatPrint(matA)<<"\n";
+
+    getVetC_Model(master, auxVect.vetRowC);
+
+std::cout << "vetC: "<<auxVect.vetRowC<< "\n";
 
 
-    const int numConstrsMestre          = ptrMaster->get(GRB_IntAttr_NumConstrs);
-    int numConstrsRmlp                  = numConstrsMestre;// + int(vetSubProb.size());
-    const int numVarMaster              = ptrMaster->get(GRB_IntAttr_NumVars);
+    int numConstrsRmlp    = info.numConstrsMaster + ptrSubProb->getNumConvConstr();// + int(vetSubProb.size());
+    info.numVarRmlpPi     = numConstrsRmlp;
+
+std::cout<<"numVarRmlpPi: "<<info.numVarRmlpPi<<"\n";
+std::cout<<"numConstrsMaster: "<<info.numConstrsMaster<<"\n\n";
+std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n\n";
 
     int temp = 0;
-    for(const auto &it:vetPairSubProb)
+    for(const auto &it:auxVect.vetPairSubProb)
     {
         if(it.second > temp)
             temp = it.second;
     }
 
-    const int maxNumVarSubProb          = temp;
+    const int maxNumVarSubProb = temp;
 
 
-    vetSubMatA = Vector<SparseMatColD>(numSubProb);
-    for(int i=0; i < numSubProb; ++i)
+    vetSubMatA = Vector<Eigen::SparseMatrix<double, Eigen::RowMajor>>(info.numSubProb);
+    for(int i=0; i < info.numSubProb; ++i)
     {   std::cout<<"ini for it: "<<i<<"\n";
         //vetSubMatA[i] = SparseMatColD(numConstrsMestre, vetPairSubProb.at(i).second);
         //std::cout<<"antes funcGetSubMatrix\n";
 
-        funcGetSubMatrix(matA, vetSubMatA[i], numConstrsMestre, vetPairSubProb.at(i).second,
-                         vetPairSubProb.at(i).first, 0);
+        funcGetSubMatrix(matA, vetSubMatA[i], info.numConstrsMaster, auxVect.vetPairSubProb.at(i).second,
+                         auxVect.vetPairSubProb.at(i).first, 0);
     }
 
 
     uRmlp = std::make_unique<GRBModel>(env_);
     GRBLinExpr objRmlp;
-    vetVarArtifRmlp = uRmlp->addVars(numConstrsMestre);
-    vetLinExprRmlp = Vector<GRBLinExpr>(numConstrsMestre);
+    vetVarArtifRmlp = uRmlp->addVars(info.numConstrsMaster);
+    vetLinExprRmlp = Vector<GRBLinExpr>(info.numConstrsMaster);
 
-    vetRmlpPi       = SparseVectorD(numConstrsMestre);
-    vetSubProbCooef = SparseVectorD(maxNumVarSubProb+1);
-    vetX_solSubProb = SparseVectorD(maxNumVarSubProb);
-    vetConvCooef    = SparseVectorD(numConstrsConv);
+    auxVect.vetRowRmlpPi.resize(1, info.numVarRmlpPi);
+    auxVect.vetRowRmlpPi.setZero();
+
+    auxVect.vetColSubProbCooef.resize(maxNumVarSubProb+1, 1);
+    auxVect.vetColSubProbCooef.setZero();
+
+
+
+    //vetColX_solSubProb = SparseVectorD(maxNumVarSubProb);
+    auxVect.vetColX_solSubProb.resize(maxNumVarSubProb, 1);
+    auxVect.vetColX_solSubProb.setZero();
+
+    //vetRowConvCooef    = SparseVectorD(numConstrsConv);
+    auxVect.vetColConvCooef.resize(info.numConstrsConv, 1);
+    auxVect.vetColConvCooef.setZero();
+
+    auxVect.vetColCooef.resize(numConstrsRmlp, 1);
+    auxVect.vetColCooef.setZero();
 
     GRBLinExpr linExprObjRmlp;
 
-    uRmlp->setObjective(linExprObjRmlp, ptrMaster->get(GRB_IntAttr_ModelSense));
+    uRmlp->setObjective(linExprObjRmlp, master.get(GRB_IntAttr_ModelSense));
 
     // Add the artificial variables to vetVarLambda
-    for(int i=0; i < numConstrsMestre+numConstrsConv; ++i)
-        vetVarLambda.emplace_back(std::make_unique<SparseVectorD>(numVarMaster));
+    for(int i=0; i < info.numConstrsMaster + info.numConstrsConv; ++i)
+        vetVarLambdaCol.emplace_back(std::make_unique<Eigen::VectorXd>(info.numVarMaster));
+
+    for(int i=0; i < info.numConstrsMaster + info.numConstrsConv; ++i)
+        vetVarLambdaCol[i]->setZero();
 
     // Creates the artificial variables to the RMLP
-    char* vetRmlpConstrsSense      = new char[numConstrsMestre];
-    double* vetRmlpRhs             = new double[numConstrsMestre];
-    std::string* vetStrConstrs     = new std::string[numConstrsMestre];
+    char* vetRmlpConstrsSense      = new char[info.numConstrsMaster];
+    double* vetRmlpRhs             = new double[info.numConstrsMaster];
+    std::string* vetStrConstrs     = new std::string[info.numConstrsMaster];
 
-    auto vetConstr = ptrMaster->getConstrs();
+    auto vetConstr = master.getConstrs();
 
-    for(int i=0; i < numConstrsMestre; ++i)
+    for(int i=0; i < info.numConstrsMaster; ++i)
     {
-        vetVarArtifRmlp[i].set(GRB_DoubleAttr_Obj, costA_Var);
+        vetVarArtifRmlp[i].set(GRB_DoubleAttr_Obj, info.costA_Var);
         vetLinExprRmlp[i] = vetVarArtifRmlp[i];
 
         //if(i < numConstrsMestre)
@@ -603,16 +647,23 @@ std::cout<<"vetC: "    <<vetC<<"\n";
 
     delete []vetConstr;
 
+    ptrSubProb->iniConvConstr(*uRmlp, nullptr, info.costA_Var);
+
     // Adiciona as restricoes do RMLP
-    vetRmlpConstr = uRmlp->addConstrs(&vetLinExprRmlp[0], vetRmlpConstrsSense, vetRmlpRhs, vetStrConstrs, numConstrsMestre);
+    vetRmlpConstr = uRmlp->addConstrs(&vetLinExprRmlp[0],
+                                      vetRmlpConstrsSense,
+                                      vetRmlpRhs,
+                                      vetStrConstrs,
+                                      info.numConstrsMaster);
     delete []vetRmlpConstr;
     uRmlp->update();
 
 
-    ptrSubProb->iniConvConstr(*uRmlp, nullptr, costA_Var);
+    //ptrSubProb->iniConvConstr(*uRmlp, nullptr, info.costA_Var);
     //return;
 
-    uRmlp->update();
+    //uRmlp->update();
+    uRmlp->write("rmlp_"+std::to_string(-1)+".lp");
     vetRmlpConstr = uRmlp->getConstrs();
 
     uRmlp->set(GRB_IntParam_Method, GRB_METHOD_PRIMAL);
@@ -625,33 +676,187 @@ std::cout<<"vetC: "    <<vetC<<"\n";
     std::cout<<"fim del!\n";
 }
 
-DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration()
+DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors &auxVect, const Info &info)
 {
+
+    bool subProbCustR_neg = true;
+    itCG = 0;
+
+    const int iniConv = 0;
+
+    while(subProbCustR_neg)
+    {
+        subProbCustR_neg = false;
+
+        std::cout<<"CG It: "<<itCG<<"\n\n";
+
+        for(int i=0; i < vetVarLambdaCol.size(); ++i)
+        {
+            std::cout << "\t" << i << ": " << vetVarLambdaCol[i]->transpose() << "\n";
+        }
+
+        std::cout<<"\n\n";
+
+
+        uRmlp->update();
+        uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
+        uRmlp->optimize();
+
+        // TODO Remove
+        GRBVar *vetVar        = uRmlp->getVars();
+        double *vetRmlpLambda = uRmlp->get(GRB_DoubleAttr_X, vetVar, uRmlp->get(GRB_IntAttr_NumVars));
+
+        std::cout<<"vetRmlpLambda: ";
+        for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
+            std::cout<<vetRmlpLambda[i]<<" ";
+
+        std::cout<<"\n\n";
+
+
+        updateRmlpPi(auxVect.vetRowRmlpPi, info);
+
+
+//        if(itCG == 3)
+//            throw "NAO EH ERRO";
+
+        // Update and solve the subproblems
+        for(int k=0; k < info.numSubProb; ++k)
+        {
+            bool subProbK_CustoR_neg = false;
+            auxVect.vetColX_solSubProb.setZero();
+            auxVect.vetColConvCooef.setZero();
+
+            //getSubProbCooef(k, auxVect);
+
+            ptrSubProb->resolveSubProb(auxVect.vetRowC,
+                                       auxVect.vetRowRmlpPi,
+                                       *uRmlp,
+                                       auxVect.vetColX_solSubProb,
+                                       itCG,
+                                       subProbK_CustoR_neg,
+                                       nullptr,
+                                       iniConv,
+                                       k,
+                                       auxVect.vetColConvCooef,
+                                       auxVect.vetPairSubProb[k]);
+
+
+            if(itCG == 0)
+                throw "NAO EH ERRO";
+
+            if(!subProbK_CustoR_neg)
+                continue;
+
+            subProbCustR_neg = true;
+
+            // Create a new lambda variable
+            vetVarLambdaCol.push_back(std::make_unique<Eigen::VectorXd>(info.numVarMaster));
+            Eigen::VectorXd &vetSol = *vetVarLambdaCol[vetVarLambdaCol.size()-1];
+            vetSol.setZero();
+
+            // Shift the x solution
+            for(int i = 0; i < auxVect.vetPairSubProb[k].second; ++i)
+                vetSol[auxVect.vetPairSubProb[k].first+i] = auxVect.vetColX_solSubProb[i];
+
+
+            double cgCooefObj = vetSol.dot(auxVect.vetRowC);
+            std::cout<<"cgCooefObj "<<k<<": "<<cgCooefObj<<"\n";
+            std::cout<<vetSol.transpose()<<"\n";
+
+            auxVect.vetColCooef.setZero();
+            std::cout<<"antes A*vetSol\n";
+            auxVect.vetColCooef.segment(0, info.numConstrsMaster) = matA*vetSol;
+            std::cout<<"depois A*vetSol\n";
+
+            addColumn(cgCooefObj, k, auxVect, info);
+        }
+
+
+
+        delete []vetVar;
+        delete []vetRmlpLambda;
+        itCG += 1;
+    }
+
+    std::cout<<"FIM CG!\n";
+    std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
 
     return DW_DecompNS::StatusSubProb_Otimo;
 
 
 }
 
-void DW_DecompNS::DW_DecompNode::funcUpdateRmlpPi()
+void DW_DecompNS::DW_DecompNode::updateRmlpPi(Eigen::RowVectorXd &vetRowRmlpPi, const Info &info)
 {
 
-    vetRmlpPi.resetVector();
+std::cout<<"updateRmlpPi\n";
 
-    for(int i=0; i < uRmlp->get(GRB_IntAttr_NumConstrs); ++i)
+    //vetRowRmlpPi.resetVector();
+
+    vetRowRmlpPi.setZero();
+
+    for(int i=0; i < info.numVarRmlpPi; ++i)
     {
         double val = vetRmlpConstr[i].get(GRB_DoubleAttr_Pi);
-        if(val != 0.0)
-            vetRmlpPi(i) = val;
+        //if(val != 0.0)
+            vetRowRmlpPi.coeffRef(0, i) = val;
     }
+
+std::cout<<"PI: "<<vetRowRmlpPi<<"\n\n";
+
+}
+
+void DW_DecompNS::DW_DecompNode::getSubProbCooef(int k, AuxVectors &auxVect)
+{
+
+    const int iniVarSubProbK = auxVect.vetPairSubProb[k].first;
+    const int numVarSubProbK = auxVect.vetPairSubProb[k].second;
+
+std::cout<<"iniVarSubProbK: "<<iniVarSubProbK<<"\nnumVarSubProbK: "<<numVarSubProbK<<"\n\n";
+std::cout<<"size(auxVect.vetColSubProbCooef)("<<auxVect.vetColSubProbCooef.size()<<"\n\n";
+std::cout<<"size(auxVect.vetRowC)("<<auxVect.vetRowC.size()<<")\n";
+std::cout<<"size(auxVect.vetRowRmlpPi)("<<auxVect.vetRowRmlpPi.size()<<"\n";
+std::cout<<"size(vetSubMatA[k].numLin)("<<vetSubMatA[k].rows()<<")\n";
+std::cout<<"size(vetSubMatA[k].numCol)("<<vetSubMatA[k].cols()<<")\n";
+std::cout<<"vetLin: "<<auxVect.vetRowRmlpPi.segment(0, numVarSubProbK)<<"\n";
+
+auto resul = (auxVect.vetRowRmlpPi.segment(0, numVarSubProbK)*vetSubMatA[k]);
+std::cout<<"resul: \n"<<resul.transpose()<<"\n";
+
+    auxVect.vetColSubProbCooef.segment(0, numVarSubProbK).noalias() =
+            (auxVect.vetRowC.segment(iniVarSubProbK, numVarSubProbK) -
+             (auxVect.vetRowRmlpPi.segment(0, numVarSubProbK)*vetSubMatA[k]));
+
+std::cout<<"vetColSubProbCooef: "<<auxVect.vetColSubProbCooef.segment(0, numVarSubProbK).transpose()<<"\n\n";
 
 
 }
 
-void DW_DecompNS::DW_DecompNode::funcGetSubProbCooef(int k)
+void DW_DecompNS::DW_DecompNode::addColumn(const double cost, int k, AuxVectors &auxVect, const Info &info)
 {
 
-    multLinTimesSparseMatCol(vetRmlpPi, vetSubMatA[k], vetSubProbCooef);
+    GRBColumn grbColumn;
 
+    std::cout<<"\tini addColumn\n";
+    std::cout << "\tvetConvCoorf.size(): " << auxVect.vetColConvCooef.size() << "\n";
+
+    for(int i=0; i < auxVect.vetColConvCooef.size(); ++i)
+        auxVect.vetColCooef[info.numConstrsMaster+i] = auxVect.vetColConvCooef[i];
+
+    std::cout<<"\tFim for\n";
+    std::cout << "\tvetConvCooef: " << auxVect.vetColConvCooef.transpose() << "\n";
+    std::cout<<"\tvetColCooef: "<<auxVect.vetColCooef.transpose()<<"\n";
+
+    grbColumn.addTerms(&auxVect.vetColCooef[0], vetRmlpConstr, int(auxVect.vetColCooef.size()));
+    uRmlp->addVar(0.0, GRB_INFINITY, cost, GRB_CONTINUOUS, grbColumn,
+                "l_"+std::to_string(itCG)+"_"+std::to_string(k));
+
+}
+
+// TODO
+void DW_DecompNS::AuxVectors::updateSizes(DW_DecompNS::DW_DecompNode &e)
+{
+
+    assertm(true, "Nao implementado!");
 
 }

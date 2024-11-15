@@ -25,9 +25,29 @@ public:
 
 
 template<typename T, int option>
+class TempSpVetPrint
+{
+public:
+
+    Eigen::SparseVector<T,option> &m;
+    TempSpVetPrint(Eigen::SparseVector<T,option> &m_):m(m_)
+    {}
+
+};
+
+
+template<typename T, int option>
 std::ostream & operator << (std::ostream & s, const TempSpMatPrint<T,option> &temp)
 {
     s<<static_cast<const Eigen::SparseMatrixBase<Eigen::SparseMatrix<T,option>>&>(temp.m);
+    return s;
+}
+
+
+template<typename T, int option>
+std::ostream & operator << (std::ostream & s, const TempSpVetPrint<T,option> &temp)
+{
+    s<<static_cast<const Eigen::SparseMatrixBase<Eigen::SparseVector<T,option>>&>(temp.m);
     return s;
 }
 

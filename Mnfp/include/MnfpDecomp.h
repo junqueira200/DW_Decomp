@@ -33,6 +33,8 @@ namespace MnfpDecompNS
         int numSubProb = 2;
         bool convConstIni = false;
 
+        int getNumConvConstr() override {return numSubProb;}
+
         MySubProbFlow(GRBEnv &e, const MNFP::MNFP_Inst &mnfp)
         {
             numSubProb = mnfp.K;
@@ -78,6 +80,7 @@ namespace MnfpDecompNS
         Eigen::MatrixX<VerticeType> matVerticeType;         // Armazenam para cada (k, vertice) o seu tipo
         int64_t idS=-1, idT=-1;
 
+        int getNumConvConstr() override {return numSubProb;}
 
         MySubProbPath(GRBEnv &e, const MNFP::MNFP_Inst &mnfp_);
         ~MySubProbPath() override {};

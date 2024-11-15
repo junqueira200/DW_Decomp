@@ -202,9 +202,11 @@ int MnfpDecompNS::MySubProbFlow::resolveSubProb(Eigen::VectorXd &subProbCooef,
     GRBConstr constr = mestre.getConstr(iniConv+k);
     subProbCooef[pairSubProb.second] = -constr.get(GRB_DoubleAttr_Pi);
 
-    std::cout << "Funcao resolveSubProb\n\n\n";
-    std::cout<<"subProbCooef: "<<subProbCooef.segment(0, (pairSubProb.second+1)).transpose()<<"\n\n";
-    std::cout<<"vetX.size(): "<<vetX.size()<<"\n";
+std::cout << "Funcao resolveSubProb\n\n\n";
+std::cout<<"subProbCooef: "<<subProbCooef.segment(0, (pairSubProb.second+1)).transpose()<<"\n\n";
+std::cout<<"vetX.size(): "<<vetX.size()<<"\n";
+    //throw "ERROR";
+
 
     DW_DecompNS::StatusProb status = DW_DecompNS::StatusSubProb_Otimo;
     custoRedNeg = false;

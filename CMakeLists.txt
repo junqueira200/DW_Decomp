@@ -18,12 +18,15 @@ include_directories(DW_Decomp/include)
 add_subdirectory(Grafo)
 include_directories(Grafo/include)
 
-add_subdirectory(Mnfp)
-include_directories(Mnfp/include)
+#add_subdirectory(Mnfp)
+#include_directories(Mnfp/include)
 
 
 add_subdirectory(SparseTeste)
 include_directories(SparseTeste/include)
+
+add_subdirectory(VRPTW)
+include_directories(VRPTW/include)
 
 #add_executable(${PROJECT_NAME})
 #target_sources(${PROJECT_NAME}
