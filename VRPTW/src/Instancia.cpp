@@ -15,7 +15,7 @@ InstanciaNS::InstVRP_TW::InstVRP_TW(int numClie_)
     vetClieDem  = Eigen::VectorXi(numClientes);
 }
 
-void InstanciaNS::leInstancia(const std::string &strFile, InstVRP_TW &instVrpTw)
+void InstanciaNS::leInstanciaSolomon(const std::string &strFile, InstVRP_TW &instVrpTw)
 {
 
     std::ifstream file(strFile);
@@ -64,6 +64,7 @@ void InstanciaNS::leInstancia(const std::string &strFile, InstVRP_TW &instVrpTw)
 
     std::cout<<matData<<"\n\n";
 
+    int totalDem = 0;
 
     for(int i=0; i < numClie; ++i)
     {
@@ -83,12 +84,95 @@ void InstanciaNS::leInstancia(const std::string &strFile, InstVRP_TW &instVrpTw)
         instVrpTw.vetClieTime[i].servTime  = matData(i, ServTime);
 
         instVrpTw.vetClieDem[i] = matData(i, Dem);
+        totalDem += instVrpTw.vetClieDem[i];
 
         std::cout<<i<<": ["<<instVrpTw.vetClieTime[i].readyTime<<";"<<instVrpTw.vetClieTime[i].dueTime<<
                       "]; servTime("<<instVrpTw.vetClieTime[i].servTime<<"); dem("<<instVrpTw.vetClieDem[i]<<")\n";
     }
 
+    instVrpTw.numVeic = std::ceil(double(totalDem)/instVrpTw.capVeic);
+
+    std::cout<<"numVeic: "<<instVrpTw.numVeic<<"\n\n";
+
     std::cout<<"\n"<<instVrpTw.matDist<<"\n";
+
+}
+
+void InstanciaNS::leInstanciaAugerat(const std::string &strFile, InstVRP_TW &instCvrp)
+{
+
+
+    std::ifstream file(strFile);
+    if(!file.is_open())
+    {
+        std::cout<< "Nao foi possivel abrir o arquivo: "<<strFile<<"\n\n";
+        throw "ERRO";
+    }
+
+    std::string line;
+    int numClientes, capVeic;
+
+    for(int i=0;i<3;++i)
+        getline(file, line);
+
+    file>>line>>line>>numClientes;
+    getline(file, line);
+    getline(file, line);
+
+    file>>line>>line>>capVeic;
+    getline(file, line);
+    getline(file, line);
+
+//    instancia->matrixDistancia.resize(numClientes, numClientes, false);
+    instCvrp = InstVRP_TW(numClientes);
+    instCvrp.capVeic = capVeic;
+
+    int *vetorX = new int[numClientes];
+    int *vetorY = new int[numClientes];
+
+    int aux;
+
+    for(int i=0; i < numClientes; ++i)
+    {
+
+        file>>aux>>vetorX[i]>>vetorY[i];
+
+        //cout<<i<<" "<<vetorX[i]<<" "<<vetorY[i]<<"\n";
+    }
+
+
+    getline(file, line);
+    getline(file, line);
+
+    for(int i=0; i<numClientes; ++i)
+    {
+        instCvrp.matDist(i, i) = 0;
+
+        for(int j=i+1; j < numClientes; ++j)
+        {
+            double temp = (sqrt(pow(vetorX[i] - vetorX[j], 2) + pow(vetorY[i] - vetorY[j], 2)));
+            instCvrp.matDist(i, j) = static_cast<int>(std::round(temp));
+            instCvrp.matDist(j, i) = instCvrp.matDist(i, j);
+        }
+
+    }
+
+    //instancia->demanda = new int[numClientes];
+    int demandaTotal = 0;
+
+    for(int i=0; i < numClientes; ++i)
+    {
+        file >>aux>>instCvrp.vetClieDem[i];
+        demandaTotal += instCvrp.vetClieDem[i];
+    }
+
+    instCvrp.numVeic = ceil(demandaTotal/double(instCvrp.capVeic));
+    std::cout<<instCvrp.numVeic<<"\n";
+
+    file.close();
+
+    delete []vetorX;
+    delete []vetorY;
 
 }
 

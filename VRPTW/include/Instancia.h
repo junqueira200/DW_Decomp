@@ -36,7 +36,8 @@ namespace InstanciaNS
 
     };
 
-    void leInstancia(const std::string &strFile, InstVRP_TW &instVrpTw);
+    void leInstanciaSolomon(const std::string &strFile, InstVRP_TW &instVrpTw);
+    void leInstanciaAugerat(const std::string &strFile, InstVRP_TW &instCvrp);
     double calculateDistance(double x1, double y1, double x2, double y2);
     double somaDist(const InstVRP_TW &instVrpTw);
 

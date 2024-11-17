@@ -12,24 +12,28 @@ namespace VrpTW_DecompNS
 {
 
     void criaMestre(const InstanciaNS::InstVRP_TW &instVrpTw, GRBModel &model);
+    void criaVRP_TW_CompleteModel(const InstanciaNS::InstVRP_TW &instVrpTw, GRBModel &model);
     int getIndex(int i, int j, int numClie);
 
     class VrpSubProb : public DW_DecompNS::SubProb
     {
     public:
+        void buildSubProbModel();
 
         std::unique_ptr<GRBModel> subProb;
+        GRBVar *grbVarX = nullptr;
+        GRBVar *grbVarF = nullptr;
+        GRBVar *grbVarT_Cheg = nullptr;
+        GRBVar *grbVarT_Saida = nullptr;
+
         int numSubProb = 1;
         bool convConstIni = false;
         InstanciaNS::InstVRP_TW *instVrpTw;                  // NAO DELETAR
 
         int getNumConvConstr() override {return 0;}
-
         VrpSubProb(GRBEnv &e, InstanciaNS::InstVRP_TW &instVrpTw);
-
         int64_t getNumberOfConvConstr() override;// {return numSubProb;}
-
-        ~VrpSubProb() override {};
+        ~VrpSubProb() override {delete []grbVarX; delete []grbVarF; delete []grbVarT_Cheg; delete []grbVarT_Saida;};
         void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
         int resolveSubProb(const Eigen::VectorXd &vetC,
                            const Eigen::RowVectorXd &vetRowPi,

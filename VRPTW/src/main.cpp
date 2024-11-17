@@ -10,10 +10,16 @@ int main(int argv, char **argc)
     InstVRP_TW instVrpTw;
     std::string strFile(argc[1]);
 
-    leInstancia(strFile, instVrpTw);
+    leInstanciaAugerat(strFile, instVrpTw);
 
     GRBEnv grbEnv;
     GRBModel model(grbEnv);
+
+    GRBModel modelComp(grbEnv);
+    criaVRP_TW_CompleteModel(instVrpTw, modelComp);
+    modelComp.optimize();
+
+    return 0;
 
     criaMestre(instVrpTw, model);
 
@@ -38,5 +44,7 @@ int main(int argv, char **argc)
     decompNode.columnGeneration(auxVectors, info);
 
     std::cout<<"..";
+    std::cout<<"Num de veic: "<<instVrpTw.numVeic<<"\n\n";
+
     return 0;
 }

@@ -64,7 +64,7 @@ std::cout<<"getSparseMatModel ini\n\n";
             double coeff = model.getCoeff(vetConstr[c], vetVar[i]);
 
             if(coeff != 0.0)
-            {   std::cout<<"("<<c<<","<<i<<")\n";
+            {   //std::cout<<"("<<c<<","<<i<<")\n";
                 matA.coeffRef(c, i) = coeff;
             }
         }
@@ -112,7 +112,7 @@ void DW_DecompNS::getVetC_Model(GRBModel &model, Eigen::RowVectorXd &vetC)
         double val = vetVar[i].get(GRB_DoubleAttr_Obj);
         if(val != 0.0)
         {
-            std::cout<<i<<"("<<val<<"); ";
+            //std::cout<<i<<"("<<val<<"); ";
             vetC.coeffRef(0, i) = val;
         }
     }
@@ -212,7 +212,7 @@ static void funcGetSubMatrix(const Eigen::SparseMatrix<double, Eigen::RowMajor> 
         }
     }
 
-    std::cout<<TempSpMatPrint(matSaida)<<"\n";
+    //std::cout<<TempSpMatPrint(matSaida)<<"\n";
 };
 
 
@@ -582,12 +582,16 @@ std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n
 
     vetSubMatA = Vector<Eigen::SparseMatrix<double, Eigen::RowMajor>>(info.numSubProb);
     for(int i=0; i < info.numSubProb; ++i)
-    {   std::cout<<"ini for it: "<<i<<"\n";
+    {   //std::cout<<"ini for it: "<<i<<"\n";
         //vetSubMatA[i] = SparseMatColD(numConstrsMestre, vetPairSubProb.at(i).second);
         //std::cout<<"antes funcGetSubMatrix\n";
 
-        funcGetSubMatrix(matA, vetSubMatA[i], info.numConstrsMaster, auxVect.vetPairSubProb.at(i).second,
-                         auxVect.vetPairSubProb.at(i).first, 0);
+        funcGetSubMatrix(matA,
+                         vetSubMatA[i],
+                         info.numConstrsMaster,
+                         auxVect.vetPairSubProb.at(i).second,
+                         auxVect.vetPairSubProb.at(i).first,
+                         0);
     }
 
 
@@ -702,6 +706,11 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
         uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
         uRmlp->optimize();
 
+        std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
+
+        //if(itCG == 70)
+        //    throw "NAO EH ERRO";
+
         // TODO Remove
         GRBVar *vetVar        = uRmlp->getVars();
         double *vetRmlpLambda = uRmlp->get(GRB_DoubleAttr_X, vetVar, uRmlp->get(GRB_IntAttr_NumVars));
@@ -740,10 +749,6 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
                                        auxVect.vetColConvCooef,
                                        auxVect.vetPairSubProb[k]);
 
-
-            if(itCG == 0)
-                throw "NAO EH ERRO";
-
             if(!subProbK_CustoR_neg)
                 continue;
 
@@ -770,6 +775,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
             addColumn(cgCooefObj, k, auxVect, info);
         }
+
 
 
 
