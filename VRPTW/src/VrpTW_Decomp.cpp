@@ -73,7 +73,7 @@ int VrpTW_DecompNS::VrpSubProb::resolveSubProb(const Eigen::VectorXd &vetC,
                                                Eigen::VectorXd &vetX,
                                                int itCG,
                                                bool &custoRedNeg,
-                                               void *data,
+                                               void* data,
                                                const int iniConv,
                                                int indSubProb,
                                                Eigen::VectorXd &vetCooefRestConv,
@@ -81,6 +81,8 @@ int VrpTW_DecompNS::VrpSubProb::resolveSubProb(const Eigen::VectorXd &vetC,
 {
 
     static Eigen::VectorXd vetRedCost(vetC.size());
+    static Eigen::VectorXi vetRota(instVrpTw->numClientes+1);
+
     vetRedCost.setZero();
     const int numClie = instVrpTw->numClientes;
 
@@ -96,17 +98,52 @@ int VrpTW_DecompNS::VrpSubProb::resolveSubProb(const Eigen::VectorXd &vetC,
         }
     }
 
-std::cout<<"Reduced costs: "<<vetRedCost.transpose()<<"\n\n";
+    int routeTam = 0;
+    static int num = 0;
+
+    double costHeur = geraSolHeuristica(*instVrpTw, vetRedCost, vetRota, routeTam);
+    if(costHeur < -DW_DecompNS::TolObjSubProb)
+    {
+        std::cout<<"\tRoute with negative reduced cost was found\n";
+
+        for(int i=0; i < (routeTam-1); ++i)
+        {
+            std::cout<<vetRota[i]<<" "<<vetRota[i+1]<<"\n";
+
+            vetX[getIndex(vetRota[i], vetRota[i+1], instVrpTw->numClientes)] = 1;
+        }
+
+        custoRedNeg = true;
+
+        num += 1;
+
+        return 0;
+    }
+
+    num += 1;
+
+//std::cout<<"Reduced costs: "<<vetRedCost.transpose()<<"\n\n";
 
     for(int i=0; i < numClie*numClie; ++i)
     {
         grbVarX[i].set(GRB_DoubleAttr_Obj, vetRedCost[i]);
     }
 
+    static double time = 2.0;
+    subProb->set(GRB_DoubleParam_TimeLimit, time);
 
     subProb->update();
     subProb->write("subProb.lp");
     subProb->optimize();
+
+    while(subProb->get(GRB_DoubleAttr_ObjVal) >= -DW_DecompNS::TolObjSubProb
+          && subProb->get(GRB_IntAttr_Status) != GRB_OPTIMAL)
+    {
+        time += 2.0;
+        subProb->set(GRB_DoubleParam_TimeLimit, time);
+
+        subProb->optimize();
+    }
 
 
     if(subProb->get(GRB_DoubleAttr_ObjVal) < -DW_DecompNS::TolObjSubProb)
@@ -149,117 +186,113 @@ std::cout<<"Reduced costs: "<<vetRedCost.transpose()<<"\n\n";
     return 0;
 }
 
-void VrpTW_DecompNS::VrpSubProb::buildSubProbModel()
+VrpTW_DecompNS::VrpSubProb::~VrpSubProb()
 {
     delete []grbVarX;
     delete []grbVarF;
+    delete []grbVarT_Cheg;
+    delete []grbVarT_Saida;
+    delete []grbVarU;
+}
+
+void VrpTW_DecompNS::VrpSubProb::buildSubProbModel()
+{
+
+    subProb->set(GRB_IntParam_Threads, 4);
+    subProb->set(GRB_DoubleParam_TimeLimit, 2.0);
+
+    delete []grbVarX;
+    delete []grbVarF;
+    delete []grbVarT_Cheg;
+    delete []grbVarT_Saida;
+    delete []grbVarU;
 
     const int numClie = instVrpTw->numClientes;
     grbVarX       = subProb->addVars(numClie*numClie, GRB_BINARY);
     grbVarF       = subProb->addVars(numClie*numClie, GRB_CONTINUOUS);
-    grbVarT_Cheg  = subProb->addVars(numClie, GRB_CONTINUOUS);
-    grbVarT_Saida = subProb->addVars(numClie, GRB_CONTINUOUS);
+    //grbVarT_Cheg  = subProb->addVars(numClie, GRB_CONTINUOUS);
+    //grbVarT_Saida = subProb->addVars(numClie, GRB_CONTINUOUS);
+    grbVarU       = subProb->addVars(numClie, GRB_CONTINUOUS);
 
-    grbVarT_Saida[0].set(GRB_DoubleAttr_UB, 0.0);
-    grbVarT_Saida[0].set(GRB_DoubleAttr_LB, 0.0);
+    //grbVarT_Saida[0].set(GRB_DoubleAttr_UB, 0.0);
+    //grbVarT_Saida[0].set(GRB_DoubleAttr_LB, 0.0);
 
- 
-    for(int i=0; i < numClie; ++i)
+    GRBModel &model = *subProb;
+
+    /* ini VRP
+     */
+
+
+    // \sum_{j \in V, j \not = 0} x_{0,j} = numVeic
+    GRBLinExpr linExpr;
+    for(int j=1; j < numClie; ++j)
     {
-        GRBLinExpr linExpr;
-        for(int j=0; j < numClie; ++j)
-        {
-            grbVarX[getIndex(i, j, numClie)].set(GRB_StringAttr_VarName, "X_"+std::to_string(i)+"_"+std::to_string(j));
 
-            if(i == j)
-                continue;
-
-            linExpr += grbVarX[getIndex(i, j, numClie)];
-        }
-
-
-        for(int j=0; j < numClie; ++j)
-        {
-            if(i == j)
-                continue;
-
-            linExpr += -grbVarX[getIndex(j, i, numClie)];
-        }
-
-        subProb->addConstr(linExpr == 0, "Rest0_"+std::to_string(i));
+        linExpr += grbVarX[getIndex(0, j, numClie)];
     }
 
+    model.addConstr(linExpr, '=', 1, "Constr_2");
 
-
-    for(int i=0; i < numClie; ++i)
+    // \sum_{j \in V, j \not = 0} x_{j,0} = numVeic
+    linExpr = 0;
+    for(int j=1; j < numClie; ++j)
     {
-        GRBLinExpr linExpr;
-        for(int j = 0; j < numClie; ++j)
-        {
-            if(i == j)
-                continue;
 
-            linExpr += grbVarX[getIndex(i, j, numClie)];
-        }
-
-        subProb->addConstr(linExpr, '<', 1, "Rest1_"+std::to_string(i));
-
+        linExpr += grbVarX[getIndex(j, 0, numClie)];
     }
 
+    model.addConstr(linExpr, '=', 1, "Constr_3");
 
+
+
+    for(int j=1; j < numClie; ++j)
+    {
+
+        GRBLinExpr grbLinExpr = 0;
+
+        for(int i = 0; i < numClie; ++i)
+        {
+            if(i != j)
+                grbLinExpr += grbVarX[getIndex(i, j, numClie)];
+        }
+
+        GRBLinExpr grbLinExpr1 = 0;
+
+        for(int i = 0; i < numClie; ++i)
+        {
+            if(i != j)
+                grbLinExpr += -grbVarX[getIndex(j, i, numClie)];
+        }
+
+
+        //if(modelo3Index)
+        model.addConstr(grbLinExpr + grbLinExpr1 == 0, "Restricao_4_j_" + std::to_string(j));
+    }
+
+    const int capacidade = instVrpTw->capVeic;
     for(int i=1; i < numClie; ++i)
     {
-        GRBLinExpr linExpr;
-        for(int j=0; j < numClie; ++j)
+        for(int j=1; j < numClie; ++j)
         {
-            const int index = getIndex(i, j, numClie);
-            grbVarF[index].set(GRB_StringAttr_VarName, "F_"+std::to_string(i)+"_"+std::to_string(j));
+            if(i != j)
+            {
+                GRBLinExpr linExpr = 0;
 
-            if(i == j)
-                continue;
-
-            linExpr += grbVarF[index];
-            linExpr += instVrpTw->vetClieDem[i]*grbVarX[index];
-        }
-
-
-        for(int j=0; j < numClie; ++j)
-        {
-            if(i == j)
-                continue;
-
-            linExpr += -grbVarF[getIndex(j, i, numClie)];
-        }
-
-        subProb->addConstr(linExpr == 0, "Rest2_"+std::to_string(i));
-    }
-
-    for(int i=1; i < numClie; ++i)
-    {
-        GRBLinExpr linExpr;
-        int index = getIndex(i, 0, numClie);
-        linExpr += grbVarF[index];
-        grbVarF[index].set(GRB_StringAttr_VarName, "F_0_"+std::to_string(i));
-
-        subProb->addConstr(linExpr, '=', 0, "Rest3_"+std::to_string(i));
-    }
-
-    const int w = instVrpTw->capVeic;
-
-    for(int i=0; i < numClie; ++i)
-    {
-        for(int j=0; j < numClie; ++j)
-        {
-            if(i == j)
-                continue;
-
-            int index = getIndex(i, j, numClie);
-            GRBLinExpr linExpr;
-            linExpr = grbVarF[index];
-            linExpr += -w*grbVarX[index];
-            subProb->addConstr(linExpr, '<', 0, "Rest4_"+std::to_string(i)+"_"+std::to_string(j));
+                // uj - ui + Q(1-xijk)>=  qj
+                linExpr = -grbVarU[i] + grbVarU[j] + capacidade * (1-grbVarX[getIndex(i, j, numClie)]);
+                double rhs = instVrpTw->vetClieDem[j];
+                model.addConstr(linExpr >= rhs, "Restricao_5_ij_" + std::to_string(i)+"_"+std::to_string(j));
+            }
         }
     }
+
+    model.addConstr(grbVarU[0] <= 0, "Restricao_6_i_" + std::to_string(0));
+    model.addConstr(grbVarU[0] >= 0, "Restricao_7_i_" + std::to_string(0));
+
+
+    // TW
+
+    /*
 
     for(int j=0; j < numClie; ++j)
     {
@@ -298,6 +331,7 @@ void VrpTW_DecompNS::VrpSubProb::buildSubProbModel()
 
 
     }
+     */
 
     subProb->update();
     subProb->write("subProb.lp");
@@ -306,7 +340,6 @@ void VrpTW_DecompNS::VrpSubProb::buildSubProbModel()
 
 void VrpTW_DecompNS::criaVRP_TW_CompleteModel(const InstanciaNS::InstVRP_TW &instVrpTw, GRBModel &model)
 {
-
 
     const int numClie = instVrpTw.numClientes;
     GRBVar *grbVarX       = model.addVars(numClie*numClie, GRB_BINARY);
@@ -418,4 +451,77 @@ void VrpTW_DecompNS::criaVRP_TW_CompleteModel(const InstanciaNS::InstVRP_TW &ins
     model.update();
     model.write("vrp.lp");
 
+
+    delete []grbVarX;
+    delete []grbVarF;
+    delete []grbVarT_Cheg;
+    delete []grbVarT_Saida;
+    delete []grbVarU;
+
+}
+
+double VrpTW_DecompNS::geraSolHeuristica(const InstanciaNS::InstVRP_TW &instVrpTw, Eigen::VectorXd &vetRedCost,
+                                         Eigen::VectorXi &rota, int &routeTam)
+{
+std::cout<<"ini geraSolHeuristica"<<"\n";
+
+    static Eigen::VectorXi vetClieVisi(instVrpTw.numClientes);
+    vetClieVisi.setZero();
+    rota.setZero();
+
+    int clienteI = 0;
+
+    int next = 1;
+    int carga = 0;
+    double cost = 0.0;
+    double dist = 0.0;
+    routeTam = 1;
+
+    std::cout<<"\tRota criada: ";
+    std::cout<<clienteI<<" ";
+
+    do
+    {
+        int clienteJ = -1;
+        double menor = std::numeric_limits<double>::infinity();
+
+        for(int i=0; i < instVrpTw.numClientes; ++i)
+        {
+            if(vetClieVisi[i] != 0 || i == clienteI)
+                continue;
+
+            if((carga+instVrpTw.vetClieDem[i]) > instVrpTw.capVeic)
+                continue;
+
+            const int index = getIndex(clienteI, i, instVrpTw.numClientes);
+            if(vetRedCost[index] < menor)
+            {
+                clienteJ = i;
+                menor = vetRedCost[index];
+            }
+        }
+
+        if(clienteJ == -1)
+        {
+            clienteJ = 0;
+            cost += vetRedCost[getIndex(clienteI, clienteJ, instVrpTw.numClientes)];
+        }
+        else
+            cost += menor;
+        std::cout<<clienteJ<<" ";
+
+        rota[next] = clienteJ;
+
+        vetClieVisi[clienteJ] = 1;
+        next += 1;
+        routeTam += 1;
+        clienteI = clienteJ;
+        carga += carga+instVrpTw.vetClieDem[clienteJ];
+
+    }while(clienteI != 0);
+
+
+    std::cout<<"; custo: "<<cost<<"\n";
+
+    return cost;
 }

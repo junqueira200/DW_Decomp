@@ -14,6 +14,9 @@ namespace VrpTW_DecompNS
     void criaMestre(const InstanciaNS::InstVRP_TW &instVrpTw, GRBModel &model);
     void criaVRP_TW_CompleteModel(const InstanciaNS::InstVRP_TW &instVrpTw, GRBModel &model);
     int getIndex(int i, int j, int numClie);
+    double
+    geraSolHeuristica(const InstanciaNS::InstVRP_TW &instVrpTw, Eigen::VectorXd &vetRedCost, Eigen::VectorXi &rota,
+                      int &routeTam);
 
     class VrpSubProb : public DW_DecompNS::SubProb
     {
@@ -21,10 +24,11 @@ namespace VrpTW_DecompNS
         void buildSubProbModel();
 
         std::unique_ptr<GRBModel> subProb;
-        GRBVar *grbVarX = nullptr;
-        GRBVar *grbVarF = nullptr;
-        GRBVar *grbVarT_Cheg = nullptr;
-        GRBVar *grbVarT_Saida = nullptr;
+        GRBVar* grbVarX       = nullptr;
+        GRBVar* grbVarF       = nullptr;
+        GRBVar* grbVarT_Cheg  = nullptr;
+        GRBVar* grbVarT_Saida = nullptr;
+        GRBVar* grbVarU       = nullptr;
 
         int numSubProb = 1;
         bool convConstIni = false;
@@ -33,7 +37,7 @@ namespace VrpTW_DecompNS
         int getNumConvConstr() override {return 0;}
         VrpSubProb(GRBEnv &e, InstanciaNS::InstVRP_TW &instVrpTw);
         int64_t getNumberOfConvConstr() override;// {return numSubProb;}
-        ~VrpSubProb() override {delete []grbVarX; delete []grbVarF; delete []grbVarT_Cheg; delete []grbVarT_Saida;};
+        ~VrpSubProb() override;
         void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
         int resolveSubProb(const Eigen::VectorXd &vetC,
                            const Eigen::RowVectorXd &vetRowPi,
@@ -41,7 +45,7 @@ namespace VrpTW_DecompNS
                            Eigen::VectorXd &vetX,
                            int itCG,
                            bool &custoRedNeg,
-                           void *data,
+                           void* data,
                            const int iniConv,
                            int indSubProb,
                            Eigen::VectorXd &vetCooefRestConv,

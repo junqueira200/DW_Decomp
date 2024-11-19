@@ -1,50 +1,66 @@
 #include <iostream>
 #include "Instancia.h"
 #include "VrpTW_Decomp.h"
+#include <filesystem>
 
 using namespace InstanciaNS;
 using namespace VrpTW_DecompNS;
 
 int main(int argv, char **argc)
 {
-    InstVRP_TW instVrpTw;
-    std::string strFile(argc[1]);
+    try
+    {
 
-    leInstanciaAugerat(strFile, instVrpTw);
+        InstVRP_TW instVrpTw;
+        std::string strFile(argc[1]);
 
-    GRBEnv grbEnv;
-    GRBModel model(grbEnv);
+        std::filesystem::path p(strFile);
+        std::string fileName = p.filename();
 
-    GRBModel modelComp(grbEnv);
-    criaVRP_TW_CompleteModel(instVrpTw, modelComp);
-    modelComp.optimize();
+        if(fileName[0] == 'A' || fileName[0] == 'P')
+            leInstanciaAugerat(strFile, instVrpTw);
+        else
+            leInstanciaSalomon(strFile, instVrpTw);
 
-    return 0;
+//        exit(-1);
+        GRBEnv grbEnv;
+        GRBModel model(grbEnv);
+        //model.set(GRB_IntParam_Threads, 4);
+        //model.set(GRB_DoubleParam_TimeLimit, 30.0);
 
-    criaMestre(instVrpTw, model);
+        GRBModel modelComp(grbEnv);
+        criaVRP_TW_CompleteModel(instVrpTw, modelComp);
+        modelComp.optimize();
 
-    double distVarA = somaDist(instVrpTw);
-    VrpSubProb vrpSubProb(grbEnv, instVrpTw);
+        return 0;
 
-    DW_DecompNS::AuxVectors auxVectors;
-    auxVectors.vetPairSubProb.push_back(std::make_pair(0, instVrpTw.numClientes*instVrpTw.numClientes));
+        criaMestre(instVrpTw, model);
 
-    DW_DecompNS::Info info;
+        double distVarA = somaDist(instVrpTw);
+        VrpSubProb vrpSubProb(grbEnv, instVrpTw);
 
-    std::cout<<"Cria decompNode\n";
-    DW_DecompNS::DW_DecompNode decompNode(grbEnv,
-                                          model,
-                                          distVarA,
-                                          (DW_DecompNS::SubProb*)&vrpSubProb,
-                                          1,
-                                          auxVectors,
-                                          info);
+        DW_DecompNS::AuxVectors auxVectors;
+        auxVectors.vetPairSubProb.push_back(std::make_pair(0, instVrpTw.numClientes * instVrpTw.numClientes));
+
+        DW_DecompNS::Info info;
+
+        std::cout << "Cria decompNode\n";
+        DW_DecompNS::DW_DecompNode decompNode(grbEnv, model, distVarA, (DW_DecompNS::SubProb *) &vrpSubProb, 1,
+                                              auxVectors, info);
 
 
-    decompNode.columnGeneration(auxVectors, info);
+        decompNode.columnGeneration(auxVectors, info);
 
-    std::cout<<"..";
-    std::cout<<"Num de veic: "<<instVrpTw.numVeic<<"\n\n";
+        std::cout << "..";
+        std::cout << "Num de veic: " << instVrpTw.numVeic << "\n\n";
+
+    }
+    catch(char const* str)
+    {
+        std::cout<<"catch(char* ):\n";
+        std::printf("%s", str);
+        std::cout<<"\n\n";
+    }
 
     return 0;
 }

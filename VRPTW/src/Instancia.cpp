@@ -15,7 +15,8 @@ InstanciaNS::InstVRP_TW::InstVRP_TW(int numClie_)
     vetClieDem  = Eigen::VectorXi(numClientes);
 }
 
-void InstanciaNS::leInstanciaSolomon(const std::string &strFile, InstVRP_TW &instVrpTw)
+
+void InstanciaNS::leInstanciaSalomon(const std::string &strFile, InstVRP_TW &instVrpTw)
 {
 
     std::ifstream file(strFile);
@@ -98,6 +99,7 @@ void InstanciaNS::leInstanciaSolomon(const std::string &strFile, InstVRP_TW &ins
 
 }
 
+
 void InstanciaNS::leInstanciaAugerat(const std::string &strFile, InstVRP_TW &instCvrp)
 {
 
@@ -122,6 +124,8 @@ void InstanciaNS::leInstanciaAugerat(const std::string &strFile, InstVRP_TW &ins
     file>>line>>line>>capVeic;
     getline(file, line);
     getline(file, line);
+
+std::cout<<"numClientes: "<<numClientes<<"; cap: "<<capVeic<<"\n\n";
 
 //    instancia->matrixDistancia.resize(numClientes, numClientes, false);
     instCvrp = InstVRP_TW(numClientes);
