@@ -14,9 +14,10 @@ namespace VrpTW_DecompNS
     void criaMestre(const InstanciaNS::InstVRP_TW &instVrpTw, GRBModel &model);
     void criaVRP_TW_CompleteModel(const InstanciaNS::InstVRP_TW &instVrpTw, GRBModel &model);
     int getIndex(int i, int j, int numClie);
-    double
-    geraSolHeuristica(const InstanciaNS::InstVRP_TW &instVrpTw, Eigen::VectorXd &vetRedCost, Eigen::VectorXi &rota,
-                      int &routeTam);
+    double geraSolHeuristica(const InstanciaNS::InstVRP_TW &instVrpTw,
+                             Eigen::VectorXd &vetRedCost,
+                             Eigen::VectorXi &rota,
+                             int &routeTam);
 
     class VrpSubProb : public DW_DecompNS::SubProb
     {

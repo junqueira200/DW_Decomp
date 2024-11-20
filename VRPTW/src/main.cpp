@@ -3,13 +3,37 @@
 #include "VrpTW_Decomp.h"
 #include <filesystem>
 
+#include <boost/dynamic_bitset.hpp>
+
 using namespace InstanciaNS;
 using namespace VrpTW_DecompNS;
+#include "LabelingAlgorithm.h"
+
+typedef  std::bitset<5> BitSet;
+
+using namespace LabelingAlgorithmNS;
 
 int main(int argv, char **argc)
 {
+/*    BitSet b0(0);
+    //std::vector<bool> vet(5);
+    b0[4] = true;
+//    b0[3] = true;
+
+    BitSet b1(0);
+    b1[3] = true;
+    b1[4] = true;
+
+    BitSet r(0);
+    r = b1 & b0;
+    bool equal = r == b0;
+
+    std::cout<<"b0: "<<b0<<"\nb1: "<<b1<<"\n";
+    std::cout<<"equal: "<<equal<<"\n";*/
+
     try
     {
+        std::cout<<"sizeof(Label): "<<sizeof(Label)<<"\n";
 
         InstVRP_TW instVrpTw;
         std::string strFile(argc[1]);
@@ -21,6 +45,13 @@ int main(int argv, char **argc)
             leInstanciaAugerat(strFile, instVrpTw);
         else
             leInstanciaSalomon(strFile, instVrpTw);
+
+        NgSet ngSet(instVrpTw.numClientes, NgSetSize);
+        ngSet.setNgSets(instVrpTw.matDist);
+
+        std::cout<<"\ncontain: "<<ngSet.contain(0, 5)<<"\n";
+
+        return 0;
 
 //        exit(-1);
         GRBEnv grbEnv;

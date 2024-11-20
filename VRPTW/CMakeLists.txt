@@ -16,6 +16,8 @@ link_directories($ENV{GUROBI_HOME}/lib)
 add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
 message("set vector_sanity_check=1")
 
+find_package(Boost REQUIRED)
+
 #add_library(DW_Decomp SHARED)
 #find_package(DW_Decomp CONFIG REQUIRED)
 #add_directory(../DW_Decomp)
@@ -29,11 +31,12 @@ message("set vector_sanity_check=1")
 add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME}
     PRIVATE
+    src/LabelingAlgorithm.cpp
     src/VrpTW_Decomp.cpp
     src/Instancia.cpp
     src/SolomonInst.cpp
     src/main.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE DwDecomp Eigen3::Eigen gurobi_c++ gurobi)
+target_link_libraries(${PROJECT_NAME} PRIVATE DwDecomp Eigen3::Eigen gurobi_c++ gurobi Boost::boost Grafo)
 

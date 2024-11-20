@@ -21,6 +21,7 @@ include_directories(Grafo/include)
 #add_subdirectory(Mnfp)
 #include_directories(Mnfp/include)
 
+set(CMAKE_CXX_FLAGS "-pedantic")
 
 add_subdirectory(SparseTeste)
 include_directories(SparseTeste/include)
