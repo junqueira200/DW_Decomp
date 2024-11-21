@@ -12,6 +12,8 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 #link_directories($ENV{GUROBI_HOME}/lib)
 
 
+set(CMAKE_CXX_FLAGS "-pedantic")
+
 add_subdirectory(DW_Decomp)
 include_directories(DW_Decomp/include)
 
@@ -20,8 +22,6 @@ include_directories(Grafo/include)
 
 #add_subdirectory(Mnfp)
 #include_directories(Mnfp/include)
-
-set(CMAKE_CXX_FLAGS "-pedantic")
 
 add_subdirectory(SparseTeste)
 include_directories(SparseTeste/include)

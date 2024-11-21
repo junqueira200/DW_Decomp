@@ -2,6 +2,7 @@
 // Created by igor on 20/11/24.
 //
 #include "LabelingAlgorithm.h"
+#include "MemoryPool.h"
 
 LabelingAlgorithmNS::NgSet::NgSet()
 {
@@ -35,7 +36,7 @@ LabelingAlgorithmNS::NgSet::NgSet(int numCust_, int ngSetSize_)
     matNgSet = Eigen::MatrixXi(numCust, ngSetSize);
 }
 
-void LabelingAlgorithmNS::NgSet::setNgSets(const Eigen::MatrixXd &matDist)
+void LabelingAlgorithmNS::NgSet::setNgSets(const EigenMatrixRow &matDist)
 {
 
     Eigen::VectorX<Node> vet(numCust-1);
@@ -81,9 +82,13 @@ void LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                                                    const VetMatResCost& vetMatResCost,
                                                    const VetVetResBound& vetVetBound,
                                                    const int dest,
-                                                   const NgSet &ngSet)
+                                                   const NgSet &ngSet,
+                                                   LabelingData &lData)
 {
 
+    static MemoryPool_NS::Pool<Label> labelPool(4, 8);
+    labelPool.resetPool(false);
+    lData.flushLabel();
 
 
 }
@@ -117,10 +122,13 @@ bool LabelingAlgorithmNS::extendLabel(const Label &label,
                                       const int numResources)
 {
 
+    // Goes through resources
     for(int i=0; i < NumMaxResources; ++i)
     {
+        // Extend the iº resource
         newLabel.vetResources[i] = label.vetResources[i] + vetMatResCost[i](custI, custJ);
 
+        // Check the bound
         if(newLabel.vetResources[i] > vetVetBound[i][custJ].upperBound)
             return false;
 
@@ -133,10 +141,75 @@ bool LabelingAlgorithmNS::extendLabel(const Label &label,
             break;
     }
 
+    // Checks if custJ its in custI ngSet
     if(custJ != 0 && ngSet.contain(custJ, custI))
         newLabel.bitSet[custJ] = true;
 
 
     return true;
+
+}
+
+/**
+ * @param vetStepSize_
+ * @param numMainResources_
+ * @param numCust_ Number of customers of the instance plus one
+ */
+LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2> &vetStepSize_,
+                                                int numMainResources_,
+                                                int numCust_)
+{
+    vetStepSize      = vetStepSize_;
+    numMainResources = std::min(numMainResources_, 2);
+    numCust          = numCust_;
+    vetNumSteps      = {0, 0};
+
+    for(int r=0; r < numMainResources; ++r)
+    {
+        double resource = vetStepSize[r].start;
+        int step = 1;
+
+        while(resource <= vetStepSize[r].end)
+        {
+            resource += vetStepSize[r].stepSize;
+            step += 1;
+        }
+
+        if(step > 1)
+            step -= 1;
+
+        vetNumSteps[r] = step;
+std::cout<<"Resource("<<r<<") have ("<<step<<") steps\n";
+
+    }
+
+    numMaxSteps = std::max(vetNumSteps[0], vetNumSteps[1]);
+
+    vetMatBucket = Eigen::VectorX<MatBucket>(numCust);//(numMaxSteps, numMaxSteps);
+    for(int i=0; i < numCust; ++i)
+        vetMatBucket[i].mat = Eigen::Matrix<Bucket, -1, -1, Eigen::RowMajor>(numMaxSteps, numMaxSteps);
+
+
+}
+
+void LabelingAlgorithmNS::LabelingData::flushLabel()
+{
+
+    for(MatBucket& mat:vetMatBucket)
+    {
+
+        for(int i=0; i < numMaxSteps; ++i)
+        {
+            for(int j=0; j < numMaxSteps; ++j)
+            {
+//                mat.mat(i, j).vetPtrLabel.conservativeResize()
+                mat.mat(i, j).flush();
+            }
+
+            if(numMainResources == 1)
+                break;
+        }
+
+    }
 
 }

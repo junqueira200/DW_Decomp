@@ -51,4 +51,6 @@ std::ostream & operator << (std::ostream & s, const TempSpVetPrint<T,option> &te
     return s;
 }
 
+typedef Eigen::Matrix<int, -1, -1, Eigen::RowMajor> EigenMatrixRow;
+
 #endif //DW_DECOMP_AUX_H

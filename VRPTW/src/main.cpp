@@ -3,11 +3,15 @@
 #include "VrpTW_Decomp.h"
 #include <filesystem>
 
+//import teste;
+
 #include <boost/dynamic_bitset.hpp>
 
 using namespace InstanciaNS;
 using namespace VrpTW_DecompNS;
+
 #include "LabelingAlgorithm.h"
+#include "MemoryPool.h"
 
 typedef  std::bitset<5> BitSet;
 
@@ -15,6 +19,16 @@ using namespace LabelingAlgorithmNS;
 
 int main(int argv, char **argc)
 {
+    Eigen::Vector<Step, 2> vetStepSize;
+
+    vetStepSize[0].stepSize = 1;
+    vetStepSize[0].start    = 99;
+    vetStepSize[0].end      = 0;
+
+    LabelingData labelingData(vetStepSize, 1, 17);
+
+    return 0;
+
 /*    BitSet b0(0);
     //std::vector<bool> vet(5);
     b0[4] = true;
@@ -49,7 +63,7 @@ int main(int argv, char **argc)
         NgSet ngSet(instVrpTw.numClientes, NgSetSize);
         ngSet.setNgSets(instVrpTw.matDist);
 
-        std::cout<<"\ncontain: "<<ngSet.contain(0, 5)<<"\n";
+        std::cout<<"\ncontain: "<<ngSet.contain(0, 4)<<"\n";
 
         return 0;
 

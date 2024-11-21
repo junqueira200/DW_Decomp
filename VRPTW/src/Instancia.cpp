@@ -10,7 +10,7 @@ InstanciaNS::InstVRP_TW::InstVRP_TW(int numClie_)
     numClientes = numClie_;
 //    numVeic     = numVeic_;
 
-    matDist     = Eigen::MatrixXd(numClientes, numClientes);
+    matDist     = EigenMatrixRow(numClientes, numClientes);
     vetClieTime = Eigen::VectorX<ClieTime>(numClientes);
     vetClieDem  = Eigen::VectorXi(numClientes);
 }

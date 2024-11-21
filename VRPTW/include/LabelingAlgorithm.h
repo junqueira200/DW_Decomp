@@ -8,6 +8,7 @@
 #include <Eigen/Eigen>
 #include "Grafo.h"
 #include <bitset>
+#include "Aux.h"
 
 namespace LabelingAlgorithmNS
 {
@@ -16,6 +17,10 @@ namespace LabelingAlgorithmNS
     constexpr int NumMaxRoute     = 300;
     constexpr int NumMaxCust      = 150;
     constexpr int NgSetSize       = 5;
+    constexpr int NumBuckets      = 10;
+    constexpr int vetPtrLabelSize = 5;
+    constexpr bool NullFlush      = true;
+
 
     struct Bound
     {
@@ -23,11 +28,18 @@ namespace LabelingAlgorithmNS
         double upperBound = std::numeric_limits<double>::infinity();
     };
 
+    // TODO Fix!
+    // Fist access the resource, and then the cost of an arc (i,j)
+    typedef Eigen::Array<Eigen::Array<double, NumMaxCust, NumMaxCust>, 1, NumMaxResources> VetMatResCost;
+
+    // Fist access the resource, and then the bound of a customer
+    typedef Eigen::Array<Eigen::Array<Bound, 1, NumMaxCust>, 1, NumMaxResources> VetVetResBound;
+
     class NgSet
     {
     public:
 
-        Eigen::MatrixXi matNgSet;
+        EigenMatrixRow matNgSet;
         int numCust   = NumMaxCust;
         int ngSetSize = NgSetSize;
         bool active   = true;
@@ -35,7 +47,7 @@ namespace LabelingAlgorithmNS
         NgSet();
         NgSet(int numCust, int ngSetSize);
         bool contain(int i, int j) const;
-        void setNgSets(const Eigen::MatrixXd &matDist);
+        void setNgSets(const EigenMatrixRow &matDist);
     };
 
     struct Node
@@ -66,29 +78,72 @@ namespace LabelingAlgorithmNS
 
     class Bucket
     {
+    public:
         // Bound: [lower;upper)
-        Eigen::Array<Bound, 1, NumMaxResources> vetBound;
+        Eigen::Vector<Bound, 2> vetBound;
         Eigen::VectorX<Label*> vetPtrLabel;
         int sizeVetPtrLabel;
+
+        Bucket()
+        {
+            vetPtrLabel.resize(vetPtrLabelSize);
+        }
+        void flush()
+        {
+            if(NullFlush)
+            {
+                for(int i = 0; i < vetPtrLabel.size(); ++i)
+                    vetPtrLabel[i] = nullptr;
+            }
+
+            sizeVetPtrLabel = 0;
+        }
+    };
+
+    class Step
+    {
+    public:
+
+        double start;
+        double end;
+        double stepSize;
     };
 
     class MatBucket
     {
+    public:
+
+        Eigen::Matrix<Bucket, -1, -1, Eigen::RowMajor> mat;
+        MatBucket()=default;
 
     };
 
-    // Fist access the resource, and then the cost of an arc (i,j)
-    typedef Eigen::Array<Eigen::Array<double, NumMaxCust, NumMaxCust>, 1, NumMaxResources> VetMatResCost;
+    class LabelingData
+    {
+    public:
 
-    // Fist access the resource, and then the bound of a customer
-    typedef Eigen::Array<Eigen::Array<Bound, 1, NumMaxCust>, 1, NumMaxResources> VetVetResBound;
+        Eigen::VectorX<MatBucket> vetMatBucket;
+        Eigen::Vector<Step, 2> vetStepSize;
+        Eigen::Vector<int, 2> vetNumSteps;
+        int numMainResources;
+        int numCust;
+        int numMaxSteps;
+
+        LabelingData(const Eigen::Vector<Step, 2> &vetStepSize_,
+                     int numMainResources_,
+                     int numCust_);
+
+        void flushLabel();
+    };
+
 
     void forwardLabelingAlgorithm(const int numRes,
                                   const int numCust,
                                   const VetMatResCost& vetMatResCost,
                                   const VetVetResBound& vetVetBound,
                                   int dest,
-                                  const NgSet &ngSet);
+                                  const NgSet &ngSet,
+                                  LabelingData &lData);
 
     bool checkDominance(const Label& l0, const Label& l1, int numResources);
 

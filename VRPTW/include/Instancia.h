@@ -7,6 +7,7 @@
 
 #include <Eigen/Eigen>
 #include <string>
+#include "Aux.h"
 
 namespace InstanciaNS
 {
@@ -26,7 +27,7 @@ namespace InstanciaNS
         int numVeic = 0;
         int capVeic = 0;
 
-        Eigen::MatrixX<double> matDist;
+        EigenMatrixRow matDist;
         Eigen::VectorX<ClieTime> vetClieTime;
         Eigen::VectorXi vetClieDem;
         std::string instName;
