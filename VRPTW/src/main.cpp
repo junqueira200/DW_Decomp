@@ -21,13 +21,19 @@ int main(int argv, char **argc)
 {
     Eigen::Vector<Step, 2> vetStepSize;
 
-    vetStepSize[0].stepSize = 1;
-    vetStepSize[0].start    = 99;
-    vetStepSize[0].end      = 0;
+    vetStepSize[0].stepSize = 10;
+    vetStepSize[0].start    = 0;
+    vetStepSize[0].end      = 50;
+
+
+/*    vetStepSize[1].stepSize = 10;
+    vetStepSize[1].start    = 60;
+    vetStepSize[1].end      = 80;*/
 
     LabelingData labelingData(vetStepSize, 1, 17);
+    std::cout<<labelingData.getIndex(0, 20)<<"\n";
 
-    return 0;
+//    return 0;
 
 /*    BitSet b0(0);
     //std::vector<bool> vet(5);
@@ -60,10 +66,32 @@ int main(int argv, char **argc)
         else
             leInstanciaSalomon(strFile, instVrpTw);
 
+        VetMatResCost vetMatResCost(1);
+        vetMatResCost[0] = instVrpTw.matDist;
+
+        VetVetResBound vetVetResBound(1);
+        vetVetResBound[0].resize(instVrpTw.numClientes+1);
+
+        double distTotal = instVrpTw.sumDist();
+
+        Bound bound;
+        bound.lowerBound = -distTotal;
+        bound.upperBound =  distTotal;
+
+        for(int i=0; i < instVrpTw.numClientes+1; ++i)
+        {
+            vetVetResBound[0][i] = bound;
+        }
+
         NgSet ngSet(instVrpTw.numClientes, NgSetSize);
         ngSet.setNgSets(instVrpTw.matDist);
 
-        std::cout<<"\ncontain: "<<ngSet.contain(0, 4)<<"\n";
+        forwardLabelingAlgorithm(1, 16, vetMatResCost, vetVetResBound, instVrpTw.numClientes, ngSet, labelingData);
+
+/*        NgSet ngSet(instVrpTw.numClientes, NgSetSize);
+        ngSet.setNgSets(instVrpTw.matDist);
+
+        std::cout<<"\ncontain: "<<ngSet.contain(0, 4)<<"\n";*/
 
         return 0;
 

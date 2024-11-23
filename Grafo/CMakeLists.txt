@@ -21,7 +21,10 @@ message(CMAKE_MODULE_PATH="${CMAKE_SOURCE_DIR}")
 find_package(Eigen3 3.3 REQUIRED)# NO_MODULE)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-set(CMAKE_CXX_FLAGS "-O0 -g3")
+#set(CMAKE_CXX_FLAGS "-O0 -g3")
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -O3")
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D __FILENAME__='\"$$(subst  ${CMAKE_SOURCE_DIR}/,,$$(abspath $$<))\"'")
 
 

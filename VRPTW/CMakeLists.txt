@@ -16,6 +16,10 @@ link_directories($ENV{GUROBI_HOME}/lib)
 add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
 message("set vector_sanity_check=1")
 
+
+#set(CMAKE_CXX_FLAGS "-pedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -O3")
+
 find_package(Boost REQUIRED)
 
 #add_library(DW_Decomp SHARED)

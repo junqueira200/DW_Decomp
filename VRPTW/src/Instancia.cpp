@@ -10,14 +10,30 @@ InstanciaNS::InstVRP_TW::InstVRP_TW(int numClie_)
     numClientes = numClie_;
 //    numVeic     = numVeic_;
 
-    matDist     = EigenMatrixRow(numClientes, numClientes);
+    matDist     = EigenMatrixRowD(numClientes, numClientes);
     vetClieTime = Eigen::VectorX<ClieTime>(numClientes);
     vetClieDem  = Eigen::VectorXi(numClientes);
+}
+
+double InstanciaNS::InstVRP_TW::sumDist()
+{
+    double dist = 0.0;
+
+    for(int i=0; i < numClientes; ++i)
+    {
+        for(int j=(i+1); j < numClientes; ++j)
+        {
+            dist += matDist(i, j);
+        }
+    }
+
+    return dist;
 }
 
 
 void InstanciaNS::leInstanciaSalomon(const std::string &strFile, InstVRP_TW &instVrpTw)
 {
+std::cout<<"leInstanciaSalomon\n";
 
     std::ifstream file(strFile);
     if(!file.is_open())
@@ -46,11 +62,11 @@ void InstanciaNS::leInstanciaSalomon(const std::string &strFile, InstVRP_TW &ins
 
     std::cout<<"numeClie("<<numClie<<"); cap("<<cap<<")\n\n";
 
-    instVrpTw = InstVRP_TW(numClie);
+    instVrpTw = InstVRP_TW(numClie+1);
     instVrpTw.instName = instName;
     instVrpTw.capVeic = cap;
 
-    Eigen::MatrixXi matData(numClie, 7);
+    Eigen::MatrixXi matData(numClie+1, 7);
 
 
     for(int i=0; i < 5; ++i)
@@ -63,13 +79,16 @@ void InstanciaNS::leInstanciaSalomon(const std::string &strFile, InstVRP_TW &ins
             file>>matData(i,j);
     }
 
+    for(int i=0; i < 7; ++i)
+        matData(numClie, i) = matData(0, i);
+
     std::cout<<matData<<"\n\n";
 
     int totalDem = 0;
 
-    for(int i=0; i < numClie; ++i)
+    for(int i=0; i < numClie+1; ++i)
     {
-        for(int j=i+1; j < numClie; ++j)
+        for(int j=i+1; j < numClie+1; ++j)
         {
 
             double distI_J = calculateDistance(matData(i, XCoord), matData(i,XCoord),
@@ -97,12 +116,15 @@ void InstanciaNS::leInstanciaSalomon(const std::string &strFile, InstVRP_TW &ins
 
     std::cout<<"\n"<<instVrpTw.matDist<<"\n";
 
+    instVrpTw.numClientes -= 1;
+
 }
 
 
 void InstanciaNS::leInstanciaAugerat(const std::string &strFile, InstVRP_TW &instCvrp)
 {
 
+std::cout<<"leInstanciaAugerat";
 
     std::ifstream file(strFile);
     if(!file.is_open())
@@ -128,11 +150,11 @@ void InstanciaNS::leInstanciaAugerat(const std::string &strFile, InstVRP_TW &ins
 std::cout<<"numClientes: "<<numClientes<<"; cap: "<<capVeic<<"\n\n";
 
 //    instancia->matrixDistancia.resize(numClientes, numClientes, false);
-    instCvrp = InstVRP_TW(numClientes);
+    instCvrp = InstVRP_TW(numClientes+1);
     instCvrp.capVeic = capVeic;
 
-    int *vetorX = new int[numClientes];
-    int *vetorY = new int[numClientes];
+    int *vetorX = new int[numClientes+1];
+    int *vetorY = new int[numClientes+1];
 
     int aux;
 
@@ -144,15 +166,18 @@ std::cout<<"numClientes: "<<numClientes<<"; cap: "<<capVeic<<"\n\n";
         //cout<<i<<" "<<vetorX[i]<<" "<<vetorY[i]<<"\n";
     }
 
+    vetorX[numClientes] = vetorX[0];
+    vetorY[numClientes] = vetorY[0];
+
 
     getline(file, line);
     getline(file, line);
 
-    for(int i=0; i<numClientes; ++i)
+    for(int i=0; i<numClientes+1; ++i)
     {
         instCvrp.matDist(i, i) = 0;
 
-        for(int j=i+1; j < numClientes; ++j)
+        for(int j=i+1; j < numClientes+1; ++j)
         {
             double temp = (sqrt(pow(vetorX[i] - vetorX[j], 2) + pow(vetorY[i] - vetorY[j], 2)));
             instCvrp.matDist(i, j) = static_cast<int>(std::round(temp));
@@ -160,6 +185,8 @@ std::cout<<"numClientes: "<<numClientes<<"; cap: "<<capVeic<<"\n\n";
         }
 
     }
+
+
 
     //instancia->demanda = new int[numClientes];
     int demandaTotal = 0;
@@ -170,6 +197,8 @@ std::cout<<"numClientes: "<<numClientes<<"; cap: "<<capVeic<<"\n\n";
         demandaTotal += instCvrp.vetClieDem[i];
     }
 
+    instCvrp.vetClieDem[numClientes] = 0;
+
     instCvrp.numVeic = ceil(demandaTotal/double(instCvrp.capVeic));
     std::cout<<instCvrp.numVeic<<"\n";
 
@@ -177,6 +206,8 @@ std::cout<<"numClientes: "<<numClientes<<"; cap: "<<capVeic<<"\n\n";
 
     delete []vetorX;
     delete []vetorY;
+
+    instCvrp.numClientes -= 1;
 
 }
 

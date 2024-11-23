@@ -11,8 +11,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 #include_directories(${GUROBI_INCLUDE_DIRS})
 #link_directories($ENV{GUROBI_HOME}/lib)
 
-
-set(CMAKE_CXX_FLAGS "-pedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -O3")
 
 add_subdirectory(DW_Decomp)
 include_directories(DW_Decomp/include)

@@ -28,18 +28,20 @@ namespace LabelingAlgorithmNS
         double upperBound = std::numeric_limits<double>::infinity();
     };
 
+    std::ostream& operator<< (std::ostream& out, const Bound &bound);
+
     // TODO Fix!
     // Fist access the resource, and then the cost of an arc (i,j)
-    typedef Eigen::Array<Eigen::Array<double, NumMaxCust, NumMaxCust>, 1, NumMaxResources> VetMatResCost;
+    typedef Eigen::Array<Eigen::Matrix<double, -1, -1, Eigen::RowMajor>, 1, -1> VetMatResCost;
 
     // Fist access the resource, and then the bound of a customer
-    typedef Eigen::Array<Eigen::Array<Bound, 1, NumMaxCust>, 1, NumMaxResources> VetVetResBound;
+    typedef Eigen::Vector<Eigen::Vector<Bound, -1>, -1> VetVetResBound;
 
     class NgSet
     {
     public:
 
-        EigenMatrixRow matNgSet;
+        EigenMatrixRowI matNgSet;
         int numCust   = NumMaxCust;
         int ngSetSize = NgSetSize;
         bool active   = true;
@@ -47,7 +49,7 @@ namespace LabelingAlgorithmNS
         NgSet();
         NgSet(int numCust, int ngSetSize);
         bool contain(int i, int j) const;
-        void setNgSets(const EigenMatrixRow &matDist);
+        void setNgSets(const EigenMatrixRowD &matDist);
     };
 
     struct Node
@@ -71,6 +73,10 @@ namespace LabelingAlgorithmNS
         int tamRoute = 0;
         std::bitset<NumMaxCust> bitSet;
 
+        int i = -1;
+        int j = -1;
+        int cust = -1;
+
         Label() = default;
 
     };
@@ -80,7 +86,7 @@ namespace LabelingAlgorithmNS
     {
     public:
         // Bound: [lower;upper)
-        Eigen::Vector<Bound, 2> vetBound;
+        // Eigen::Vector<Bound, 2> vetBound;
         Eigen::VectorX<Label*> vetPtrLabel;
         int sizeVetPtrLabel;
 
@@ -98,6 +104,10 @@ namespace LabelingAlgorithmNS
 
             sizeVetPtrLabel = 0;
         }
+
+        void addLabel(Label *labelPtr);
+        bool delLabel(Label *labelPtr);
+
     };
 
     class Step
@@ -122,7 +132,11 @@ namespace LabelingAlgorithmNS
     {
     public:
 
+        /** Access first the customer and after (i,j), where i is the component of the first resource
+          *  and j the component of the second one.
+          */
         Eigen::VectorX<MatBucket> vetMatBucket;
+        Eigen::Matrix<Eigen::Vector<Bound, 2>, -1, -1, Eigen::RowMajor> matBound;
         Eigen::Vector<Step, 2> vetStepSize;
         Eigen::Vector<int, 2> vetNumSteps;
         int numMainResources;
@@ -134,6 +148,8 @@ namespace LabelingAlgorithmNS
                      int numCust_);
 
         void flushLabel();
+        int getIndex(int resource, double val);
+        void removeLabel(Label *label);
     };
 
 

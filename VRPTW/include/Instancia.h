@@ -27,13 +27,14 @@ namespace InstanciaNS
         int numVeic = 0;
         int capVeic = 0;
 
-        EigenMatrixRow matDist;
+        EigenMatrixRowD matDist;
         Eigen::VectorX<ClieTime> vetClieTime;
         Eigen::VectorXi vetClieDem;
         std::string instName;
 
         explicit InstVRP_TW(int numClie);
         InstVRP_TW()=default;
+        double sumDist();
 
     };
 
