@@ -19,19 +19,7 @@ using namespace LabelingAlgorithmNS;
 
 int main(int argv, char **argc)
 {
-    Eigen::Vector<Step, 2> vetStepSize;
 
-    vetStepSize[0].stepSize = 10;
-    vetStepSize[0].start    = 0;
-    vetStepSize[0].end      = 50;
-
-
-/*    vetStepSize[1].stepSize = 10;
-    vetStepSize[1].start    = 60;
-    vetStepSize[1].end      = 80;*/
-
-    LabelingData labelingData(vetStepSize, 1, 17);
-    std::cout<<labelingData.getIndex(0, 20)<<"\n";
 
 //    return 0;
 
@@ -66,8 +54,37 @@ int main(int argv, char **argc)
         else
             leInstanciaSalomon(strFile, instVrpTw);
 
+
+        Eigen::Vector<Step, 2> vetStepSize;
+
+        double sumDist = instVrpTw.sumDist();
+
+        vetStepSize[0].stepSize = 100;
+        vetStepSize[0].start    = -instVrpTw.sumDist();
+        vetStepSize[0].end      = instVrpTw.sumDist();
+
+
+
+/*    vetStepSize[1].stepSize = 10;
+    vetStepSize[1].start    = 60;
+    vetStepSize[1].end      = 80;*/
+
+        LabelingData labelingData(vetStepSize, 1, 17);
+        std::cout<<labelingData.getIndex(0, 20)<<"\n";
+
         VetMatResCost vetMatResCost(1);
         vetMatResCost[0] = instVrpTw.matDist;
+
+        for(int i=0; i < instVrpTw.numClientes+1; ++i)
+        {
+            for(int j=0; j < instVrpTw.numClientes+1; ++j)
+            {
+                if(i == j || (i==0 && j == instVrpTw.numClientes) || (j==0 && i == instVrpTw.numClientes))
+                    continue;
+
+                vetMatResCost[0](i, j) += -sumDist;
+            }
+        }
 
         VetVetResBound vetVetResBound(1);
         vetVetResBound[0].resize(instVrpTw.numClientes+1);
@@ -75,18 +92,18 @@ int main(int argv, char **argc)
         double distTotal = instVrpTw.sumDist();
 
         Bound bound;
-        bound.lowerBound = -distTotal;
-        bound.upperBound =  distTotal;
+        bound.lowerBound = -std::numeric_limits<double>::infinity();
+        bound.upperBound =  std::numeric_limits<double>::infinity();
 
         for(int i=0; i < instVrpTw.numClientes+1; ++i)
         {
             vetVetResBound[0][i] = bound;
         }
 
-        NgSet ngSet(instVrpTw.numClientes, NgSetSize);
+        NgSet ngSet(instVrpTw.numClientes+1, NgSetSize);
         ngSet.setNgSets(instVrpTw.matDist);
 
-        forwardLabelingAlgorithm(1, 16, vetMatResCost, vetVetResBound, instVrpTw.numClientes, ngSet, labelingData);
+        forwardLabelingAlgorithm(1, instVrpTw.numClientes+1, vetMatResCost, vetVetResBound, instVrpTw.numClientes, ngSet, labelingData);
 
 /*        NgSet ngSet(instVrpTw.numClientes, NgSetSize);
         ngSet.setNgSets(instVrpTw.matDist);

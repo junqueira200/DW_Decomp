@@ -9,6 +9,7 @@
 #include "Grafo.h"
 #include <bitset>
 #include "Aux.h"
+#include "DW_Decomp.h"
 
 namespace LabelingAlgorithmNS
 {
@@ -82,6 +83,9 @@ namespace LabelingAlgorithmNS
     };
 
 
+    std::ostream& operator<< (std::ostream& out, const Label &label);
+
+
     class Bucket
     {
     public:
@@ -150,6 +154,38 @@ namespace LabelingAlgorithmNS
         void flushLabel();
         int getIndex(int resource, double val);
         void removeLabel(Label *label);
+
+        bool isCustEmpty(int cust)
+        {
+//std::cout<<"isCustEmpty\n";
+//std::cout<<"vetNumSteps[1]("<<vetNumSteps[1]<<")\n";
+
+            MatBucket &matBucket = vetMatBucket[cust];
+
+            for(int i=0; i < vetNumSteps[0]; ++i)
+            {
+                for(int j=0; j < vetNumSteps[1]; ++j)
+                {
+//std::cout<<"before\n";
+                    Bucket &bucket = matBucket.mat(i, j);
+//std::cout<<"got bucket\n";
+//std::cout<<"bucket.sizeVetPtrLabel("<<bucket.sizeVetPtrLabel<<")\n";
+
+                    for(int t=0; t < bucket.sizeVetPtrLabel; ++t)
+                    {
+                        // TODO: FIX
+                        Label* label = bucket.vetPtrLabel[t];
+
+                        if(label->vetResources[0] < -DW_DecompNS::TolObjSubProb)
+                            return false;
+                    }
+                }
+            }
+
+//std::cout<<"END\n";
+            return true;
+
+        }
     };
 
 
@@ -172,5 +208,7 @@ namespace LabelingAlgorithmNS
                      const NgSet &ngSet,
                      int numResources);
 
+    void removeCycles(Label &label, const int numCust);
+    void updateLabelCost(Label &label, const VetMatResCost &vetMatResCost);
 }
 #endif //DW_LABELINGALGORITHM_H
