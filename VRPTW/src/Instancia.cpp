@@ -30,6 +30,15 @@ double InstanciaNS::InstVRP_TW::sumDist()
     return dist;
 }
 
+int InstanciaNS::InstVRP_TW::sumDem()
+{
+    int sum = 0;
+    for(int i=0; i < numClientes; ++i)
+        sum += vetClieDem[i];
+
+    return sum;
+}
+
 
 void InstanciaNS::leInstanciaSalomon(const std::string &strFile, InstVRP_TW &instVrpTw)
 {

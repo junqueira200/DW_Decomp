@@ -40,6 +40,7 @@ namespace DW_DecompNS
 
         Eigen::MatrixXd *matA = nullptr;
 
+        SubProb()=default;
         virtual ~SubProb(){};
 
         virtual int getNumConvConstr()=0;

@@ -99,8 +99,10 @@ std::cout<<"numCust: "<<numCust<<"\n";
 
     labelPtr->vetRoute.resize(10);
     labelPtr->tamRoute = 1;
+
     labelPtr->vetRoute[0] = 0;
-    labelPtr->vetResources[0] = 0.0;
+//    labelPtr->vetResources[0] = 0.0;
+    labelPtr->vetResources.setZero();
 
 std::cout<<"\nsetup label0\n";
 
@@ -120,7 +122,9 @@ std::cout<<"\nsetup label0\n";
 
     int numIt = 0;
 
-    while(!listLabel.empty())
+    Label *labelPtrBest = nullptr;
+
+    while(!listLabel.empty())// && !labelPtrBest)
     {
 //std::cout<<"before front\n";
         labelPtr = listLabel.back();
@@ -146,7 +150,7 @@ std::cout<<*labelPtr<<"\n\n";
         // Extend label
         for(int t=1; t < numCust; ++t)
         {
-            if(t == lastCust)
+            if(t == lastCust || labelPtr->bitSet[t] == 1)
                 continue;
 
 
@@ -159,7 +163,6 @@ std::cout<<"\tt("<<t<<")\n";
 std::cout<<"\t\textendLabel;"<<*labelPtrAux<<"\n";
                 // Find index from resources
                 i = lData.getIndex(0, labelPtrAux->vetResources[0]);
-//std::cout<<"\t\ti("<<i<<")\n";
                 j = 0;
                 if(lData.numMainResources > 1)
                     j = lData.getIndex(1, labelPtrAux->vetResources[1]);
@@ -171,10 +174,25 @@ std::cout<<"\t\textendLabel;"<<*labelPtrAux<<"\n";
 std::cout<<"\t\ti("<<i<<"); j("<<j<<")\n";
 
                 Bucket &bucket = lData.vetMatBucket[t].mat(i, j);
+
+                for(int k=0; k < bucket.sizeVetPtrLabel; ++k)
+                {
+                    std::cout<<"\t\t\tcheckDominance: "<<*bucket.vetPtrLabel[k]<<"\n";
+                    if(checkDominance(*labelPtrAux, *bucket.vetPtrLabel[k], numRes))
+                    {
+std::cout<<"\t\t\t\t("<<labelPtrAux<<") domina ("<<bucket.vetPtrLabel[k]<<")\n";
+//std::cout<<"\t\t\t\t"<<*bucket.vetPtrLabel[k]<<"\n\n";
+                    }
+                }
+
+
 //std::cout<<"\t\tDepois\n";
 
                 bucket.addLabel(labelPtrAux);
                 listLabel.push_back(labelPtrAux);
+
+                if(labelPtrAux->cust == dest && labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb)
+                    labelPtrBest = labelPtrAux;
 
 //std::cout<<"extendLabel to t("<<t<<")\n";
 
@@ -182,17 +200,33 @@ std::cout<<"\t\ti("<<i<<"); j("<<j<<")\n";
             else
                 labelPool.delT(labelPtrAux);
 
+
+
         }
+
+std::cout<<"\n########################################################################################\n\n";
 
         labelPool.delT(labelPtr);
 
-        if(numIt == 9)
+        if(numIt == 15)
             break;
             //throw "ERRO";
 
         numIt += 1;
     }
 
+    if(labelPtrBest)
+    {
+        std::cout << "BEST LABEL: " << *labelPtrBest << "\n";
+
+        removeCycles(*labelPtrBest, numCust);
+        updateLabelCost(*labelPtrBest, vetMatResCost);
+        labelPtrBest->vetRoute[labelPtrBest->tamRoute-1] = labelPtrBest->vetRoute[0];
+
+        std::cout << "BEST LABEL: " << *labelPtrBest << "\n";
+    }
+
+    return;
 
     MatBucket &matBucket = lData.vetMatBucket[dest];
     Label *labelDest = nullptr;
@@ -263,7 +297,7 @@ bool LabelingAlgorithmNS::checkDominance(const Label& l0, const Label& l1, const
     }
 
     // Check if l0 is a subset of l1
-    return ((l0.bitSet&l1.bitSet)==l0.bitSet);
+    return ((l1.bitSet&l0.bitSet)==l1.bitSet);
 
 
 }
@@ -310,6 +344,8 @@ std::cout<<"\tLowerBound\n";
         if((i+1) == numResources)
             break;
     }
+
+    newLabel.bitSet = label.bitSet;
 
     // Checks if custJ its in custI ngSet
     if(custJ != 0 && ngSet.contain(custJ, custI))
@@ -383,14 +419,22 @@ std::cout<<"Resource("<<r<<") have ("<<step<<") steps\n";
     for(int i=0; i < vetNumSteps[0]; ++i)
     {
         double r00 = vetStepSize[0].start + i*vetStepSize[0].stepSize;
+
         double r01 = r00 + vetStepSize[0].stepSize;
         for(int j=0; j < vetNumSteps[1]; ++j)
         {
             double r10 = vetStepSize[1].start + j*vetStepSize[1].stepSize;
             double r11 = r10 + vetStepSize[1].stepSize;
 
-            matBound(i, j)[0].lowerBound = r00;
-            matBound(i, j)[0].upperBound = r01;
+            if(i != 0)
+                matBound(i, j)[0].lowerBound = r00;
+            else
+                matBound(i, j)[0].lowerBound = -std::numeric_limits<double>::infinity();
+
+            if(i != (vetNumSteps[0]-1))
+                matBound(i, j)[0].upperBound = r01;
+            else
+                matBound(i, j)[0].upperBound = std::numeric_limits<double>::infinity();
 
             matBound(i, j)[1].lowerBound = r10;
             matBound(i, j)[1].upperBound = r11;
@@ -398,8 +442,8 @@ std::cout<<"Resource("<<r<<") have ("<<step<<") steps\n";
         }
     }
 
-    matBound(vetNumSteps[0]-1, 0)[0].upperBound = std::numeric_limits<double>::infinity();
-    matBound(0, 0)[0].lowerBound = -std::numeric_limits<double>::infinity();
+//    matBound(vetNumSteps[0]-1, 0)[0].upperBound = std::numeric_limits<double>::infinity();
+//    matBound(0, 0)[0].lowerBound = -std::numeric_limits<double>::infinity();
 
     //for(int r=0; r < 2; ++r)
     {
@@ -564,14 +608,10 @@ void LabelingAlgorithmNS::Bucket::addLabel(LabelingAlgorithmNS::Label *labelPtr)
     }
 
     vetPtrLabel[sizeVetPtrLabel] = labelPtr;
+    labelPtr->pos = sizeVetPtrLabel;
     sizeVetPtrLabel += 1;
 }
 
-// TODO
-bool LabelingAlgorithmNS::Bucket::delLabel(LabelingAlgorithmNS::Label *labelPtr)
-{
-    return false;
-}
 
 std::ostream&  LabelingAlgorithmNS::operator<<(std::ostream& out, const Label &label)
 {
@@ -621,7 +661,7 @@ std::cout<<"start("<<start<<"); end("<<end<<")\n";
             }
 
             label.tamRoute -= end-start;
-
+            i = start;
             std::cout<<label<<"\n";
 
         }

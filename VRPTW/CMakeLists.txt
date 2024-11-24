@@ -48,6 +48,7 @@ add_executable(${PROJECT_NAME})
 target_sources(${PROJECT_NAME}
     PRIVATE
         src/LabelingAlgorithm.cpp
+        src/VrpTW_DecompLabeling.cpp
         src/VrpTW_Decomp.cpp
         src/Instancia.cpp
         src/SolomonInst.cpp

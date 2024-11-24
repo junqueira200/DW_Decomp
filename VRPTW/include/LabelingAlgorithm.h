@@ -14,9 +14,9 @@
 namespace LabelingAlgorithmNS
 {
 
-    constexpr int NumMaxResources = 1;
+    constexpr int NumMaxResources = 2;
     constexpr int NumMaxRoute     = 300;
-    constexpr int NumMaxCust      = 150;
+    constexpr int NumMaxCust      = 20;
     constexpr int NgSetSize       = 5;
     constexpr int NumBuckets      = 10;
     constexpr int vetPtrLabelSize = 5;
@@ -74,9 +74,10 @@ namespace LabelingAlgorithmNS
         int tamRoute = 0;
         std::bitset<NumMaxCust> bitSet;
 
-        int i = -1;
-        int j = -1;
+        int i    = -1;
+        int j    = -1;
         int cust = -1;
+        int pos  = -1;
 
         Label() = default;
 
@@ -110,7 +111,7 @@ namespace LabelingAlgorithmNS
         }
 
         void addLabel(Label *labelPtr);
-        bool delLabel(Label *labelPtr);
+//        bool delLabel(Label *labelPtr);
 
     };
 
@@ -150,6 +151,7 @@ namespace LabelingAlgorithmNS
         LabelingData(const Eigen::Vector<Step, 2> &vetStepSize_,
                      int numMainResources_,
                      int numCust_);
+        LabelingData()=default;
 
         void flushLabel();
         int getIndex(int resource, double val);

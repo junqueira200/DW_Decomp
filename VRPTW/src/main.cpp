@@ -2,7 +2,7 @@
 #include "Instancia.h"
 #include "VrpTW_Decomp.h"
 #include <filesystem>
-
+#include "VrpTW_DecompLabeling.h"
 //import teste;
 
 #include <boost/dynamic_bitset.hpp>
@@ -16,12 +16,11 @@ using namespace VrpTW_DecompNS;
 typedef  std::bitset<5> BitSet;
 
 using namespace LabelingAlgorithmNS;
+using namespace VrpTW_DecompLabelingNS;
 
 int main(int argv, char **argc)
 {
 
-
-//    return 0;
 
 /*    BitSet b0(0);
     //std::vector<bool> vet(5);
@@ -54,31 +53,46 @@ int main(int argv, char **argc)
         else
             leInstanciaSalomon(strFile, instVrpTw);
 
+        VrpLabelingSubProb vrpLabelingSubProb(instVrpTw);
+        return 0;
+
 
         Eigen::Vector<Step, 2> vetStepSize;
 
-        double sumDist = instVrpTw.sumDist();
+        const double sumDist = instVrpTw.sumDist();
+        const int sumDem     = instVrpTw.sumDem();
+
+        std::cout<<"sumDem: "<<sumDem<<"\n\n";
 
         vetStepSize[0].stepSize = 100;
         vetStepSize[0].start    = -instVrpTw.sumDist();
         vetStepSize[0].end      = instVrpTw.sumDist();
 
+        vetStepSize[1].stepSize = 5;
+        vetStepSize[1].start    = 0;
+        vetStepSize[1].end      = instVrpTw.capVeic;
 
 
 /*    vetStepSize[1].stepSize = 10;
     vetStepSize[1].start    = 60;
     vetStepSize[1].end      = 80;*/
 
-        LabelingData labelingData(vetStepSize, 1, 17);
+        LabelingData labelingData(vetStepSize, 2, 17);
+
+        //return 0;
+
         std::cout<<labelingData.getIndex(0, 20)<<"\n";
 
-        VetMatResCost vetMatResCost(1);
+        VetMatResCost vetMatResCost(2);
         vetMatResCost[0] = instVrpTw.matDist;
+        vetMatResCost[1].resize(instVrpTw.numClientes+1, instVrpTw.numClientes+1);
+        vetMatResCost[1].setZero();
 
         for(int i=0; i < instVrpTw.numClientes+1; ++i)
         {
             for(int j=0; j < instVrpTw.numClientes+1; ++j)
             {
+
                 if(i == j || (i==0 && j == instVrpTw.numClientes) || (j==0 && i == instVrpTw.numClientes))
                     continue;
 
@@ -86,24 +100,44 @@ int main(int argv, char **argc)
             }
         }
 
-        VetVetResBound vetVetResBound(1);
+
+        for(int i=0; i < instVrpTw.numClientes; ++i)
+        {
+            for(int j=0; j < instVrpTw.numClientes + 1; ++j)
+            {
+                if(i == j)
+                    continue;
+
+                vetMatResCost[1](i, j) = instVrpTw.vetClieDem[j];
+            }
+        }
+
+        VetVetResBound vetVetResBound(2);
+
         vetVetResBound[0].resize(instVrpTw.numClientes+1);
+        vetVetResBound[1].resize(instVrpTw.numClientes+1);
 
         double distTotal = instVrpTw.sumDist();
 
-        Bound bound;
-        bound.lowerBound = -std::numeric_limits<double>::infinity();
-        bound.upperBound =  std::numeric_limits<double>::infinity();
+        Bound bound0;
+        bound0.lowerBound = -std::numeric_limits<double>::infinity();
+        bound0.upperBound =  std::numeric_limits<double>::infinity();
+
+        Bound bound1;
+        bound1.lowerBound = 0;
+        bound1.upperBound = instVrpTw.capVeic;
 
         for(int i=0; i < instVrpTw.numClientes+1; ++i)
         {
-            vetVetResBound[0][i] = bound;
+            vetVetResBound[0][i] = bound0;
+            vetVetResBound[1][i] = bound1;
         }
 
         NgSet ngSet(instVrpTw.numClientes+1, NgSetSize);
         ngSet.setNgSets(instVrpTw.matDist);
+        ngSet.active = false;
 
-        forwardLabelingAlgorithm(1, instVrpTw.numClientes+1, vetMatResCost, vetVetResBound, instVrpTw.numClientes, ngSet, labelingData);
+        forwardLabelingAlgorithm(2, instVrpTw.numClientes+1, vetMatResCost, vetVetResBound, instVrpTw.numClientes, ngSet, labelingData);
 
 /*        NgSet ngSet(instVrpTw.numClientes, NgSetSize);
         ngSet.setNgSets(instVrpTw.matDist);

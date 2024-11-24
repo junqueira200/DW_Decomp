@@ -35,6 +35,7 @@ namespace InstanciaNS
         explicit InstVRP_TW(int numClie);
         InstVRP_TW()=default;
         double sumDist();
+        int sumDem();
 
     };
 
