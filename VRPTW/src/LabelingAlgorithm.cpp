@@ -117,6 +117,7 @@ std::cout<<"\nsetup label0\n";
     lData.vetMatBucket[0].mat(i, j).vetPtrLabel[0] = labelPtr;
     lData.vetMatBucket[0].mat(i, j).sizeVetPtrLabel = 1;
 
+    // TODO: MELHORAR PARA A REMOCAO!
     listLabel.push_back(labelPtr);
     labelPtr = nullptr;
 
@@ -126,6 +127,7 @@ std::cout<<"\nsetup label0\n";
 
     while(!listLabel.empty())// && !labelPtrBest)
     {
+std::cout<<"numIt: "<<numIt<<"\n";
 //std::cout<<"before front\n";
         labelPtr = listLabel.back();
 std::cout<<"labelPtr: "<<labelPtr<<"\n";
@@ -160,7 +162,7 @@ std::cout<<"\tt("<<t<<")\n";
 
             if(extendLabel(*labelPtr, *labelPtrAux, vetMatResCost, vetVetBound, labelPtr->cust, t, ngSet, numRes))
             {
-std::cout<<"\t\textendLabel;"<<*labelPtrAux<<"\n";
+std::cout<<"\t\textendLabel "<<labelPtrAux<<": "<<*labelPtrAux<<"\n";
                 // Find index from resources
                 i = lData.getIndex(0, labelPtrAux->vetResources[0]);
                 j = 0;
@@ -172,27 +174,71 @@ std::cout<<"\t\textendLabel;"<<*labelPtrAux<<"\n";
                 labelPtrAux->cust = t;
 
 std::cout<<"\t\ti("<<i<<"); j("<<j<<")\n";
-
+                //checkDominance 0x3185f880: Resouces(-13051 34 )
                 Bucket &bucket = lData.vetMatBucket[t].mat(i, j);
 
-                for(int k=0; k < bucket.sizeVetPtrLabel; ++k)
+                bool dominate = false;
+
+                int k=0;
+                while(k < bucket.sizeVetPtrLabel)
                 {
-                    std::cout<<"\t\t\tcheckDominance: "<<*bucket.vetPtrLabel[k]<<"\n";
+
+std::cout<<"\t\t\tcheckDominance "<<bucket.vetPtrLabel[k]<<": "<<*bucket.vetPtrLabel[k]<<"\n";
                     if(checkDominance(*labelPtrAux, *bucket.vetPtrLabel[k], numRes))
                     {
+                        if(bucket.vetPtrLabel[k] == labelPtrBest)
+                            labelPtrBest = nullptr;
+
+                        listLabel.remove(bucket.vetPtrLabel[k]);
+
 std::cout<<"\t\t\t\t("<<labelPtrAux<<") domina ("<<bucket.vetPtrLabel[k]<<")\n";
-//std::cout<<"\t\t\t\t"<<*bucket.vetPtrLabel[k]<<"\n\n";
+                        if(k == (bucket.sizeVetPtrLabel-1))
+                        {
+                            labelPool.delT(bucket.vetPtrLabel[k]);
+                            bucket.vetPtrLabel[k] = nullptr;
+                        }
+                        else
+                        {
+                            std::swap(bucket.vetPtrLabel[k], bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1]);
+                            labelPool.delT(bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1]);
+                            bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1] = nullptr;
+
+                        }
+
+                        bucket.sizeVetPtrLabel -= 1;
+                        continue;
                     }
+                    else if(checkDominance(*bucket.vetPtrLabel[k], *labelPtrAux, numRes))
+                    {
+std::cout<<"\t\t\t\t<"<<bucket.vetPtrLabel[k]<<">> domina <<"<<labelPtrAux<<">>\n";
+
+                        labelPool.delT(labelPtrAux);
+                        labelPtrAux = nullptr;
+                        break;
+                    }
+
+                    k += 1;
                 }
 
 
 //std::cout<<"\t\tDepois\n";
 
+                if(!labelPtrAux)
+                    continue;
+
                 bucket.addLabel(labelPtrAux);
                 listLabel.push_back(labelPtrAux);
 
                 if(labelPtrAux->cust == dest && labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb)
-                    labelPtrBest = labelPtrAux;
+                {
+                    if(labelPtrBest)
+                    {
+                        if(labelPtrAux->vetResources[0] < labelPtrBest->vetResources[0])
+                            labelPtrBest = labelPtrAux;
+                    }
+                    else
+                        labelPtrBest = labelPtrAux;
+                }
 
 //std::cout<<"extendLabel to t("<<t<<")\n";
 
@@ -200,15 +246,13 @@ std::cout<<"\t\t\t\t("<<labelPtrAux<<") domina ("<<bucket.vetPtrLabel[k]<<")\n";
             else
                 labelPool.delT(labelPtrAux);
 
-
-
         }
 
 std::cout<<"\n########################################################################################\n\n";
 
         labelPool.delT(labelPtr);
 
-        if(numIt == 15)
+        if(numIt == 200)
             break;
             //throw "ERRO";
 
@@ -228,58 +272,7 @@ std::cout<<"\n##################################################################
 
     return;
 
-    MatBucket &matBucket = lData.vetMatBucket[dest];
-    Label *labelDest = nullptr;
 
-    for(int i=0; i < lData.vetNumSteps[0]; ++i)
-    {
-        for(int j=0; j < lData.vetNumSteps[1]; ++j)
-        {
-//std::cout<<"before\n";
-            Bucket &bucket = matBucket.mat(i, j);
-//std::cout<<"got bucket\n";
-//std::cout<<"bucket.sizeVetPtrLabel("<<bucket.sizeVetPtrLabel<<")\n";
-
-            for(int t=0; t < bucket.sizeVetPtrLabel; ++t)
-            {
-                // TODO: FIX
-                Label* label = bucket.vetPtrLabel[t];
-
-                if(label->vetResources[0] < -DW_DecompNS::TolObjSubProb)
-                {
-                    if(labelDest)
-                    {
-                        if(label->vetResources[0] >= labelDest->vetResources[0])
-                            continue;
-                    }
-
-
-                    labelDest = label;
-                    //break;
-                }
-            }
-
-            //if(labelDest)
-                //break;
-        }
-
-        //if(labelDest)
-          //  break;
-    }
-
-    if(labelDest != nullptr)
-        std::cout<<"Dest: "<<(*labelDest)<<"\n\n";
-
-    std::cout<<"listLabel.empty: "<<listLabel.empty()<<"\n";
-
-    removeCycles(*labelDest, numCust);
-    updateLabelCost(*labelDest, vetMatResCost);
-
-    labelDest->vetRoute[labelDest->tamRoute-1] = labelDest->vetRoute[0];
-
-    std::cout<<*labelDest<<"\n";
-
-    throw "ERRO";
 
 }
 
@@ -297,7 +290,7 @@ bool LabelingAlgorithmNS::checkDominance(const Label& l0, const Label& l1, const
     }
 
     // Check if l0 is a subset of l1
-    return ((l1.bitSet&l0.bitSet)==l1.bitSet);
+    return ((l0.bitSet&l1.bitSet)==l0.bitSet);
 
 
 }
