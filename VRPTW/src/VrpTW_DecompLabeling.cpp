@@ -5,6 +5,7 @@
 
 using namespace LabelingAlgorithmNS;
 
+
 VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw_)
 {
     if(instVrpTw_.numClientes > NumMaxCust)
@@ -82,11 +83,12 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
 
     ngSet = NgSet(instVrpTw->numClientes+1, NgSetSize);
     ngSet.setNgSets(instVrpTw->matDist);
-//    ngSet.active = false;
+    ngSet.active = false;
 
 
-
-    forwardLabelingAlgorithm(2, instVrpTw->numClientes+1, vetMatResCost, vetVetResBound, instVrpTw->numClientes, ngSet, labelingData);
+    Eigen::VectorXd vetX(instVrpTw->numClientes*instVrpTw->numClientes);
+    vetX.setZero();
+    forwardLabelingAlgorithm(2, instVrpTw->numClientes+1, vetMatResCost, vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, vetX);
 
 }
 
@@ -94,14 +96,55 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
 void VrpTW_DecompLabelingNS::VrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA)
 {
 
+    GRBLinExpr linExpr;
+    rmlp.addConstr(linExpr, '<', instVrpTw->numVeic, "convConstr");
+
 }
 
 int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::VectorXd &vetC,
-                                                               const Eigen::RowVectorXd &vetRowPi, GRBModel &mestre,
-                                                               Eigen::VectorXd &vetX, int itCG, bool &custoRedNeg,
-                                                               void *data, const int iniConv, int indSubProb,
+                                                               const Eigen::RowVectorXd &vetRowPi,
+                                                               GRBModel &mestre,
+                                                               Eigen::VectorXd &vetX,
+                                                               int itCG,
+                                                               bool &custoRedNeg,
+                                                               void *data,
+                                                               const int iniConv,
+                                                               int indSubProb,
                                                                Eigen::VectorXd &vetCooefRestConv,
                                                                const std::pair<int, int> &pairSubProb)
 {
+
+    double pi0 = vetRowPi[0];
+
+    for(int i=0; i < instVrpTw->numClientes; ++i)
+    {
+        for(int j=1; j < instVrpTw->numClientes; ++j)
+        {
+            if(i == j)
+                continue;
+
+            vetMatResCost[0](i, j) = instVrpTw->matDist(i, j) - vetRowPi[j-1];
+        }
+
+        if(i != 0)
+        {
+            vetMatResCost[0](i, 0) = instVrpTw->matDist(i, 0);
+            vetMatResCost[0](i, instVrpTw->numClientes) = instVrpTw->matDist(i, 0);// - pi0;
+        }
+    }
+
+//    std::cout<<"Custo Reduzido: \n"<<vetMatResCost[0]<<"\n\n";
+
+    custoRedNeg = forwardLabelingAlgorithm(2,
+                                           instVrpTw->numClientes+1,
+                                           vetMatResCost,
+                                           vetVetResBound,
+                                           instVrpTw->numClientes,
+                                           ngSet,
+                                           labelingData,
+                                           vetX);
+
+    vetCooefRestConv[0] = 1;
+
     return 0;
 }

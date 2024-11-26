@@ -37,7 +37,7 @@ namespace VrpTW_DecompNS
 
         int getNumConvConstr() override {return 0;}
         VrpSubProb(GRBEnv &e, InstanciaNS::InstVRP_TW &instVrpTw);
-        int64_t getNumberOfConvConstr() override;// {return numSubProb;}
+        //int64_t getNumberOfConvConstr() override;// {return numSubProb;}
         ~VrpSubProb() override;
         void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
         int resolveSubProb(const Eigen::VectorXd &vetC,

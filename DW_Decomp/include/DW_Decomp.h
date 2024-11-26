@@ -82,7 +82,7 @@ namespace DW_DecompNS
                                    const std::pair<int, int> &pairSubProb)=0;
 
 
-        virtual int64_t getNumberOfConvConstr() = 0;
+        //virtual int64_t getNumberOfConvConstr() = 0;
     };
 
 

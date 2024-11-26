@@ -20,7 +20,7 @@ message("set vector_sanity_check=1")
 #set(CMAKE_CXX_FLAGS "-pedantic")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -O3")
 
-find_package(Boost REQUIRED)
+find_package(Boost CONFIG)
 
 #add_library(DW_Decomp SHARED)
 #find_package(DW_Decomp CONFIG REQUIRED)

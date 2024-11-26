@@ -44,7 +44,7 @@ void LabelingAlgorithmNS::NgSet::setNgSets(const EigenMatrixRowD &matDist)
 
     for(int i=0; i < numCust; ++i)
     {
-        std::cout<<"i("<<i<<")\n";
+        //std::cout<<"i("<<i<<")\n";
         int next = 0;
         for(int j=0; j < numCust; ++j)
         {
@@ -55,19 +55,19 @@ void LabelingAlgorithmNS::NgSet::setNgSets(const EigenMatrixRowD &matDist)
             vet[next].i    = j;
             next += 1;
 
-            std::cout<<"("<<j<<","<<matDist(i,j)<<"); ";
+            //std::cout<<"("<<j<<","<<matDist(i,j)<<"); ";
         }
 
 
         std::sort(vet.begin(), vet.end());
         next = 0;
 
-        std::cout<<"\tsort:\n";
+        //std::cout<<"\tsort:\n";
 
         for(int j=0; j < ngSetSize; ++j)
         {
             matNgSet(i, j) = vet[j].i;
-            std::cout<<"("<<vet[j].i<<","<<vet[j].dist<<"); ";
+            //std::cout<<"("<<vet[j].i<<","<<vet[j].dist<<"); ";
         }
 
         if((i+1) == numCust)
@@ -78,17 +78,22 @@ void LabelingAlgorithmNS::NgSet::setNgSets(const EigenMatrixRowD &matDist)
 
 
 
-void LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
+bool LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                                                    const int numCust,
                                                    const VetMatResCost& vetMatResCost,
                                                    const VetVetResBound& vetVetBound,
                                                    const int dest,
                                                    const NgSet &ngSet,
-                                                   LabelingData &lData)
+                                                   LabelingData &lData,
+                                                   Eigen::VectorXd &vetX)
 {
 
-std::cout<<"numCust: "<<numCust<<"\n";
-
+    //if(Print)
+    {
+        std::cout << "************************************************************\n";
+        std::cout << "*****************FORWARD LABELING ALGORITHM*****************\n\n";
+        std::cout << "numCust: " << numCust << "\n";
+    }
     static MemoryPool_NS::Pool<Label> labelPool(4, 8);
     labelPool.resetPool(false);
     lData.flushLabel();
@@ -103,8 +108,11 @@ std::cout<<"numCust: "<<numCust<<"\n";
     labelPtr->vetRoute[0] = 0;
 //    labelPtr->vetResources[0] = 0.0;
     labelPtr->vetResources.setZero();
+    labelPtr->bitSet = 0;
 
-std::cout<<"\nsetup label0\n";
+
+    if(Print)
+        std::cout<<"\nsetup label0\n";
 
     int i = lData.getIndex(0, 0.0);
     int j = 0; // lData.getIndex(0, 0.0);
@@ -127,12 +135,16 @@ std::cout<<"\nsetup label0\n";
 
     while(!listLabel.empty())// && !labelPtrBest)
     {
-std::cout<<"numIt: "<<numIt<<"\n";
+        if(Print)
+            std::cout << "numIt: " << numIt << "\n";
 //std::cout<<"before front\n";
         labelPtr = listLabel.back();
-std::cout<<"labelPtr: "<<labelPtr<<"\n";
-std::cout<<*labelPtr<<"\n\n";
 
+        if(Print)
+        {
+            std::cout << "labelPtr: " << labelPtr << "\n";
+            std::cout << *labelPtr << "\n\n";
+        }
         listLabel.pop_back();
 
 
@@ -141,7 +153,8 @@ std::cout<<*labelPtr<<"\n\n";
 
         if(lastCust == dest)
         {
-            std::cout<<"lastCust==dest("<<dest<<")\n";
+            if(Print)
+                std::cout<<"lastCust==dest("<<dest<<")\n";
             continue;
         }
 
@@ -156,13 +169,15 @@ std::cout<<*labelPtr<<"\n\n";
                 continue;
 
 
-std::cout<<"\tt("<<t<<")\n";
+            if(Print)
+                std::cout<<"\tt("<<t<<")\n";
 
             Label *labelPtrAux = labelPool.getT();
 
             if(extendLabel(*labelPtr, *labelPtrAux, vetMatResCost, vetVetBound, labelPtr->cust, t, ngSet, numRes))
             {
-std::cout<<"\t\textendLabel "<<labelPtrAux<<": "<<*labelPtrAux<<"\n";
+                if(Print)
+                    std::cout<<"\t\textendLabel "<<labelPtrAux<<": "<<*labelPtrAux<<"\n";
                 // Find index from resources
                 i = lData.getIndex(0, labelPtrAux->vetResources[0]);
                 j = 0;
@@ -173,7 +188,9 @@ std::cout<<"\t\textendLabel "<<labelPtrAux<<": "<<*labelPtrAux<<"\n";
                 labelPtrAux->j = j;
                 labelPtrAux->cust = t;
 
-std::cout<<"\t\ti("<<i<<"); j("<<j<<")\n";
+                if(Print)
+                    std::cout<<"\t\ti("<<i<<"); j("<<j<<")\n";
+
                 //checkDominance 0x3185f880: Resouces(-13051 34 )
                 Bucket &bucket = lData.vetMatBucket[t].mat(i, j);
 
@@ -182,8 +199,9 @@ std::cout<<"\t\ti("<<i<<"); j("<<j<<")\n";
                 int k=0;
                 while(k < bucket.sizeVetPtrLabel)
                 {
+                    if(Print)
+                        std::cout<<"\t\t\tcheckDominance "<<bucket.vetPtrLabel[k]<<": "<<*bucket.vetPtrLabel[k]<<"\n";
 
-std::cout<<"\t\t\tcheckDominance "<<bucket.vetPtrLabel[k]<<": "<<*bucket.vetPtrLabel[k]<<"\n";
                     if(checkDominance(*labelPtrAux, *bucket.vetPtrLabel[k], numRes))
                     {
                         if(bucket.vetPtrLabel[k] == labelPtrBest)
@@ -191,7 +209,9 @@ std::cout<<"\t\t\tcheckDominance "<<bucket.vetPtrLabel[k]<<": "<<*bucket.vetPtrL
 
                         listLabel.remove(bucket.vetPtrLabel[k]);
 
-std::cout<<"\t\t\t\t("<<labelPtrAux<<") domina ("<<bucket.vetPtrLabel[k]<<")\n";
+                        if(Print)
+                            std::cout<<"\t\t\t\t("<<labelPtrAux<<") domina ("<<bucket.vetPtrLabel[k]<<")\n";
+
                         if(k == (bucket.sizeVetPtrLabel-1))
                         {
                             labelPool.delT(bucket.vetPtrLabel[k]);
@@ -210,7 +230,8 @@ std::cout<<"\t\t\t\t("<<labelPtrAux<<") domina ("<<bucket.vetPtrLabel[k]<<")\n";
                     }
                     else if(checkDominance(*bucket.vetPtrLabel[k], *labelPtrAux, numRes))
                     {
-std::cout<<"\t\t\t\t<"<<bucket.vetPtrLabel[k]<<">> domina <<"<<labelPtrAux<<">>\n";
+                        if(Print)
+                            std::cout<<"\t\t\t\t<"<<bucket.vetPtrLabel[k]<<">> domina <<"<<labelPtrAux<<">>\n";
 
                         labelPool.delT(labelPtrAux);
                         labelPtrAux = nullptr;
@@ -231,13 +252,22 @@ std::cout<<"\t\t\t\t<"<<bucket.vetPtrLabel[k]<<">> domina <<"<<labelPtrAux<<">>\
 
                 if(labelPtrAux->cust == dest && labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb)
                 {
-                    if(labelPtrBest)
+
+                    removeCycles(*labelPtrAux, numCust);
+                    updateLabelCost(*labelPtrAux, vetMatResCost);
+
+                    if(Print)
+                        std::cout<<*labelPtrAux<<"\n\n";
+
+                    if(labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb)
                     {
-                        if(labelPtrAux->vetResources[0] < labelPtrBest->vetResources[0])
+                        if(labelPtrBest)
+                        {
+                            if(labelPtrAux->vetResources[0] < labelPtrBest->vetResources[0])
+                                labelPtrBest = labelPtrAux;
+                        } else
                             labelPtrBest = labelPtrAux;
                     }
-                    else
-                        labelPtrBest = labelPtrAux;
                 }
 
 //std::cout<<"extendLabel to t("<<t<<")\n";
@@ -248,11 +278,12 @@ std::cout<<"\t\t\t\t<"<<bucket.vetPtrLabel[k]<<">> domina <<"<<labelPtrAux<<">>\
 
         }
 
-std::cout<<"\n########################################################################################\n\n";
+        if(Print)
+            std::cout<<"\n########################################################################################\n\n";
 
         labelPool.delT(labelPtr);
 
-        if(numIt == 200)
+        if(numIt == 2000)
             break;
             //throw "ERRO";
 
@@ -263,16 +294,43 @@ std::cout<<"\n##################################################################
     {
         std::cout << "BEST LABEL: " << *labelPtrBest << "\n";
 
-        removeCycles(*labelPtrBest, numCust);
-        updateLabelCost(*labelPtrBest, vetMatResCost);
+        //removeCycles(*labelPtrBest, numCust);
+        //updateLabelCost(*labelPtrBest, vetMatResCost);
         labelPtrBest->vetRoute[labelPtrBest->tamRoute-1] = labelPtrBest->vetRoute[0];
 
         std::cout << "BEST LABEL: " << *labelPtrBest << "\n";
+
+
+        if(labelPtrBest->vetResources[0] >= -DW_DecompNS::TolObjSubProb)
+            return false;
+
+
+        std::cout << "listLabel.size: " << listLabel.size() << "\n";
+
+        Eigen::VectorXi &vetRoute = labelPtrBest->vetRoute;
+
+        for(int i = 0; i < (labelPtrBest->tamRoute - 1); ++i)
+        {
+            vetX(getIndex(vetRoute[i], vetRoute[i+1], numCust-1)) = 1.0;
+        }
+
+        std::cout<<vetX.transpose()<<"\n";
+
+
+std::cout<<"*****************END FORWARD LABELING ALGORITHM*****************\n";
+std::cout<<"****************************************************************\n\n";
+
+        return true;
     }
+    else
+    {
+std::cout<<"labelPtrBest is nullptr\n";
+std::cout<<"Dest("<<dest<<")\n";
+std::cout<<"*****************END FORWARD LABELING ALGORITHM*****************\n";
+std::cout<<"****************************************************************\n\n";
 
-    return;
-
-
+        return false;
+    }
 
 }
 
@@ -305,7 +363,8 @@ bool LabelingAlgorithmNS::extendLabel(const Label &label,
                                       const NgSet &ngSet,
                                       const int numResources)
 {
-std::cout<<"extendLabel\n";
+    if(Print)
+        std::cout<<"extendLabel\n";
 
     // Goes through resources
     for(int i=0; i < NumMaxResources; ++i)
@@ -323,13 +382,15 @@ std::cout<<vetMatResCost[i](custI, custJ)<<"\n";
         // Check the bound
         if(newLabel.vetResources[i] > vetVetBound[i][custJ].upperBound)
         {
-std::cout<<"\tUpperBound\n";
+            if(Print)
+                std::cout<<"\tUpperBound\n";
             return false;
         }
 
         else if(newLabel.vetResources[i] < vetVetBound[i][custJ].lowerBound)
         {
-std::cout<<"\tLowerBound\n";
+            if(Print)
+                std::cout<<"\tLowerBound\n";
             return false;
             newLabel.vetResources[i] = vetVetBound[i][custJ].lowerBound;
         }
@@ -338,6 +399,7 @@ std::cout<<"\tLowerBound\n";
             break;
     }
 
+    newLabel.bitSet = 0;
     newLabel.bitSet = label.bitSet;
 
     // Checks if custJ its in custI ngSet
@@ -347,9 +409,12 @@ std::cout<<"\tLowerBound\n";
     if((newLabel.vetRoute.size()) < label.tamRoute+1)
         newLabel.vetRoute.resize(label.vetRoute.size()+1);
 
-std::cout<<"copy route\n";
-std::cout<<"label.tamRoute("<<label.tamRoute<<")\n";
-std::cout<<"newLabel.vetRoute.size("<<newLabel.vetRoute.size()<<")\n";
+    if(Print)
+    {
+        std::cout << "copy route\n";
+        std::cout << "label.tamRoute(" << label.tamRoute << ")\n";
+        std::cout << "newLabel.vetRoute.size(" << newLabel.vetRoute.size() << ")\n";
+    }
 
     // Copy route
     for(int i=0; i < label.tamRoute; ++i)
@@ -357,10 +422,14 @@ std::cout<<"newLabel.vetRoute.size("<<newLabel.vetRoute.size()<<")\n";
         newLabel.vetRoute[i] = label.vetRoute[i];
     }
 
+    if(Print)
+        std::cout<<"APOS COPY ROUTE\n";
+
     newLabel.vetRoute[label.tamRoute] = custJ;
     newLabel.tamRoute = label.tamRoute+1;
 
-std::cout<<"END\n";
+    if(Print)
+        std::cout<<"END\n";
 
     return true;
 
@@ -396,7 +465,8 @@ LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2> &ve
             step -= 1;
 
         vetNumSteps[r] = step;
-std::cout<<"Resource("<<r<<") have ("<<step<<") steps\n";
+
+//std::cout<<"Resource("<<r<<") have ("<<step<<") steps\n";
 
     }
 
@@ -439,7 +509,7 @@ std::cout<<"Resource("<<r<<") have ("<<step<<") steps\n";
 //    matBound(0, 0)[0].lowerBound = -std::numeric_limits<double>::infinity();
 
     //for(int r=0; r < 2; ++r)
-    {
+/*    {
         //std::cout<<"r("<<r<<"\n";
 
         for(int i=0; i < vetNumSteps[0]; ++i)
@@ -453,7 +523,7 @@ std::cout<<"Resource("<<r<<") have ("<<step<<") steps\n";
         }
 
         std::cout<<"\n\n";
-    }
+    }*/
 
 }
 
@@ -557,7 +627,8 @@ std::ostream& LabelingAlgorithmNS::operator<< (std::ostream& out, const Bound &b
 
 void LabelingAlgorithmNS::LabelingData::removeLabel(Label *label)
 {
-std::cout<<"Begin removeLabel\n";
+    if(Print)
+        std::cout<<"Begin removeLabel\n";
 
     int cust = label->cust;
     int i    = label->i;
@@ -586,8 +657,8 @@ std::cout<<"Begin removeLabel\n";
 
     vetMatBucket[cust].mat(i, j).sizeVetPtrLabel -= 1;
 
-
-std::cout<<"End removeLabel\n";
+    if(Print)
+        std::cout<<"End removeLabel\n";
 }
 
 void LabelingAlgorithmNS::Bucket::addLabel(LabelingAlgorithmNS::Label *labelPtr)
@@ -637,7 +708,8 @@ void LabelingAlgorithmNS::removeCycles(Label &label, const int numCust)
             int end   = i+1;
             int prox  = end;
 
-std::cout<<"start("<<start<<"); end("<<end<<")\n";
+            if(Print)
+                std::cout<<"start("<<start<<"); end("<<end<<")\n";
 
             for(int k=start; k < end; ++k)
             {
@@ -655,7 +727,8 @@ std::cout<<"start("<<start<<"); end("<<end<<")\n";
 
             label.tamRoute -= end-start;
             i = start;
-            std::cout<<label<<"\n";
+            if(Print)
+                std::cout<<label<<"\n";
 
         }
         else

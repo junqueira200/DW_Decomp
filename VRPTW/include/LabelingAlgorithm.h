@@ -16,12 +16,13 @@ namespace LabelingAlgorithmNS
 
     constexpr int NumMaxResources = 2;
     constexpr int NumMaxRoute     = 300;
-    constexpr int NumMaxCust      = 20;
+    constexpr int NumMaxCust      = 100;
     constexpr int NgSetSize       = 5;
     constexpr int NumBuckets      = 10;
     constexpr int vetPtrLabelSize = 5;
     constexpr bool NullFlush      = true;
 
+    constexpr bool Print          = false;
 
     struct Bound
     {
@@ -177,7 +178,6 @@ namespace LabelingAlgorithmNS
                     {
                         // TODO: FIX
                         Label* label = bucket.vetPtrLabel[t];
-
                         if(label->vetResources[0] < -DW_DecompNS::TolObjSubProb)
                             return false;
                     }
@@ -191,13 +191,14 @@ namespace LabelingAlgorithmNS
     };
 
 
-    void forwardLabelingAlgorithm(const int numRes,
+    bool forwardLabelingAlgorithm(const int numRes,
                                   const int numCust,
                                   const VetMatResCost& vetMatResCost,
                                   const VetVetResBound& vetVetBound,
-                                  int dest,
+                                  const int dest,
                                   const NgSet &ngSet,
-                                  LabelingData &lData);
+                                  LabelingData &lData,
+                                  Eigen::VectorXd &vetX);
 
     bool checkDominance(const Label& l0, const Label& l1, int numResources);
 
@@ -212,5 +213,10 @@ namespace LabelingAlgorithmNS
 
     void removeCycles(Label &label, const int numCust);
     void updateLabelCost(Label &label, const VetMatResCost &vetMatResCost);
+
+
+    // Linear index for a nxn matrix
+    inline __attribute__((always_inline))
+    int getIndex(int i, int j, int numClie){return i*numClie+j;}
 }
 #endif //DW_LABELINGALGORITHM_H

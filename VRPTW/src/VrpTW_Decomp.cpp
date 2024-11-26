@@ -19,7 +19,7 @@ void VrpTW_DecompNS::criaMestre(const InstanciaNS::InstVRP_TW &instVrpTw, GRBMod
         }
     }
 
-    for(int i=0; i < NumClie; ++i)
+    for(int i=1; i < NumClie; ++i)
     {
         GRBLinExpr linExpr;
         for(int j=0; j < NumClie; ++j)
@@ -45,11 +45,11 @@ int VrpTW_DecompNS::getIndex(int i, int j, int numClie)
 }
 
 
-int64_t VrpTW_DecompNS::VrpSubProb::getNumberOfConvConstr()
+/*int64_t VrpTW_DecompNS::VrpSubProb::getNumberOfConvConstr()
 {
     std::cout<<"VrpSubProb::getNumberOfConvConstr\n\n";
     return 0;
-}
+}*/
 
 
 VrpTW_DecompNS::VrpSubProb::VrpSubProb(GRBEnv &e, InstanciaNS::InstVRP_TW &instVrpTw_)

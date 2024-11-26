@@ -11,6 +11,9 @@
 
 namespace VrpTW_DecompLabelingNS
 {
+    // Linear index for a nxn matrix
+    inline __attribute__((always_inline))
+    int getIndex(int i, int j, int numClie){return i*numClie+j;}
 
 
     class VrpLabelingSubProb : public DW_DecompNS::SubProb
@@ -28,10 +31,10 @@ namespace VrpTW_DecompLabelingNS
         LabelingAlgorithmNS::VetVetResBound vetVetResBound;
         LabelingAlgorithmNS::NgSet ngSet;
 
-        int getNumConvConstr() override {return 0;}
+        int getNumConvConstr() override {return 1;}
         VrpLabelingSubProb()=default;
         explicit VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw);
-        int64_t getNumberOfConvConstr() override{return 0;};// {return numSubProb;}
+        //int64_t getNumberOfConvConstr() override{return 0;};// {return numSubProb;}
         ~VrpLabelingSubProb() override =default;
         void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
         int resolveSubProb(const Eigen::VectorXd &vetC,

@@ -239,7 +239,7 @@ void DW_DecompNS::dwDecomp(GRBEnv &env,
                            const int numSubProb)
 {
 
-    const int64_t numConstrsConv = subProb->getNumberOfConvConstr();
+    const int64_t numConstrsConv = subProb->getNumConvConstr();
 
     std::cout<<"********************************DW DECOMP********************************\n";
 
@@ -546,7 +546,7 @@ std::cout<<"ini DW_DecompNode\n";
     info.costA_Var  = costA_Var_;
     info.numSubProb = numSubProb_;
 std::cout<<"antes\n";
-    info.numConstrsConv = ptrSubProb->getNumberOfConvConstr();
+    info.numConstrsConv = ptrSubProb->getNumConvConstr();
 std::cout<<"depois\n";
 
     info.numConstrsMaster = master.get(GRB_IntAttr_NumConstrs);
@@ -639,12 +639,16 @@ std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n
 
     for(int i=0; i < info.numConstrsMaster; ++i)
     {
-        vetVarArtifRmlp[i].set(GRB_DoubleAttr_Obj, info.costA_Var);
-        vetLinExprRmlp[i] = vetVarArtifRmlp[i];
+        char sense = vetConstr[i].get(GRB_CharAttr_Sense);
 
+        if(sense != '<')
+        {
+            vetVarArtifRmlp[i].set(GRB_DoubleAttr_Obj, info.costA_Var);
+            vetLinExprRmlp[i] = vetVarArtifRmlp[i];
+        }
         //if(i < numConstrsMestre)
 
-        vetRmlpConstrsSense[i] = vetConstr[i].get(GRB_CharAttr_Sense);
+        vetRmlpConstrsSense[i] = sense;
         vetRmlpRhs[i]          = vetConstr[i].get(GRB_DoubleAttr_RHS);
         vetStrConstrs[i]       = "master_" + std::to_string(i);
     }
@@ -687,6 +691,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
     itCG = 0;
 
     const int iniConv = 0;
+    bool setAllVarAZero = false;
+
 
     while(subProbCustR_neg)
     {
@@ -694,12 +700,14 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
         std::cout<<"CG It: "<<itCG<<"\n\n";
 
+        /*
         for(int i=0; i < vetVarLambdaCol.size(); ++i)
         {
             std::cout << "\t" << i << ": " << vetVarLambdaCol[i]->transpose() << "\n";
         }
 
         std::cout<<"\n\n";
+        */
 
 
         uRmlp->update();
@@ -714,6 +722,25 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
         // TODO Remove
         GRBVar *vetVar        = uRmlp->getVars();
         double *vetRmlpLambda = uRmlp->get(GRB_DoubleAttr_X, vetVar, uRmlp->get(GRB_IntAttr_NumVars));
+
+        // Set zero if finds an artificial variable with value equal to 0
+        //if(!setAllVarAZero)
+        {
+            setAllVarAZero = true;
+            for(int i=0; i < info.numConstrsMaster; ++i)
+            {
+                if(vetVar[i].get(GRB_DoubleAttr_X) == 0.0 && vetVar[i].get(GRB_DoubleAttr_Obj) != 0.0)
+                {
+                    vetVar[i].set(GRB_DoubleAttr_Obj, 0.0);
+                    vetVar[i].set(GRB_DoubleAttr_LB, 0.0);
+                    vetVar[i].set(GRB_DoubleAttr_UB, 0.0);
+
+                    setAllVarAZero = false;
+                }
+            }
+        }
+        //else
+        //    std::cout<<"SET VARIAVEIS ARTIFICIAIS PARA ZERO!\n";
 
         std::cout<<"vetRmlpLambda: ";
         for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
@@ -770,7 +797,15 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
             auxVect.vetColCooef.setZero();
             std::cout<<"antes A*vetSol\n";
-            auxVect.vetColCooef.segment(0, info.numConstrsMaster) = matA*vetSol;
+
+            auxVect.vetColCooef.segment(0, info.numConstrsConv)   = auxVect.vetColConvCooef;
+            auxVect.vetColCooef.segment(info.numConstrsConv, info.numConstrsMaster) = matA*vetSol;
+            std::cout<<"antes\n";
+//std::cout<<"vetColCooef.size("<<auxVect.vetColCooef.size()<<"\n";
+//std::cout<<"info.numConstrsMaster+1: "<<info.numConstrsMaster+1<<"\n";
+//std::cout<<"numConstrsConv: "<<info.numConstrsConv<<"\n\n";
+            //auxVect.vetColCooef.segment(info.numConstrsMaster, info.numConstrsConv) = auxVect.vetColConvCooef;
+
             std::cout<<"depois A*vetSol\n";
 
             addColumn(cgCooefObj, k, auxVect, info);
@@ -786,6 +821,18 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
     std::cout<<"FIM CG!\n";
     std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
+
+    GRBVar *vetVar        = uRmlp->getVars();
+    double *vetRmlpLambda = uRmlp->get(GRB_DoubleAttr_X, vetVar, uRmlp->get(GRB_IntAttr_NumVars));
+
+    std::cout<<"vetRmlpLambda: ";
+    for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
+        std::cout<<vetRmlpLambda[i]<<" ";
+
+    std::cout<<"\n\n";
+    delete []vetRmlpLambda;
+    delete []vetVar;
+
 
     return DW_DecompNS::StatusSubProb_Otimo;
 
@@ -846,8 +893,8 @@ void DW_DecompNS::DW_DecompNode::addColumn(const double cost, int k, AuxVectors 
     std::cout<<"\tini addColumn\n";
     std::cout << "\tvetConvCoorf.size(): " << auxVect.vetColConvCooef.size() << "\n";
 
-    for(int i=0; i < auxVect.vetColConvCooef.size(); ++i)
-        auxVect.vetColCooef[info.numConstrsMaster+i] = auxVect.vetColConvCooef[i];
+    //for(int i=0; i < auxVect.vetColConvCooef.size(); ++i)
+    //    auxVect.vetColCooef[info.numConstrsMaster+i] = auxVect.vetColConvCooef[i];
 
     std::cout<<"\tFim for\n";
     std::cout << "\tvetConvCooef: " << auxVect.vetColConvCooef.transpose() << "\n";
@@ -856,6 +903,9 @@ void DW_DecompNS::DW_DecompNode::addColumn(const double cost, int k, AuxVectors 
     grbColumn.addTerms(&auxVect.vetColCooef[0], vetRmlpConstr, int(auxVect.vetColCooef.size()));
     uRmlp->addVar(0.0, GRB_INFINITY, cost, GRB_CONTINUOUS, grbColumn,
                 "l_"+std::to_string(itCG)+"_"+std::to_string(k));
+
+    //PRINT_DEBUG("", "");
+    //throw "NAO EH ERRO";
 
 }
 
