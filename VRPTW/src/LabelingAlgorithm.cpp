@@ -175,6 +175,10 @@ std::cout<<"while\n";
         {
             std::cout<<"listLabel have a nullptr\n";
             PRINT_DEBUG("", "");
+
+            for(int i=1; i < sizeLabelHeap; ++i)
+                std::cout<<vetLabel[i]<<"\n";
+
             throw "ERROR";
         }
 
