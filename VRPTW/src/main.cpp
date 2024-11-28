@@ -63,7 +63,7 @@ int main(int argv, char **argc)
         GRBModel model(grbEnv);
         criaMestre(instVrpTw, model);
 
-        double distVarA = somaDist(instVrpTw);
+        double distVarA = somaDist(instVrpTw)*4;
         //VrpSubProb vrpSubProb(grbEnv, instVrpTw);
 
         DW_DecompNS::AuxVectors auxVectors;
@@ -77,6 +77,8 @@ int main(int argv, char **argc)
 
         std::cout << "..";
         std::cout << "Num de veic: " << instVrpTw.numVeic << "\n\n";
+
+        std::cout<<"sizeof(Label): "<<sizeof(Label)<<"\n";
 
     }
     catch(char const* str)

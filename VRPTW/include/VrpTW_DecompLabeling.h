@@ -31,7 +31,7 @@ namespace VrpTW_DecompLabelingNS
         LabelingAlgorithmNS::VetVetResBound vetVetResBound;
         LabelingAlgorithmNS::NgSet ngSet;
 
-        int getNumConvConstr() override {return 1;}
+        int getNumConvConstr() override {return 0;}
         VrpLabelingSubProb()=default;
         explicit VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw);
         //int64_t getNumberOfConvConstr() override{return 0;};// {return numSubProb;}

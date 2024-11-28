@@ -711,7 +711,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
 
         uRmlp->update();
-        uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
+        //uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
         uRmlp->optimize();
 
         std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
@@ -727,6 +727,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
         //if(!setAllVarAZero)
         {
             setAllVarAZero = true;
+            bool increaseValue = false;
             for(int i=0; i < info.numConstrsMaster; ++i)
             {
                 if(vetVar[i].get(GRB_DoubleAttr_X) == 0.0 && vetVar[i].get(GRB_DoubleAttr_Obj) != 0.0)
@@ -737,6 +738,11 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
                     setAllVarAZero = false;
                 }
+/*                else if(vetVar[i].get(GRB_DoubleAttr_X) != 0.0 && !increaseValue)
+                {
+                    vetVar[i].set(GRB_DoubleAttr_Obj, info.costA_Var);
+                    increaseValue = true;
+                }*/
             }
         }
         //else
@@ -752,8 +758,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
         updateRmlpPi(auxVect.vetRowRmlpPi, info);
 
 
-//        if(itCG == 3)
-//            throw "NAO EH ERRO";
+        //if(itCG == 500)
+        //    throw "NAO EH ERRO";
 
         // Update and solve the subproblems
         for(int k=0; k < info.numSubProb; ++k)
@@ -812,6 +818,20 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
         }
 
 
+/*        if(!subProbCustR_neg)
+        {
+
+            for(int i=0; i < info.numConstrsMaster; ++i)
+            {
+
+                vetVar[i].set(GRB_DoubleAttr_Obj, 0.0);
+                vetVar[i].set(GRB_DoubleAttr_LB, 0.0);
+                vetVar[i].set(GRB_DoubleAttr_UB, 0.0);
+            }
+
+            subProbCustR_neg = true;
+
+        }*/
 
 
         delete []vetVar;

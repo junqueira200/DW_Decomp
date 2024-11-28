@@ -10,13 +10,15 @@
 #include <bitset>
 #include "Aux.h"
 #include "DW_Decomp.h"
+#include "safe_vector.h"
+#include <boost/array.hpp>
 
 namespace LabelingAlgorithmNS
 {
 
     constexpr int NumMaxResources = 2;
     constexpr int NumMaxRoute     = 300;
-    constexpr int NumMaxCust      = 100;
+    constexpr int NumMaxCust      = 20;
     constexpr int NgSetSize       = 5;
     constexpr int NumBuckets      = 10;
     constexpr int vetPtrLabelSize = 5;
@@ -71,7 +73,7 @@ namespace LabelingAlgorithmNS
 
         //int numResources = 1;
         Eigen::Array<double, 1, NumMaxResources> vetResources;
-        Eigen::VectorXi vetRoute;
+        boost::array<int, 200> vetRoute;
         int tamRoute = 0;
         std::bitset<NumMaxCust> bitSet;
 
@@ -191,14 +193,9 @@ namespace LabelingAlgorithmNS
     };
 
 
-    bool forwardLabelingAlgorithm(const int numRes,
-                                  const int numCust,
-                                  const VetMatResCost& vetMatResCost,
-                                  const VetVetResBound& vetVetBound,
-                                  const int dest,
-                                  const NgSet &ngSet,
-                                  LabelingData &lData,
-                                  Eigen::VectorXd &vetX);
+    bool forwardLabelingAlgorithm(const int numRes, const int numCust, const VetMatResCost &vetMatResCost,
+                                  const VetVetResBound &vetVetBound, const int dest, const NgSet &ngSet,
+                                  LabelingData &lData, Eigen::VectorXd &vetX, const double labelStart);
 
     bool checkDominance(const Label& l0, const Label& l1, int numResources);
 

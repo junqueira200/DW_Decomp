@@ -83,12 +83,13 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
 
     ngSet = NgSet(instVrpTw->numClientes+1, NgSetSize);
     ngSet.setNgSets(instVrpTw->matDist);
-    ngSet.active = false;
+    //ngSet.active = false;
 
 
     Eigen::VectorXd vetX(instVrpTw->numClientes*instVrpTw->numClientes);
     vetX.setZero();
-    forwardLabelingAlgorithm(2, instVrpTw->numClientes+1, vetMatResCost, vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, vetX);
+    forwardLabelingAlgorithm(2, instVrpTw->numClientes + 1, vetMatResCost, vetVetResBound, instVrpTw->numClientes,
+                             ngSet, labelingData, vetX, 0);
 
 }
 
@@ -96,8 +97,8 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
 void VrpTW_DecompLabelingNS::VrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA)
 {
 
-    GRBLinExpr linExpr;
-    rmlp.addConstr(linExpr, '<', instVrpTw->numVeic, "convConstr");
+    //GRBLinExpr linExpr;
+    //rmlp.addConstr(linExpr, '<', instVrpTw->numVeic, "convConstr");
 
 }
 
@@ -115,6 +116,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
 {
 
     double pi0 = vetRowPi[0];
+    vetMatResCost[0].setZero();
 
     for(int i=0; i < instVrpTw->numClientes; ++i)
     {
@@ -133,18 +135,19 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
         }
     }
 
-//    std::cout<<"Custo Reduzido: \n"<<vetMatResCost[0]<<"\n\n";
+    //std::cout<<"Custo Reduzido: \n"<<vetMatResCost[0]<<"\n\n";
 
     custoRedNeg = forwardLabelingAlgorithm(2,
-                                           instVrpTw->numClientes+1,
+                                           instVrpTw->numClientes + 1,
                                            vetMatResCost,
                                            vetVetResBound,
                                            instVrpTw->numClientes,
                                            ngSet,
                                            labelingData,
-                                           vetX);
+                                           vetX,
+                                           0.0);//-vetRowPi[0]);
 
-    vetCooefRestConv[0] = 1;
+    //vetCooefRestConv[0] = 1;
 
     return 0;
 }
