@@ -102,8 +102,10 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     labelPool.resetPool(false);
     lData.flushLabel();
 
-    std::list<Label*> listLabel;
-    boost::heap::fibonacci_heap<Label*> heapLabel;
+    //std::list<Label*> listLabel;
+    static Eigen::Array<Label*, 1, -1> vetLabel(400);
+    vetLabel.setConstant(nullptr);
+    long sizeLabelHeap = 0;
 
     Label *labelPtr = labelPool.getT();
     if(labelPtr == nullptr)
@@ -123,6 +125,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     labelPtr->bitSet = 0;
 
 
+
+
     if(Print)
     {   std::cout << "\nsetup label0\n";
         std::cout << *labelPtr << "\n";
@@ -139,30 +143,69 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     lData.vetMatBucket[0].mat(i, j).vetPtrLabel[0] = labelPtr;
     lData.vetMatBucket[0].mat(i, j).sizeVetPtrLabel = 1;
 
-    // TODO: MELHORAR PARA A REMOCAO!
-    listLabel.push_back(labelPtr);
+    //listLabel.push_back(labelPtr);
+    vetLabel[sizeLabelHeap] = labelPtr;
+    sizeLabelHeap += 1;
+
     labelPtr = nullptr;
+
+    //std::make_heap(labelHeap.begin(), labelHeap.begin()+sizeLabelHeap, LessLabel);
+
+
 
     int numIt = 0;
 
     Label *labelPtrBest = nullptr;
 
-    while(!listLabel.empty() && !labelPtrBest)
+    while(sizeLabelHeap > 0 && !labelPtrBest)
     {
-//std::cout<<"while\n";
+std::cout<<"while\n";
 
-        if(Print)
+//        if(Print)
+        {
             std::cout << "numIt: " << numIt << "\n";
+        }
 //std::cout<<"before front\n";
-        labelPtr = listLabel.back();
+
+        labelPtr = vetLabel[0];
+        int pos = 0;
+
 
         if(labelPtr == nullptr)
         {
-
             std::cout<<"listLabel have a nullptr\n";
             PRINT_DEBUG("", "");
-            throw "ERRO";
+            throw "ERROR";
         }
+
+
+//std::cout<<"\tfor\n";
+//std::cout<<"sizeLabelHeap: "<<sizeLabelHeap<<"\n";
+
+        // Get the label with the minimal resource
+        for(int i=1; i < sizeLabelHeap; ++i)
+        {
+
+            if(vetLabel[i] == nullptr)
+            {
+                std::cout<<"vetLabel[i] is nullptr!\n";
+                PRINT_DEBUG("", "");
+                throw "ERROR";
+            }
+
+            if(vetLabel[i]->vetResources[0] < labelPtr->vetResources[0])
+            {
+                labelPtr = vetLabel[i];
+                pos = i;
+            }
+        }
+
+std::cout<<"\n\n\tEND for\n";
+
+        // Erase labelPtr position from vetLabel
+        std::swap(vetLabel[pos], vetLabel[sizeLabelHeap-1]);
+        vetLabel[sizeLabelHeap-1] = nullptr;
+        sizeLabelHeap -= 1;
 
         if(Print)
         {
@@ -170,7 +213,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
             std::cout << *labelPtr << "\n\n";
         }
 
-        listLabel.pop_back();
+        //listLabel.pop_back();
 
 
         //std::cout<<"Extract label("<<labelPtr->vetRoute<<")\n";
@@ -180,6 +223,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
         {
             if(Print)
                 std::cout<<"lastCust==dest("<<dest<<")\n";
+
+            // labelPtr is nor removed due to its still in vetMatBucket
             continue;
         }
 
@@ -187,7 +232,6 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
         // Remove labelPtr from vetMatBucket
         lData.removeLabel(labelPtr);
 
-//std::cout<<"Extend label\n";
         // Extend label
         for(int t=1; t < numCust; ++t)
         {
@@ -224,7 +268,6 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                     std::cout<<"\t\ti("<<i<<"); j("<<j<<")\n";
 
                 Bucket &bucket = lData.vetMatBucket[t].mat(i, j);
-
                 bool dominate = false;
 
                 int k=0;
@@ -240,7 +283,38 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                         if(bucket.vetPtrLabel[k] == labelPtrBest)
                             labelPtrBest = nullptr;
 
-                        listLabel.remove(bucket.vetPtrLabel[k]);
+                        // Remove from the vetLeabel
+                        //bucket.vetPtrLabel[k]->vetResources[0] = std::numeric_limits<double>::infinity();
+                        pos = -1;
+                        for(int i=0; i < sizeLabelHeap; ++i)
+                        {
+                            if(!vetLabel[i])
+                            {
+                                std::cout<<"vetLabel[i] is nullptr!\n";
+                                PRINT_DEBUG("", "");
+                                throw "ERROR";
+                            }
+
+                            if(vetLabel[i] == bucket.vetPtrLabel[k])
+                            {
+                                pos = i;
+                                break;
+                            }
+                        }
+
+                        if(pos == -1)
+                        {
+                            std::cout<<bucket.vetPtrLabel[k]<<" isn't in vetLabel!";
+                            PRINT_DEBUG("", "");
+                            throw "ERROR";
+                        }
+
+
+                        std::swap(vetLabel[pos], vetLabel[sizeLabelHeap-1]);
+                        vetLabel[sizeLabelHeap-1] = nullptr;
+                        sizeLabelHeap -= 1;
+
+                        //listLabel.remove(bucket.vetPtrLabel[k]);
 
                         if(Print)
                             std::cout<<"\t\t\t\t("<<labelPtrAux<<") domina ("<<bucket.vetPtrLabel[k]<<")\n";
@@ -255,7 +329,6 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                             std::swap(bucket.vetPtrLabel[k], bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1]);
                             labelPool.delT(bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1]);
                             bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1] = nullptr;
-
                         }
 
                         bucket.sizeVetPtrLabel -= 1;
@@ -274,15 +347,18 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                     k += 1;
                 }
 
-
-
-//std::cout<<"\t\tDepois\n";
-
                 if(!labelPtrAux)
                     continue;
 
                 bucket.addLabel(labelPtrAux);
-                listLabel.push_back(labelPtrAux);
+                //listLabel.push_back(labelPtrAux);
+
+                if((sizeLabelHeap+1) > vetLabel.size())
+                    vetLabel.resize(2*sizeLabelHeap);
+
+                vetLabel[sizeLabelHeap] = labelPtrAux;
+                sizeLabelHeap += 1;
+
 
                 if(labelPtrAux->cust == dest && labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb)
                 {
@@ -292,7 +368,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                     removeCycles(*labelPtrAux, numCust);
                     updateLabelCost(*labelPtrAux, vetMatResCost);
 
-                    //if(Print)
+                    if(Print)
                         std::cout<<"*"<<*labelPtrAux<<"\n\n";
 
                     if(labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb)
@@ -313,13 +389,14 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                 labelPool.delT(labelPtrAux);
 
         }
-
 //std::cout<<"END Extend label\n";
 
         if(Print)
             std::cout<<"\n########################################################################################\n\n";
 
-        labelPool.delT(labelPtr);
+        labelPtr->vetResources[0] = std::numeric_limits<double>::infinity();
+
+        //labelPool.delT(labelPtr);
         numIt += 1;
     }
 
@@ -338,7 +415,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
             return false;
 
 
-        std::cout << "listLabel.size: " << listLabel.size() << "\n";
+        std::cout << "listLabel.size: " << sizeLabelHeap << "\n";
 
         auto &vetRoute = labelPtrBest->vetRoute;
 
@@ -402,10 +479,10 @@ bool LabelingAlgorithmNS::extendLabel(const Label &label,
                                       const int numResources)
 {
 
-/*
-std::cout<<"ExtendLabel\n";
-std::cout<<"i("<<custI<<"); j("<<custJ<<")\n";
-*/
+
+//std::cout<<"ExtendLabel\n";
+//std::cout<<"i("<<custI<<"); j("<<custJ<<")\n";
+
     // Goes through resources
     for(int i=0; i < NumMaxResources; ++i)
     {
@@ -447,12 +524,10 @@ std::cout<<vetMatResCost[i](custI, custJ)<<"\n";
         newLabel.bitSet[custJ] = true;
 
     if((newLabel.vetRoute.size()) < label.tamRoute+1)
-    {   std::cout<<"ini resize\n";
-        //newLabel.vetRoute.resize(label.vetRoute.size() + 1);
-        std::cout<<"end resize\n";
+    {
+        PRINT_DEBUG("", "");
         throw "ERRO, OUT OF MEMORY";
     }
-
 
     if(Print)
     {
@@ -790,4 +865,9 @@ void LabelingAlgorithmNS::updateLabelCost(Label &label, const VetMatResCost &vet
         label.vetResources[0] += vetMatResCost[0](label.vetRoute[i], label.vetRoute[i+1]);
     }
 
+}
+
+bool LabelingAlgorithmNS::LessLabel(Label *l0, Label*l1)
+{
+    return l0->vetResources[0] > l1->vetResources[0];
 }

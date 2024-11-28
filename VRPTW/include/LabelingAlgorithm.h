@@ -12,6 +12,7 @@
 #include "DW_Decomp.h"
 #include "safe_vector.h"
 #include <boost/array.hpp>
+#include <boost/heap/fibonacci_heap.hpp>
 
 namespace LabelingAlgorithmNS
 {
@@ -23,7 +24,6 @@ namespace LabelingAlgorithmNS
     constexpr int NumBuckets      = 10;
     constexpr int vetPtrLabelSize = 5;
     constexpr bool NullFlush      = true;
-
     constexpr bool Print          = false;
 
     struct Bound
@@ -86,6 +86,7 @@ namespace LabelingAlgorithmNS
 
     };
 
+    bool LessLabel(Label *l0, Label*l1);
 
     std::ostream& operator<< (std::ostream& out, const Label &label);
 
@@ -210,7 +211,6 @@ namespace LabelingAlgorithmNS
 
     void removeCycles(Label &label, const int numCust);
     void updateLabelCost(Label &label, const VetMatResCost &vetMatResCost);
-
 
     // Linear index for a nxn matrix
     inline __attribute__((always_inline))
