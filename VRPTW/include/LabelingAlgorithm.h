@@ -12,7 +12,7 @@
 #include "DW_Decomp.h"
 #include "safe_vector.h"
 #include <boost/array.hpp>
-#include <boost/heap/fibonacci_heap.hpp>
+#include <list>
 
 namespace LabelingAlgorithmNS
 {
@@ -25,6 +25,10 @@ namespace LabelingAlgorithmNS
     constexpr int vetPtrLabelSize = 5;
     constexpr bool NullFlush      = true;
     constexpr bool Print          = false;
+
+    class Label;
+
+    typedef std::list<Label*>::iterator LabelIt;
 
     struct Bound
     {
@@ -81,6 +85,8 @@ namespace LabelingAlgorithmNS
         int j    = -1;
         int cust = -1;
         int pos  = -1;
+
+        LabelIt labelIt;
 
         Label() = default;
 

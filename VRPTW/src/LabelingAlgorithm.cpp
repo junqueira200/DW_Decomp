@@ -228,7 +228,7 @@ std::cout<<"\n\n\tEND for\n";
             if(Print)
                 std::cout<<"lastCust==dest("<<dest<<")\n";
 
-            // labelPtr is nor removed due to its still in vetMatBucket
+            // labelPtr is not removed due to its still in vetMatBucket
             continue;
         }
 
@@ -308,7 +308,7 @@ std::cout<<"\n\n\tEND for\n";
 
                         if(pos == -1)
                         {
-                            std::cout<<bucket.vetPtrLabel[k]<<" isn't in vetLabel!";
+                            std::cout<<bucket.vetPtrLabel[k]<<" isn't in vetLabel!\n";
                             PRINT_DEBUG("", "");
                             throw "ERROR";
                         }
