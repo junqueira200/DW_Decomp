@@ -12,7 +12,7 @@
 #include "DW_Decomp.h"
 #include "safe_vector.h"
 #include <boost/array.hpp>
-#include <list>
+#include <set>
 
 namespace LabelingAlgorithmNS
 {
@@ -26,9 +26,9 @@ namespace LabelingAlgorithmNS
     constexpr bool NullFlush      = true;
     constexpr bool Print          = false;
 
-    class Label;
+    class LabelSet;
 
-    typedef std::list<Label*>::iterator LabelIt;
+    typedef std::set<LabelSet>::iterator LabelIt;
 
     struct Bound
     {
@@ -84,7 +84,7 @@ namespace LabelingAlgorithmNS
         int i    = -1;
         int j    = -1;
         int cust = -1;
-        int pos  = -1;
+        //int pos  = -1;
 
         LabelIt labelIt;
 
@@ -92,7 +92,15 @@ namespace LabelingAlgorithmNS
 
     };
 
-    bool LessLabel(Label *l0, Label*l1);
+    class LabelSet
+    {
+    public:
+        Label *label= nullptr;
+
+        bool operator<(const LabelSet &labelSet) const {return label->vetResources[0] < labelSet.label->vetResources[0];}
+
+    };
+
 
     std::ostream& operator<< (std::ostream& out, const Label &label);
 
