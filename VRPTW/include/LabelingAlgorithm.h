@@ -84,7 +84,8 @@ namespace LabelingAlgorithmNS
         int i    = -1;
         int j    = -1;
         int cust = -1;
-        //int pos  = -1;
+        int pos  = -1;
+        bool active = false;
 
         LabelIt labelIt;
 
