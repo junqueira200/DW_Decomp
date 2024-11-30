@@ -854,9 +854,32 @@ LabelingAlgorithmNS::Label* LabelingAlgorithmNS::LabelingData::getBestLabel(int 
 void LabelingAlgorithmNS::LabelingData::setupGraphBucket()
 {
     graphBucket = GraphNS::Graph<int>(vetNumSteps[0]*vetNumSteps[1]);
+    std::cout<<"Num nodes: "<<vetNumSteps[0]*vetNumSteps[1]<<"\n";
+    std::cout<<"Num steps: "<<vetNumSteps[0]<<"; "<<vetNumSteps[1]<<"\n\n";
 
+    //for(int cust=1; cust < numCust; ++cust)
+    {
+        for(int i=0; i < vetNumSteps[0]; ++i)
+        {
+            for(int j=0; j < vetNumSteps[0]; ++j)
+            {
+                int nodeId0 = getIndexGraphBucket(i, j);
 
-    // Bucked (i, j) pode dominar bucked (i', j') onde i' > i e j' > j;
+                for(int ii=i; ii < vetNumSteps[0]; ++ii)
+                {
+                    for(int jj=j+1; jj < vetNumSteps[1]; ++jj)
+                    {
+                        int nodeId1 = getIndexGraphBucket(ii, jj);
+                        graphBucket.addArc(nodeId0, nodeId1, 1.0);
+                        //std::cout<<"Add arc: ("<<nodeId0<<", "<<nodeId1<<")\t"<<"i("<<i<<"), j("<<j<<"), ii("<<ii<<"), jj("<<jj<<")\n";
+                    }
+                }
+
+            }
+        }
+    }
+
+    // Bucked (i, j) pode dominar bucked (i', j') onde i' >= i e j' > j;
 }
 
 void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(Eigen::Vector<Label*, NumMaxCust> &vetPtrLabel, int tamVet)

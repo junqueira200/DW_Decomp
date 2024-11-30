@@ -15,6 +15,7 @@
 #include <set>
 #include "Grafo.h"
 
+
 namespace LabelingAlgorithmNS
 {
 
@@ -81,6 +82,7 @@ namespace LabelingAlgorithmNS
         boost::array<int, NumMaxRoute> vetRoute;
         int tamRoute = 0;
         std::bitset<NumMaxCust> bitSet;
+
 
         int i    = -1;
         int j    = -1;
@@ -163,6 +165,10 @@ namespace LabelingAlgorithmNS
         Eigen::Matrix<Eigen::Vector<Bound, 2>, -1, -1, Eigen::RowMajor> matBound;
         Eigen::Vector<Step, 2> vetStepSize;
         Eigen::Vector<int, 2> vetNumSteps;
+
+        // Given a bucket index (i, j)
+        EigenMatrixRowI matBucketIndex;
+
         int numMainResources;
         int numCust;
         int numMaxSteps;
@@ -185,6 +191,8 @@ namespace LabelingAlgorithmNS
         {
             return i*vetNumSteps[1] + j;
         }
+
+
 
         void dominanceInterBuckets(Eigen::Vector<Label*, NumMaxCust> &vetPtrLabel, int tamVet);
         void setupGraphBucket();
