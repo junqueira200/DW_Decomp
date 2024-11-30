@@ -19,7 +19,7 @@ namespace LabelingAlgorithmNS
 
     constexpr int NumMaxResources = 2;
     constexpr int NumMaxRoute     = 300;
-    constexpr int NumMaxCust      = 20;
+    constexpr int NumMaxCust      = 65;
     constexpr int NgSetSize       = 5;
     constexpr int NumBuckets      = 10;
     constexpr int vetPtrLabelSize = 5;
