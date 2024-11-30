@@ -88,8 +88,12 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                                               const NgSet &ngSet,
                                               LabelingData &lData,
                                               Eigen::VectorXd &vetX,
-                                              const double labelStart)
+                                              const double labelStart,
+                                              int NumMaxLabePerBucket)
 {
+
+    if(NumMaxLabePerBucket == -1)
+        NumMaxLabePerBucket = std::numeric_limits<int>::infinity();
 
     if(Print)
     {
@@ -134,6 +138,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     labelPtr->i = i;
     labelPtr->j = j;
     labelPtr->cust = 0;
+    labelPtr->active = true;
 
     lData.vetMatBucket[0].mat(i, j).vetPtrLabel.resize(10);
     lData.vetMatBucket[0].mat(i, j).vetPtrLabel[0] = labelPtr;
@@ -146,15 +151,21 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     int numIt = 0;
 
     Label *labelPtrBest = nullptr;
+    int maxSize = 0;
 
     while(!listLabel.empty() && !labelPtrBest)
     {
+
+        maxSize = std::max(maxSize, int(listLabel.size()));
+        //std::cout<<"Max: "<<maxSize<<"\n";
+
 //std::cout<<"while\n";
 
         if(Print)
             std::cout << "numIt: " << numIt << "\n";
 //std::cout<<"before front\n";
         labelPtr = listLabel.back();
+        listLabel.pop_back();
 
         if(labelPtr == nullptr)
         {
@@ -170,11 +181,15 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
             std::cout << *labelPtr << "\n\n";
         }
 
-        listLabel.pop_back();
-
 
         //std::cout<<"Extract label("<<labelPtr->vetRoute<<")\n";
         int lastCust = labelPtr->cust;
+
+        if(!labelPtr->active)
+        {
+            labelPool.delT(labelPtr);
+            continue;
+        }
 
         if(lastCust == dest)
         {
@@ -182,7 +197,6 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                 std::cout<<"lastCust==dest("<<dest<<")\n";
             continue;
         }
-
 
         // Remove labelPtr from vetMatBucket
         lData.removeLabel(labelPtr);
@@ -240,20 +254,21 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                         if(bucket.vetPtrLabel[k] == labelPtrBest)
                             labelPtrBest = nullptr;
 
-                        listLabel.remove(bucket.vetPtrLabel[k]);
+                        //listLabel.remove(bucket.vetPtrLabel[k]);
+                        bucket.vetPtrLabel[k]->active = false;
 
                         if(Print)
                             std::cout<<"\t\t\t\t("<<labelPtrAux<<") domina ("<<bucket.vetPtrLabel[k]<<")\n";
 
                         if(k == (bucket.sizeVetPtrLabel-1))
                         {
-                            labelPool.delT(bucket.vetPtrLabel[k]);
+                            //labelPool.delT(bucket.vetPtrLabel[k]);
                             bucket.vetPtrLabel[k] = nullptr;
                         }
                         else
                         {
                             std::swap(bucket.vetPtrLabel[k], bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1]);
-                            labelPool.delT(bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1]);
+                            //labelPool.delT(bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1]);
                             bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1] = nullptr;
 
                         }
@@ -281,7 +296,14 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                 if(!labelPtrAux)
                     continue;
 
+                if((bucket.sizeVetPtrLabel+1) > NumMaxLabePerBucket && t != dest)
+                {
+                    labelPool.delT(labelPtrAux);
+                    continue;
+                }
+
                 bucket.addLabel(labelPtrAux);
+                labelPtrAux->active = true;
                 listLabel.push_back(labelPtrAux);
 
                 if(labelPtrAux->cust == dest && labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb)
@@ -322,6 +344,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
         labelPool.delT(labelPtr);
         numIt += 1;
     }
+
+    std::cout<<"MAX SIZE: "<<maxSize<<"\n";
 
     if(labelPtrBest)
     {
@@ -372,7 +396,7 @@ std::cout<<"****************************************************************\n\n
 
 }
 
-bool LabelingAlgorithmNS::checkDominance(const Label& l0, const Label& l1, const int numResources)
+/*bool LabelingAlgorithmNS::checkDominance(const Label& l0, const Label& l1, const int numResources)
 {
 
     // Check the resources
@@ -389,7 +413,7 @@ bool LabelingAlgorithmNS::checkDominance(const Label& l0, const Label& l1, const
     return ((l0.bitSet&l1.bitSet)==l0.bitSet);
 
 
-}
+}*/
 
 // TODO Fix
 bool LabelingAlgorithmNS::extendLabel(const Label &label,

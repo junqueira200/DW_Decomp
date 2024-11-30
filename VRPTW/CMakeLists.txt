@@ -18,7 +18,7 @@ message("set vector_sanity_check=1")
 
 
 #set(CMAKE_CXX_FLAGS "-pedantic")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -O3 -g")
 
 find_package(Boost CONFIG)
 

@@ -211,9 +211,27 @@ namespace LabelingAlgorithmNS
 
     bool forwardLabelingAlgorithm(const int numRes, const int numCust, const VetMatResCost &vetMatResCost,
                                   const VetVetResBound &vetVetBound, const int dest, const NgSet &ngSet,
-                                  LabelingData &lData, Eigen::VectorXd &vetX, const double labelStart);
+                                  LabelingData &lData, Eigen::VectorXd &vetX, const double labelStart,
+                                  int NumMaxLabePerBucket);
 
-    bool checkDominance(const Label& l0, const Label& l1, int numResources);
+    inline __attribute__((always_inline))
+    bool checkDominance(const Label& l0, const Label& l1, int numResources)
+    {
+
+        // Check the resources
+        #pragma GCC unroll NumMaxResources
+        for(int i=0; i < NumMaxResources; ++i)
+        {
+            if(l0.vetResources[i] > l1.vetResources[i])
+                return false;
+
+            //if((i+1) == numResources)
+            //    break;
+        }
+
+        // Check if l0 is a subset of l1
+        return ((l0.bitSet&l1.bitSet)==l0.bitSet);
+    }
 
     bool extendLabel(const Label &label,
                      Label &newLabel,

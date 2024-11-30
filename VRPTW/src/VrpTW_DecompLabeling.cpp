@@ -18,7 +18,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     const double sumDist = instVrpTw->sumDist();
     const int sumDem     = instVrpTw->sumDem();
 
-    vetStepSize[0].stepSize = 100;
+    vetStepSize[0].stepSize = 400;
     vetStepSize[0].start    = -instVrpTw->sumDist();
     vetStepSize[0].end      = instVrpTw->sumDist();
 
@@ -83,13 +83,13 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
 
     ngSet = NgSet(instVrpTw->numClientes+1, NgSetSize);
     ngSet.setNgSets(instVrpTw->matDist);
-    //ngSet.active = false;
+    ngSet.active = false;
 
 
     Eigen::VectorXd vetX(instVrpTw->numClientes*instVrpTw->numClientes);
     vetX.setZero();
     forwardLabelingAlgorithm(2, instVrpTw->numClientes + 1, vetMatResCost, vetVetResBound, instVrpTw->numClientes,
-                             ngSet, labelingData, vetX, 0);
+                             ngSet, labelingData, vetX, 0, 0);
 
 }
 
@@ -137,15 +137,44 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
 
     //std::cout<<"Custo Reduzido: \n"<<vetMatResCost[0]<<"\n\n";
 
-    custoRedNeg = forwardLabelingAlgorithm(2,
-                                           instVrpTw->numClientes + 1,
-                                           vetMatResCost,
-                                           vetVetResBound,
-                                           instVrpTw->numClientes,
-                                           ngSet,
-                                           labelingData,
-                                           vetX,
-                                           0.0);//-vetRowPi[0]);
+    int it = 0;
+
+    for(int i=1; i < 200; i += 5)
+    {
+        std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
+        custoRedNeg = forwardLabelingAlgorithm(2,
+                                               instVrpTw->numClientes + 1,
+                                               vetMatResCost,
+                                               vetVetResBound,
+                                               instVrpTw->numClientes,
+                                               ngSet,
+                                               labelingData,
+                                               vetX,
+                                               0.0,
+                                               i);
+
+        it += 1;
+        if(custoRedNeg)
+            break;
+
+    }
+
+    std::cout<<"IT: "<<it<<"\n";
+
+    if(!custoRedNeg)
+    {
+
+        custoRedNeg = forwardLabelingAlgorithm(2,
+                                               instVrpTw->numClientes + 1,
+                                               vetMatResCost,
+                                               vetVetResBound,
+                                               instVrpTw->numClientes,
+                                               ngSet,
+                                               labelingData,
+                                               vetX,
+                                               0.0,
+                                               -1);
+    }
 
     //vetCooefRestConv[0] = 1;
 
