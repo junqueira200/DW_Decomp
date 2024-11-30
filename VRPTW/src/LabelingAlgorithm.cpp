@@ -576,6 +576,8 @@ LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2> &ve
         }
     }
 
+    setupGraphBucket();
+
 //    matBound(vetNumSteps[0]-1, 0)[0].upperBound = std::numeric_limits<double>::infinity();
 //    matBound(0, 0)[0].lowerBound = -std::numeric_limits<double>::infinity();
 
@@ -816,3 +818,50 @@ void LabelingAlgorithmNS::updateLabelCost(Label &label, const VetMatResCost &vet
 
 }
 
+
+LabelingAlgorithmNS::Label* LabelingAlgorithmNS::LabelingData::getBestLabel(int cust)
+{
+    MatBucket &matBucket = vetMatBucket[cust];
+    Label *labelBest = nullptr;
+
+    for(int i=0; i < vetNumSteps[0]; ++i)
+    {
+        for(int j=0; j < vetNumSteps[1]; ++j)
+        {
+            Bucket &bucket = matBucket.mat(i, j);
+
+            for(int t=0; t < bucket.sizeVetPtrLabel; ++t)
+            {
+                // TODO: FIX
+                Label* label = bucket.vetPtrLabel[t];
+                if(label->vetResources[0] < -DW_DecompNS::TolObjSubProb && !labelBest)
+                {
+                    labelBest = label;
+                }
+                else if(labelBest)
+                {
+                    if(label->vetResources[0] < labelBest->vetResources[0])
+                        labelBest = label;
+                }
+            }
+        }
+    }
+
+    return labelBest;
+
+}
+
+void LabelingAlgorithmNS::LabelingData::setupGraphBucket()
+{
+    graphBucket = GraphNS::Graph<int>(vetNumSteps[0]*vetNumSteps[1]);
+
+
+    // Bucked (i, j) pode dominar bucked (i', j') onde i' > i e j' > j;
+}
+
+void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(Eigen::Vector<Label*, NumMaxCust> &vetPtrLabel, int tamVet)
+{
+
+    // Bucked (i, j) pode dominar bucked (i', j') onde i' > i e j' > j;
+
+}

@@ -13,6 +13,7 @@
 #include "safe_vector.h"
 #include <boost/array.hpp>
 #include <set>
+#include "Grafo.h"
 
 namespace LabelingAlgorithmNS
 {
@@ -77,7 +78,7 @@ namespace LabelingAlgorithmNS
 
         //int numResources = 1;
         Eigen::Array<double, 1, NumMaxResources> vetResources;
-        boost::array<int, 200> vetRoute;
+        boost::array<int, NumMaxRoute> vetRoute;
         int tamRoute = 0;
         std::bitset<NumMaxCust> bitSet;
 
@@ -86,7 +87,6 @@ namespace LabelingAlgorithmNS
         int cust = -1;
         int pos  = -1;
         bool active = false;
-
         LabelIt labelIt;
 
         Label() = default;
@@ -167,6 +167,8 @@ namespace LabelingAlgorithmNS
         int numCust;
         int numMaxSteps;
 
+        GraphNS::Graph<int> graphBucket;
+
         LabelingData(const Eigen::Vector<Step, 2> &vetStepSize_,
                      int numMainResources_,
                      int numCust_);
@@ -175,37 +177,18 @@ namespace LabelingAlgorithmNS
         void flushLabel();
         int getIndex(int resource, double val);
         void removeLabel(Label *label);
+        Label* getBestLabel(int cust);
 
-        bool isCustEmpty(int cust)
+
+        inline __attribute__((always_inline))
+        int getIndexGraphBucket(int i, int j)
         {
-//std::cout<<"isCustEmpty\n";
-//std::cout<<"vetNumSteps[1]("<<vetNumSteps[1]<<")\n";
-
-            MatBucket &matBucket = vetMatBucket[cust];
-
-            for(int i=0; i < vetNumSteps[0]; ++i)
-            {
-                for(int j=0; j < vetNumSteps[1]; ++j)
-                {
-//std::cout<<"before\n";
-                    Bucket &bucket = matBucket.mat(i, j);
-//std::cout<<"got bucket\n";
-//std::cout<<"bucket.sizeVetPtrLabel("<<bucket.sizeVetPtrLabel<<")\n";
-
-                    for(int t=0; t < bucket.sizeVetPtrLabel; ++t)
-                    {
-                        // TODO: FIX
-                        Label* label = bucket.vetPtrLabel[t];
-                        if(label->vetResources[0] < -DW_DecompNS::TolObjSubProb)
-                            return false;
-                    }
-                }
-            }
-
-//std::cout<<"END\n";
-            return true;
-
+            return i*vetNumSteps[1] + j;
         }
+
+        void dominanceInterBuckets(Eigen::Vector<Label*, NumMaxCust> &vetPtrLabel, int tamVet);
+        void setupGraphBucket();
+
     };
 
 
@@ -225,8 +208,8 @@ namespace LabelingAlgorithmNS
             if(l0.vetResources[i] > l1.vetResources[i])
                 return false;
 
-            //if((i+1) == numResources)
-            //    break;
+            if((i+1) == numResources)
+                break;
         }
 
         // Check if l0 is a subset of l1
@@ -248,5 +231,7 @@ namespace LabelingAlgorithmNS
     // Linear index for a nxn matrix
     inline __attribute__((always_inline))
     int getIndex(int i, int j, int numClie){return i*numClie+j;}
+
+
 }
 #endif //DW_LABELINGALGORITHM_H

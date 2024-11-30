@@ -758,9 +758,6 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
         updateRmlpPi(auxVect.vetRowRmlpPi, info);
 
 
-        if(itCG == 800)
-            throw "NAO EH ERRO";
-
         // Update and solve the subproblems
         for(int k=0; k < info.numSubProb; ++k)
         {
