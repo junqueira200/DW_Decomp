@@ -1,5 +1,7 @@
 //
 // Created by igor on 20/11/24.
+
+// Alteracoes: checkDominance was temporary removed
 //
 #include "LabelingAlgorithm.h"
 #include "MemoryPool.h"
@@ -106,8 +108,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     labelPool.resetPool(false);
     lData.flushLabel();
 
-    std::list<Label*> listLabel;
-    boost::heap::fibonacci_heap<Label*> heapLabel;
+    //std::list<Label*> listLabel;
+    std::set<Label*, LabelCmp> setLabel;
 
     Label *labelPtr = labelPool.getT();
     if(labelPtr == nullptr)
@@ -121,7 +123,6 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     labelPtr->tamRoute = 1;
 
     labelPtr->vetRoute[0] = 0;
-//    labelPtr->vetResources[0] = 0.0;
     labelPtr->vetResources.setZero();
     labelPtr->vetResources[0] = labelStart;
     labelPtr->bitSet = 0;
@@ -145,7 +146,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     lData.vetMatBucket[0].mat(i, j).sizeVetPtrLabel = 1;
 
     // TODO: MELHORAR PARA A REMOCAO!
-    listLabel.push_back(labelPtr);
+    //listLabel.push_back(labelPtr);
+    setLabel.insert(labelPtr);
     labelPtr = nullptr;
 
     int numIt = 0;
@@ -153,19 +155,18 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     Label *labelPtrBest = nullptr;
     int maxSize = 0;
 
-    while(!listLabel.empty() && !labelPtrBest)
+    //while(!listLabel.empty() && !labelPtrBest)
+    while(!setLabel.empty() && !labelPtrBest)
     {
 
-        maxSize = std::max(maxSize, int(listLabel.size()));
-        //std::cout<<"Max: "<<maxSize<<"\n";
-
-//std::cout<<"while\n";
+        maxSize = std::max(maxSize, int(setLabel.size()));
 
         if(Print)
             std::cout << "numIt: " << numIt << "\n";
-//std::cout<<"before front\n";
-        labelPtr = listLabel.back();
-        listLabel.pop_back();
+        //labelPtr = listLabel.back();
+        //listLabel.pop_back();
+        labelPtr = (*setLabel.begin());
+        setLabel.erase(setLabel.begin());
 
         if(labelPtr == nullptr)
         {
@@ -244,7 +245,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                 int k=0;
 
 
-                while(k < bucket.sizeVetPtrLabel)
+/*                while(k < bucket.sizeVetPtrLabel)
                 {
                     if(Print)
                         std::cout<<"\t\t\tcheckDominance "<<bucket.vetPtrLabel[k]<<": "<<*bucket.vetPtrLabel[k]<<"\n";
@@ -287,11 +288,10 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                     }
 
                     k += 1;
-                }
+                }*/
 
 
 
-//std::cout<<"\t\tDepois\n";
 
                 if(!labelPtrAux)
                     continue;
@@ -304,7 +304,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
 
                 bucket.addLabel(labelPtrAux);
                 labelPtrAux->active = true;
-                listLabel.push_back(labelPtrAux);
+                //listLabel.push_back(labelPtrAux);
+                setLabel.insert(labelPtrAux);
 
                 if(labelPtrAux->cust == dest && labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb)
                 {
@@ -314,7 +315,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                     removeCycles(*labelPtrAux, numCust);
                     updateLabelCost(*labelPtrAux, vetMatResCost);
 
-                    //if(Print)
+                    if(Print)
                         std::cout<<"*"<<*labelPtrAux<<"\n\n";
 
                     if(labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb)
@@ -349,7 +350,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
 
     if(labelPtrBest)
     {
-        std::cout << "BEST LABEL: " << *labelPtrBest << "\n";
+        //std::cout << "BEST LABEL: " << *labelPtrBest << "\n";
 
         //removeCycles(*labelPtrBest, numCust);
         //updateLabelCost(*labelPtrBest, vetMatResCost);
@@ -362,7 +363,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
             return false;
 
 
-        std::cout << "listLabel.size: " << listLabel.size() << "\n";
+        std::cout << "listLabel.size: " << setLabel.size() << "\n";
 
         auto &vetRoute = labelPtrBest->vetRoute;
 
@@ -371,7 +372,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
             vetX(getIndex(vetRoute[i], vetRoute[i+1], numCust-1)) = 1.0;
         }
 
-        std::cout<<vetX.transpose()<<"\n";
+        //std::cout<<vetX.transpose()<<"\n";
 
 
 /*

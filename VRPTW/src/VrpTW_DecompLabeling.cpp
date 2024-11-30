@@ -85,7 +85,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
 
     ngSet = NgSet(instVrpTw->numClientes+1, NgSetSize);
     ngSet.setNgSets(instVrpTw->matDist);
-    //ngSet.active = false;
+    ngSet.active = false;
 
 
     Eigen::VectorXd vetX(instVrpTw->numClientes*instVrpTw->numClientes);
@@ -141,7 +141,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
 
     int it = 0;
 
-    for(int i=1; i < 200; i += 5)
+    for(int i=1; i < 18; i += 5)
     {
         std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
         custoRedNeg = forwardLabelingAlgorithm(2,

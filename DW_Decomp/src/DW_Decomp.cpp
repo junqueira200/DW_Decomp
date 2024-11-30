@@ -748,9 +748,9 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
         //else
         //    std::cout<<"SET VARIAVEIS ARTIFICIAIS PARA ZERO!\n";
 
-        std::cout<<"vetRmlpLambda: ";
-        for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
-            std::cout<<vetRmlpLambda[i]<<" ";
+        //std::cout<<"vetRmlpLambda: ";
+        //for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
+        //    std::cout<<vetRmlpLambda[i]<<" ";
 
         std::cout<<"\n\n";
 
@@ -795,21 +795,13 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
 
             double cgCooefObj = vetSol.dot(auxVect.vetRowC);
-            std::cout<<"cgCooefObj "<<k<<": "<<cgCooefObj<<"\n";
-            std::cout<<vetSol.transpose()<<"\n";
+            //std::cout<<"cgCooefObj "<<k<<": "<<cgCooefObj<<"\n";
+            //std::cout<<vetSol.transpose()<<"\n";
 
             auxVect.vetColCooef.setZero();
-            std::cout<<"antes A*vetSol\n";
 
             auxVect.vetColCooef.segment(0, info.numConstrsConv)   = auxVect.vetColConvCooef;
             auxVect.vetColCooef.segment(info.numConstrsConv, info.numConstrsMaster) = matA*vetSol;
-            std::cout<<"antes\n";
-//std::cout<<"vetColCooef.size("<<auxVect.vetColCooef.size()<<"\n";
-//std::cout<<"info.numConstrsMaster+1: "<<info.numConstrsMaster+1<<"\n";
-//std::cout<<"numConstrsConv: "<<info.numConstrsConv<<"\n\n";
-            //auxVect.vetColCooef.segment(info.numConstrsMaster, info.numConstrsConv) = auxVect.vetColConvCooef;
-
-            std::cout<<"depois A*vetSol\n";
 
             addColumn(cgCooefObj, k, auxVect, info);
         }
@@ -907,15 +899,15 @@ void DW_DecompNS::DW_DecompNode::addColumn(const double cost, int k, AuxVectors 
 
     GRBColumn grbColumn;
 
-    std::cout<<"\tini addColumn\n";
-    std::cout << "\tvetConvCoorf.size(): " << auxVect.vetColConvCooef.size() << "\n";
+    //std::cout<<"\tini addColumn\n";
+    //std::cout << "\tvetConvCoorf.size(): " << auxVect.vetColConvCooef.size() << "\n";
 
     //for(int i=0; i < auxVect.vetColConvCooef.size(); ++i)
     //    auxVect.vetColCooef[info.numConstrsMaster+i] = auxVect.vetColConvCooef[i];
 
-    std::cout<<"\tFim for\n";
-    std::cout << "\tvetConvCooef: " << auxVect.vetColConvCooef.transpose() << "\n";
-    std::cout<<"\tvetColCooef: "<<auxVect.vetColCooef.transpose()<<"\n";
+    //std::cout<<"\tFim for\n";
+    //std::cout << "\tvetConvCooef: " << auxVect.vetColConvCooef.transpose() << "\n";
+    //std::cout<<"\tvetColCooef: "<<auxVect.vetColCooef.transpose()<<"\n";
 
     grbColumn.addTerms(&auxVect.vetColCooef[0], vetRmlpConstr, int(auxVect.vetColCooef.size()));
     uRmlp->addVar(0.0, GRB_INFINITY, cost, GRB_CONTINUOUS, grbColumn,

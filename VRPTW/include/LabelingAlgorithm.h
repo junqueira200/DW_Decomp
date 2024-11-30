@@ -95,12 +95,12 @@ namespace LabelingAlgorithmNS
 
     };
 
-    class LabelSet
+    class LabelCmp
     {
     public:
-        Label *label= nullptr;
 
-        bool operator<(const LabelSet &labelSet) const {return label->vetResources[0] < labelSet.label->vetResources[0];}
+        bool operator()(Label *l0, Label *l1) const
+        {return l0->vetResources[0] < l1->vetResources[0];}
 
     };
 
