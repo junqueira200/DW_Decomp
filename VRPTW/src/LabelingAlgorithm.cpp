@@ -6,7 +6,6 @@
 #include "LabelingAlgorithm.h"
 #include "MemoryPool.h"
 #include <list>
-#include <boost/heap/fibonacci_heap.hpp>
 
 LabelingAlgorithmNS::NgSet::NgSet()
 {
@@ -103,7 +102,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
         std::cout << "*****************FORWARD LABELING ALGORITHM*****************\n\n";
         std::cout << "numCust: " << numCust << "\n";
     }
-    static MemoryPool_NS::Pool<Label> labelPool(44, 88);
+    static MemoryPool_NS::Pool<Label> labelPool(44, 400);
 
     labelPool.resetPool(false);
     lData.flushLabel();
@@ -134,7 +133,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     }
 
     int i = lData.getIndex(0, labelStart);
-    int j = 0; // lData.getIndex(0, 0.0);
+    int j = lData.getIndex(1, 0.0);
 
     labelPtr->i = i;
     labelPtr->j = j;
@@ -145,7 +144,6 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     lData.vetMatBucket[0].mat(i, j).vetPtrLabel[0] = labelPtr;
     lData.vetMatBucket[0].mat(i, j).sizeVetPtrLabel = 1;
 
-    // TODO: MELHORAR PARA A REMOCAO!
     //listLabel.push_back(labelPtr);
     setLabel.insert(labelPtr);
     labelPtr = nullptr;
@@ -245,7 +243,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                 int k=0;
 
 
-/*                while(k < bucket.sizeVetPtrLabel)
+
+                /*while(k < bucket.sizeVetPtrLabel)
                 {
                     if(Print)
                         std::cout<<"\t\t\tcheckDominance "<<bucket.vetPtrLabel[k]<<": "<<*bucket.vetPtrLabel[k]<<"\n";
@@ -315,11 +314,12 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                     removeCycles(*labelPtrAux, numCust);
                     updateLabelCost(*labelPtrAux, vetMatResCost);
 
-                    if(Print)
-                        std::cout<<"*"<<*labelPtrAux<<"\n\n";
+                    //if(Print)
+                        //std::cout<<"*"<<*labelPtrAux<<"\n\n";
 
                     if(labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb)
                     {
+                        std::cout<<"*"<<*labelPtrAux<<"\n\n";
                         if(labelPtrBest)
                         {
                             if(labelPtrAux->vetResources[0] < labelPtrBest->vetResources[0])
@@ -328,6 +328,10 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                             labelPtrBest = labelPtrAux;
                     }
                 }
+/*                else if(labelPtrAux->cust == dest)
+                {
+                    std::cout<<"*"<<*labelPtrAux<<"\n\n";
+                }*/
 
 //std::cout<<"extendLabel to t("<<t<<")\n";
 
@@ -372,7 +376,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
             vetX(getIndex(vetRoute[i], vetRoute[i+1], numCust-1)) = 1.0;
         }
 
-        //std::cout<<vetX.transpose()<<"\n";
+        std::cout<<"X: "<<vetX.transpose()<<"\n";
 
 
 /*
@@ -397,26 +401,7 @@ std::cout<<"****************************************************************\n\n
 
 }
 
-/*bool LabelingAlgorithmNS::checkDominance(const Label& l0, const Label& l1, const int numResources)
-{
 
-    // Check the resources
-    for(int i=0; i < NumMaxResources; ++i)
-    {
-        if(l0.vetResources[i] > l1.vetResources[i])
-            return false;
-
-        if((i+1) == numResources)
-            break;
-    }
-
-    // Check if l0 is a subset of l1
-    return ((l0.bitSet&l1.bitSet)==l0.bitSet);
-
-
-}*/
-
-// TODO Fix
 bool LabelingAlgorithmNS::extendLabel(const Label &label,
                                       Label &newLabel,
                                       const VetMatResCost& vetMatResCost,
@@ -427,22 +412,14 @@ bool LabelingAlgorithmNS::extendLabel(const Label &label,
                                       const int numResources)
 {
 
-/*
-std::cout<<"ExtendLabel\n";
-std::cout<<"i("<<custI<<"); j("<<custJ<<")\n";
-*/
+
     // Goes through resources
     for(int i=0; i < NumMaxResources; ++i)
     {
-/*
-std::cout<<"\t\t\tResourcee("<<i<<"); "<<custI<<", "<<custJ<<"\n";
-std::cout<<"\t\t\t\tvetMatResCost("<<i<<")("<<custI<<","<<custJ<<") = ";
-std::cout<<vetMatResCost[i](custI, custJ)<<"\n";
-*/
+
         // Extend the iº resource
         newLabel.vetResources[i] = label.vetResources[i] + vetMatResCost[i](custI, custJ);
 
-//std::cout<<"\t\t\t\t"<<newLabel.vetResources[i]<<"\n";
 
         // Check the bound
         if(newLabel.vetResources[i] > vetVetBound[i][custJ].upperBound)
@@ -478,24 +455,12 @@ std::cout<<vetMatResCost[i](custI, custJ)<<"\n";
         throw "ERRO, OUT OF MEMORY";
     }
 
-
-    if(Print)
-    {
-        std::cout<<"copy route\n";
-        std::cout<<"label.tamRoute(" << label.tamRoute << ")\n";
-        std::cout<<"newLabel.vetRoute.size(" << newLabel.vetRoute.size() << ")\n";
-        //std::cout<<"label.vetRoute: "<<label.vetRoute<<"\n";
-        //std::cout<<"newLabel.vetRoute: "<<newLabel.vetRoute<<"\n";
-        //std::cout<<"&newLabel.vetRoute: "<<&newLabel.vetRoute<<"\n";
-    }
-
     // Copy route
     for(int i=0; i < label.tamRoute; ++i)
     {
         newLabel.vetRoute[i] = label.vetRoute[i];
     }
 
-//std::cout<<"Depois\n";
 
     if(Print)
         std::cout<<"APOS COPY ROUTE\n";

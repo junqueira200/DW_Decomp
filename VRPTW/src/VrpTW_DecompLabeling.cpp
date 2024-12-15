@@ -37,7 +37,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     vetMatResCost[1].setZero();
 
 
-    for(int i=0; i < instVrpTw->numClientes+1; ++i)
+/*    for(int i=0; i < instVrpTw->numClientes+1; ++i)
     {
         for(int j=0; j < instVrpTw->numClientes+1; ++j)
         {
@@ -47,7 +47,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
 
             vetMatResCost[0](i, j) += -sumDist;
         }
-    }
+    }*/
 
 
     for(int i=0; i < instVrpTw->numClientes; ++i)
@@ -80,6 +80,12 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     for(int i=0; i < instVrpTw->numClientes+1; ++i)
     {
         vetVetResBound[0][i] = bound0;
+        if(i > 0 && i < instVrpTw->numClientes)
+            bound1.lowerBound = instVrpTw->vetClieDem[i];
+
+        else
+            bound1.lowerBound = 0.0;
+
         vetVetResBound[1][i] = bound1;
     }
 
@@ -90,8 +96,9 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
 
     Eigen::VectorXd vetX(instVrpTw->numClientes*instVrpTw->numClientes);
     vetX.setZero();
-    forwardLabelingAlgorithm(2, instVrpTw->numClientes + 1, vetMatResCost, vetVetResBound, instVrpTw->numClientes,
-                             ngSet, labelingData, vetX, 0, 0);
+
+    //forwardLabelingAlgorithm(2, instVrpTw->numClientes + 1, vetMatResCost, vetVetResBound, instVrpTw->numClientes,
+    //                         ngSet, labelingData, vetX, 0, 0);
 
 }
 
@@ -137,13 +144,15 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
         }
     }
 
-    //std::cout<<"Custo Reduzido: \n"<<vetMatResCost[0]<<"\n\n";
+    std::cout<<"Custo Reduzido: \n"<<vetMatResCost[0]<<"\n\n";
+    std::cout<<"Peso: "<<vetMatResCost[1]<<"\n\n";
 
     int it = 0;
 
     for(int i=1; i < 18; i += 5)
     {
         std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
+        vetX.setZero();
         custoRedNeg = forwardLabelingAlgorithm(2,
                                                instVrpTw->numClientes + 1,
                                                vetMatResCost,
@@ -165,7 +174,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
 
     if(!custoRedNeg)
     {
-
+        vetX.setZero();
         custoRedNeg = forwardLabelingAlgorithm(2,
                                                instVrpTw->numClientes + 1,
                                                vetMatResCost,
@@ -176,6 +185,49 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                vetX,
                                                0.0,
                                                -1);
+    }
+
+    if(custoRedNeg)
+    {
+        double sumDem = 0.0;
+        double dist   = 0.0;
+        int cliI = 0;
+
+        std::cout<<cliI<<" ";
+
+        do
+        {
+
+            for(int i=0; i < instVrpTw->numClientes; ++i)
+            {
+                if(vetX[getIndex(cliI, i, instVrpTw->numClientes)] >= 0.9)
+                {
+                    sumDem += instVrpTw->vetClieDem[i];
+                    dist   += instVrpTw->matDist(cliI, i);
+                    cliI = i;
+                    std::cout<<i<<" ";
+                    break;
+
+                }
+            }
+
+        }
+        while(cliI != 0);
+        std::cout<<"\n";
+        if(sumDem > instVrpTw->capVeic)
+        {
+            std::cout<<"ERROR, rota com demanda maior que a capacidade do veiculo\n";
+            throw "ERROR";
+        }
+
+        std::cout<<"Dem: "<<sumDem<<"\nDist: "<<dist<<"\n\n";
+
+/*        static int num = 0;
+        if(num == 100)
+        {   std::cout<<"cap: "<<instVrpTw->capVeic<<"\n\n";
+            throw "NAO EH ERROR";
+        }
+        num += 1;*/
     }
 
     //vetCooefRestConv[0] = 1;

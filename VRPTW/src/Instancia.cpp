@@ -196,7 +196,6 @@ std::cout<<"numClientes: "<<numClientes<<"; cap: "<<capVeic<<"\n\n";
     }
 
 
-
     //instancia->demanda = new int[numClientes];
     int demandaTotal = 0;
 

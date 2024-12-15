@@ -711,7 +711,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
 
         uRmlp->update();
-        //uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
+        // TODO del
+        uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
         uRmlp->optimize();
 
         std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
@@ -725,7 +726,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
         // Set zero if finds an artificial variable with value equal to 0
         //if(!setAllVarAZero)
-        {
+/*        {
             setAllVarAZero = true;
             bool increaseValue = false;
             for(int i=0; i < info.numConstrsMaster; ++i)
@@ -738,19 +739,14 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
                     setAllVarAZero = false;
                 }
-/*                else if(vetVar[i].get(GRB_DoubleAttr_X) != 0.0 && !increaseValue)
-                {
-                    vetVar[i].set(GRB_DoubleAttr_Obj, info.costA_Var);
-                    increaseValue = true;
-                }*/
             }
-        }
+        }*/
         //else
         //    std::cout<<"SET VARIAVEIS ARTIFICIAIS PARA ZERO!\n";
 
         //std::cout<<"vetRmlpLambda: ";
-        //for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
-        //    std::cout<<vetRmlpLambda[i]<<" ";
+        for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
+            std::cout<<vetRmlpLambda[i]<<" ";
 
         std::cout<<"\n\n";
 
@@ -906,7 +902,8 @@ void DW_DecompNS::DW_DecompNode::addColumn(const double cost, int k, AuxVectors 
     //    auxVect.vetColCooef[info.numConstrsMaster+i] = auxVect.vetColConvCooef[i];
 
     //std::cout<<"\tFim for\n";
-    //std::cout << "\tvetConvCooef: " << auxVect.vetColConvCooef.transpose() << "\n";
+    // TODO del
+    std::cout << "\tvetConvCooef: " << auxVect.vetColConvCooef.transpose() << "\n";
     //std::cout<<"\tvetColCooef: "<<auxVect.vetColCooef.transpose()<<"\n";
 
     grbColumn.addTerms(&auxVect.vetColCooef[0], vetRmlpConstr, int(auxVect.vetColCooef.size()));
