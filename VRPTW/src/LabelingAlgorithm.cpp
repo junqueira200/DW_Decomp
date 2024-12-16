@@ -107,7 +107,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     if(!labelPoolStart)
     {
         labelPoolStart = true;
-        labelPoolG.startPool(44, 400);
+        labelPoolG.startPool(5, 100);
     }
 
     labelPoolG.resetPool(false);

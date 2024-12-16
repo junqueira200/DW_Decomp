@@ -26,7 +26,7 @@ namespace LabelingAlgorithmNS
     constexpr int NgSetSize       = 5;
     constexpr int NumBuckets      = 10;
     constexpr int vetPtrLabelSize = 5;
-    constexpr bool NullFlush      = true;
+    constexpr bool NullFlush      = false;
     constexpr bool Print          = false;
     constexpr double RedCostCut   = -0.05;
     constexpr int NumMaxLabel     = 10000;
