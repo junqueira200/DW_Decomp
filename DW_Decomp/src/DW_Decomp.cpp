@@ -712,7 +712,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
         uRmlp->update();
         // TODO del
-        uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
+        //uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
         uRmlp->optimize();
 
         std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
@@ -744,7 +744,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
         //else
         //    std::cout<<"SET VARIAVEIS ARTIFICIAIS PARA ZERO!\n";
 
-        //std::cout<<"vetRmlpLambda: ";
+        std::cout<<"vetRmlpLambda: ";
         for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
             std::cout<<vetRmlpLambda[i]<<" ";
 
@@ -822,6 +822,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
         delete []vetVar;
         delete []vetRmlpLambda;
         itCG += 1;
+
     }
 
     std::cout<<"FIM CG!\n";

@@ -19,12 +19,12 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     const int sumDem     = instVrpTw->sumDem();
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 900;
+    vetStepSize[0].stepSize = 100;
     vetStepSize[0].start    = -instVrpTw->sumDist();
     vetStepSize[0].end      = instVrpTw->sumDist();
 
     //vetStepSize[1].stepSize = 5;
-    vetStepSize[1].stepSize = 15;
+    vetStepSize[1].stepSize = 5;
     vetStepSize[1].start    = 0;
     vetStepSize[1].end      = instVrpTw->capVeic;
 
@@ -91,7 +91,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
 
     ngSet = NgSet(instVrpTw->numClientes+1, NgSetSize);
     ngSet.setNgSets(instVrpTw->matDist);
-    ngSet.active = false;
+    ngSet.active = true;
 
 
     Eigen::VectorXd vetX(instVrpTw->numClientes*instVrpTw->numClientes);
@@ -144,10 +144,11 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
         }
     }
 
-    std::cout<<"Custo Reduzido: \n"<<vetMatResCost[0]<<"\n\n";
-    std::cout<<"Peso: "<<vetMatResCost[1]<<"\n\n";
+    //std::cout<<"Custo Reduzido: \n"<<vetMatResCost[0]<<"\n\n";
+    //std::cout<<"Peso: "<<vetMatResCost[1]<<"\n\n";
 
     int it = 0;
+
 
     for(int i=1; i < 18; i += 5)
     {

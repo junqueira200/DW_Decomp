@@ -14,6 +14,7 @@
 #include <boost/array.hpp>
 #include <set>
 #include "Grafo.h"
+//#include "MemoryPool.h"
 
 
 namespace LabelingAlgorithmNS
@@ -27,6 +28,9 @@ namespace LabelingAlgorithmNS
     constexpr int vetPtrLabelSize = 5;
     constexpr bool NullFlush      = true;
     constexpr bool Print          = false;
+    constexpr double RedCostCut   = -0.05;
+    constexpr int NumMaxLabel     = 10000;
+    constexpr bool DominaIterBuckets = true;
 
     class LabelSet;
 
@@ -194,7 +198,7 @@ namespace LabelingAlgorithmNS
 
 
 
-        void dominanceInterBuckets(Eigen::Vector<Label*, NumMaxCust> &vetPtrLabel, int tamVet);
+        void dominanceInterBuckets(std::set<Label*, LabelCmp> &setLabel, int numRes);//, MemoryPool_NS::Pool<Label> &poolTemp);
         void setupGraphBucket();
 
     };
@@ -216,8 +220,8 @@ namespace LabelingAlgorithmNS
             if(l0.vetResources[i] > l1.vetResources[i])
                 return false;
 
-            if((i+1) == numResources)
-                break;
+/*            if((i+1) == numResources)
+                break;*/
         }
 
         // Check if l0 is a subset of l1
