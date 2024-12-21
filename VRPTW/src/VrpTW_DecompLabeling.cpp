@@ -19,7 +19,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     const int sumDem     = instVrpTw->sumDem();
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 100;
+    vetStepSize[0].stepSize = 400;
     vetStepSize[0].start    = -instVrpTw->sumDist();
     vetStepSize[0].end      = instVrpTw->sumDist();
 

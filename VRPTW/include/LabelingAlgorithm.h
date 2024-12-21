@@ -32,7 +32,7 @@ namespace LabelingAlgorithmNS
     constexpr bool NullFlush      = false;
     constexpr bool Print          = false;
     constexpr double RedCostCut   = -0.05;
-    constexpr int NumMaxLabel     = 10000;
+    constexpr int NumMaxLabel     = 2000;
     constexpr bool DominaIterBuckets = true;
 
     class LabelSet;
@@ -200,7 +200,7 @@ namespace LabelingAlgorithmNS
 
 
         // std::set<Label*, LabelCmp> &setLabel
-        void dominanceInterBuckets(std::multiset<Label*, LabelCmp> &setLabel, int numRes);//, MemoryPool_NS::Pool<Label> &poolTemp);
+        void dominanceInterBuckets(std::multiset<Label*, LabelCmp> &setLabel, int numRes, int localNumMaxLabel);//, MemoryPool_NS::Pool<Label> &poolTemp);
         void setupGraphBucket();
 
     };
@@ -225,15 +225,12 @@ namespace LabelingAlgorithmNS
         //#pragma GCC unroll NumMaxResources
         for(int i=0; i < NumMaxResources; ++i)
         {
-            if(l0.vetResources[i] > l1.vetResources[i])
+            if(l0.vetResources[i] >= l1.vetResources[i])
                 return false;
 
             if((i+1) == numResources)
                 break;
         }
-
-        if(l0.bitSet == 0 || l1.bitSet == 0)
-            return false;
 
         // Check if l0 is a subset of l1
         return (l0.bitSet&l1.bitSet)==l0.bitSet;

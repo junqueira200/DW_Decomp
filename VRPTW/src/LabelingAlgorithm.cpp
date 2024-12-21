@@ -164,12 +164,24 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     Label *labelPtrBest = nullptr;
     int maxSize = 0;
     int maxSizeVetPtrLabel = 0;
+    int localNumMaxLabel = NumMaxLabel;
 
     //while(!listLabel.empty() && !labelPtrBest)
     while(!setLabel.empty() && !labelPtrBest)
     {
-        if(setLabel.size() > NumMaxLabel && DominaIterBuckets && dominaceCheck)
-            lData.dominanceInterBuckets(setLabel, numRes);
+        if(setLabel.size() > localNumMaxLabel && DominaIterBuckets && dominaceCheck)
+        {
+            lData.dominanceInterBuckets(setLabel, numRes, localNumMaxLabel);
+            bool print = false;
+
+            while(setLabel.size() > localNumMaxLabel)
+            {
+                print = true;
+                localNumMaxLabel += NumMaxLabel;
+            }
+            if(print)
+                std::cout<<"localNumMaxLabel: "<<localNumMaxLabel<<"\n\n";
+        }
 
         maxSize = std::max(maxSize, int(setLabel.size()));
 
@@ -316,7 +328,15 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                     continue;
                 }
 
-                maxSizeVetPtrLabel = std::max(maxSizeVetPtrLabel, bucket.sizeVetPtrLabel);
+                if(t == dest && labelPtrAux->vetResources[0] >= -DW_DecompNS::TolObjSubProb)
+                {
+
+                    labelPoolG.delT(labelPtrAux);
+                    continue;
+                }
+
+                if(t != dest)
+                    maxSizeVetPtrLabel = std::max(maxSizeVetPtrLabel, bucket.sizeVetPtrLabel);
 
                 bucket.addLabel(labelPtrAux);
                 labelPtrAux->active = true;
@@ -863,7 +883,7 @@ void LabelingAlgorithmNS::LabelingData::setupGraphBucket()
 }
 
 
-void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(std::multiset<Label*, LabelCmp> &setLabel, int numRes)
+void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(std::multiset<Label*, LabelCmp> &setLabel, int numRes, const int localNumMaxLabel)
 {
     if(Print)
         std::cout<<"dominanceInterBuckets\n\n";
@@ -924,7 +944,7 @@ void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(std::multiset<Labe
                                     b1.sizeVetPtrLabel -= 1;
 
                                     numDel += 1;
-                                    if(setLabel.size() < NumMaxLabel/2)
+                                    if(setLabel.size() < localNumMaxLabel/2)
                                     {
                                         if(Print)
                                             std::cout<<"\t"<<"FORAM DELETADOS: "<<numDel<<" LABELS\n\n";
@@ -936,6 +956,7 @@ void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(std::multiset<Labe
                                 else
                                     t1 += 1;
                             }
+
                         }
                     }
                 }

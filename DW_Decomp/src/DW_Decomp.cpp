@@ -823,6 +823,12 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
         delete []vetRmlpLambda;
         itCG += 1;
 
+/*        if(itCG == 1150)
+        {
+            std::cout<<"CG atingiu numero max de iteracoes!\n";
+            break;
+        }*/
+
     }
 
     std::cout<<"FIM CG!\n";
