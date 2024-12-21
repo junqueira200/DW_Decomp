@@ -55,4 +55,18 @@ std::ostream & operator << (std::ostream & s, const TempSpVetPrint<T,option> &te
 typedef Eigen::Matrix<int, -1, -1, Eigen::RowMajor> EigenMatrixRowI;
 typedef Eigen::Matrix<double, -1, -1, Eigen::RowMajor> EigenMatrixRowD;
 
+
+inline __attribute__((always_inline))
+bool doubleLess(double a, double b, double ep=1E-3)
+{
+    return (a-b) < -ep;
+}
+
+
+inline __attribute__((always_inline))
+bool doubleEqual(double a, double b, double ep=std::numeric_limits<double>::epsilon())
+{
+    return std::fabs(a-b) < ep;
+}
+
 #endif //DW_DECOMP_AUX_H

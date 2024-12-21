@@ -15,6 +15,9 @@
 #include <set>
 #include "Grafo.h"
 //#include "MemoryPool.h"
+#include "Aux.h"
+#include <boost/container/set.hpp>
+
 
 
 namespace LabelingAlgorithmNS
@@ -22,7 +25,7 @@ namespace LabelingAlgorithmNS
 
     constexpr int NumMaxResources = 2;
     constexpr int NumMaxRoute     = 300;
-    constexpr int NumMaxCust      = 65;
+    constexpr int NumMaxCust      = 100;
     constexpr int NgSetSize       = 5;
     constexpr int NumBuckets      = 10;
     constexpr int vetPtrLabelSize = 5;
@@ -86,7 +89,6 @@ namespace LabelingAlgorithmNS
         boost::array<int, NumMaxRoute> vetRoute;
         int tamRoute = 0;
         std::bitset<NumMaxCust> bitSet;
-
 
         int i    = -1;
         int j    = -1;
@@ -197,8 +199,8 @@ namespace LabelingAlgorithmNS
         }
 
 
-
-        void dominanceInterBuckets(std::set<Label*, LabelCmp> &setLabel, int numRes);//, MemoryPool_NS::Pool<Label> &poolTemp);
+        // std::set<Label*, LabelCmp> &setLabel
+        void dominanceInterBuckets(std::multiset<Label*, LabelCmp> &setLabel, int numRes);//, MemoryPool_NS::Pool<Label> &poolTemp);
         void setupGraphBucket();
 
     };
@@ -207,25 +209,34 @@ namespace LabelingAlgorithmNS
     bool forwardLabelingAlgorithm(const int numRes, const int numCust, const VetMatResCost &vetMatResCost,
                                   const VetVetResBound &vetVetBound, const int dest, const NgSet &ngSet,
                                   LabelingData &lData, Eigen::VectorXd &vetX, const double labelStart,
-                                  int NumMaxLabePerBucket);
+                                  int NumMaxLabePerBucket, const bool dominaceCheck);
 
     inline __attribute__((always_inline))
     bool checkDominance(const Label& l0, const Label& l1, int numResources)
     {
+        if(l0.cust != l1.cust)
+        {
+            std::cout<<"ERROR, lo.cust("<<l0.cust<<") != l1.cust("<<l1.cust<<")\n\n";
+            PRINT_DEBUG("", "");
+            throw "ERROR";
+        }
 
         // Check the resources
-        #pragma GCC unroll NumMaxResources
+        //#pragma GCC unroll NumMaxResources
         for(int i=0; i < NumMaxResources; ++i)
         {
             if(l0.vetResources[i] > l1.vetResources[i])
                 return false;
 
-/*            if((i+1) == numResources)
-                break;*/
+            if((i+1) == numResources)
+                break;
         }
 
+        if(l0.bitSet == 0 || l1.bitSet == 0)
+            return false;
+
         // Check if l0 is a subset of l1
-        return ((l0.bitSet&l1.bitSet)==l0.bitSet);
+        return (l0.bitSet&l1.bitSet)==l0.bitSet;
     }
 
     bool extendLabel(const Label &label,
