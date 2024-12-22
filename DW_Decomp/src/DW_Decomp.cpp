@@ -609,8 +609,8 @@ std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n
 
 
     //vetColX_solSubProb = SparseVectorD(maxNumVarSubProb);
-    auxVect.vetColX_solSubProb.resize(maxNumVarSubProb, 1);
-    auxVect.vetColX_solSubProb.setZero();
+    auxVect.matColX_solSubProb.resize(maxNumVarSubProb, NumMaxSolSubProb);
+    auxVect.matColX_solSubProb.setZero();
 
     //vetRowConvCooef    = SparseVectorD(numConstrsConv);
     auxVect.vetColConvCooef.resize(info.numConstrsConv, 1);
@@ -694,23 +694,19 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
     const int iniConv = 0;
     bool setAllVarAZero = false;
+    int numSol = 0;
 
+    static Eigen::Matrix<double, 2, -1, Eigen::RowMajor> matDual;
+    if(matDual.cols() < info.numVarRmlpPi)
+        matDual.resize(2, info.numVarRmlpPi);
+
+    matDual.setConstant(std::numeric_limits<double>::infinity());
 
     while(subProbCustR_neg)
     {
         subProbCustR_neg = false;
 
         std::cout<<"CG It: "<<itCG<<"\n\n";
-
-        /*
-        for(int i=0; i < vetVarLambdaCol.size(); ++i)
-        {
-            std::cout << "\t" << i << ": " << vetVarLambdaCol[i]->transpose() << "\n";
-        }
-
-        std::cout<<"\n\n";
-        */
-
 
         uRmlp->update();
         // TODO del
@@ -719,32 +715,10 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
         std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
 
-        //if(itCG == 70)
-        //    throw "NAO EH ERRO";
 
         // TODO Remove
         GRBVar *vetVar        = uRmlp->getVars();
         double *vetRmlpLambda = uRmlp->get(GRB_DoubleAttr_X, vetVar, uRmlp->get(GRB_IntAttr_NumVars));
-
-        // Set zero if finds an artificial variable with value equal to 0
-        //if(!setAllVarAZero)
-/*        {
-            setAllVarAZero = true;
-            bool increaseValue = false;
-            for(int i=0; i < info.numConstrsMaster; ++i)
-            {
-                if(vetVar[i].get(GRB_DoubleAttr_X) == 0.0 && vetVar[i].get(GRB_DoubleAttr_Obj) != 0.0)
-                {
-                    vetVar[i].set(GRB_DoubleAttr_Obj, 0.0);
-                    vetVar[i].set(GRB_DoubleAttr_LB, 0.0);
-                    vetVar[i].set(GRB_DoubleAttr_UB, 0.0);
-
-                    setAllVarAZero = false;
-                }
-            }
-        }*/
-        //else
-        //    std::cout<<"SET VARIAVEIS ARTIFICIAIS PARA ZERO!\n";
 
         std::cout<<"vetRmlpLambda: ";
         for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
@@ -755,71 +729,82 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
         updateRmlpPi(auxVect.vetRowRmlpPi, info);
 
+        // Check if the dual solution has changed
+
+        for(int64_t i=0; i < info.numVarRmlpPi; ++i)
+            matDual((itCG%2), i) = auxVect.vetRowRmlpPi[i];
+
+        bool equal = true;
+
+        for(int64_t i=0; i < info.numVarRmlpPi; ++i)
+        {
+            if(!doubleEqual(matDual((itCG%2), i), matDual(((itCG+1)%2), i)))
+            {
+                equal = false;
+                break;
+            }
+        }
+
+        if(equal)
+        {
+            std::cout<<"Dual solution is the same of the previous iteration\n";
+            break;
+        }
+
 
         // Update and solve the subproblems
         for(int k=0; k < info.numSubProb; ++k)
         {
             bool subProbK_CustoR_neg = false;
-            auxVect.vetColX_solSubProb.setZero();
+            auxVect.matColX_solSubProb.setZero();
             auxVect.vetColConvCooef.setZero();
 
             //getSubProbCooef(k, auxVect);
+            numSol = 0;
+            Eigen::VectorXd vetX;
 
             ptrSubProb->resolveSubProb(auxVect.vetRowC,
                                        auxVect.vetRowRmlpPi,
                                        *uRmlp,
-                                       auxVect.vetColX_solSubProb,
                                        itCG,
                                        subProbK_CustoR_neg,
                                        nullptr,
                                        iniConv,
                                        k,
                                        auxVect.vetColConvCooef,
-                                       auxVect.vetPairSubProb[k]);
+                                       auxVect.vetPairSubProb[k],
+                                       auxVect.matColX_solSubProb,
+                                       numSol);
 
             if(!subProbK_CustoR_neg)
                 continue;
 
             subProbCustR_neg = true;
 
-            // Create a new lambda variable
-            vetVarLambdaCol.push_back(std::make_unique<Eigen::VectorXd>(info.numVarMaster));
-            Eigen::VectorXd &vetSol = *vetVarLambdaCol[vetVarLambdaCol.size()-1];
-            vetSol.setZero();
-
-            // Shift the x solution
-            for(int i = 0; i < auxVect.vetPairSubProb[k].second; ++i)
-                vetSol[auxVect.vetPairSubProb[k].first+i] = auxVect.vetColX_solSubProb[i];
-
-
-            double cgCooefObj = vetSol.dot(auxVect.vetRowC);
-            //std::cout<<"cgCooefObj "<<k<<": "<<cgCooefObj<<"\n";
-            //std::cout<<vetSol.transpose()<<"\n";
-
-            auxVect.vetColCooef.setZero();
-
-            auxVect.vetColCooef.segment(0, info.numConstrsConv)   = auxVect.vetColConvCooef;
-            auxVect.vetColCooef.segment(info.numConstrsConv, info.numConstrsMaster) = matA*vetSol;
-
-            addColumn(cgCooefObj, k, auxVect, info);
-        }
-
-
-/*        if(!subProbCustR_neg)
-        {
-
-            for(int i=0; i < info.numConstrsMaster; ++i)
+            for(int l=0; l < numSol; ++l)
             {
+                // Create a new lambda variable
+                vetVarLambdaCol.push_back(std::make_unique<Eigen::VectorXd>(info.numVarMaster));
+                Eigen::VectorXd &vetSol = *vetVarLambdaCol[vetVarLambdaCol.size() - 1];
+                vetSol.setZero();
 
-                vetVar[i].set(GRB_DoubleAttr_Obj, 0.0);
-                vetVar[i].set(GRB_DoubleAttr_LB, 0.0);
-                vetVar[i].set(GRB_DoubleAttr_UB, 0.0);
+                // Shift the x solution
+                for(int i = 0; i < auxVect.vetPairSubProb[k].second; ++i)
+                    vetSol[auxVect.vetPairSubProb[k].first + i] = auxVect.matColX_solSubProb(i, l);
+
+
+                double cgCooefObj = vetSol.dot(auxVect.vetRowC);
+                //std::cout<<"cgCooefObj "<<k<<": "<<cgCooefObj<<"\n";
+                //std::cout<<vetSol.transpose()<<"\n";
+
+                auxVect.vetColCooef.setZero();
+
+                auxVect.vetColCooef.segment(0, info.numConstrsConv) = auxVect.vetColConvCooef;
+                auxVect.vetColCooef.segment(info.numConstrsConv, info.numConstrsMaster) = matA * vetSol;
+
+                addColumn(cgCooefObj, l, auxVect, info);
             }
-
-            subProbCustR_neg = true;
-
-        }*/
-
+        }
 
         delete []vetVar;
         delete []vetRmlpLambda;
@@ -904,24 +889,10 @@ void DW_DecompNS::DW_DecompNode::addColumn(const double cost, int k, AuxVectors 
 {
 
     GRBColumn grbColumn;
-
-    //std::cout<<"\tini addColumn\n";
-    //std::cout << "\tvetConvCoorf.size(): " << auxVect.vetColConvCooef.size() << "\n";
-
-    //for(int i=0; i < auxVect.vetColConvCooef.size(); ++i)
-    //    auxVect.vetColCooef[info.numConstrsMaster+i] = auxVect.vetColConvCooef[i];
-
-    //std::cout<<"\tFim for\n";
-    // TODO del
-    std::cout << "\tvetConvCooef: " << auxVect.vetColConvCooef.transpose() << "\n";
-    //std::cout<<"\tvetColCooef: "<<auxVect.vetColCooef.transpose()<<"\n";
-
     grbColumn.addTerms(&auxVect.vetColCooef[0], vetRmlpConstr, int(auxVect.vetColCooef.size()));
     uRmlp->addVar(0.0, GRB_INFINITY, cost, GRB_CONTINUOUS, grbColumn,
                 "l_"+std::to_string(itCG)+"_"+std::to_string(k));
 
-    //PRINT_DEBUG("", "");
-    //throw "NAO EH ERRO";
 
 }
 

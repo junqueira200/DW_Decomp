@@ -23,7 +23,7 @@ namespace VrpTW_DecompLabelingNS
 
         int numSubProb = 1;
         bool convConstIni = false;
-        InstanciaNS::InstVRP_TW *instVrpTw;                  // NAO DELETAR
+        InstanciaNS::InstVRP_TW *instVrpTw = nullptr;                  // NAO DELETAR
 
         Eigen::Vector<LabelingAlgorithmNS::Step, 2> vetStepSize;
         LabelingAlgorithmNS::LabelingData labelingData;
@@ -40,14 +40,15 @@ namespace VrpTW_DecompLabelingNS
         int resolveSubProb(const Eigen::VectorXd &vetC,
                            const Eigen::RowVectorXd &vetRowPi,
                            GRBModel &mestre,
-                           Eigen::VectorXd &vetX,
                            int itCG,
                            bool &custoRedNeg,
                            void* data,
-                           const int iniConv,
+                           int iniConv,
                            int indSubProb,
                            Eigen::VectorXd &vetCooefRestConv,
-                           const std::pair<int, int> &pairSubProb) override;
+                           const std::pair<int, int> &pairSubProb,
+                           Eigen::MatrixXd &matColX,
+                           int &numSol) override;
 
     }; // FIM MySubProb
 

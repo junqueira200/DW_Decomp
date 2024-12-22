@@ -12,7 +12,9 @@ using namespace SparseNS;
 namespace DW_DecompNS
 {
 
-    inline const double TolObjSubProb = 1E-6;
+    constexpr double TolObjSubProb = 1E-6;
+    constexpr int NumMaxSolSubProb = 10;
+
 
     Eigen::MatrixXd getMatA_Model(GRBModel &mestre);
     void getSparseMatModel(GRBModel &model, Eigen::SparseMatrix<double, Eigen::RowMajor> &matA);
@@ -72,14 +74,15 @@ namespace DW_DecompNS
         virtual int resolveSubProb(const Eigen::VectorXd &vetC,
                                    const Eigen::RowVectorXd &vetRowPi,
                                    GRBModel &rmlp,
-                                   Eigen::VectorXd &vetX,
                                    int itCG,
                                    bool &custoRedNeg,
                                    void *data,
                                    const int iniConv,
                                    int indSubProb,
                                    Eigen::VectorXd &vetCooefRestConv,
-                                   const std::pair<int, int> &pairSubProb)=0;
+                                   const std::pair<int, int> &pairSubProb,
+                                   Eigen::MatrixXd &matColX,
+                                   int &numSol)=0;
 
 
         //virtual int64_t getNumberOfConvConstr() = 0;
@@ -111,7 +114,7 @@ namespace DW_DecompNS
         Eigen::RowVectorXd          vetRowRmlpPi;
         Eigen::RowVectorXd          vetRowC;
         Eigen::VectorXd             vetColSubProbCooef;
-        Eigen::VectorXd             vetColX_solSubProb;
+        Eigen::MatrixXd             matColX_solSubProb;
         Eigen::VectorXd             vetColConvCooef;
         Eigen::VectorXd             vetColCooef;
 

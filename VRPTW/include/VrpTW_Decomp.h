@@ -19,7 +19,7 @@ namespace VrpTW_DecompNS
                              Eigen::VectorXi &rota,
                              int &routeTam);
 
-    class VrpSubProb : public DW_DecompNS::SubProb
+/*    class VrpSubProb : public DW_DecompNS::SubProb
     {
     public:
         void buildSubProbModel();
@@ -52,7 +52,7 @@ namespace VrpTW_DecompNS
                            Eigen::VectorXd &vetCooefRestConv,
                            const std::pair<int, int> &pairSubProb) override;
 
-    }; // FIM MySubProb
+    }; // FIM MySubProb*/
 
 }
 

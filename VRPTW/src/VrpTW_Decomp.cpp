@@ -51,6 +51,7 @@ int VrpTW_DecompNS::getIndex(int i, int j, int numClie)
     return 0;
 }*/
 
+/*
 
 VrpTW_DecompNS::VrpSubProb::VrpSubProb(GRBEnv &e, InstanciaNS::InstVRP_TW &instVrpTw_)
 {
@@ -219,8 +220,7 @@ void VrpTW_DecompNS::VrpSubProb::buildSubProbModel()
 
     GRBModel &model = *subProb;
 
-    /* ini VRP
-     */
+
 
 
     // \sum_{j \in V, j \not = 0} x_{0,j} = numVeic
@@ -331,7 +331,7 @@ void VrpTW_DecompNS::VrpSubProb::buildSubProbModel()
 
 
     }
-     */
+
 
     subProb->update();
     subProb->write("subProb.lp");
@@ -525,3 +525,4 @@ std::cout<<"ini geraSolHeuristica"<<"\n";
 
     return cost;
 }
+*/
