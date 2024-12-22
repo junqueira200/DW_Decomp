@@ -279,7 +279,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                             std::cout << "\t\t\tcheckDominance " << bucket.vetPtrLabel[k] << ": "
                                       << *bucket.vetPtrLabel[k] << "\n";
 
-                        if(checkDominance(*labelPtrAux, *bucket.vetPtrLabel[k], numRes))
+                        if(checkDominance(*labelPtrAux, *bucket.vetPtrLabel[k], numRes) && !checkDominance(*bucket.vetPtrLabel[k], *labelPtrAux, numRes))
                         {
                             if(bucket.vetPtrLabel[k] == labelPtrBest)
                                 labelPtrBest = nullptr;
@@ -921,7 +921,7 @@ void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(std::multiset<Labe
 
                                 Label *label1 = b1.vetPtrLabel[t1];
 
-                                if(checkDominance(*label0, *label1, numRes))
+                                if(checkDominance(*label0, *label1, numRes) && !checkDominance(*label1, *label0, numRes))
                                 {
                                     //std::cout<<"Domina\n";
                                     // Rm label1

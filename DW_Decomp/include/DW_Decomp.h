@@ -12,7 +12,7 @@ using namespace SparseNS;
 namespace DW_DecompNS
 {
 
-    inline const double TolObjSubProb = 1E-12;
+    inline const double TolObjSubProb = 1E-6;
 
     Eigen::MatrixXd getMatA_Model(GRBModel &mestre);
     void getSparseMatModel(GRBModel &model, Eigen::SparseMatrix<double, Eigen::RowMajor> &matA);

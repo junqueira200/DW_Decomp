@@ -151,7 +151,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
 
     ngSet.active = true;
 
-    for(int i=1; i < 18; i += 5)
+    for(int i=2; i < 18; i += 5)
     {
         std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
         vetX.setZero();

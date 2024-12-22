@@ -26,13 +26,13 @@ namespace LabelingAlgorithmNS
     constexpr int NumMaxResources = 2;
     constexpr int NumMaxRoute     = 300;
     constexpr int NumMaxCust      = 100;
-    constexpr int NgSetSize       = 5;
+    constexpr int NgSetSize       = 8;
     constexpr int NumBuckets      = 10;
     constexpr int vetPtrLabelSize = 5;
     constexpr bool NullFlush      = false;
     constexpr bool Print          = false;
     constexpr double RedCostCut   = -0.05;
-    constexpr int NumMaxLabel     = 2000;
+    constexpr int NumMaxLabel     = 5000;
     constexpr bool DominaIterBuckets = true;
 
     class LabelSet;
@@ -225,7 +225,7 @@ namespace LabelingAlgorithmNS
         //#pragma GCC unroll NumMaxResources
         for(int i=0; i < NumMaxResources; ++i)
         {
-            if(l0.vetResources[i] >= l1.vetResources[i])
+            if(l0.vetResources[i] > l1.vetResources[i])
                 return false;
 
             if((i+1) == numResources)

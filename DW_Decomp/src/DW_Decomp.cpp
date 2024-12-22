@@ -664,6 +664,8 @@ std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n
                                       vetStrConstrs,
                                       info.numConstrsMaster);
     delete []vetRmlpConstr;
+
+    //uRmlp->set(GRB_DoubleParam_OptimalityTol, 1E-9);
     uRmlp->update();
 
 
@@ -833,6 +835,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
     std::cout<<"FIM CG!\n";
     std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
+    uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
 
     GRBVar *vetVar        = uRmlp->getVars();
     double *vetRmlpLambda = uRmlp->get(GRB_DoubleAttr_X, vetVar, uRmlp->get(GRB_IntAttr_NumVars));
