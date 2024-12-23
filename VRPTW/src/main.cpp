@@ -81,6 +81,9 @@ int main(int argv, char **argc)
         std::cout<<"sizeof(Label): "<<sizeof(Label)<<"\n";
         std::cout<<"Num Clientes: "<<instVrpTw.numClientes<<"\n";
 
+        std::cout<<"vetNumSteps r0: "<<vrpLabelingSubProb.labelingData.vetNumSteps[0]<<"\n";
+        std::cout<<"vetNumSteps r1: "<<vrpLabelingSubProb.labelingData.vetNumSteps[1]<<"\n";
+
     }
     catch(char const* str)
     {

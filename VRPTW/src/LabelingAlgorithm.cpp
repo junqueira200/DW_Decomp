@@ -636,14 +636,10 @@ int LabelingAlgorithmNS::LabelingData::getIndex(int resource, double val)
             start = vetIndex[resource]+1;
             vetIndex[resource] = start + (end-start)/2;
         }
-
-        if(start == index && start == end)
-        {
-            if(!(val >= matBound(vetIndex[0], vetIndex[1])[resource].lowerBound && val < matBound(vetIndex[0], vetIndex[1])[resource].upperBound))
-                return -1;
-
-        }
     }
+
+    if(!(val >= matBound(vetIndex[0], vetIndex[1])[resource].lowerBound && val < matBound(vetIndex[0], vetIndex[1])[resource].upperBound))
+        return -1;
 
     return vetIndex[resource];
 

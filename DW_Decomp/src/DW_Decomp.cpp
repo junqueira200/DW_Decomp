@@ -804,6 +804,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
                 addColumn(cgCooefObj, l, auxVect, info);
             }
+
+            break;
         }
 
         delete []vetVar;
