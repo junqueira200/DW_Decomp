@@ -12,8 +12,11 @@ using namespace SparseNS;
 namespace DW_DecompNS
 {
 
-    constexpr double TolObjSubProb = 1E-6;
-    constexpr int NumMaxSolSubProb = 10;
+    constexpr double TolObjSubProb      = 1E-4;
+    constexpr int    NumMaxSolSubProb   = 10;
+    constexpr double StabilizationAlpha = 0.5;
+    constexpr bool   Stabilization      = false;
+    constexpr double gapLimit           = 0.01;
 
 
     Eigen::MatrixXd getMatA_Model(GRBModel &mestre);
@@ -71,18 +74,20 @@ namespace DW_DecompNS
          *  ************************************************************************
          */
 
-        virtual int resolveSubProb(const Eigen::VectorXd &vetC,
-                                   const Eigen::RowVectorXd &vetRowPi,
-                                   GRBModel &rmlp,
-                                   int itCG,
-                                   bool &custoRedNeg,
-                                   void *data,
-                                   const int iniConv,
-                                   int indSubProb,
-                                   Eigen::VectorXd &vetCooefRestConv,
-                                   const std::pair<int, int> &pairSubProb,
-                                   Eigen::MatrixXd &matColX,
-                                   int &numSol)=0;
+        virtual int
+        resolveSubProb(const Eigen::VectorXd &vetC,
+                       const Eigen::RowVectorXd &vetRowPi,
+                       GRBModel &rmlp,
+                       int itCG,
+                       bool &custoRedNeg,
+                       void *data,
+                       const int iniConv,
+                       int indSubProb,
+                       Eigen::VectorXd &vetCooefRestConv,
+                       const std::pair<int, int> &pairSubProb,
+                       Eigen::MatrixXd &matColX,
+                       int &numSol,
+                       double &redCost) =0;
 
 
         //virtual int64_t getNumberOfConvConstr() = 0;
@@ -106,17 +111,37 @@ namespace DW_DecompNS
 
     class DW_DecompNode;
 
-    struct AuxVectors
+    class StabilizationData
+    {
+    public:
+        Eigen::Matrix<double, -1, -1, Eigen::RowMajor> matPi;
+        int numRow = 0;
+
+
+        explicit StabilizationData(int numVarRmlpPi);
+        StabilizationData()=default;
+        void start(int numVarRmlpPi);
+
+        void addPi(const Eigen::RowVectorXd &vetRowRmlpPi);
+        void getWeightSum(const double alpha, Eigen::RowVectorXd &vetRowRmlpPi);
+
+
+    };
+
+    struct AuxData
     {
 
         Vector<std::pair<int, int>> vetPairSubProb;
 
         Eigen::RowVectorXd          vetRowRmlpPi;
+        Eigen::RowVectorXd          vetRowRmlpSmoothPi;
         Eigen::RowVectorXd          vetRowC;
         Eigen::VectorXd             vetColSubProbCooef;
         Eigen::MatrixXd             matColX_solSubProb;
         Eigen::VectorXd             vetColConvCooef;
         Eigen::VectorXd             vetColCooef;
+
+        StabilizationData           stabD;
 
         void updateSizes(DW_DecompNS::DW_DecompNode &e);
     };
@@ -151,13 +176,14 @@ namespace DW_DecompNS
                       double costA_Var_,
                       SubProb *ptrSubProb_,
                       const int numSubProb_,
-                      AuxVectors &auxVect,
+                      AuxData &auxVect,
                       Info &info);
 
-        StatusProb columnGeneration(AuxVectors &auxVect, const Info &info);
-        void getSubProbCooef(int k, AuxVectors &auxVect);
-        void addColumn(const double cost, int k, AuxVectors &auxVect, const Info &info);
+        StatusProb columnGeneration(AuxData &auxVect, const Info &info);
+        void getSubProbCooef(int k, AuxData &auxVect);
+        void addColumn(const double cost, int k, AuxData &auxVect, const Info &info);
         void updateRmlpPi(Eigen::RowVectorXd &vetRowRmlpPi, const Info &info);
+        double getLagrangeDualBound(double objRmlp, double redCost);
 
         // TODO
         DW_DecompNode(const DW_DecompNode &decomp)=delete;

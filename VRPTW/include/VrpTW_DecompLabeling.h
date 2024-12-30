@@ -33,7 +33,7 @@ namespace VrpTW_DecompLabelingNS
 
         int getNumConvConstr() override {return 0;}
         VrpLabelingSubProb()=default;
-        explicit VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw);
+        explicit VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw, double startDis);
         //int64_t getNumberOfConvConstr() override{return 0;};// {return numSubProb;}
         ~VrpLabelingSubProb() override =default;
         void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
@@ -42,13 +42,14 @@ namespace VrpTW_DecompLabelingNS
                            GRBModel &mestre,
                            int itCG,
                            bool &custoRedNeg,
-                           void* data,
-                           int iniConv,
+                           void *data,
+                           const int iniConv,
                            int indSubProb,
                            Eigen::VectorXd &vetCooefRestConv,
                            const std::pair<int, int> &pairSubProb,
                            Eigen::MatrixXd &matColX,
-                           int &numSol) override;
+                           int &numSol,
+                           double &redCost) override;
 
     }; // FIM MySubProb
 

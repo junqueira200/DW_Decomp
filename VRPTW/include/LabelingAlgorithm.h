@@ -26,14 +26,14 @@ namespace LabelingAlgorithmNS
     constexpr int NumMaxResources = 2;
     constexpr int NumMaxRoute     = 300;
     constexpr int NumMaxCust      = 100;
-    constexpr int NgSetSize       = 8;
+    constexpr int NgSetSize       = 5;
     constexpr int NumBuckets      = 10;
     constexpr int vetPtrLabelSize = 5;
     constexpr bool NullFlush      = false;
     constexpr bool Print          = false;
-    constexpr double RedCostCut   = -0.05;
     constexpr int NumMaxLabel     = 5000;
     constexpr bool DominaIterBuckets = true;
+    constexpr bool HalfNgSet      = false;
 
     class LabelSet;
 
@@ -88,7 +88,9 @@ namespace LabelingAlgorithmNS
         Eigen::Array<double, 1, NumMaxResources> vetResources;
         boost::array<int, NumMaxRoute> vetRoute;
         int tamRoute = 0;
-        std::bitset<NumMaxCust> bitSet;
+        std::bitset<NumMaxCust> bitSetNg;
+        std::bitset<NumMaxCust> bitSethalf;
+
 
         int i    = -1;
         int j    = -1;
@@ -217,7 +219,9 @@ namespace LabelingAlgorithmNS
                                   int &numSol,
                                   const double labelStart,
                                   int NumMaxLabePerBucket,
-                                  const bool dominaceCheck);
+                                  const bool dominaceCheck,
+                                  double& maxDist,
+                                  double& redCost);
 
     inline __attribute__((always_inline))
     bool checkDominance(const Label& l0, const Label& l1, int numResources)
@@ -241,7 +245,7 @@ namespace LabelingAlgorithmNS
         }
 
         // Check if l0 is a subset of l1
-        return (l0.bitSet&l1.bitSet)==l0.bitSet;
+        return (l0.bitSetNg & l1.bitSetNg) == l0.bitSetNg;
     }
 
     bool extendLabel(const Label &label,
@@ -259,6 +263,8 @@ namespace LabelingAlgorithmNS
     // Linear index for a nxn matrix
     inline __attribute__((always_inline))
     int getIndex(int i, int j, int numClie){return i*numClie+j;}
+
+    bool checkDistance(const Eigen::Matrix<double, -1, -1, Eigen::RowMajor> &matDist);
 
 
 }

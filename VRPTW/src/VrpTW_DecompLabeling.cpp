@@ -6,7 +6,7 @@
 using namespace LabelingAlgorithmNS;
 
 
-VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw_)
+VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw_, double startDist)
 {
     if(instVrpTw_.numClientes > NumMaxCust)
     {
@@ -19,9 +19,9 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     const int sumDem     = instVrpTw->sumDem();
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 400;
-    vetStepSize[0].start    = -instVrpTw->sumDist();
-    vetStepSize[0].end      = instVrpTw->sumDist();
+    vetStepSize[0].stepSize = 10; // 10
+    vetStepSize[0].start    = -startDist;
+    vetStepSize[0].end      = startDist;
 
     //vetStepSize[1].stepSize = 5;
     vetStepSize[1].stepSize = 5;
@@ -122,7 +122,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                                Eigen::VectorXd &vetCooefRestConv,
                                                                const std::pair<int, int> &pairSubProb,
                                                                Eigen::MatrixXd &matColX,
-                                                               int &numSol)
+                                                               int &numSol,
+                                                               double &redCost)
 {
 
     double pi0 = vetRowPi[0];
@@ -149,10 +150,11 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
     //std::cout<<"Peso: "<<vetMatResCost[1]<<"\n\n";
 
     int it = 0;
+    double maxDist;
 
     ngSet.active = true;
 
-    for(int i=1; i <= 21; i += 5)
+    for(int i=1; i <= 16; i += 5)
     {
         std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
         matColX.setZero();
@@ -167,7 +169,9 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                numSol,
                                                0.0,
                                                i,
-                                               true);
+                                               true,
+                                               maxDist,
+                                               redCost);
 
         it += 1;
         if(custoRedNeg)
@@ -189,7 +193,9 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                numSol,
                                                0.0,
                                                -1,
-                                               true);
+                                               true,
+                                               maxDist,
+                                               redCost);
 
         if(!custoRedNeg)
         {
@@ -207,7 +213,9 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                    numSol,
                                                    0.0,
                                                    -1,
-                                                   true);
+                                                   true,
+                                                   maxDist,
+                                                   redCost);
         }
     }
 

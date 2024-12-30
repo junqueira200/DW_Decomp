@@ -536,7 +536,7 @@ DW_DecompNS::DW_DecompNode::DW_DecompNode(GRBEnv &env_,
                                           double costA_Var_,
                                           SubProb *ptrSubProb_,
                                           const int numSubProb_,
-                                          AuxVectors &auxVect,
+                                          AuxData &auxVect,
                                           Info &info):
                                                                          ptrSubProb(ptrSubProb_)
 {
@@ -602,6 +602,10 @@ std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n
 
     auxVect.vetRowRmlpPi.resize(1, info.numVarRmlpPi);
     auxVect.vetRowRmlpPi.setZero();
+    auxVect.vetRowRmlpSmoothPi.resize(1, info.numVarRmlpPi);
+    auxVect.vetRowRmlpSmoothPi.setZero();
+
+    auxVect.stabD.start(info.numVarRmlpPi);
 
     auxVect.vetColSubProbCooef.resize(maxNumVarSubProb+1, 1);
     auxVect.vetColSubProbCooef.setZero();
@@ -686,7 +690,7 @@ std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n
     std::cout<<"fim del!\n";
 }
 
-DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors &auxVect, const Info &info)
+DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &auxVect, const Info &info)
 {
 
     bool subProbCustR_neg = true;
@@ -695,6 +699,9 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
     const int iniConv = 0;
     bool setAllVarAZero = false;
     int numSol = 0;
+    double redCost = 0.0;
+    double lagrangeDualBound = std::numeric_limits<double>::max();
+    double gap = std::numeric_limits<double>::max();
 
     static Eigen::Matrix<double, 2, -1, Eigen::RowMajor> matDual;
     if(matDual.cols() < info.numVarRmlpPi)
@@ -702,7 +709,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
     matDual.setConstant(std::numeric_limits<double>::infinity());
 
-    while(subProbCustR_neg)
+
+    while(subProbCustR_neg && gap > gapLimit)
     {
         subProbCustR_neg = false;
 
@@ -729,8 +737,21 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
 
         updateRmlpPi(auxVect.vetRowRmlpPi, info);
 
+        if(Stabilization)
+        {
+            //auxVect.stabD.getWeightSum(StabilizationAlpha, auxVect.vetRowRmlpSmoothPi);
+            auxVect.vetRowRmlpSmoothPi *= StabilizationAlpha;
+            auxVect.vetRowRmlpSmoothPi += (1.0-StabilizationAlpha) * auxVect.vetRowRmlpPi;
+
+
+            std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
+        }
+        else
+            auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpPi;
+
         // Check if the dual solution has changed
 
+        /*
         for(int64_t i=0; i < info.numVarRmlpPi; ++i)
             matDual((itCG%2), i) = auxVect.vetRowRmlpPi[i];
 
@@ -750,7 +771,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
             std::cout<<"Dual solution is the same of the previous iteration\n";
             break;
         }
-
+        */
 
         // Update and solve the subproblems
         for(int k=0; k < info.numSubProb; ++k)
@@ -764,7 +785,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
             Eigen::VectorXd vetX;
 
             ptrSubProb->resolveSubProb(auxVect.vetRowC,
-                                       auxVect.vetRowRmlpPi,
+                                       auxVect.vetRowRmlpSmoothPi,
                                        *uRmlp,
                                        itCG,
                                        subProbK_CustoR_neg,
@@ -774,7 +795,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
                                        auxVect.vetColConvCooef,
                                        auxVect.vetPairSubProb[k],
                                        auxVect.matColX_solSubProb,
-                                       numSol);
+                                       numSol,
+                                       redCost);
 
             if(!subProbK_CustoR_neg)
                 continue;
@@ -808,6 +830,16 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
             break;
         }
 
+        double objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
+        lagrangeDualBound = getLagrangeDualBound(objRmlp, redCost);
+        gap = (std::abs(redCost)/objRmlp)*100.0;
+        std::cout<<"GAP("<<gap<<"%)\n";
+
+
+
+        //if(Stabilization)
+        //    auxVect.stabD.addPi(auxVect.vetRowRmlpPi);
+
         delete []vetVar;
         delete []vetRmlpLambda;
         itCG += 1;
@@ -819,6 +851,10 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxVectors 
         }*/
 
     }
+
+
+    uRmlp->update();
+    uRmlp->optimize();
 
     std::cout<<"FIM CG!\n";
     std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
@@ -861,7 +897,7 @@ std::cout<<"PI: "<<vetRowRmlpPi<<"\n\n";
 
 }
 
-void DW_DecompNS::DW_DecompNode::getSubProbCooef(int k, AuxVectors &auxVect)
+void DW_DecompNS::DW_DecompNode::getSubProbCooef(int k, AuxData &auxVect)
 {
 
     const int iniVarSubProbK = auxVect.vetPairSubProb[k].first;
@@ -887,7 +923,7 @@ std::cout<<"vetColSubProbCooef: "<<auxVect.vetColSubProbCooef.segment(0, numVarS
 
 }
 
-void DW_DecompNS::DW_DecompNode::addColumn(const double cost, int k, AuxVectors &auxVect, const Info &info)
+void DW_DecompNS::DW_DecompNode::addColumn(const double cost, int k, AuxData &auxVect, const Info &info)
 {
 
     GRBColumn grbColumn;
@@ -898,10 +934,59 @@ void DW_DecompNS::DW_DecompNode::addColumn(const double cost, int k, AuxVectors 
 
 }
 
+double DW_DecompNS::DW_DecompNode::getLagrangeDualBound(double objRmlp, double redCost)
+{
+   return objRmlp + redCost;
+}
+
 // TODO
-void DW_DecompNS::AuxVectors::updateSizes(DW_DecompNS::DW_DecompNode &e)
+void DW_DecompNS::AuxData::updateSizes(DW_DecompNS::DW_DecompNode &e)
 {
 
     assertm(true, "Nao implementado!");
 
 }
+
+DW_DecompNS::StabilizationData::StabilizationData(int numVarRmlpPi)
+{
+    //matPi.resize(1000, numVarRmlpPi);
+    start(numVarRmlpPi);
+}
+
+void DW_DecompNS::StabilizationData::addPi(const Eigen::RowVectorXd &vetRowRmlpPi)
+{
+    if((numRow+1) > matPi.rows())
+        matPi.conservativeResize(2*numRow, matPi.cols());
+
+    matPi.row(numRow) = vetRowRmlpPi;
+    numRow += 1;
+}
+
+void DW_DecompNS::StabilizationData::getWeightSum(const double alpha, Eigen::RowVectorXd &vetRowRmlpPi)
+{
+    vetRowRmlpPi.setZero();
+
+    if(numRow == 0)
+        return;
+
+    const int numIt = numRow+1;
+
+    const double alpha_1 = (1.0-alpha)*alpha;
+
+    for(int i=0; i < numRow; ++i)
+    {
+        const double coef = alpha_1;// * //std::pow(alpha, numIt-i);
+        vetRowRmlpPi += coef*matPi.row(i);
+    }
+
+}
+
+void DW_DecompNS::StabilizationData::start(int numVarRmlpPi)
+{
+
+    matPi.resize(1000, numVarRmlpPi);
+    matPi.setZero();
+    numRow = 0;
+
+}
+
