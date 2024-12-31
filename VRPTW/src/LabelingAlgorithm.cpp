@@ -1,7 +1,6 @@
 //
 // Created by igor on 20/11/24.
 
-// Alteracoes: checkDominance was temporary removed
 //
 #include "LabelingAlgorithm.h"
 #include "MemoryPool.h"
@@ -378,10 +377,10 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
                     removeCycles(*labelPtrAux, numCust);
                     updateLabelCost(*labelPtrAux, vetMatResCost);
 
-                    //if(Print)
-                        //std::cout<<"*"<<*labelPtrAux<<"\n\n";
+                    if(Print)
+                        std::cout<<"*"<<*labelPtrAux<<"\n\n";
 
-                    if(labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb)
+                    if(labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb && !containRoute(vetLabel, numSol, labelPtrAux))
                     {
                         //std::cout<<"*"<<*labelPtrAux<<"\n\n";
                         vetLabel[numSol] = labelPtrAux;
@@ -432,15 +431,17 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
         {
             vetLabel[l]->vetRoute[vetLabel[l]->tamRoute-1] = vetLabel[l]->vetRoute[0];
 
-            std::cout << "BEST LABEL: " << *vetLabel[l] << "\n";
+            std::cout << "BEST LABEL: "<<vetLabel[l]<<" "<< *vetLabel[l] << "\n";
 
             auto &vetRoute = vetLabel[l]->vetRoute;
 
             for(int i = 0; i < (vetLabel[l]->tamRoute - 1); ++i)
             {
-                matColX((getIndex(vetRoute[i], vetRoute[i+1], numCust - 1)), l) = 1.0;
+                matColX((getIndex(vetRoute[i], vetRoute[i+1], numCust-1)), l) = 1.0;
             }
         }
+
+        //std::cout<<"Dest: "<<dest<<"\n\n";
 
         return true;
     }
@@ -989,4 +990,31 @@ bool LabelingAlgorithmNS::checkDistance(const Eigen::Matrix<double, -1, -1, Eige
 
     return true;
 
+}
+
+bool LabelingAlgorithmNS::containRoute(const Eigen::Array<Label*, 1, DW_DecompNS::NumMaxSolSubProb> &vetLabel, int numSol, Label* label)
+{
+    if(numSol == 0)
+        return false;
+
+    for(int i=0; i < numSol; ++i)
+    {
+        if(vetLabel[i]->tamRoute != label->tamRoute)
+            continue;
+
+        bool equal = true;
+        for(int ii=0; ii < label->tamRoute; ++ii)
+        {
+            if(vetLabel[i]->vetRoute[ii] != label->vetRoute[ii])
+            {
+                equal = false;
+                break;
+            }
+        }
+
+        if(equal)
+            return true;
+    }
+
+    return false;
 }

@@ -26,6 +26,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 find_package(GUROBI REQUIRED)
 include_directories(${GUROBI_INCLUDE_DIRS})
 link_directories($ENV{GUROBI_HOME}/lib)
+find_package(Boost)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -pedantic -g")# -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D __FILENAME__='\"$$(subst  ${CMAKE_SOURCE_DIR}/,,$$(abspath $$<))\"'")
@@ -43,6 +44,8 @@ target_sources(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
 target_link_libraries(${PROJECT_NAME} gurobi_c++)
 target_link_libraries(${PROJECT_NAME} gurobi)
+target_link_libraries(${PROJECT_NAME} Boost::boost)
+
 
                         
 target_include_directories(${PROJECT_NAME}

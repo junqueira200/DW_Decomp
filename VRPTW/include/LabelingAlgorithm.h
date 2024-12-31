@@ -265,6 +265,7 @@ namespace LabelingAlgorithmNS
     int getIndex(int i, int j, int numClie){return i*numClie+j;}
 
     bool checkDistance(const Eigen::Matrix<double, -1, -1, Eigen::RowMajor> &matDist);
+    bool containRoute(const Eigen::Array<Label*, 1, DW_DecompNS::NumMaxSolSubProb> &vetLabel, int numSol, Label* label);
 
 
 }

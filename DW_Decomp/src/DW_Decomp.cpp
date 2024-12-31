@@ -2,6 +2,8 @@
 #include "SparseOp.h"
 #include <memory>
 #include <utility>
+#include <boost/unordered_set.hpp>
+
 
 using namespace SparseOpNS;
 
@@ -702,6 +704,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
     double redCost = 0.0;
     double lagrangeDualBound = std::numeric_limits<double>::max();
     double gap = std::numeric_limits<double>::max();
+    double privObjRmlp = gap;
+    int numLimit = 0;
 
     static Eigen::Matrix<double, 2, -1, Eigen::RowMajor> matDual;
     if(matDual.cols() < info.numVarRmlpPi)
@@ -710,7 +714,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
     matDual.setConstant(std::numeric_limits<double>::infinity());
 
 
-    while(subProbCustR_neg && gap > gapLimit)
+    while(subProbCustR_neg && numLimit < 5)
     {
         subProbCustR_neg = false;
 
@@ -722,6 +726,20 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
         uRmlp->optimize();
 
         std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
+        double objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
+
+        if(itCG > 50)
+        {
+            gap = (std::abs(objRmlp-privObjRmlp)/objRmlp)*100.0;
+            std::cout<<"GAP("<<gap<<"%)\n";
+            if(gap <= gapLimit)
+                numLimit += 1;
+            else
+                numLimit = 0;
+
+            std::cout<<"numLimit: "<<numLimit<<"\n";
+
+        }
 
 
         // TODO Remove
@@ -803,16 +821,26 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
             subProbCustR_neg = true;
 
+
             for(int l=0; l < numSol; ++l)
             {
                 // Create a new lambda variable
                 vetVarLambdaCol.push_back(std::make_unique<Eigen::VectorXd>(info.numVarMaster));
-                Eigen::VectorXd &vetSol = *vetVarLambdaCol[vetVarLambdaCol.size() - 1];
+                Eigen::VectorXd &vetSol = *vetVarLambdaCol[vetVarLambdaCol.size()-1];
                 vetSol.setZero();
 
                 // Shift the x solution
                 for(int i = 0; i < auxVect.vetPairSubProb[k].second; ++i)
                     vetSol[auxVect.vetPairSubProb[k].first + i] = auxVect.matColX_solSubProb(i, l);
+
+                if(setVarLamdaCol.count(SolXHash(vetSol)) == 1)
+                {
+                    std::cout<<"miss pricing!\n";
+                    PRINT_DEBUG("", "");
+                    throw "MISS_PRICING";
+                }
+                else
+                    setVarLamdaCol.emplace(vetSol);
 
 
                 double cgCooefObj = vetSol.dot(auxVect.vetRowC);
@@ -830,10 +858,11 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
             break;
         }
 
-        double objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
-        lagrangeDualBound = getLagrangeDualBound(objRmlp, redCost);
-        gap = (std::abs(redCost)/objRmlp)*100.0;
-        std::cout<<"GAP("<<gap<<"%)\n";
+        objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
+        privObjRmlp = objRmlp;
+        //lagrangeDualBound = getLagrangeDualBound(objRmlp, redCost);
+        //gap = (std::abs(redCost)/objRmlp)*100.0;
+        //std::cout<<"GAP("<<gap<<"%)\n";
 
 
 
@@ -990,3 +1019,20 @@ void DW_DecompNS::StabilizationData::start(int numVarRmlpPi)
 
 }
 
+DW_DecompNS::SolXHash::SolXHash(const Eigen::VectorXd &vetX_):vetX(vetX_)
+{
+
+    // https://cseweb.ucsd.edu/~kube/cls/100/Lectures/lec16/lec16-16.html
+    // ELF Hash algorithm
+    hashVal = 0;
+    for(int i=0; i < vetX.size(); ++i)
+    {   //         valHash * 16
+        hashVal = (hashVal<<4) + vetX[i];
+        uint64_t g = hashVal & 0xF0000000L;
+
+        if(g != 0)
+            hashVal ^= g >> 24;
+        hashVal &= ~g;
+    }
+
+}
