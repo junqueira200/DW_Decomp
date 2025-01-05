@@ -156,7 +156,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
 
     for(int i=1; i <= 16; i += 5)
     {
-        std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
+        //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
         matColX.setZero();
         custoRedNeg = forwardLabelingAlgorithm(2,
                                                instVrpTw->numClientes + 1,

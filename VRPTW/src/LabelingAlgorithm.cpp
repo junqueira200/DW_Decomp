@@ -101,7 +101,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     if(NumMaxLabePerBucket == -1)
         NumMaxLabePerBucket = std::numeric_limits<int>::max();
 
-    std::cout<<"NumMaxLabePerBucket: "<<NumMaxLabePerBucket<<"\n\n";
+    //std::cout<<"NumMaxLabePerBucket: "<<NumMaxLabePerBucket<<"\n\n";
 
     if(checkDistance(vetMatResCost[0]))
     {
@@ -185,19 +185,15 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     //while(!listLabel.empty() && !labelPtrBest)
     while(!setLabel.empty() && numSol < DW_DecompNS::NumMaxSolSubProb)
     {
-        if(setLabel.size() > localNumMaxLabel && DominaIterBuckets && dominaceCheck)
+        if(int(setLabel.size()) > localNumMaxLabel && DominaIterBuckets && dominaceCheck)
         {
             lData.dominanceInterBuckets(setLabel, numRes, localNumMaxLabel);
-            bool print = false;
 
-            while(setLabel.size() > localNumMaxLabel)
+            while(int(setLabel.size()) > localNumMaxLabel)
             {
-                print = true;
                 //localNumMaxLabel += NumMaxLabel;
                 localNumMaxLabel *= 2;
             }
-            if(print)
-                std::cout<<"localNumMaxLabel: "<<localNumMaxLabel<<"\n\n";
         }
 
         if(numSol >= 1 && setLabel.size() > NumMaxLabel)
@@ -422,8 +418,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
         numIt += 1;
     }
 
-    std::cout<<"Max dist: "<<maxDist<<"\n";
-    std::cout<<"maxSizeVetPtrLabel: "<<maxSizeVetPtrLabel<<"\n";
+    //std::cout<<"Max dist: "<<maxDist<<"\n";
+    //std::cout<<"maxSizeVetPtrLabel: "<<maxSizeVetPtrLabel<<"\n";
 
     if(numSol > 0)
     {
@@ -431,7 +427,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
         {
             vetLabel[l]->vetRoute[vetLabel[l]->tamRoute-1] = vetLabel[l]->vetRoute[0];
 
-            std::cout << "BEST LABEL: "<<vetLabel[l]<<" "<< *vetLabel[l] << "\n";
+            //std::cout << "BEST LABEL: "<<vetLabel[l]<<" "<< *vetLabel[l] << "\n";
 
             auto &vetRoute = vetLabel[l]->vetRoute;
 

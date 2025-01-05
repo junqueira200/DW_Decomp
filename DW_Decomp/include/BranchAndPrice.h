@@ -10,6 +10,7 @@
 
 namespace BranchAndPriceNS
 {
+    constexpr double IntFeasTol = 1E-5;
 
     struct Cut
     {
@@ -19,7 +20,10 @@ namespace BranchAndPriceNS
     };
 
     int getMostFractionVariable(const Eigen::VectorXd &vetSolX);
+    bool isInteger(const Eigen::VectorXd &vet);
     void addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &decompNode, int num);
+    void branchAndPrice(const DW_DecompNS::DW_DecompNode &rootNode, DW_DecompNS::AuxData &auxVectors);
+    double computeGap(double lb, double ub);
 
 }
 
