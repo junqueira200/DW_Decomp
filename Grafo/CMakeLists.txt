@@ -23,7 +23,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 #set(CMAKE_CXX_FLAGS "-O0 -g3")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -O3 -g -pedantic -Wall -Wextra -fPIC")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D __FILENAME__='\"$$(subst  ${CMAKE_SOURCE_DIR}/,,$$(abspath $$<))\"'")
 
@@ -72,13 +72,6 @@ set(public_headers
     include/GAux.h
     include/Grafo.h
 )
-
-# not for MSVC
-if(CMAKE_COMPILER_IS_GNUCXX)
-    # compile options for this target only
-    # treat warnings as errors
-    target_compile_options(${PROJECT_NAME} PRIVATE -Werror)
-endif()
 
 # where to find our CMake modules
 #set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")

@@ -678,12 +678,17 @@ std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n
     //ptrSubProb->iniConvConstr(*uRmlp, nullptr, info.costA_Var);
     //return;
 
+    vetSolX.resize(info.numVarMaster);
+    vetSolX.setZero();
+
     //uRmlp->update();
     uRmlp->write("rmlp_"+std::to_string(-1)+".lp");
     vetRmlpConstr = uRmlp->getConstrs();
 
-    uRmlp->set(GRB_IntParam_Method, GRB_METHOD_PRIMAL);
-    uRmlp->set(GRB_IntParam_Presolve, GRB_PRESOLVE_OFF);
+    uRmlp->set(GRB_IntParam_Method, GRB_METHOD_DUAL);
+    //uRmlp->set(GRB_IntParam_Presolve, GRB_PRESOLVE_OFF);
+    uRmlp->set(GRB_IntParam_OutputFlag, 0);
+
 
     std::cout<<"ini del!\n";
     delete []vetRmlpConstrsSense;
@@ -699,22 +704,17 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
     itCG = 0;
 
     const int iniConv = 0;
-    bool setAllVarAZero = false;
+    //bool setAllVarAZero = false;
     int numSol = 0;
     double redCost = 0.0;
-    double lagrangeDualBound = std::numeric_limits<double>::max();
+    //double lagrangeDualBound = std::numeric_limits<double>::max();
     double gap = std::numeric_limits<double>::max();
-    double privObjRmlp = gap;
-    int numLimit = 0;
-
-    static Eigen::Matrix<double, 2, -1, Eigen::RowMajor> matDual;
-    if(matDual.cols() < info.numVarRmlpPi)
-        matDual.resize(2, info.numVarRmlpPi);
-
-    matDual.setConstant(std::numeric_limits<double>::infinity());
+    //double privObjRmlp = gap;
+    //int numLimit = 0;
+    bool missPricing = false;
 
 
-    while(subProbCustR_neg && numLimit < 5)
+    while(subProbCustR_neg)// && numLimit < 5)
     {
         subProbCustR_neg = false;
 
@@ -723,12 +723,13 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
         uRmlp->update();
         // TODO del
         //uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
-        uRmlp->optimize();
+        if(!missPricing)
+            uRmlp->optimize();
 
         std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
         double objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
 
-        if(itCG > 50)
+/*        if(itCG > 50)
         {
             gap = (std::abs(objRmlp-privObjRmlp)/objRmlp)*100.0;
             std::cout<<"GAP("<<gap<<"%)\n";
@@ -739,16 +740,16 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
             std::cout<<"numLimit: "<<numLimit<<"\n";
 
-        }
+        }*/
 
 
         // TODO Remove
         GRBVar *vetVar        = uRmlp->getVars();
         double *vetRmlpLambda = uRmlp->get(GRB_DoubleAttr_X, vetVar, uRmlp->get(GRB_IntAttr_NumVars));
 
-        std::cout<<"vetRmlpLambda: ";
-        for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
-            std::cout<<vetRmlpLambda[i]<<" ";
+        //std::cout<<"vetRmlpLambda: ";
+        //for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
+        //    std::cout<<vetRmlpLambda[i]<<" ";
 
         std::cout<<"\n\n";
 
@@ -757,39 +758,11 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
         if(Stabilization)
         {
-            //auxVect.stabD.getWeightSum(StabilizationAlpha, auxVect.vetRowRmlpSmoothPi);
-            auxVect.vetRowRmlpSmoothPi *= StabilizationAlpha;
-            auxVect.vetRowRmlpSmoothPi += (1.0-StabilizationAlpha) * auxVect.vetRowRmlpPi;
-
-
+            auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpSmoothPi + StabilizationAlpha * (auxVect.vetRowRmlpPi-auxVect.vetRowRmlpSmoothPi);
             std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
         }
         else
             auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpPi;
-
-        // Check if the dual solution has changed
-
-        /*
-        for(int64_t i=0; i < info.numVarRmlpPi; ++i)
-            matDual((itCG%2), i) = auxVect.vetRowRmlpPi[i];
-
-        bool equal = true;
-
-        for(int64_t i=0; i < info.numVarRmlpPi; ++i)
-        {
-            if(!doubleEqual(matDual((itCG%2), i), matDual(((itCG+1)%2), i)))
-            {
-                equal = false;
-                break;
-            }
-        }
-
-        if(equal)
-        {
-            std::cout<<"Dual solution is the same of the previous iteration\n";
-            break;
-        }
-        */
 
         // Update and solve the subproblems
         for(int k=0; k < info.numSubProb; ++k)
@@ -820,7 +793,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
                 continue;
 
             subProbCustR_neg = true;
-
+            int numSolRep = 0;
 
             for(int l=0; l < numSol; ++l)
             {
@@ -835,51 +808,50 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
                 if(setVarLamdaCol.count(SolXHash(vetSol)) == 1)
                 {
-                    std::cout<<"miss pricing!\n";
-                    PRINT_DEBUG("", "");
-                    throw "MISS_PRICING";
+                    numSolRep += 1;
+                    continue;
                 }
                 else
                     setVarLamdaCol.emplace(vetSol);
 
 
                 double cgCooefObj = vetSol.dot(auxVect.vetRowC);
-                //std::cout<<"cgCooefObj "<<k<<": "<<cgCooefObj<<"\n";
-                //std::cout<<vetSol.transpose()<<"\n";
-
                 auxVect.vetColCooef.setZero();
-
                 auxVect.vetColCooef.segment(0, info.numConstrsConv) = auxVect.vetColConvCooef;
                 auxVect.vetColCooef.segment(info.numConstrsConv, info.numConstrsMaster) = matA * vetSol;
 
                 addColumn(cgCooefObj, l, auxVect, info);
             }
 
+            if(numSolRep == numSol)
+            {
+                std::cout<<"MISS PRICING\n";
+                missPricing = true;
+            }
+            else
+                missPricing = false;
+
             break;
         }
 
-        objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
-        privObjRmlp = objRmlp;
+        if(!missPricing)
+        {
+            objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
+            //privObjRmlp = objRmlp;
+        }
+        //else
+            //numLimit = 0;
+
         //lagrangeDualBound = getLagrangeDualBound(objRmlp, redCost);
         //gap = (std::abs(redCost)/objRmlp)*100.0;
         //std::cout<<"GAP("<<gap<<"%)\n";
 
 
-
-        //if(Stabilization)
-        //    auxVect.stabD.addPi(auxVect.vetRowRmlpPi);
-
         delete []vetVar;
         delete []vetRmlpLambda;
         itCG += 1;
-
-/*        if(itCG == 1150)
-        {
-            std::cout<<"CG atingiu numero max de iteracoes!\n";
-            break;
-        }*/
-
     }
+
 
 
     uRmlp->update();
@@ -895,6 +867,14 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
     std::cout<<"vetRmlpLambda: ";
     for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
         std::cout<<vetRmlpLambda[i]<<" ";
+
+    vetSolX.setZero();
+    for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
+    {
+        vetSolX += vetRmlpLambda[i]*(*vetVarLambdaCol[i]);
+    }
+
+    std::cout<<"X: "<<vetSolX.transpose()<<"\n";
 
     std::cout<<"\n\n";
     delete []vetRmlpLambda;

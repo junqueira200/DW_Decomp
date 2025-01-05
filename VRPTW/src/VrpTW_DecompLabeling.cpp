@@ -197,6 +197,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                maxDist,
                                                redCost);
 
+        /*
         if(!custoRedNeg)
         {
             matColX.setZero();
@@ -217,6 +218,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                    maxDist,
                                                    redCost);
         }
+        */
     }
 
 

@@ -13,11 +13,13 @@ using namespace VrpTW_DecompNS;
 
 #include "LabelingAlgorithm.h"
 #include "MemoryPool.h"
+#include "BranchAndPrice.h"
 
 typedef  std::bitset<5> BitSet;
 
 using namespace LabelingAlgorithmNS;
 using namespace VrpTW_DecompLabelingNS;
+using namespace BranchAndPriceNS;
 
 int main(int argv, char **argc)
 {
@@ -114,6 +116,8 @@ int main(int argv, char **argc)
         std::cout<<"start r0: "<<vrpLabelingSubProb.labelingData.vetStepSize[0].start<<"\n";
         std::cout<<"vetNumSteps r1: "<<vrpLabelingSubProb.labelingData.vetNumSteps[1]<<"\n";
 
+        int id = getMostFractionVariable(decompNode.vetSolX);
+        std::cout<<"Most fraction variable: "<<decompNode.vetSolX[id]<<"\n\n";
 
 
     }

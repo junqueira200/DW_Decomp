@@ -12,7 +12,6 @@ else()
 endif()
 
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
 message("set vector_sanity_check=1")
 
@@ -28,7 +27,7 @@ include_directories(${GUROBI_INCLUDE_DIRS})
 link_directories($ENV{GUROBI_HOME}/lib)
 find_package(Boost)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -pedantic -g")# -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -pedantic -Wall -Wextra -fPIC")# -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D __FILENAME__='\"$$(subst  ${CMAKE_SOURCE_DIR}/,,$$(abspath $$<))\"'")
 
 add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
@@ -39,6 +38,7 @@ add_library(${PROJECT_NAME} SHARED)
 target_sources(${PROJECT_NAME}
     PRIVATE
         src/DW_Decomp.cpp
+        src/BranchAndPrice.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
@@ -84,14 +84,8 @@ set(public_headers
     include/SparseOp.h
     include/safe_matrix.h
     include/safe_vector.h
+    include/BranchAndPrice.h
 )
-
-# not for MSVC
-if(CMAKE_COMPILER_IS_GNUCXX)
-    # compile options for this target only
-    # treat warnings as errors
-    target_compile_options(${PROJECT_NAME} PRIVATE -Werror)
-endif()
 
 # where to find our CMake modules
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
