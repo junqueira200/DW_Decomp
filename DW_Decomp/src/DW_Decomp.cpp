@@ -623,6 +623,7 @@ std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n
 
     auxVect.vetColCooef.resize(numConstrsRmlp, 1);
     auxVect.vetColCooef.setZero();
+    auxVect.auxVetCooef = new double[numConstrsRmlp];
 
     GRBLinExpr linExprObjRmlp;
 
@@ -693,6 +694,7 @@ std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n
     delete []vetRmlpConstrsSense;
     delete []vetRmlpRhs;
     delete []vetStrConstrs;
+    delete []vetRmlpConstr;
     std::cout<<"fim del!\n";
 }
 
@@ -712,12 +714,13 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
     //int numLimit = 0;
     bool missPricing = false;
 
+    uRmlp->update();
     vetRmlpConstr = uRmlp->getConstrs();
 
     while(subProbCustR_neg)// && numLimit < 5)
     {
-        subProbCustR_neg = false;
         uRmlp->update();
+        subProbCustR_neg = false;
 
         if(!missPricing)
             uRmlp->optimize();
@@ -808,7 +811,11 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
                 double cgCooefObj = vetSol.dot(auxVect.vetRowC);
                 auxVect.vetColCooef.setZero();
-                auxVect.vetColCooef.segment(0, info.numConstrsConv) = auxVect.vetColConvCooef;
+                //std::cout<<"numConstrsConv: "<<info.numConstrsConv<<"\n";
+                if(info.numConstrsConv > 0)
+                    auxVect.vetColCooef.segment(0, info.numConstrsConv) = auxVect.vetColConvCooef;
+
+                //std::cout<<"numConstrsMaster: "<<info.numConstrsMaster<<"\n";
                 auxVect.vetColCooef.segment(info.numConstrsConv, info.numConstrsMaster) = matA * vetSol;
 
                 addColumn(cgCooefObj, l, auxVect);
@@ -844,6 +851,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
         itCG += 1;
 
+        //delete []vetRmlpConstr;
+
     }
 
 
@@ -865,6 +874,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
     delete []vetRmlpLambda;
     delete []vetVar;
+    delete []vetRmlpConstr;
 
 
     return DW_DecompNS::StatusSubProb_Otimo;
@@ -921,12 +931,12 @@ std::cout<<"vetColSubProbCooef: "<<auxVect.vetColSubProbCooef.segment(0, numVarS
 void DW_DecompNS::DW_DecompNode::addColumn(const double cost, int k, AuxData &auxVect)
 {
 
+    auxVect.updateAuxVetCooef();
     GRBColumn grbColumn;
-    grbColumn.addTerms(&auxVect.vetColCooef[0], vetRmlpConstr, int(auxVect.vetColCooef.size()));
+    grbColumn.addTerms(auxVect.auxVetCooef, vetRmlpConstr, info.numConstrsMaster);
+
     uRmlp->addVar(0.0, GRB_INFINITY, cost, GRB_CONTINUOUS, grbColumn,
                 "l_"+std::to_string(itCG)+"_"+std::to_string(k));
-
-
 }
 
 double DW_DecompNS::DW_DecompNode::getLagrangeDualBound(double objRmlp, double redCost)
@@ -959,12 +969,30 @@ DW_DecompNS::DW_DecompNode::DW_DecompNode(const DW_DecompNS::DW_DecompNode &deco
 
 }
 
-// TODO
 void DW_DecompNS::AuxData::updateSizes(DW_DecompNS::DW_DecompNode &e)
 {
+    Info &info = e.info;
+    int numConstrsMaster = info.numConstrsMaster;
 
-    assertm(true, "Nao implementado!");
+    if(vetRowRmlpPi.size() >= info.numConstrsMaster)
+        return;
 
+    vetRowRmlpPi.resize(numConstrsMaster);
+    vetRowRmlpSmoothPi.resize(numConstrsMaster);
+    vetColCooef.resize(numConstrsMaster);
+
+    vetRowRmlpPi.setZero();
+    vetRowRmlpSmoothPi.setZero();
+    vetColCooef.setZero();
+
+    delete []auxVetCooef;
+    auxVetCooef = new double[numConstrsMaster];
+
+}
+
+DW_DecompNS::AuxData::~AuxData()
+{
+    delete []auxVetCooef;
 }
 
 DW_DecompNS::StabilizationData::StabilizationData(int numVarRmlpPi)

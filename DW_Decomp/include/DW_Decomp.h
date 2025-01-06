@@ -141,10 +141,20 @@ namespace DW_DecompNS
         Eigen::MatrixXd             matColX_solSubProb;
         Eigen::VectorXd             vetColConvCooef;
         Eigen::VectorXd             vetColCooef;
+        double*                     auxVetCooef = nullptr;
 
         StabilizationData           stabD;
 
         void updateSizes(DW_DecompNS::DW_DecompNode &e);
+        AuxData()=default;
+        ~AuxData();
+
+        inline
+        void updateAuxVetCooef()
+        {
+            for(int i=0; i < vetColCooef.size(); ++i)
+                auxVetCooef[i] = vetColCooef[i];
+        }
     };
 
     struct Info
@@ -228,7 +238,7 @@ namespace DW_DecompNS
 
         ~DW_DecompNode()
         {
-            delete []vetRmlpConstr;
+            //delete []vetRmlpConstr;
             delete []vetVarArtifRmlp;
         }
 

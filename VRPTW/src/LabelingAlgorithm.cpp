@@ -105,6 +105,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
 
     if(checkDistance(vetMatResCost[0]))
     {
+        std::cout<<"dist > 0\n";
         numSol = 0;
         return false;
 

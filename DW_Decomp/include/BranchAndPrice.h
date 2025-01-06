@@ -22,8 +22,9 @@ namespace BranchAndPriceNS
     int getMostFractionVariable(const Eigen::VectorXd &vetSolX);
     bool isInteger(const Eigen::VectorXd &vet);
     void addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &decompNode, int num);
-    void branchAndPrice(const DW_DecompNS::DW_DecompNode &rootNode, DW_DecompNS::AuxData &auxVectors);
+    void branchAndPrice(const DW_DecompNS::DW_DecompNode &cRootNode, DW_DecompNS::AuxData &auxVectors);
     double computeGap(double lb, double ub);
+    double computeLowerBaound(std::list<DW_DecompNS::DW_DecompNode*> &list);
 
 }
 
