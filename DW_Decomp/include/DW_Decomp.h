@@ -234,7 +234,7 @@ namespace DW_DecompNS
         double getLagrangeDualBound(double objRmlp, double redCost);
 
 
-        DW_DecompNode(const DW_DecompNode &decomp);
+        DW_DecompNode(DW_DecompNode &decomp);
 
         ~DW_DecompNode()
         {

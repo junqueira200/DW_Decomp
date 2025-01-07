@@ -37,6 +37,9 @@ void BranchAndPriceNS::addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &
 
     // Update columns coef
     GRBLinExpr linExpr;
+
+    decompNode.uRmlp->update();
+    decompNode.uRmlp->optimize();
     GRBVar *varRmlp = decompNode.uRmlp->getVars();
 
     std::cout<<"vetX: \n"<<cut.vetX.rows()<<"\n\n";
@@ -59,7 +62,7 @@ void BranchAndPriceNS::addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &
     delete []varRmlp;
 }
 
-void BranchAndPriceNS::branchAndPrice(const DW_DecompNS::DW_DecompNode &cRootNode, DW_DecompNS::AuxData &auxVectors)
+void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode, DW_DecompNS::AuxData &auxVectors)
 {
 
     std::list<DW_DecompNode*> listDecomNode;
@@ -89,16 +92,18 @@ void BranchAndPriceNS::branchAndPrice(const DW_DecompNS::DW_DecompNode &cRootNod
 
     rootNode = nullptr;
 
-    int it = 0;
+    int it = -1;
 
     while(!listDecomNode.empty() && gap > gapLimit)
     {
+
+        it += 1;
+
         lowerBound = computeLowerBaound(listDecomNode);
         gap = computeGap(lowerBound, upperBound);
 
         std::cout<<"it("<<it<<") \t LB("<<lowerBound<<") \t UB("<<upperBound<<") \t gap("<<gap<<"%)\n";
 
-        numIt += 1;
 
         DW_DecompNode* ptrDecomNode = listDecomNode.back();
         std::cout<<"Processando NO: "<<ptrDecomNode<<"\n\n";
@@ -122,13 +127,6 @@ void BranchAndPriceNS::branchAndPrice(const DW_DecompNS::DW_DecompNode &cRootNod
             delete ptrDecomNode;
             continue;
 
-        }
-
-        if(numIt == 5)
-        {
-            std::cout<<"NAO EH ERROR\n";
-            PRINT_DEBUG("", "");
-            throw "NAO_EH_ERROR";
         }
 
         int varId = getMostFractionVariable(ptrDecomNode->vetSolX);
@@ -165,7 +163,6 @@ void BranchAndPriceNS::branchAndPrice(const DW_DecompNS::DW_DecompNode &cRootNod
             delete ptrNodeGreater;
 
         delete ptrDecomNode;
-        it += 1;
 
     }
 

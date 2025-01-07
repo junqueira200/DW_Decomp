@@ -3,7 +3,7 @@
 #include <memory>
 #include <utility>
 #include <boost/unordered_set.hpp>
-
+#include <format>
 
 using namespace SparseOpNS;
 
@@ -709,15 +709,15 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
     int numSol = 0;
     double redCost = 0.0;
     //double lagrangeDualBound = std::numeric_limits<double>::max();
-    double gap = std::numeric_limits<double>::max();
-    //double privObjRmlp = gap;
-    //int numLimit = 0;
+    double gap = std::numeric_limits<double>::infinity();
+    double privObjRmlp = gap;
+    int numLimit = 0;
     bool missPricing = false;
 
     uRmlp->update();
     vetRmlpConstr = uRmlp->getConstrs();
 
-    while(subProbCustR_neg)// && numLimit < 5)
+    while(subProbCustR_neg && numLimit < 10)
     {
         uRmlp->update();
         subProbCustR_neg = false;
@@ -731,18 +731,18 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
         //std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
         double objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
 
-/*        if(itCG > 50)
+        //if(itCG > 50)
         {
             gap = (std::abs(objRmlp-privObjRmlp)/objRmlp)*100.0;
-            std::cout<<"GAP("<<gap<<"%)\n";
+            //std::cout<<"GAP("<<gap<<"%)\n";
             if(gap <= gapLimit)
                 numLimit += 1;
             else
                 numLimit = 0;
 
-            std::cout<<"numLimit: "<<numLimit<<"\n";
+            //std::cout<<"numLimit: "<<numLimit<<"\n";
 
-        }*/
+        }
 
 
         //GRBVar *vetVar        = uRmlp->getVars();
@@ -832,13 +832,15 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
             break;
         }
 
-        if(!missPricing)
+        //if(!missPricing)
         {
             objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
-            //privObjRmlp = objRmlp;
+            privObjRmlp = objRmlp;
         }
-        //else
-            //numLimit = 0;
+        if(missPricing)
+        {//numLimit = 0;
+            std::cout<<"miss pricing\n";
+        }
 
         //lagrangeDualBound = getLagrangeDualBound(objRmlp, redCost);
         //gap = (std::abs(redCost)/objRmlp)*100.0;
@@ -846,7 +848,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
         if((itCG%10) == 0)
         {
-            std::cout<<"\t"<<itCG<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
+            //std::cout<<"\t"<<itCG<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"%\"\n";
+            std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG, uRmlp->get(GRB_DoubleAttr_ObjVal), gap);
         }
 
         itCG += 1;
@@ -860,7 +863,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
     uRmlp->optimize();
 
     funcObj = uRmlp->get(GRB_DoubleAttr_ObjVal);
-    std::cout<<"\t"<<itCG-1<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n\n\n";
+    std::cout<<"\t"<<itCG-1<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"\"\n\n\n";
     //uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
 
     GRBVar *vetVar        = uRmlp->getVars();
@@ -944,10 +947,11 @@ double DW_DecompNS::DW_DecompNode::getLagrangeDualBound(double objRmlp, double r
    return objRmlp + redCost;
 }
 
-DW_DecompNS::DW_DecompNode::DW_DecompNode(const DW_DecompNS::DW_DecompNode &decomp)
+DW_DecompNS::DW_DecompNode::DW_DecompNode(DW_DecompNS::DW_DecompNode &decomp)
 {
 
     ptrSubProb = decomp.ptrSubProb;
+    decomp.uRmlp->update();
     uRmlp      = std::make_unique<GRBModel>(*decomp.uRmlp);
     info       = decomp.info;
     itCG       = 0;
