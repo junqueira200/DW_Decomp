@@ -695,6 +695,11 @@ std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n
     delete []vetRmlpRhs;
     delete []vetStrConstrs;
     delete []vetRmlpConstr;
+    delete []vetVarArtifRmlp;
+
+    vetRmlpConstr = nullptr;
+    vetVarArtifRmlp = nullptr;
+
     std::cout<<"fim del!\n";
 }
 
@@ -878,6 +883,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
     delete []vetRmlpLambda;
     delete []vetVar;
     delete []vetRmlpConstr;
+    vetRmlpConstr = nullptr;
 
 
     return DW_DecompNS::StatusSubProb_Otimo;
@@ -953,12 +959,33 @@ DW_DecompNS::DW_DecompNode::DW_DecompNode(DW_DecompNS::DW_DecompNode &decomp)
     ptrSubProb = decomp.ptrSubProb;
     decomp.uRmlp->update();
     uRmlp      = std::make_unique<GRBModel>(*decomp.uRmlp);
+    uRmlp->update();
     info       = decomp.info;
     itCG       = 0;
     matA       = decomp.matA;
+    vetVarArtifRmlp = nullptr;
 
+
+    vetVarLambdaCol.reserve(decomp.vetVarLambdaCol.size());
     for(int i=0; i < int(decomp.vetVarLambdaCol.size()); ++i)
-        vetVarLambdaCol.emplace_back(std::make_unique<Eigen::VectorXd>(*decomp.vetVarLambdaCol[i]));
+        vetVarLambdaCol.push_back(std::make_unique<Eigen::VectorXd>(*decomp.vetVarLambdaCol[i]));
+
+    if(vetVarLambdaCol.size() != decomp.vetVarLambdaCol.size())
+    {
+        std::cout<<"ERROR in copy vetVarLambaCol\n";
+        PRINT_DEBUG("", "");
+        throw "ERROR";
+
+    }
+
+    if(decomp.uRmlp->get(GRB_IntAttr_NumVars) != uRmlp->get(GRB_IntAttr_NumVars))
+    {
+        std::cout<<"ERROR in copy model\n";
+        PRINT_DEBUG("", "");
+        throw "ERROR";
+    }
+
+    std::cout<<"COPY: NUM VARS: "<<uRmlp->get(GRB_IntAttr_NumVars)<<"\n";
 
     for(int i=0; i < int(decomp.vetVarLambdaCol.size()); ++i)
         setVarLamdaCol.insert(SolXHash(*vetVarLambdaCol[i]));

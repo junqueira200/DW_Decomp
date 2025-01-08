@@ -238,7 +238,8 @@ namespace DW_DecompNS
 
         ~DW_DecompNode()
         {
-            //delete []vetRmlpConstr;
+            std::cout<<"~DW_DecompNode\n";
+            delete []vetRmlpConstr;
             delete []vetVarArtifRmlp;
         }
 

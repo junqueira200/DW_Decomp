@@ -36,7 +36,7 @@ void VrpTW_DecompNS::criaMestre(const InstanciaNS::InstVRP_TW &instVrpTw, GRBMod
 
     model.update();
     model.write("vrp.lp");
-
+    delete []varX;
 }
 
 int VrpTW_DecompNS::getIndex(int i, int j, int numClie)

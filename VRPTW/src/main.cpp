@@ -73,6 +73,7 @@ int main(int argv, char **argc)
     catch(GRBException &e)
     {
         std::cout<<"GRBException:\n"<<e.getMessage()<<"\n";
+        std::cout<<"Code: "<<e.getErrorCode()<<"\n\n";
     }
 
     return 0;

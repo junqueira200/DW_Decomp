@@ -39,10 +39,20 @@ void BranchAndPriceNS::addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &
     GRBLinExpr linExpr;
 
     decompNode.uRmlp->update();
-    decompNode.uRmlp->optimize();
+    //decompNode.uRmlp->optimize();
+    decompNode.uRmlp->write("rmlp.lp");
     GRBVar *varRmlp = decompNode.uRmlp->getVars();
 
-    std::cout<<"vetX: \n"<<cut.vetX.rows()<<"\n\n";
+
+    int numVars = decompNode.uRmlp->get(GRB_IntAttr_NumVars);
+
+    if(numVars != int(decompNode.vetVarLambdaCol.size()))
+    {
+        std::cout<<"Num Vars is wrong;\n\t Model: "<<numVars<<"; vetVarLamdaCol: "<<decompNode.vetVarLambdaCol.size()<<"\n";
+        PRINT_DEBUG("", "");
+        throw "ERROR";
+    }
+
 
     // Runs through columns and compute their coefficients
     for(int i=0; i < int(decompNode.vetVarLambdaCol.size()); ++i)
@@ -99,6 +109,7 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode, DW_
 
         it += 1;
 
+
         lowerBound = computeLowerBaound(listDecomNode);
         gap = computeGap(lowerBound, upperBound);
 
@@ -106,7 +117,7 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode, DW_
 
 
         DW_DecompNode* ptrDecomNode = listDecomNode.back();
-        std::cout<<"Processando NO: "<<ptrDecomNode<<"\n\n";
+        std::cout<<"Processando NO: "<<ptrDecomNode<<"\nNumVars: "<<ptrDecomNode->uRmlp->get(GRB_IntAttr_NumVars)<<"\n\n";
         listDecomNode.pop_back();
 
 
@@ -142,10 +153,12 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode, DW_
 
         cut.sense = '>';
         cut.rhs   = std::ceil(varValue);
+        std::cout<<"x_"<<varId<<" >= "<<cut.rhs<<"\n";
         addMasterCut(cut, *ptrNodeGreater, numIt);
 
         cut.sense = '<';
         cut.rhs   = std::floor(varValue);
+        std::cout<<"x_"<<varId<<" <= "<<cut.rhs<<"\n";
         addMasterCut(cut,*ptrNodeSmaller, numIt);
 
         auxVectors.updateSizes(*ptrNodeGreater);
