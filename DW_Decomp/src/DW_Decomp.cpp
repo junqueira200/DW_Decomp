@@ -808,6 +808,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
                 if(setVarLamdaCol.count(SolXHash(vetSol)) == 1)
                 {
                     numSolRep += 1;
+                    vetVarLambdaCol.pop_back();
                     continue;
                 }
                 else

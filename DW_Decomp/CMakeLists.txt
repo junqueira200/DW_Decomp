@@ -39,6 +39,7 @@ target_sources(${PROJECT_NAME}
     PRIVATE
         src/DW_Decomp.cpp
         src/BranchAndPrice.cpp
+        src/SearchStrategy.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
@@ -85,6 +86,7 @@ set(public_headers
     include/safe_matrix.h
     include/safe_vector.h
     include/BranchAndPrice.h
+    include/SearchStrategy.h
 )
 
 # where to find our CMake modules

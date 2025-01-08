@@ -19,6 +19,8 @@ namespace BranchAndPriceNS
         double rhs;
     };
 
+
+
     int getMostFractionVariable(const Eigen::VectorXd &vetSolX);
     bool isInteger(const Eigen::VectorXd &vet);
     void addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &decompNode, int num);
