@@ -38,9 +38,8 @@ void BranchAndPriceNS::addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &
     // Update columns coef
     GRBLinExpr linExpr;
 
-    decompNode.uRmlp->update();
+    //decompNode.uRmlp->update();
     //decompNode.uRmlp->optimize();
-    decompNode.uRmlp->write("rmlp.lp");
     GRBVar *varRmlp = decompNode.uRmlp->getVars();
 
 
