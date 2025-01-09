@@ -14,6 +14,7 @@ using namespace VrpTW_DecompNS;
 using namespace LabelingAlgorithmNS;
 using namespace VrpTW_DecompLabelingNS;
 using namespace BranchAndPriceNS;
+using namespace SearchStrategyNS;
 
 int main(int argv, char **argc)
 {
@@ -45,12 +46,13 @@ int main(int argv, char **argc)
         DW_DecompNS::AuxData auxVectors;
         auxVectors.vetPairSubProb.push_back(std::make_pair(0, instVrpTw.numClientes * instVrpTw.numClientes));
 
-        DW_DecompNS::Info info;
 
         std::cout << "Cria decompNode\n";
-        DW_DecompNS::DW_DecompNode decompNode(grbEnv, model, distVarA, (DW_DecompNS::SubProb *) &vrpLabelingSubProb, 1, auxVectors);
+        DW_DecompNS::DW_DecompNode decompNode(grbEnv, model, distVarA, (DW_DecompNS::SubProb*)&vrpLabelingSubProb, 1, auxVectors);
+        //DepthFirst depthFirst;
+        MinFuncObj minFuncObj;
 
-        branchAndPrice(decompNode, auxVectors);
+        branchAndPrice(decompNode, auxVectors, (SearchDataInter*)&minFuncObj);
 
         //decompNode.columnGeneration(auxVectors);
 

@@ -3,7 +3,11 @@
 //
 
 #include "BranchAndPrice.h"
+#include "PrimalHeuristic.h"
+
 using namespace DW_DecompNS;
+using namespace SearchStrategyNS;
+using namespace PrimalHeuristicNS;
 
 int BranchAndPriceNS::getMostFractionVariable(const Eigen::VectorXd &vetSolX)
 {
@@ -71,14 +75,20 @@ void BranchAndPriceNS::addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &
     delete []varRmlp;
 }
 
-void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode, DW_DecompNS::AuxData &auxVectors)
+void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
+                                      DW_DecompNS::AuxData &auxVectors,
+                                      SearchDataInter* searchD)
 {
 
-    std::list<DW_DecompNode*> listDecomNode;
-    listDecomNode.emplace_back(new DW_DecompNode(cRootNode));
+    PrimalHeuristicInter* ptrPrimalH = new SimpleDiving;
+
+    //std::list<DW_DecompNode*> listDecomNode;
+    //listDecomNode.emplace_back(new DW_DecompNode(cRootNode));
+
 
     if(cRootNode.uRmlp->get(GRB_IntAttr_ModelSense) != GRB_MINIMIZE)
     {
+        delete ptrPrimalH;
         std::cout<<"ERROR, model should be a min problem\n";
         PRINT_DEBUG("", "");
         throw "ERROR IN MODEL";
@@ -91,35 +101,54 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode, DW_
 
     int numIt = -1;
 
-    DW_DecompNode *rootNode = listDecomNode.back();
+    DW_DecompNode *rootNode = new DW_DecompNode(cRootNode);
     int status = rootNode->columnGeneration(auxVectors);
     if(status != StatusSubProb_Otimo)
     {
+        delete ptrPrimalH;
         std::cout<<"Root node can't be soved\n";
+        delete rootNode;
         return;
     }
 
+    searchD->insert(rootNode);
     rootNode = nullptr;
 
     int it = -1;
 
-    while(!listDecomNode.empty() && gap > gapLimit)
+    while(!searchD->empty() && gap > gapLimit)
     {
 
         it += 1;
 
 
-        lowerBound = computeLowerBaound(listDecomNode);
+        //lowerBound = computeLowerBaound(listDecomNode);
+        lowerBound = searchD->getMin();
+
+        //DW_DecompNode* ptrDecomNode = listDecomNode.back();
+        DW_DecompNode* ptrDecomNode = searchD->pop();
+        std::cout<<"Diving Heuristic\n";
+        DW_DecompNode* primalNode   = (*ptrPrimalH)(ptrDecomNode, auxVectors, upperBound);
+        if(primalNode)
+        {
+            if(primalNode->funcObj < upperBound)
+            {
+                upperBound = primalNode->funcObj;
+                vetX_best  = primalNode->vetSolX;
+            }
+
+            delete primalNode;
+            primalNode = nullptr;
+        }
+
         gap = computeGap(lowerBound, upperBound);
 
         std::cout<<"it("<<it<<") \t LB("<<lowerBound<<") \t UB("<<upperBound<<") \t gap("<<gap<<"%)\n";
 
-
-        DW_DecompNode* ptrDecomNode = listDecomNode.back();
         std::cout<<"Processando NO: "<<ptrDecomNode<<"\nNumVars: "<<ptrDecomNode->uRmlp->get(GRB_IntAttr_NumVars)<<"\n\n";
-        listDecomNode.pop_back();
+        //listDecomNode.pop_back();
 
-
+        // TODO Colocar antes da chamada da heuristica
         if(ptrDecomNode->funcObj > upperBound)
         {
             delete ptrDecomNode;
@@ -164,13 +193,13 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode, DW_
 
         int statusSubProb = ptrNodeSmaller->columnGeneration(auxVectors);
         if(statusSubProb == StatusSubProb_Otimo)
-            listDecomNode.push_back(ptrNodeSmaller);
+            searchD->insert(ptrNodeSmaller);
         else
             delete ptrNodeSmaller;
 
         statusSubProb = ptrNodeGreater->columnGeneration(auxVectors);
         if(statusSubProb == StatusSubProb_Otimo)
-            listDecomNode.push_back(ptrNodeGreater);
+            searchD->insert(ptrNodeGreater);
         else
             delete ptrNodeGreater;
 
@@ -178,36 +207,19 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode, DW_
 
     }
 
+    delete ptrPrimalH;
+
 }
 
 bool BranchAndPriceNS::isInteger(const Eigen::VectorXd &vet)
 {
     for(const double &val:vet)
     {
-        double ceil     = std::ceil(val);
-        double floor    = std::floor(val);
-        double difCeil  = std::abs(ceil-val);
-        double difFloor = std::abs(val-floor);
-        double smaller  = difCeil<difFloor? difCeil:difFloor;
-
-        if(smaller > IntFeasTol)
+        if(!isInteger(val))
             return false;
     }
 
     return true;
-}
-
-double BranchAndPriceNS::computeLowerBaound(std::list<DW_DecompNS::DW_DecompNode*> &list)
-{
-    double lb = std::numeric_limits<double>::max();
-
-    for(DW_DecompNode* node:list)
-    {
-        if(node->funcObj < lb)
-            lb = node->funcObj;
-    }
-
-    return lb;
 }
 
 double BranchAndPriceNS::computeGap(double lb, double ub)
