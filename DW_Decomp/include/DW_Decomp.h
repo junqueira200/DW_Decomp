@@ -18,6 +18,7 @@ namespace DW_DecompNS
     constexpr double StabilizationAlpha = 0.2;
     constexpr bool   Stabilization      = false;
     constexpr double gapLimit           = 0.001;
+    constexpr int NumCandidatesBranch   = 3;
 
 
     Eigen::MatrixXd getMatA_Model(GRBModel &mestre);
@@ -234,7 +235,7 @@ namespace DW_DecompNS
         double getLagrangeDualBound(double objRmlp, double redCost);
 
 
-        DW_DecompNode(DW_DecompNode &decomp);
+        DW_DecompNode(const DW_DecompNode &decomp);
 
         ~DW_DecompNode()
         {

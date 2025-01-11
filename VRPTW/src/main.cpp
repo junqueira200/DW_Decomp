@@ -6,6 +6,7 @@
 #include "LabelingAlgorithm.h"
 #include "MemoryPool.h"
 #include "BranchAndPrice.h"
+#include "Alarm.h"
 
 //import teste;
 
@@ -15,6 +16,8 @@ using namespace LabelingAlgorithmNS;
 using namespace VrpTW_DecompLabelingNS;
 using namespace BranchAndPriceNS;
 using namespace SearchStrategyNS;
+using namespace PrimalHeuristicNS;
+using namespace BranchNS;
 
 int main(int argv, char **argc)
 {
@@ -46,13 +49,20 @@ int main(int argv, char **argc)
         DW_DecompNS::AuxData auxVectors;
         auxVectors.vetPairSubProb.push_back(std::make_pair(0, instVrpTw.numClientes * instVrpTw.numClientes));
 
+        setAlarm(1*60*60); // 1H timer
 
         std::cout << "Cria decompNode\n";
         DW_DecompNS::DW_DecompNode decompNode(grbEnv, model, distVarA, (DW_DecompNS::SubProb*)&vrpLabelingSubProb, 1, auxVectors);
         //DepthFirst depthFirst;
         MinFuncObj minFuncObj;
+        SimpleDiving simpleDiving;
+        StrongBranch branch;
 
-        branchAndPrice(decompNode, auxVectors, (SearchDataInter*)&minFuncObj);
+        branchAndPrice(decompNode,
+                       auxVectors,
+                       (SearchDataInter*)&minFuncObj,
+                       (PrimalHeuristicInter*)&simpleDiving,
+                       (BranchInter*)&branch);
 
         //decompNode.columnGeneration(auxVectors);
 

@@ -39,34 +39,46 @@ DW_DecompNode* PrimalHeuristicNS::SimpleDiving::operator()(DW_DecompNode *node,
             return nullptr;
         }
 
-        int id = -1;
-        double val = std::numeric_limits<double>::infinity();
-
-        // Chose a variable to branch
-        for(int i=0; i < int(nodeTemp->vetSolX.size()); ++i)
+        bool didCut = false;
+        const int numItMax = std::min(15, (int)nodeTemp->vetSolX.size());
+        for(int j=0; j < numItMax; ++j)
         {
-            double dif = (std::ceil(nodeTemp->vetSolX[i])-nodeTemp->vetSolX[i]);
+            int id = -1;
+            double val = std::numeric_limits<double>::infinity();
 
-            if(dif < val && !isInteger(nodeTemp->vetSolX[i]))
+            // Chose a variable to branch
+            for(int i = 0; i < int(nodeTemp->vetSolX.size()); ++i)
             {
-                val = dif;
-                id = i;
+                double dif = (std::ceil(nodeTemp->vetSolX[i]) - nodeTemp->vetSolX[i]);
+
+                if(dif < val && !isInteger(nodeTemp->vetSolX[i]))
+                {
+                    val = dif;
+                    id = i;
+                }
             }
+
+            // Check is solution is integer
+            if(id == -1 && !didCut)
+                return nodeTemp;
+
+            if(id == -1)
+                break;
+
+            Cut cut;
+            cut.vetX.resize(nodeTemp->vetSolX.size());
+            cut.vetX.coeffRef(id) = 1;
+            cut.rhs = std::ceil(nodeTemp->vetSolX[id]);
+            cut.sense = '>';
+
+            addMasterCut(cut, *nodeTemp, numIt);
+            auxVet.updateSizes(*nodeTemp);
+
+            nodeTemp->vetSolX[id] = std::ceil(nodeTemp->vetSolX[id]);
+
+            didCut = true;
         }
 
-        // Check is solution is integer
-        if(id == -1)
-            return nodeTemp;
-
-
-        Cut cut;
-        cut.vetX.resize(nodeTemp->vetSolX.size());
-        cut.vetX.coeffRef(id) = 1;
-        cut.rhs = std::ceil(nodeTemp->vetSolX[id]);
-        cut.sense = '>';
-
-        addMasterCut(cut, *nodeTemp, numIt);
-        auxVet.updateSizes(*nodeTemp);
 
         status = nodeTemp->columnGeneration(auxVet);
         if(status != StatusSubProb_Otimo)

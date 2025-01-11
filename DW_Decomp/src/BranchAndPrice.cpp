@@ -4,10 +4,12 @@
 
 #include "BranchAndPrice.h"
 #include "PrimalHeuristic.h"
+#include "Alarm.h"
 
 using namespace DW_DecompNS;
 using namespace SearchStrategyNS;
 using namespace PrimalHeuristicNS;
+using namespace BranchNS;
 
 int BranchAndPriceNS::getMostFractionVariable(const Eigen::VectorXd &vetSolX)
 {
@@ -77,10 +79,12 @@ void BranchAndPriceNS::addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &
 
 void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
                                       DW_DecompNS::AuxData &auxVectors,
-                                      SearchDataInter* searchD)
+                                      SearchDataInter* searchD,
+                                      PrimalHeuristicInter* ptrPrimalH,
+                                      BranchInter* branch)
 {
 
-    PrimalHeuristicInter* ptrPrimalH = new SimpleDiving;
+    //PrimalHeuristicInter* ptrPrimalH = new SimpleDiving;
 
     //std::list<DW_DecompNode*> listDecomNode;
     //listDecomNode.emplace_back(new DW_DecompNode(cRootNode));
@@ -116,7 +120,7 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
 
     int it = -1;
 
-    while(!searchD->empty() && gap > gapLimit)
+    while(!searchD->empty() && gap > gapLimit && !alarm_stopG)
     {
 
         it += 1;
@@ -168,7 +172,16 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
 
         }
 
-        int varId = getMostFractionVariable(ptrDecomNode->vetSolX);
+        if(alarm_stopG)
+        {
+            if(!searchD->empty())
+                lowerBound = searchD->getMin();
+
+            delete ptrDecomNode;
+            break;
+        }
+
+        int varId = (*branch)(ptrDecomNode, auxVectors);
         double varValue = ptrDecomNode->vetSolX[varId];
 
         Cut cut;
@@ -207,7 +220,9 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
 
     }
 
-    delete ptrPrimalH;
+
+    gap = computeGap(lowerBound, upperBound);
+    std::cout<<"it("<<it<<") \t LB("<<lowerBound<<") \t UB("<<upperBound<<") \t gap("<<gap<<"%)\n";
 
 }
 

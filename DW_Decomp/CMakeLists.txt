@@ -41,6 +41,7 @@ target_sources(${PROJECT_NAME}
         src/BranchAndPrice.cpp
         src/SearchStrategy.cpp
         src/PrimalHeuristic.cpp
+        src/Branch.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
@@ -89,6 +90,8 @@ set(public_headers
     include/BranchAndPrice.h
     include/SearchStrategy.h
     include/PrimalHeuristic.h
+    include/Branch.h
+    include/Alarm.h
 )
 
 # where to find our CMake modules

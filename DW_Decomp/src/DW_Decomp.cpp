@@ -954,11 +954,11 @@ double DW_DecompNS::DW_DecompNode::getLagrangeDualBound(double objRmlp, double r
    return objRmlp + redCost;
 }
 
-DW_DecompNS::DW_DecompNode::DW_DecompNode(DW_DecompNS::DW_DecompNode &decomp)
+DW_DecompNS::DW_DecompNode::DW_DecompNode(const DW_DecompNS::DW_DecompNode &decomp)
 {
 
     ptrSubProb = decomp.ptrSubProb;
-    decomp.uRmlp->update();
+    //decomp.uRmlp->update();
     uRmlp      = std::make_unique<GRBModel>(*decomp.uRmlp);
     uRmlp->update();
     info       = decomp.info;
@@ -985,8 +985,6 @@ DW_DecompNS::DW_DecompNode::DW_DecompNode(DW_DecompNS::DW_DecompNode &decomp)
         PRINT_DEBUG("", "");
         throw "ERROR";
     }
-
-    std::cout<<"COPY: NUM VARS: "<<uRmlp->get(GRB_IntAttr_NumVars)<<"\n";
 
     for(int i=0; i < int(decomp.vetVarLambdaCol.size()); ++i)
         setVarLamdaCol.insert(SolXHash(*vetVarLambdaCol[i]));

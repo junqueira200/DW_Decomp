@@ -7,7 +7,8 @@
 
 #include "DW_Decomp.h"
 #include "SearchStrategy.h"
-
+#include "PrimalHeuristic.h"
+#include "Branch.h"
 
 namespace BranchAndPriceNS
 {
@@ -27,7 +28,10 @@ namespace BranchAndPriceNS
     void addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &decompNode, int num);
     void branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
                         DW_DecompNS::AuxData &auxVectors,
-                        SearchStrategyNS::SearchDataInter* searchD);
+                        SearchStrategyNS::SearchDataInter* searchD,
+                        PrimalHeuristicNS::PrimalHeuristicInter* ptrPrimalH,
+                        BranchNS::BranchInter* branch);
+
     double computeGap(double lb, double ub);
 
     inline __attribute__((always_inline))
