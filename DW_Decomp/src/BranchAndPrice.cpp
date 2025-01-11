@@ -35,6 +35,7 @@ void BranchAndPriceNS::addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &
 
     // Update info
     decompNode.info.numConstrsMaster += 1;
+    decompNode.info.numVarRmlpPi     += 1;
 
     // Add cut to matA
     auto &matA = decompNode.matA;

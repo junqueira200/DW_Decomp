@@ -13,12 +13,12 @@ using namespace SparseNS;
 namespace DW_DecompNS
 {
 
-    constexpr double TolObjSubProb      = 1E-4;
-    constexpr int    NumMaxSolSubProb   = 25;
-    constexpr double StabilizationAlpha = 0.2;
-    constexpr bool   Stabilization      = false;
-    constexpr double gapLimit           = 0.001;
-    constexpr int NumCandidatesBranch   = 3;
+    constexpr double TolObjSubProb       = 1E-4;
+    constexpr int    NumMaxSolSubProb    = 25;
+    constexpr double StabilizationAlpha  = 0.2;
+    constexpr bool   Stabilization       = false;
+    constexpr double gapLimit            = 0.001;
+    constexpr int    NumCandidatesBranch = 3;
 
 
     Eigen::MatrixXd getMatA_Model(GRBModel &mestre);
@@ -89,7 +89,8 @@ namespace DW_DecompNS
                        const std::pair<int, int> &pairSubProb,
                        Eigen::MatrixXd &matColX,
                        int &numSol,
-                       double &redCost) =0;
+                       double &redCost,
+                       double constPiValue) =0;
 
 
         //virtual int64_t getNumberOfConvConstr() = 0;
@@ -160,12 +161,13 @@ namespace DW_DecompNS
 
     struct Info
     {
-        int numSubProb         = 0;        // Number of sub problems
-        double costA_Var       = 0.0;
-        int64_t numConstrsConv = 0;        // Number of constants of convexity
-        int numConstrsMaster   = 0;        // Number of the master's constrants
-        int numVarMaster       = 0;        // Number of the variables into the master mip
-        int numVarRmlpPi       = 0;        // Number of dual variables into the rmlp
+        int     numSubProb               = 0;        // Number of sub problems
+        double  costA_Var                = 0.0;
+        int64_t numConstrsConv           = 0;        // Number of constants of convexity
+        int     numConstrsMaster         = 0;        // Number of the master's constrants
+        int     numVarMaster             = 0;        // Number of the variables into the master mip
+        int     numVarRmlpPi             = 0;        // Number of dual variables into the rmlp
+        int     numConstrsOrignalProblem = 0;
     };
 
 

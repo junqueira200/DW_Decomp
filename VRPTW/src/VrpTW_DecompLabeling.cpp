@@ -123,7 +123,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                                const std::pair<int, int> &pairSubProb,
                                                                Eigen::MatrixXd &matColX,
                                                                int &numSol,
-                                                               double &redCost)
+                                                               double &redCost,
+                                                               double constPiValue)
 {
 
     double pi0 = vetRowPi[0];
@@ -167,7 +168,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                labelingData,
                                                matColX,
                                                numSol,
-                                               0.0,
+                                               constPiValue,
                                                i,
                                                true,
                                                maxDist,

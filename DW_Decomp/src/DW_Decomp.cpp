@@ -551,6 +551,7 @@ std::cout<<"antes\n";
 std::cout<<"depois\n";
 
     info.numConstrsMaster = master.get(GRB_IntAttr_NumConstrs);
+    info.numConstrsOrignalProblem = info.numConstrsMaster;
     info.numVarMaster     = master.get(GRB_IntAttr_NumVars);
 
 std::cout<<"info set\n";
@@ -763,6 +764,15 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
         else
             auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpPi;
 
+        double constVal = 0;
+        for(int i=info.numConstrsOrignalProblem; i < info.numConstrsMaster; ++i)
+            constVal += -auxVect.vetRowRmlpSmoothPi[i];
+
+        /*
+        if(!doubleEqual(constVal, 0.0))
+            std::cout<<"ConstVal: "<<constVal<<"\n";
+        */
+
         // Update and solve the subproblems
         for(int k=0; k < info.numSubProb; ++k)
         {
@@ -786,7 +796,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
                                        auxVect.vetPairSubProb[k],
                                        auxVect.matColX_solSubProb,
                                        numSol,
-                                       redCost);
+                                       redCost,
+                                       constVal);
 
             if(!subProbK_CustoR_neg)
                 continue;
@@ -829,7 +840,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
             if(numSolRep == numSol)
             {
-                //std::cout<<"MISS PRICING\n";
+                std::cout<<"MISS PRICING\n";
                 missPricing = true;
             }
             else
@@ -843,10 +854,17 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
             objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
             privObjRmlp = objRmlp;
         }
+        /*
         if(missPricing)
         {//numLimit = 0;
+
+            uRmlp->write("missPricing.lp");
             std::cout<<"miss pricing\n";
+            std::cout<<auxVect.vetRowRmlpPi<<"\n";
+            PRINT_DEBUG("", "");
+            throw "MISS_PRICING";
         }
+        */
 
         //lagrangeDualBound = getLagrangeDualBound(objRmlp, redCost);
         //gap = (std::abs(redCost)/objRmlp)*100.0;
@@ -1003,6 +1021,7 @@ void DW_DecompNS::AuxData::updateSizes(DW_DecompNS::DW_DecompNode &e)
 {
     Info &info = e.info;
     int numConstrsMaster = info.numConstrsMaster;
+
 
     if(vetRowRmlpPi.size() >= info.numConstrsMaster)
         return;

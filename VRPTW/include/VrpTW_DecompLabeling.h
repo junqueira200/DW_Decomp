@@ -49,7 +49,8 @@ namespace VrpTW_DecompLabelingNS
                            const std::pair<int, int> &pairSubProb,
                            Eigen::MatrixXd &matColX,
                            int &numSol,
-                           double &redCost) override;
+                           double &redCost,
+                           double constPiValue) override;
 
     }; // FIM MySubProb
 
