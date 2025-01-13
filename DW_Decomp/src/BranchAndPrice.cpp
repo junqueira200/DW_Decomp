@@ -2,6 +2,8 @@
 // Created by igor on 04/01/25.
 //
 
+#include <fstream>
+#include <filesystem>
 #include "BranchAndPrice.h"
 #include "PrimalHeuristic.h"
 #include "Alarm.h"
@@ -10,6 +12,7 @@ using namespace DW_DecompNS;
 using namespace SearchStrategyNS;
 using namespace PrimalHeuristicNS;
 using namespace BranchNS;
+using namespace StatisticsNS;
 
 int BranchAndPriceNS::getMostFractionVariable(const Eigen::VectorXd &vetSolX)
 {
@@ -32,58 +35,111 @@ int BranchAndPriceNS::getMostFractionVariable(const Eigen::VectorXd &vetSolX)
 
 void BranchAndPriceNS::addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &decompNode, int num)
 {
-
-    // Update info
-    decompNode.info.numConstrsMaster += 1;
-    decompNode.info.numVarRmlpPi     += 1;
-
-    // Add cut to matA
-    auto &matA = decompNode.matA;
-    matA.conservativeResize(matA.rows()+1, matA.cols());
-    matA.row(matA.rows()-1) = cut.vetX;
-
-    // Update columns coef
-    GRBLinExpr linExpr;
-
-    //decompNode.uRmlp->update();
-    //decompNode.uRmlp->optimize();
-    GRBVar *varRmlp = decompNode.uRmlp->getVars();
-
-
-    int numVars = decompNode.uRmlp->get(GRB_IntAttr_NumVars);
-
-    if(numVars != int(decompNode.vetVarLambdaCol.size()))
+    if(cut.rhs != 0 && cut.sense != '<')
     {
-        std::cout<<"Num Vars is wrong;\n\t Model: "<<numVars<<"; vetVarLamdaCol: "<<decompNode.vetVarLambdaCol.size()<<"\n";
-        PRINT_DEBUG("", "");
-        throw "ERROR";
+
+        // Update info
+        decompNode.info.numConstrsMaster += 1;
+        decompNode.info.numVarRmlpPi += 1;
+
+        // Add cut to matA
+        auto &matA = decompNode.matA;
+        matA.conservativeResize(matA.rows() + 1, matA.cols());
+        matA.row(matA.rows() - 1) = cut.vetX;
+
+        // Update columns coef
+        GRBLinExpr linExpr;
+
+        //decompNode.uRmlp->update();
+        //decompNode.uRmlp->optimize();
+        GRBVar *varRmlp = decompNode.uRmlp->getVars();
+
+
+        int numVars = decompNode.uRmlp->get(GRB_IntAttr_NumVars);
+
+        if(numVars != int(decompNode.vetVarLambdaCol.size()))
+        {
+            std::cout << "Num Vars is wrong;\n\t Model: " << numVars << "; vetVarLamdaCol: "
+                      << decompNode.vetVarLambdaCol.size() << "\n";
+            PRINT_DEBUG("", "");
+            throw "ERROR";
+        }
+
+
+        // Runs through columns and compute their coefficients
+        for(int i = 0; i < int(decompNode.vetVarLambdaCol.size()); ++i)
+        {
+            auto &col = *decompNode.vetVarLambdaCol[i];
+            double coef = (cut.vetX.dot(col));
+
+            if(coef != 0.0)
+                linExpr += coef * varRmlp[i];
+
+            //exit(-1);
+        }
+
+        std::cout << "add cut\n";
+        // Add cut to rmlp
+        decompNode.uRmlp->addConstr(linExpr, cut.sense, cut.rhs, "masterCut_" + std::to_string(num));
+        delete[]varRmlp;
     }
-
-
-    // Runs through columns and compute their coefficients
-    for(int i=0; i < int(decompNode.vetVarLambdaCol.size()); ++i)
+    else
     {
-        auto &col    = *decompNode.vetVarLambdaCol[i];
-        double coef = (cut.vetX.dot(col));
+        int varId = -1;
+        for(int i=0; i < (int)cut.vetX.size(); ++i)
+        {
+            if(cut.vetX.coeff(i) != 0.0)
+            {
+                varId = i;
+                break;
+            }
+        }
 
-        if(coef != 0.0)
-            linExpr += coef * varRmlp[i];
+        if(varId == -1)
+        {
+            std::cout<<"ERROR, cut.vetX is zero!\nvetX: "<<cut.vetX<<"\n";
+            PRINT_DEBUG("", "");
+            throw "ERROR";
+        }
 
-        //exit(-1);
+        std::cout<<"X_"<<varId<<" <= 0\n";
+
+        VectorI vetRmColumns;
+        vetRmColumns.reserve(50);
+
+        // Removes all columns with X_<varId> variable
+        for(int i=0; i < (int)decompNode.vetVarLambdaCol.size(); ++i)
+        {
+            Eigen::Matrix<double, -1, 1> &vetX = (*decompNode.vetVarLambdaCol[i]);
+            if(vetX[varId] != 0.0)
+                vetRmColumns.push_back(i);
+        }
+
+        std::reverse(vetRmColumns.begin(), vetRmColumns.end());
+        GRBVar *varRmlp = decompNode.uRmlp->getVars();
+
+        for(int rmId:vetRmColumns)
+        {
+            decompNode.setVarLamdaCol.erase(SolXHash((*decompNode.vetVarLambdaCol[rmId])));
+            decompNode.vetVarLambdaCol.erase(decompNode.vetVarLambdaCol.begin() + rmId);
+            decompNode.uRmlp->remove(varRmlp[rmId]);
+        }
+
+        decompNode.vetDelVar.push_back(varId);
+
+        delete []varRmlp;
     }
-
-    std::cout<<"add cut\n";
-    // Add cut to rmlp
-    decompNode.uRmlp->addConstr(linExpr, cut.sense, cut.rhs, "masterCut_"+std::to_string(num));
-    delete []varRmlp;
 }
 
 void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
                                       DW_DecompNS::AuxData &auxVectors,
                                       SearchDataInter* searchD,
                                       PrimalHeuristicInter* ptrPrimalH,
-                                      BranchInter* branch)
+                                      BranchInter* branch,
+                                      StatisticsData &statisticD)
 {
+
+   clock_t start = clock();
 
     //PrimalHeuristicInter* ptrPrimalH = new SimpleDiving;
 
@@ -108,6 +164,11 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
 
     DW_DecompNode *rootNode = new DW_DecompNode(cRootNode);
     int status = rootNode->columnGeneration(auxVectors);
+
+    clock_t end = clock();
+    statisticD.rootTime = double(end-start)/CLOCKS_PER_SEC;
+    statisticD.rootLB   = rootNode->funcObj;
+
     if(status != StatusSubProb_Otimo)
     {
         delete ptrPrimalH;
@@ -221,8 +282,17 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
 
     }
 
+    gap                   = computeGap(lowerBound, upperBound);
+    end                   = clock();
+    statisticD.totalTime  = double(end-start)/CLOCKS_PER_SEC;
+    statisticD.upperBound = upperBound;
+    statisticD.lowerBound = lowerBound;
+    statisticD.gap        = gap;
+    statisticD.timeLimit  = alarm_stopG;
+    statisticD.numIt      = numIt;
 
-    gap = computeGap(lowerBound, upperBound);
+
+
     std::cout<<"it("<<it<<") \t LB("<<lowerBound<<") \t UB("<<upperBound<<") \t gap("<<gap<<"%)\n";
 
 }
@@ -243,3 +313,38 @@ double BranchAndPriceNS::computeGap(double lb, double ub)
     return ((ub-lb)/lb)*100.0;
 }
 
+void BranchAndPriceNS::writeToFile(StatisticsNS::StatisticsData& statisticsD, const std::string& fileStr)
+{
+
+    if(fileStr.empty())
+        return;
+
+    statisticsD.inst = std::filesystem::path(statisticsD.inst);
+
+    std::filesystem::path path(statisticsD.inst);
+    path.replace_extension();
+    statisticsD.inst = path.string();
+
+    std::ofstream file;
+    if(std::filesystem::exists(fileStr))
+    {
+        file.open(fileStr, std::ios_base::app);
+    }
+    else
+    {
+        file.open(fileStr, std::ios_base::out);
+        file<<"#"<<statisticsD.date<<"\n";
+        file<<"inst; rootLB; rootTime; LB; UB; gap; totalTime\n";
+    }
+
+    file<<statisticsD.inst<<"; "<<std::format("{:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}\n", statisticsD.rootLB,
+                                                                                                       statisticsD.rootTime,
+                                                                                                       statisticsD.lowerBound,
+                                                                                                       statisticsD.upperBound,
+                                                                                                       statisticsD.gap,
+                                                                                                       statisticsD.totalTime);
+
+    file.close();
+
+
+}

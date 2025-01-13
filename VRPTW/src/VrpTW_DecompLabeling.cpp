@@ -124,7 +124,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                                Eigen::MatrixXd &matColX,
                                                                int &numSol,
                                                                double &redCost,
-                                                               double constPiValue)
+                                                               double constPiValue,
+                                                               const VectorI &vetDelVar)
 {
 
     double pi0 = vetRowPi[0];
@@ -145,6 +146,18 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
             vetMatResCost[0](i, 0) = instVrpTw->matDist(i, 0);
             vetMatResCost[0](i, instVrpTw->numClientes) = instVrpTw->matDist(i, 0);// - pi0;
         }
+    }
+
+    for(int varId:vetDelVar)
+    {
+        int i = varId/instVrpTw->numClientes;
+        int j = varId%instVrpTw->numClientes;
+
+        if(j == 0)
+            j = instVrpTw->numClientes;
+
+        vetMatResCost[0](i, j) = std::numeric_limits<double>::infinity();
+        //std::cout<<varId<<"\n";
     }
 
     //std::cout<<"Custo Reduzido: \n"<<vetMatResCost[0]<<"\n\n";
@@ -198,12 +211,12 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                maxDist,
                                                redCost);
 
-        /*
+
         if(!custoRedNeg)
         {
             matColX.setZero();
             ngSet.active = false;
-            std::cout<<"Ultimo forwardLabelingAlgorithm\n\n";
+            //std::cout<<"Ultimo forwardLabelingAlgorithm\n\n";
             custoRedNeg = forwardLabelingAlgorithm(2,
                                                    instVrpTw->numClientes+1,
                                                    vetMatResCost,
@@ -219,7 +232,6 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                    maxDist,
                                                    redCost);
         }
-        */
     }
 
 

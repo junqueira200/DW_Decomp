@@ -18,6 +18,7 @@ using namespace BranchAndPriceNS;
 using namespace SearchStrategyNS;
 using namespace PrimalHeuristicNS;
 using namespace BranchNS;
+using namespace StatisticsNS;
 
 int main(int argv, char **argc)
 {
@@ -49,7 +50,7 @@ int main(int argv, char **argc)
         DW_DecompNS::AuxData auxVectors;
         auxVectors.vetPairSubProb.push_back(std::make_pair(0, instVrpTw.numClientes * instVrpTw.numClientes));
 
-        setAlarm(1*60*60); // 1H timer
+        setAlarm(2.5*60*60); // 2.5H timer
 
         std::cout << "Cria decompNode\n";
         DW_DecompNS::DW_DecompNode decompNode(grbEnv, model, distVarA, (DW_DecompNS::SubProb*)&vrpLabelingSubProb, 1, auxVectors);
@@ -58,11 +59,19 @@ int main(int argv, char **argc)
         SimpleDiving simpleDiving;
         StrongBranch branch;
 
+        StatisticsData statisticD;
+
+
         branchAndPrice(decompNode,
                        auxVectors,
                        (SearchDataInter*)&minFuncObj,
                        (PrimalHeuristicInter*)&simpleDiving,
-                       (BranchInter*)&branch);
+                       (BranchInter*)&branch,
+                       statisticD);
+
+
+        statisticD.inst = fileName;
+        writeToFile(statisticD, "result.csv");
 
         //decompNode.columnGeneration(auxVectors);
 

@@ -249,7 +249,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
         // Extend label
         for(int t=1; t < numCust; ++t)
         {
-            if(t == lastCust)
+            if(t == lastCust || vetMatResCost[0](labelPtr->cust, t) == std::numeric_limits<double>::infinity())
                 continue;
 
             if(HalfNgSet && labelPtr->bitSethalf[t] == 1)
@@ -506,7 +506,7 @@ bool LabelingAlgorithmNS::extendLabel(const Label &label,
 
 
 
-    if((newLabel.vetRoute.size()) < label.tamRoute+1)
+    if(((int)newLabel.vetRoute.size()) < label.tamRoute+1)
     {   std::cout<<"ini resize\n";
         //newLabel.vetRoute.resize(label.vetRoute.size() + 1);
         std::cout<<"end resize\n";

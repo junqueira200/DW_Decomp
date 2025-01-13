@@ -92,6 +92,7 @@ set(public_headers
     include/PrimalHeuristic.h
     include/Branch.h
     include/Alarm.h
+    include/Statistics.h
 )
 
 # where to find our CMake modules

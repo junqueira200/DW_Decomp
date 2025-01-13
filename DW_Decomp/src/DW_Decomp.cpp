@@ -37,7 +37,7 @@ Eigen::MatrixXd DW_DecompNS::getMatA_Model(GRBModel &mestre)
     delete []vetVar;
     delete []vetConstr;
 
-    return std::move(matA);
+    return matA;
 
 }
 
@@ -95,7 +95,7 @@ Eigen::VectorXd DW_DecompNS::getVetC_Model(GRBModel &mestre)
 
     delete []vetVar;
 
-    return std::move(vetC);
+    return vetC;
 
 }
 
@@ -137,7 +137,7 @@ Eigen::VectorX<char> DW_DecompNS::getConstSenseModel(GRBModel &model)
 
     delete []vetConstr;
 
-    return std::move(vetSense);
+    return vetSense;
 
 }
 
@@ -157,7 +157,7 @@ Eigen::VectorXd DW_DecompNS::getRhsModel(GRBModel &model)
 
     delete []vetConstr;
 
-    return std::move(vetRhs);
+    return vetRhs;
 
 }
 
@@ -305,7 +305,7 @@ void DW_DecompNS::dwDecomp(GRBEnv &env,
     subProbCooef.setZero();
 
 
-    std::cout << "Mat A:\n" << matA << "\n\nvetC: " << vetC.transpose() << "\n\n" << vetMestreRhs.transpose() << "\n\n";
+    //std::cout << "Mat A:\n" << matA << "\n\nvetC: " << vetC.transpose() << "\n\n" << vetMestreRhs.transpose() << "\n\n";
 
     rmlp.setObjective(linExprObjRmlp, mestre.get(GRB_IntAttr_ModelSense));
 
@@ -388,7 +388,7 @@ void DW_DecompNS::dwDecomp(GRBEnv &env,
                             const Eigen::VectorXd &vetEigenLambda,
                             Eigen::VectorXd &vetX)
     {
-        if(vetVarLambda.size() != vetEigenLambda.size())
+        if((int)vetVarLambda.size() != (int)vetEigenLambda.size())
         {
             std::cout<<"Erro, vetVarLambda.size() != vetEigenLambda\n";
             std::cout<<"\nvetVarLambda.size(): "<<vetVarLambda.size()<<"\nvetEigenLambda.size(): "<<vetEigenLambda.size()<<"\n\n";
@@ -410,7 +410,7 @@ void DW_DecompNS::dwDecomp(GRBEnv &env,
     {
         std::cout<<"CG It: "<<itCG<<"\n\n";
 
-        for(int i=0; i < vetVarLambda.size(); ++i)
+        for(int i=0; i < (int)vetVarLambda.size(); ++i)
         {
             std::cout<<"\t"<< i << ": " << vetVarLambda[i]->transpose() << "\n";
         }
@@ -541,6 +541,7 @@ DW_DecompNS::DW_DecompNode::DW_DecompNode(GRBEnv &env_,
                                           AuxData &auxVect):
                                                                          ptrSubProb(ptrSubProb_)
 {
+    vetDelVar = VectorI();
 
 std::cout<<"ini DW_DecompNode\n";
 
@@ -562,7 +563,7 @@ std::cout<<"info set\n";
 
     getVetC_Model(master, auxVect.vetRowC);
 
-std::cout << "vetC: "<<auxVect.vetRowC<< "\n";
+//std::cout << "vetC: "<<auxVect.vetRowC<< "\n";
 
 
     int numConstrsRmlp    = info.numConstrsMaster + ptrSubProb->getNumConvConstr();// + int(vetSubProb.size());
@@ -691,7 +692,6 @@ std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n
     uRmlp->set(GRB_IntParam_OutputFlag, 0);
 
 
-    std::cout<<"ini del!\n";
     delete []vetRmlpConstrsSense;
     delete []vetRmlpRhs;
     delete []vetStrConstrs;
@@ -701,7 +701,6 @@ std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n
     vetRmlpConstr = nullptr;
     vetVarArtifRmlp = nullptr;
 
-    std::cout<<"fim del!\n";
 }
 
 DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &auxVect)
@@ -765,8 +764,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
             auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpPi;
 
         double constVal = 0;
-        for(int i=info.numConstrsOrignalProblem; i < info.numConstrsMaster; ++i)
-            constVal += -auxVect.vetRowRmlpSmoothPi[i];
+        //for(int i=info.numConstrsOrignalProblem; i < info.numConstrsMaster; ++i)
+        //    constVal += -auxVect.vetRowRmlpSmoothPi[i];
 
         /*
         if(!doubleEqual(constVal, 0.0))
@@ -797,7 +796,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
                                        auxVect.matColX_solSubProb,
                                        numSol,
                                        redCost,
-                                       constVal);
+                                       constVal,
+                                       vetDelVar);
 
             if(!subProbK_CustoR_neg)
                 continue;
@@ -854,7 +854,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
             objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
             privObjRmlp = objRmlp;
         }
-        /*
+
         if(missPricing)
         {//numLimit = 0;
 
@@ -864,7 +864,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
             PRINT_DEBUG("", "");
             throw "MISS_PRICING";
         }
-        */
+
 
         //lagrangeDualBound = getLagrangeDualBound(objRmlp, redCost);
         //gap = (std::abs(redCost)/objRmlp)*100.0;
@@ -887,7 +887,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
     uRmlp->optimize();
 
     funcObj = uRmlp->get(GRB_DoubleAttr_ObjVal);
-    std::cout<<"\t"<<itCG-1<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"\"\n\n\n";
+    //std::cout<<"\t"<<itCG-1<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"\"\n\n\n";
+    std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG-1, uRmlp->get(GRB_DoubleAttr_ObjVal), gap);
     //uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
 
     GRBVar *vetVar        = uRmlp->getVars();
@@ -983,6 +984,7 @@ DW_DecompNS::DW_DecompNode::DW_DecompNode(const DW_DecompNS::DW_DecompNode &deco
     itCG       = 0;
     matA       = decomp.matA;
     vetVarArtifRmlp = nullptr;
+    vetDelVar  = decomp.vetDelVar;
 
 
     vetVarLambdaCol.reserve(decomp.vetVarLambdaCol.size());

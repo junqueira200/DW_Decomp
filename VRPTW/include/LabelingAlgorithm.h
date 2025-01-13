@@ -84,20 +84,21 @@ namespace LabelingAlgorithmNS
     {
     public:
 
-        //int numResources = 1;
-        Eigen::Array<double, 1, NumMaxResources> vetResources;
-        boost::array<int, NumMaxRoute> vetRoute;
-        int tamRoute = 0;
-        std::bitset<NumMaxCust> bitSetNg;
-        std::bitset<NumMaxCust> bitSethalf;
-
-
+        bool active = false;
         int i    = -1;
         int j    = -1;
         int cust = -1;
         int pos  = -1;
-        bool active = false;
+        int tamRoute = 0;
         LabelIt labelIt;
+
+        //int numResources = 1;
+        Eigen::Array<double, 1, NumMaxResources> vetResources;
+        std::bitset<NumMaxCust> bitSetNg;
+        std::bitset<NumMaxCust> bitSethalf;
+        boost::array<int, NumMaxRoute> vetRoute;
+
+
 
         Label() = default;
 

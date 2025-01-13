@@ -9,6 +9,7 @@
 #include "SearchStrategy.h"
 #include "PrimalHeuristic.h"
 #include "Branch.h"
+#include "Statistics.h"
 
 namespace BranchAndPriceNS
 {
@@ -30,9 +31,11 @@ namespace BranchAndPriceNS
                         DW_DecompNS::AuxData &auxVectors,
                         SearchStrategyNS::SearchDataInter* searchD,
                         PrimalHeuristicNS::PrimalHeuristicInter* ptrPrimalH,
-                        BranchNS::BranchInter* branch);
+                        BranchNS::BranchInter* branch,
+                        StatisticsNS::StatisticsData& statisticD);
 
     double computeGap(double lb, double ub);
+    void writeToFile(StatisticsNS::StatisticsData& statisticsD, const std::string& fileStr);
 
     inline __attribute__((always_inline))
     bool isInteger(double val)

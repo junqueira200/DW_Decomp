@@ -50,7 +50,8 @@ namespace VrpTW_DecompLabelingNS
                            Eigen::MatrixXd &matColX,
                            int &numSol,
                            double &redCost,
-                           double constPiValue) override;
+                           double constPiValue,
+                           const VectorI &vetDelVar) override;
 
     }; // FIM MySubProb
 

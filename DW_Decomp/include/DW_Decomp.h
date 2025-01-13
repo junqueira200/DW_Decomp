@@ -90,7 +90,8 @@ namespace DW_DecompNS
                        Eigen::MatrixXd &matColX,
                        int &numSol,
                        double &redCost,
-                       double constPiValue) =0;
+                       double constPiValue,
+                       const VectorI &vetDelVar) =0;
 
 
         //virtual int64_t getNumberOfConvConstr() = 0;
@@ -222,6 +223,10 @@ namespace DW_DecompNS
         GRBConstr* vetRmlpConstr = nullptr;
         GRBVar* vetVarArtifRmlp  = nullptr;
 
+        VectorI vetDelVar;
+
+
+
 
         DW_DecompNode(GRBEnv &env_,
                       GRBModel &master_,
@@ -241,7 +246,7 @@ namespace DW_DecompNS
 
         ~DW_DecompNode()
         {
-            std::cout<<"~DW_DecompNode\n";
+            //std::cout<<"~DW_DecompNode\n";
             delete []vetRmlpConstr;
             delete []vetVarArtifRmlp;
         }
