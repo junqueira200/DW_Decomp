@@ -27,12 +27,12 @@ namespace BranchAndPriceNS
     int getMostFractionVariable(const Eigen::VectorXd &vetSolX);
     bool isInteger(const Eigen::VectorXd &vet);
     void addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &decompNode, int num);
-    void branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
-                        DW_DecompNS::AuxData &auxVectors,
-                        SearchStrategyNS::SearchDataInter* searchD,
-                        PrimalHeuristicNS::PrimalHeuristicInter* ptrPrimalH,
-                        BranchNS::BranchInter* branch,
-                        StatisticsNS::StatisticsData& statisticD);
+    Eigen::VectorXd branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
+                                   DW_DecompNS::AuxData &auxVectors,
+                                   SearchStrategyNS::SearchDataInter* searchD,
+                                   PrimalHeuristicNS::PrimalHeuristicInter* ptrPrimalH,
+                                   BranchNS::BranchInter* branch,
+                                   StatisticsNS::StatisticsData& statisticD);
 
     double computeGap(double lb, double ub);
     void writeToFile(StatisticsNS::StatisticsData& statisticsD, const std::string& fileStr);

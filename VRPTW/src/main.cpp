@@ -61,13 +61,65 @@ int main(int argv, char **argc)
 
         StatisticsData statisticD;
 
-        branchAndPrice(decompNode,
-                       auxVectors,
-                       (SearchDataInter*)&minFuncObj,
-                       (PrimalHeuristicInter*)&simpleDiving,
-                       (BranchInter*)&branch,
-                       statisticD);
+        Eigen::VectorXd vetSol;
 
+        vetSol = branchAndPrice(decompNode,
+                                auxVectors,
+                                (SearchDataInter*)&minFuncObj,
+                                (PrimalHeuristicInter*)&simpleDiving,
+                                (BranchInter*)&branch,
+                                statisticD);
+
+        Eigen::MatrixXi matSol(instVrpTw.numVeic, instVrpTw.numClientes/2);
+        matSol.setZero();
+
+        int pos = 1;
+        int i   = 0;
+        int r   = 0;
+
+        for(int j=1; j < instVrpTw.numClientes; ++j)
+        {
+            if(vetSol[VrpTW_DecompNS::getIndex(i, j, instVrpTw.numClientes)] >= 0.99)
+            {
+                matSol.coeffRef(r, pos) = j;
+                r += 1;
+            }
+
+        }
+
+        for(r=0; r < instVrpTw.numVeic; ++r)
+        {
+            pos = 2;
+            i = matSol(r, 1);
+
+            while(i != 0)
+            {
+                for(int j=0; j < instVrpTw.numClientes; ++j)
+                {
+                    if(vetSol[VrpTW_DecompNS::getIndex(i, j, instVrpTw.numClientes)] >= 0.99)
+                    {
+                        matSol.coeffRef(r, pos) = j;
+                        pos += 1;
+                        i = j;
+                        break;
+                    }
+                }
+            }
+
+        }
+
+        for(int k=0; k < vetSol.size(); ++k)
+        {
+            if(vetSol[k] >= 0.99)
+            {
+                int i = k/instVrpTw.numClientes;
+                int j = k%instVrpTw.numClientes;
+
+                std::cout<<"("<<i<<" "<<j<<"), ";
+            }
+        }
+
+        std::cout<<"\n\n"<<matSol<<"\n";
 
         statisticD.inst = fileName;
         writeToFile(statisticD, "result.csv");
@@ -79,7 +131,7 @@ int main(int argv, char **argc)
         std::cout<<"vetNumSteps r0: "<<vrpLabelingSubProb.labelingData.vetNumSteps[0]<<"\n";
         std::cout<<"start r0: "<<vrpLabelingSubProb.labelingData.vetStepSize[0].start<<"\n";
         std::cout<<"vetNumSteps r1: "<<vrpLabelingSubProb.labelingData.vetNumSteps[1]<<"\n";
-
+        std::cout<<"numClien: "<<instVrpTw.numClientes<<"\n";
 
 
 

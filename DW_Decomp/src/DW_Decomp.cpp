@@ -765,8 +765,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
             auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpPi;
 
         double constVal = 0;
-        //for(int i=info.numConstrsOrignalProblem; i < info.numConstrsMaster; ++i)
-        //    constVal += -auxVect.vetRowRmlpSmoothPi[i];
+        for(int i=info.numConstrsOrignalProblem; i < info.numConstrsMaster; ++i)
+            constVal += -auxVect.vetRowRmlpSmoothPi[i];
 
         /*
         if(!doubleEqual(constVal, 0.0))

@@ -131,12 +131,12 @@ void BranchAndPriceNS::addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &
     }
 }
 
-void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
-                                      DW_DecompNS::AuxData &auxVectors,
-                                      SearchDataInter* searchD,
-                                      PrimalHeuristicInter* ptrPrimalH,
-                                      BranchInter* branch,
-                                      StatisticsData &statisticD)
+Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
+                                                 DW_DecompNS::AuxData &auxVectors,
+                                                 SearchDataInter* searchD,
+                                                 PrimalHeuristicInter* ptrPrimalH,
+                                                 BranchInter* branch,
+                                                 StatisticsData &statisticD)
 {
 
    clock_t start = clock();
@@ -158,6 +158,7 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
     double lowerBound = -std::numeric_limits<double>::infinity();
     double upperBound =  std::numeric_limits<double>::infinity();
     auto vetX_best    = cRootNode.vetSolX;
+    vetX_best.setZero();
     double gap = std::numeric_limits<double>::infinity();
 
     int numIt = -1;
@@ -183,7 +184,8 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
         delete ptrPrimalH;
         std::cout<<"Root node can't be soved\n";
         delete rootNode;
-        return;
+        vetX_best.setZero();
+        return vetX_best;
     }
 
     searchD->insert(rootNode);
@@ -303,6 +305,8 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
 
 
     std::cout<<"it("<<it<<") \t LB("<<lowerBound<<") \t UB("<<upperBound<<") \t gap("<<gap<<"%)\n";
+
+    return vetX_best;
 
 }
 
