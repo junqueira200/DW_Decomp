@@ -687,7 +687,7 @@ std::cout<<"info set\n";
     uRmlp->write("rmlp_"+std::to_string(-1)+".lp");
     vetRmlpConstr = uRmlp->getConstrs();
 
-    uRmlp->set(GRB_IntParam_Method, GRB_METHOD_PRIMAL);
+    uRmlp->set(GRB_IntParam_Method, GRB_METHOD_DUAL);
     //uRmlp->set(GRB_IntParam_Presolve, GRB_PRESOLVE_OFF);
     uRmlp->set(GRB_IntParam_OutputFlag, 0);
 
@@ -727,6 +727,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
         uRmlp->update();
         subProbCustR_neg = false;
 
+        uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
+
         //if(!missPricing)
             uRmlp->optimize();
 
@@ -765,13 +767,21 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
             auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpPi;
 
         double constVal = 0;
-        for(int i=info.numConstrsOrignalProblem; i < info.numConstrsMaster; ++i)
+
+        for(int i=0; i < info.numConstrsConv; ++i)
             constVal += -auxVect.vetRowRmlpSmoothPi[i];
 
-        /*
-        if(!doubleEqual(constVal, 0.0))
-            std::cout<<"ConstVal: "<<constVal<<"\n";
-        */
+
+/*        if(!doubleEqual(constVal, 0.0))
+            std::cout<<"ConstVal: "<<constVal<<"\n";*/
+
+        for(int i=info.numConstrsOrignalProblem+info.numConstrsConv; i < info.numConstrsMaster; ++i)
+            constVal += -auxVect.vetRowRmlpSmoothPi[i];
+
+
+/*        if(!doubleEqual(constVal, 0.0))
+            std::cout<<"*ConstVal: "<<constVal<<"\n";*/
+
 
         // Update and solve the subproblems
         for(int k=0; k < info.numSubProb; ++k)

@@ -106,9 +106,14 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
 void VrpTW_DecompLabelingNS::VrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA)
 {
 
-    //GRBLinExpr linExpr;
-    //rmlp.addConstr(linExpr, '<', instVrpTw->numVeic, "convConstr");
+/*
+    GRBLinExpr linExpr;
+    GRBVar a = rmlp.addVar(0, GRB_INFINITY, custoVarA, GRB_CONTINUOUS);
+    linExpr += -a;
 
+    rmlp.addConstr(linExpr, '<', instVrpTw->numVeic, "convConstr");
+
+*/
 }
 
 int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::VectorXd &vetC,
@@ -128,23 +133,23 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                                const VectorI &vetDelVar)
 {
 
-    double pi0 = vetRowPi[0];
     vetMatResCost[0].setZero();
+    //constPiValue += -vetRowPi[0];
 
     for(int i=0; i < instVrpTw->numClientes; ++i)
     {
-        for(int j=1; j < instVrpTw->numClientes; ++j)
+        for(int j=0; j < instVrpTw->numClientes; ++j)
         {
             if(i == j)
                 continue;
 
-            vetMatResCost[0](i, j) = instVrpTw->matDist(i, j) - vetRowPi[j-1];
+            vetMatResCost[0](i, j) = instVrpTw->matDist(i, j) - vetRowPi[j];
         }
 
         if(i != 0)
         {
-            vetMatResCost[0](i, 0) = instVrpTw->matDist(i, 0);
-            vetMatResCost[0](i, instVrpTw->numClientes) = instVrpTw->matDist(i, 0);// - pi0;
+            //vetMatResCost[0](i, 0) = instVrpTw->matDist(i, 0);
+            vetMatResCost[0](i, instVrpTw->numClientes) = instVrpTw->matDist(i, 0) - vetRowPi[0];
         }
     }
 
@@ -233,6 +238,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                    redCost);
         }
     }
+
+    //vetCooefRestConv[0] = 1;
 
 
     return 0;

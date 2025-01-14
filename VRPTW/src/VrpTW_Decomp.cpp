@@ -19,7 +19,7 @@ void VrpTW_DecompNS::criaMestre(const InstanciaNS::InstVRP_TW &instVrpTw, GRBMod
         }
     }
 
-    for(int i=1; i < NumClie; ++i)
+    for(int i=0; i < NumClie; ++i)
     {
         GRBLinExpr linExpr;
         for(int j=0; j < NumClie; ++j)
