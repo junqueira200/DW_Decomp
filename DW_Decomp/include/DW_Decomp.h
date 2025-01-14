@@ -13,7 +13,7 @@ using namespace SparseNS;
 namespace DW_DecompNS
 {
 
-    constexpr double TolObjSubProb       = 1E-4;
+    constexpr double TolObjSubProb       = 1E-5;
     constexpr int    NumMaxSolSubProb    = 25;
     constexpr double StabilizationAlpha  = 0.2;
     constexpr bool   Stabilization       = false;

@@ -165,6 +165,15 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
     DW_DecompNode *rootNode = new DW_DecompNode(cRootNode);
     int status = rootNode->columnGeneration(auxVectors);
 
+    //rootNode->uRmlp->write("root.lp");
+
+    /*
+    auto rootCp = new DW_DecompNode(*rootNode);
+
+    rootCp->uRmlp->write("rootCP.lp");
+
+    rootCp->columnGeneration(auxVectors);*/
+
     clock_t end = clock();
     statisticD.rootTime = double(end-start)/CLOCKS_PER_SEC;
     statisticD.rootLB   = rootNode->funcObj;
@@ -282,6 +291,7 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
 
     }
 
+    lowerBound            = std::min(searchD->getMin(), lowerBound);
     gap                   = computeGap(lowerBound, upperBound);
     end                   = clock();
     statisticD.totalTime  = double(end-start)/CLOCKS_PER_SEC;
@@ -290,7 +300,6 @@ void BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
     statisticD.gap        = gap;
     statisticD.timeLimit  = alarm_stopG;
     statisticD.numIt      = numIt;
-
 
 
     std::cout<<"it("<<it<<") \t LB("<<lowerBound<<") \t UB("<<upperBound<<") \t gap("<<gap<<"%)\n";

@@ -569,9 +569,9 @@ std::cout<<"info set\n";
     int numConstrsRmlp    = info.numConstrsMaster + ptrSubProb->getNumConvConstr();// + int(vetSubProb.size());
     info.numVarRmlpPi     = numConstrsRmlp;
 
-std::cout<<"numVarRmlpPi: "<<info.numVarRmlpPi<<"\n";
-std::cout<<"numConstrsMaster: "<<info.numConstrsMaster<<"\n\n";
-std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n\n";
+//std::cout<<"numVarRmlpPi: "<<info.numVarRmlpPi<<"\n";
+//std::cout<<"numConstrsMaster: "<<info.numConstrsMaster<<"\n\n";
+//std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n\n";
 
     int temp = 0;
     for(const auto &it:auxVect.vetPairSubProb)
@@ -687,7 +687,7 @@ std::cout<<"ptrSubProb->getNumConvConstr: "<<ptrSubProb->getNumConvConstr()<<"\n
     uRmlp->write("rmlp_"+std::to_string(-1)+".lp");
     vetRmlpConstr = uRmlp->getConstrs();
 
-    uRmlp->set(GRB_IntParam_Method, GRB_METHOD_DUAL);
+    uRmlp->set(GRB_IntParam_Method, GRB_METHOD_PRIMAL);
     //uRmlp->set(GRB_IntParam_Presolve, GRB_PRESOLVE_OFF);
     uRmlp->set(GRB_IntParam_OutputFlag, 0);
 
@@ -722,12 +722,12 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
     uRmlp->update();
     vetRmlpConstr = uRmlp->getConstrs();
 
-    while(subProbCustR_neg && numLimit < 10)
+    while(subProbCustR_neg)
     {
         uRmlp->update();
         subProbCustR_neg = false;
 
-        if(!missPricing)
+        //if(!missPricing)
             uRmlp->optimize();
 
         if(uRmlp->get(GRB_IntAttr_Status) != GRB_OPTIMAL)
@@ -736,18 +736,19 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
         //std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
         double objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
 
-        //if(itCG > 50)
-        {
-            gap = (std::abs(objRmlp-privObjRmlp)/objRmlp)*100.0;
+
+
+        gap = (std::abs(objRmlp-privObjRmlp)/objRmlp)*100.0;
             //std::cout<<"GAP("<<gap<<"%)\n";
+        /*
             if(gap <= gapLimit)
                 numLimit += 1;
             else
                 numLimit = 0;
-
+        */
             //std::cout<<"numLimit: "<<numLimit<<"\n";
 
-        }
+
 
 
         //GRBVar *vetVar        = uRmlp->getVars();
@@ -882,6 +883,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
     }
 
+    //std::cout<<"PI: "<<auxVect.vetRowRmlpPi<<"\n";
 
     uRmlp->update();
     uRmlp->optimize();
@@ -905,6 +907,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
     delete []vetRmlpConstr;
     vetRmlpConstr = nullptr;
 
+
+    //std::cout<<"PI: "<<auxVect.vetRowRmlpPi<<"\n\n";
 
     return DW_DecompNS::StatusSubProb_Otimo;
 
@@ -1015,6 +1019,8 @@ DW_DecompNS::DW_DecompNode::DW_DecompNode(const DW_DecompNS::DW_DecompNode &deco
     vetSubMatA = Vector<Eigen::SparseMatrix<double, Eigen::RowMajor>>(info.numSubProb);
     for(int i=0; i < info.numSubProb; ++i)
         vetSubMatA[i] = decomp.vetSubMatA[i];
+
+    vetRmlpConstr = nullptr;
 
 
 }

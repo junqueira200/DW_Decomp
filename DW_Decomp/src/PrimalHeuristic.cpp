@@ -16,6 +16,7 @@ DW_DecompNode* PrimalHeuristicNS::SimpleDiving::operator()(DW_DecompNode *node,
     DepthFirst dfs;
     DW_DecompNode* root = new DW_DecompNode(*node);
 
+    std::cout<<"ROOT\n";
     int status = root->columnGeneration(auxVet);
     if(status != StatusSubProb_Otimo)
     {
@@ -78,7 +79,6 @@ DW_DecompNode* PrimalHeuristicNS::SimpleDiving::operator()(DW_DecompNode *node,
 
             didCut = true;
         }
-
 
         status = nodeTemp->columnGeneration(auxVet);
         if(status != StatusSubProb_Otimo)

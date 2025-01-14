@@ -61,7 +61,6 @@ int main(int argv, char **argc)
 
         StatisticsData statisticD;
 
-
         branchAndPrice(decompNode,
                        auxVectors,
                        (SearchDataInter*)&minFuncObj,
