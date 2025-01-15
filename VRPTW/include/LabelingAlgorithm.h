@@ -95,7 +95,7 @@ namespace LabelingAlgorithmNS
         //int numResources = 1;
         Eigen::Array<double, 1, NumMaxResources> vetResources;
         std::bitset<NumMaxCust> bitSetNg;
-        std::bitset<NumMaxCust> bitSethalf;
+        //std::bitset<NumMaxCust> bitSethalf;
         boost::array<int, NumMaxRoute> vetRoute;
 
 

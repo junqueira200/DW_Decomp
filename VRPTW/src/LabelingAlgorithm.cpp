@@ -153,7 +153,6 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     labelPtr->vetResources.setZero();
     labelPtr->vetResources[0] = labelStart;
     labelPtr->bitSetNg = 0;
-    labelPtr->bitSethalf = 0;
 
     if(Print)
     {   std::cout << "\nsetup label0\n";
@@ -252,9 +251,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
             if(t == lastCust || vetMatResCost[0](labelPtr->cust, t) == std::numeric_limits<double>::infinity())
                 continue;
 
-            if(HalfNgSet && labelPtr->bitSethalf[t] == 1)
-                continue;
-            else if(!HalfNgSet && labelPtr->bitSetNg[t] == 1)
+            if(labelPtr->bitSetNg[t] == 1)
                 continue;
 
 
@@ -491,12 +488,6 @@ bool LabelingAlgorithmNS::extendLabel(const Label &label,
 
     newLabel.bitSetNg   = 0;
     newLabel.bitSetNg   = label.bitSetNg;
-
-    if(HalfNgSet)
-    {
-        newLabel.bitSethalf = label.bitSethalf;
-        newLabel.bitSethalf[custJ] = true;
-    }
 
     // Checks if custJ its in custI ngSet
     if(ngSet.contain(custJ, custI))
