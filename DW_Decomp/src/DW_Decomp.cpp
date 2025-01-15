@@ -727,7 +727,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
         uRmlp->update();
         subProbCustR_neg = false;
 
-        uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
+        //uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
 
         //if(!missPricing)
             uRmlp->optimize();

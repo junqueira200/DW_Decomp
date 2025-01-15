@@ -219,10 +219,11 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
         }
 
         gap = computeGap(lowerBound, upperBound);
+        end = clock();
 
-        std::cout<<"it("<<it<<") \t LB("<<lowerBound<<") \t UB("<<upperBound<<") \t gap("<<gap<<"%)\n";
+        std::cout<<"it("<<it<<") \t LB("<<lowerBound<<") \t UB("<<upperBound<<") \t gap("<<gap<<"%) \t T("<<double(end-start)/CLOCKS_PER_SEC<<" s)\n";
 
-        std::cout<<"Processando NO: "<<ptrDecomNode<<"\nNumVars: "<<ptrDecomNode->uRmlp->get(GRB_IntAttr_NumVars)<<"\n\n";
+        std::cout<<"Processando NO: "<<ptrDecomNode<<"\n\n";
         //listDecomNode.pop_back();
 
         // TODO Colocar antes da chamada da heuristica

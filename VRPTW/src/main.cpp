@@ -63,6 +63,13 @@ int main(int argv, char **argc)
 
         Eigen::VectorXd vetSol;
 
+
+        std::cout<<"sizeof(Label): "<<sizeof(Label)<<"\n";
+        std::cout<<"vetNumSteps r0: "<<vrpLabelingSubProb.labelingData.vetNumSteps[0]<<"\n";
+        std::cout<<"start r0: "<<vrpLabelingSubProb.labelingData.vetStepSize[0].start<<"\n";
+        std::cout<<"vetNumSteps r1: "<<vrpLabelingSubProb.labelingData.vetNumSteps[1]<<"\n";
+        std::cout<<"numClien: "<<instVrpTw.numClientes<<"\n";
+
         vetSol = branchAndPrice(decompNode,
                                 auxVectors,
                                 (SearchDataInter*)&minFuncObj,

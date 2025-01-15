@@ -14,7 +14,10 @@ inline bool alarm_stopG = false;
 void on_alarm(int signal)
 {
     alarm_stopG = true;
+    std::cout<<"TIME OUT!\n\n";
 }
+
+
 
 void setAlarm(unsigned int alarmPeriod)
 {
@@ -23,6 +26,8 @@ void setAlarm(unsigned int alarmPeriod)
     if(!alarmSet)
     {
         signal(SIGALRM, on_alarm);
+        signal(SIGINT, on_alarm);
+
         alarm(alarmPeriod);
 
         alarmSet = true;
