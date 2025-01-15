@@ -1,6 +1,13 @@
-//
-// Created by igor on 24/11/24.
-//
+/*  *****************************************************************
+ *  *****************************************************************
+ *  File:    VrpTW_DecompLabeling.cpp
+ *  Project: DW_Decomp
+ *  Author:  Igor de Andrade Junqueira
+ *  Date:    20/11/24
+ *
+ *  *****************************************************************
+ *  *****************************************************************/
+
 #include "VrpTW_DecompLabeling.h"
 
 using namespace LabelingAlgorithmNS;
@@ -15,25 +22,24 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     }
 
     instVrpTw = &instVrpTw_;
-    const double sumDist = instVrpTw->sumDist();
-    const int sumDem     = instVrpTw->sumDem();
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 50; // 50
-    vetStepSize[0].start    = -startDist;
-    vetStepSize[0].end      = startDist;
+    vetStepSize[0].stepSize = 25; // 50
+    vetStepSize[0].start    = (FloatType)-startDist;
+    vetStepSize[0].end      = (FloatType)startDist;
 
     //vetStepSize[1].stepSize = 5;
     vetStepSize[1].stepSize = 5;
     vetStepSize[1].start    = 0;
-    vetStepSize[1].end      = instVrpTw->capVeic;
+    vetStepSize[1].end      = (FloatType)instVrpTw->capVeic;
 
     labelingData = LabelingAlgorithmNS::LabelingData(vetStepSize, 2, instVrpTw->numClientes+1);
 
 
     vetMatResCost = LabelingAlgorithmNS::VetMatResCost(2);
-    vetMatResCost[0] = instVrpTw->matDist;
+    vetMatResCost[0].resize(instVrpTw->matDist.rows(), instVrpTw->matDist.cols());
     vetMatResCost[1].resize(instVrpTw->numClientes+1, instVrpTw->numClientes+1);
+    vetMatResCost[0].setZero();
     vetMatResCost[1].setZero();
 
 
@@ -57,7 +63,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
             if(i == j)
                 continue;
 
-            vetMatResCost[1](i, j) = instVrpTw->vetClieDem[j];
+            vetMatResCost[1](i, j) = (FloatType)instVrpTw->vetClieDem[j];
         }
     }
 
@@ -70,18 +76,18 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     double distTotal = instVrpTw->sumDist();
 
     Bound bound0;
-    bound0.lowerBound = -std::numeric_limits<double>::infinity();
-    bound0.upperBound =  std::numeric_limits<double>::infinity();
+    bound0.lowerBound = -std::numeric_limits<FloatType>::infinity();
+    bound0.upperBound =  std::numeric_limits<FloatType>::infinity();
 
     Bound bound1;
     bound1.lowerBound = 0;
-    bound1.upperBound = instVrpTw->capVeic;
+    bound1.upperBound = (FloatType)instVrpTw->capVeic;
 
     for(int i=0; i < instVrpTw->numClientes+1; ++i)
     {
         vetVetResBound[0][i] = bound0;
         if(i > 0 && i < instVrpTw->numClientes)
-            bound1.lowerBound = instVrpTw->vetClieDem[i];
+            bound1.lowerBound = (FloatType)instVrpTw->vetClieDem[i];
 
         else
             bound1.lowerBound = 0.0;
@@ -116,22 +122,23 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, v
 */
 }
 
-int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::VectorXd &vetC,
-                                                               const Eigen::RowVectorXd &vetRowPi,
-                                                               GRBModel &mestre,
-                                                               int itCG,
-                                                               bool &custoRedNeg,
-                                                               void *data,
-                                                               const int iniConv,
-                                                               int indSubProb,
-                                                               Eigen::VectorXd &vetCooefRestConv,
-                                                               const std::pair<int, int> &pairSubProb,
-                                                               Eigen::MatrixXd &matColX,
-                                                               int &numSol,
-                                                               double &redCost,
-                                                               double constPiValue,
-                                                               const VectorI &vetDelVar)
+int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::VectorXd&     vetC,
+                                                               const Eigen::RowVectorXd&  vetRowPi,
+                                                               GRBModel&                  mestre,
+                                                               int                        itCG,
+                                                               bool&                      custoRedNeg,
+                                                               void*                      data,
+                                                               const int                  iniConv,
+                                                               int                        indSubProb,
+                                                               Eigen::VectorXd&           vetCooefRestConv,
+                                                               const std::pair<int, int>& pairSubProb,
+                                                               Eigen::MatrixXd&           matColX,
+                                                               int&                       numSol,
+                                                               double&                    redCost,
+                                                               double                     constPiValue,
+                                                               const VectorI&             vetDelVar)
 {
+    FloatType redCostFT = 0;
 
     vetMatResCost[0].setZero();
     //constPiValue += -vetRowPi[0];
@@ -143,13 +150,13 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
             if(i == j)
                 continue;
 
-            vetMatResCost[0](i, j) = instVrpTw->matDist(i, j) - vetRowPi[j];
+            vetMatResCost[0](i, j) = (FloatType)instVrpTw->matDist(i, j) - vetRowPi[j];
         }
 
         if(i != 0)
         {
             //vetMatResCost[0](i, 0) = instVrpTw->matDist(i, 0);
-            vetMatResCost[0](i, instVrpTw->numClientes) = instVrpTw->matDist(i, 0) - vetRowPi[0];
+            vetMatResCost[0](i, instVrpTw->numClientes) = (FloatType)instVrpTw->matDist(i, 0) - vetRowPi[0];
         }
     }
 
@@ -161,7 +168,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
         if(j == 0)
             j = instVrpTw->numClientes;
 
-        vetMatResCost[0](i, j) = std::numeric_limits<double>::infinity();
+        vetMatResCost[0](i, j) = std::numeric_limits<FloatType>::infinity();
         //std::cout<<varId<<"\n";
     }
 
@@ -169,7 +176,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
     //std::cout<<"Peso: "<<vetMatResCost[1]<<"\n\n";
 
     int it = 0;
-    double maxDist;
+    FloatType maxDist;
 
     ngSet.active = true;
 
@@ -186,11 +193,11 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                labelingData,
                                                matColX,
                                                numSol,
-                                               constPiValue,
+                                               (FloatType)constPiValue,
                                                i,
                                                true,
                                                maxDist,
-                                               redCost);
+                                               redCostFT);
 
         it += 1;
         if(custoRedNeg)
@@ -210,11 +217,11 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                labelingData,
                                                matColX,
                                                numSol,
-                                               0.0,
+                                               (FloatType)constPiValue,
                                                -1,
                                                true,
                                                maxDist,
-                                               redCost);
+                                               redCostFT);
 
 
         if(!custoRedNeg)
@@ -231,14 +238,15 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                    labelingData,
                                                    matColX,
                                                    numSol,
-                                                   0.0,
+                                                   (FloatType)constPiValue,
                                                    -1,
                                                    true,
                                                    maxDist,
-                                                   redCost);
+                                                   redCostFT);
         }
     }
 
+    redCost = (double)redCostFT;
     //vetCooefRestConv[0] = 1;
 
 

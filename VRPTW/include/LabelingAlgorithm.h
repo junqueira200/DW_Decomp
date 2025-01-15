@@ -1,6 +1,12 @@
-//
-// Created by igor on 20/11/24.
-//
+/*  *****************************************************************
+ *  *****************************************************************
+ *  File:    LabelingAlgorithm.h
+ *  Project: DW_Decomp
+ *  Author:  Igor de Andrade Junqueira
+ *  Date:    20/11/24
+ *
+ *  *****************************************************************
+ *  *****************************************************************/
 
 #ifndef DW_LABELINGALGORITHM_H
 #define DW_LABELINGALGORITHM_H
@@ -19,21 +25,21 @@
 #include <boost/container/set.hpp>
 
 
+typedef double FloatType;
 
 namespace LabelingAlgorithmNS
 {
 
-    constexpr int NumMaxResources = 2;
-    constexpr int NumMaxRoute     = 300;
-    constexpr int NumMaxCust      = 100;
-    constexpr int NgSetSize       = 5;
-    constexpr int NumBuckets      = 10;
-    constexpr int vetPtrLabelSize = 5;
-    constexpr bool NullFlush      = false;
-    constexpr bool Print          = false;
-    constexpr int NumMaxLabel     = 5000;
-    constexpr bool DominaIterBuckets = true;
-    constexpr bool HalfNgSet      = false;
+    constexpr int   NumMaxResources   = 2;
+    constexpr int   NumMaxRoute       = 300;
+    constexpr int   NumMaxCust        = 100;
+    constexpr int   NgSetSize         = 5;
+    constexpr int   NumBuckets        = 10;
+    constexpr int   vetPtrLabelSize   = 5;
+    constexpr bool  NullFlush         = false;
+    constexpr bool  Print             = false;
+    constexpr int   NumMaxLabel       = 5000;
+    constexpr bool  DominaIterBuckets = true;
 
     class LabelSet;
 
@@ -41,15 +47,15 @@ namespace LabelingAlgorithmNS
 
     struct Bound
     {
-        double lowerBound = -std::numeric_limits<double>::infinity();
-        double upperBound = std::numeric_limits<double>::infinity();
+        FloatType lowerBound = -std::numeric_limits<FloatType>::infinity();
+        FloatType upperBound = std::numeric_limits<FloatType>::infinity();
     };
 
     std::ostream& operator<< (std::ostream& out, const Bound &bound);
 
     // TODO Fix!
     // Fist access the resource, and then the cost of an arc (i,j)
-    typedef Eigen::Array<Eigen::Matrix<double, -1, -1, Eigen::RowMajor>, 1, -1> VetMatResCost;
+    typedef Eigen::Array<Eigen::Matrix<FloatType, -1, -1, Eigen::RowMajor>, 1, -1> VetMatResCost;
 
     // Fist access the resource, and then the bound of a customer
     typedef Eigen::Vector<Eigen::Vector<Bound, -1>, -1> VetVetResBound;
@@ -71,8 +77,8 @@ namespace LabelingAlgorithmNS
 
     struct Node
     {
-        int i;
-        double dist;
+        int       i;
+        FloatType dist;
 
         bool operator<(const Node &node) const
         {
@@ -84,19 +90,18 @@ namespace LabelingAlgorithmNS
     {
     public:
 
-        bool active = false;
-        int i    = -1;
-        int j    = -1;
-        int cust = -1;
-        int pos  = -1;
-        int tamRoute = 0;
+        bool    active   = false;
+        int     i        = -1;
+        int     j        = -1;
+        int     cust     = -1;
+        int     pos      = -1;
+        int     tamRoute = 0;
         LabelIt labelIt;
 
         //int numResources = 1;
-        Eigen::Array<double, 1, NumMaxResources> vetResources;
-        std::bitset<NumMaxCust> bitSetNg;
-        //std::bitset<NumMaxCust> bitSethalf;
-        boost::array<int, NumMaxRoute> vetRoute;
+        Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
+        std::bitset<NumMaxCust>                     bitSetNg;
+        boost::array<int, NumMaxRoute>              vetRoute;
 
 
 
@@ -123,7 +128,7 @@ namespace LabelingAlgorithmNS
         // Bound: [lower;upper)
         // Eigen::Vector<Bound, 2> vetBound;
         Eigen::VectorX<Label*> vetPtrLabel;
-        int sizeVetPtrLabel;
+        int                    sizeVetPtrLabel;
 
         Bucket()
         {
@@ -149,9 +154,9 @@ namespace LabelingAlgorithmNS
     {
     public:
 
-        double start;
-        double end;
-        double stepSize;
+        FloatType start;
+        FloatType end;
+        FloatType stepSize;
     };
 
     class MatBucket
@@ -170,13 +175,11 @@ namespace LabelingAlgorithmNS
         /** Access first the customer and after (i,j), where i is the component of the first resource
           *  and j the component of the second one.
           */
-        Eigen::VectorX<MatBucket> vetMatBucket;
+        Eigen::VectorX<MatBucket>                                       vetMatBucket;
         Eigen::Matrix<Eigen::Vector<Bound, 2>, -1, -1, Eigen::RowMajor> matBound;
-        Eigen::Vector<Step, 2> vetStepSize;
-        Eigen::Vector<int, 2> vetNumSteps;
-
-        // Given a bucket index (i, j)
-        EigenMatrixRowI matBucketIndex;
+        Eigen::Vector<Step, 2>                                          vetStepSize;
+        Eigen::Vector<int, 2>                                           vetNumSteps;
+        EigenMatrixRowI                                                 matBucketIndex; // Given a bucket index (i, j)
 
         int numMainResources;
         int numCust;
@@ -190,7 +193,7 @@ namespace LabelingAlgorithmNS
         LabelingData()=default;
 
         void flushLabel();
-        int getIndex(int resource, double val);
+        int getIndex(int resource, FloatType val);
         void removeLabel(Label *label);
         Label* getBestLabel(int cust);
 
@@ -209,20 +212,20 @@ namespace LabelingAlgorithmNS
     };
 
 
-    bool forwardLabelingAlgorithm(const int numRes,
-                                  const int numCust,
-                                  const VetMatResCost &vetMatResCost,
-                                  const VetVetResBound &vetVetBound,
-                                  const int dest,
-                                  const NgSet &ngSet,
-                                  LabelingData &lData,
-                                  Eigen::MatrixXd &matColX,
-                                  int &numSol,
-                                  const double labelStart,
-                                  int NumMaxLabePerBucket,
-                                  const bool dominaceCheck,
-                                  double& maxDist,
-                                  double& redCost);
+    bool forwardLabelingAlgorithm(const int             numRes,
+                                  const int             numCust,
+                                  const VetMatResCost&  vetMatResCost,
+                                  const VetVetResBound& vetVetBound,
+                                  const int             dest,
+                                  const NgSet&          ngSet,
+                                  LabelingData&         lData,
+                                  Eigen::MatrixXd&      matColX,
+                                  int&                  numSol,
+                                  const FloatType       labelStart,
+                                  int                   NumMaxLabePerBucket,
+                                  const bool            dominaceCheck,
+                                  FloatType&            maxDist,
+                                  FloatType&            redCost);
 
     inline __attribute__((always_inline))
     bool checkDominance(const Label& l0, const Label& l1, int numResources)
@@ -249,14 +252,14 @@ namespace LabelingAlgorithmNS
         return (l0.bitSetNg & l1.bitSetNg) == l0.bitSetNg;
     }
 
-    bool extendLabel(const Label &label,
-                     Label &newLabel,
-                     const VetMatResCost& vetMatResCost,
+    bool extendLabel(const Label&          label,
+                     Label&                newLabel,
+                     const VetMatResCost&  vetMatResCost,
                      const VetVetResBound& vetVetBound,
-                     int custI,
-                     int custJ,
-                     const NgSet &ngSet,
-                     int numResources);
+                     int                   custI,
+                     int                   custJ,
+                     const NgSet&          ngSet,
+                     int                   numResources);
 
     void removeCycles(Label &label, const int numCust);
     void updateLabelCost(Label &label, const VetMatResCost &vetMatResCost);
@@ -265,7 +268,7 @@ namespace LabelingAlgorithmNS
     inline __attribute__((always_inline))
     int getIndex(int i, int j, int numClie){return i*numClie+j;}
 
-    bool checkDistance(const Eigen::Matrix<double, -1, -1, Eigen::RowMajor> &matDist);
+    bool checkDistance(const Eigen::Matrix<FloatType, -1, -1, Eigen::RowMajor> &matDist);
     bool containRoute(const Eigen::Array<Label*, 1, DW_DecompNS::NumMaxSolSubProb> &vetLabel, int numSol, Label* label);
 
 

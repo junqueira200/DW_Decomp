@@ -1,7 +1,13 @@
-//
-// Created by igor on 20/11/24.
+/*  *****************************************************************
+ *  *****************************************************************
+ *  File:    LabelingAlgorithm.cpp
+ *  Project: DW_Decomp
+ *  Author:  Igor de Andrade Junqueira
+ *  Date:    20/11/24
+ *
+ *  *****************************************************************
+ *  *****************************************************************/
 
-//
 #include "LabelingAlgorithm.h"
 #include "MemoryPool.h"
 #include <list>
@@ -82,20 +88,20 @@ void LabelingAlgorithmNS::NgSet::setNgSets(const EigenMatrixRowD &matDist)
 inline MemoryPool_NS::Pool<LabelingAlgorithmNS::Label> labelPoolG;
 
 bool
-LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
-                                              const int numCust,
-                                              const VetMatResCost &vetMatResCost,
-                                              const VetVetResBound &vetVetBound,
-                                              const int dest,
-                                              const NgSet &ngSet,
-                                              LabelingData &lData,
-                                              Eigen::MatrixXd &matColX,
-                                              int &numSol,
-                                              const double labelStart,
-                                              int NumMaxLabePerBucket,
-                                              const bool dominaceCheck,
-                                              double &maxDist,
-                                              double& redCost)
+LabelingAlgorithmNS::forwardLabelingAlgorithm(const int             numRes,
+                                              const int             numCust,
+                                              const VetMatResCost&  vetMatResCost,
+                                              const VetVetResBound& vetVetBound,
+                                              const int             dest,
+                                              const NgSet&          ngSet,
+                                              LabelingData&         lData,
+                                              Eigen::MatrixXd&      matColX,
+                                              int&                  numSol,
+                                              const FloatType       labelStart,
+                                              int                   NumMaxLabePerBucket,
+                                              const bool            dominaceCheck,
+                                              FloatType&            maxDist,
+                                              FloatType&            redCost)
 {
 
     if(NumMaxLabePerBucket == -1)
@@ -115,8 +121,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
     Eigen::Array<Label*, 1, DW_DecompNS::NumMaxSolSubProb> vetLabel;
     vetLabel.setZero();
 
-    maxDist = -std::numeric_limits<double>::max();
-    redCost = std::numeric_limits<double>::max();
+    maxDist = -std::numeric_limits<FloatType>::max();
+    redCost = std::numeric_limits<FloatType>::max();
 
     if(Print)
     {
@@ -248,7 +254,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int numRes,
         // Extend label
         for(int t=1; t < numCust; ++t)
         {
-            if(t == lastCust || vetMatResCost[0](labelPtr->cust, t) == std::numeric_limits<double>::infinity())
+            if(t == lastCust || vetMatResCost[0](labelPtr->cust, t) == std::numeric_limits<FloatType>::infinity())
                 continue;
 
             if(labelPtr->bitSetNg[t] == 1)
@@ -538,7 +544,7 @@ LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2> &ve
     // Calculates the number of steps of each resource
     for(int r=0; r < numMainResources; ++r)
     {
-        double resource = vetStepSize[r].start;
+        FloatType resource = vetStepSize[r].start;
         int step = 1;
 
         while(resource <= vetStepSize[r].end)
@@ -567,23 +573,23 @@ LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2> &ve
 
     for(int i=0; i < vetNumSteps[0]; ++i)
     {
-        double r00 = vetStepSize[0].start + i*vetStepSize[0].stepSize;
+        FloatType r00 = vetStepSize[0].start + i*vetStepSize[0].stepSize;
 
-        double r01 = r00 + vetStepSize[0].stepSize;
+        FloatType r01 = r00 + vetStepSize[0].stepSize;
         for(int j=0; j < vetNumSteps[1]; ++j)
         {
-            double r10 = vetStepSize[1].start + j*vetStepSize[1].stepSize;
-            double r11 = r10 + vetStepSize[1].stepSize;
+            FloatType r10 = vetStepSize[1].start + j*vetStepSize[1].stepSize;
+            FloatType r11 = r10 + vetStepSize[1].stepSize;
 
             if(i != 0)
                 matBound(i, j)[0].lowerBound = r00;
             else
-                matBound(i, j)[0].lowerBound = -std::numeric_limits<double>::infinity();
+                matBound(i, j)[0].lowerBound = -std::numeric_limits<FloatType>::infinity();
 
             if(i != (vetNumSteps[0]-1))
                 matBound(i, j)[0].upperBound = r01;
             else
-                matBound(i, j)[0].upperBound = std::numeric_limits<double>::infinity();
+                matBound(i, j)[0].upperBound = std::numeric_limits<FloatType>::infinity();
 
             matBound(i, j)[1].lowerBound = r10;
             matBound(i, j)[1].upperBound = r11;
@@ -615,7 +621,7 @@ LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2> &ve
 
 }
 
-int LabelingAlgorithmNS::LabelingData::getIndex(int resource, double val)
+int LabelingAlgorithmNS::LabelingData::getIndex(int resource, FloatType val)
 {
     if(resource != 0 && resource != 1)
     {
@@ -723,7 +729,8 @@ void LabelingAlgorithmNS::LabelingData::removeLabel(Label *label)
     int size = vetMatBucket[cust].mat(i, j).sizeVetPtrLabel;
 
     if(size > 1)
-        std::swap(vetMatBucket[cust].mat(i, j).vetPtrLabel[pos], vetMatBucket[cust].mat(i, j).vetPtrLabel[size-1]);
+        std::swap(vetMatBucket[cust].mat(i, j).vetPtrLabel[pos],
+                  vetMatBucket[cust].mat(i, j).vetPtrLabel[size-1]);
 
     vetMatBucket[cust].mat(i, j).vetPtrLabel[size-1] = nullptr;
     vetMatBucket[cust].mat(i, j).sizeVetPtrLabel -= 1;
@@ -963,7 +970,7 @@ void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(std::multiset<Labe
 
 }
 
-bool LabelingAlgorithmNS::checkDistance(const Eigen::Matrix<double, -1, -1, Eigen::RowMajor> &matDist)
+bool LabelingAlgorithmNS::checkDistance(const Eigen::Matrix<FloatType, -1, -1, Eigen::RowMajor> &matDist)
 {
 
 

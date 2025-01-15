@@ -1,6 +1,13 @@
-//
-// Created by igor on 09/01/25.
-//
+/*  *****************************************************************
+ *  *****************************************************************
+ *  File:    PrimalHeuristic.cpp
+ *  Project: DW_Decomp
+ *  Author:  Igor de Andrade Junqueira
+ *  Date:    09/01/25
+ *
+ *  *****************************************************************
+ *  *****************************************************************/
+
 #include "PrimalHeuristic.h"
 #include "SearchStrategy.h"
 #include "BranchAndPrice.h"

@@ -1,6 +1,12 @@
-//
-// Created by igor on 24/11/24.
-//
+/*  *****************************************************************
+ *  *****************************************************************
+ *  File:    VrpTW_DecompLabeling.h
+ *  Project: DW_Decomp
+ *  Author:  Igor de Andrade Junqueira
+ *  Date:    20/11/24
+ *
+ *  *****************************************************************
+ *  *****************************************************************/
 
 #ifndef DW_VRPTW_DECOMPLABELING_H
 #define DW_VRPTW_DECOMPLABELING_H
@@ -23,13 +29,13 @@ namespace VrpTW_DecompLabelingNS
 
         int numSubProb = 1;
         bool convConstIni = false;
-        InstanciaNS::InstVRP_TW *instVrpTw = nullptr;                  // NAO DELETAR
+        InstanciaNS::InstVRP_TW* instVrpTw = nullptr;                  // NAO DELETAR
 
         Eigen::Vector<LabelingAlgorithmNS::Step, 2> vetStepSize;
-        LabelingAlgorithmNS::LabelingData labelingData;
-        LabelingAlgorithmNS::VetMatResCost vetMatResCost;
-        LabelingAlgorithmNS::VetVetResBound vetVetResBound;
-        LabelingAlgorithmNS::NgSet ngSet;
+        LabelingAlgorithmNS::LabelingData           labelingData;
+        LabelingAlgorithmNS::VetMatResCost          vetMatResCost;
+        LabelingAlgorithmNS::VetVetResBound         vetVetResBound;
+        LabelingAlgorithmNS::NgSet                  ngSet;
 
         int getNumConvConstr() override {return 0;}
         VrpLabelingSubProb()=default;
@@ -37,21 +43,21 @@ namespace VrpTW_DecompLabelingNS
         //int64_t getNumberOfConvConstr() override{return 0;};// {return numSubProb;}
         ~VrpLabelingSubProb() override =default;
         void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
-        int resolveSubProb(const Eigen::VectorXd &vetC,
-                           const Eigen::RowVectorXd &vetRowPi,
-                           GRBModel &mestre,
-                           int itCG,
-                           bool &custoRedNeg,
-                           void *data,
-                           const int iniConv,
-                           int indSubProb,
-                           Eigen::VectorXd &vetCooefRestConv,
-                           const std::pair<int, int> &pairSubProb,
-                           Eigen::MatrixXd &matColX,
-                           int &numSol,
-                           double &redCost,
-                           double constPiValue,
-                           const VectorI &vetDelVar) override;
+        int resolveSubProb(const Eigen::VectorXd&     vetC,
+                           const Eigen::RowVectorXd&  vetRowPi,
+                           GRBModel&                  mestre,
+                           int                        itCG,
+                           bool&                      custoRedNeg,
+                           void*                      data,
+                           const int                  iniConv,
+                           int                        indSubProb,
+                           Eigen::VectorXd&           vetCooefRestConv,
+                           const std::pair<int, int>& pairSubProb,
+                           Eigen::MatrixXd&           matColX,
+                           int&                       numSol,
+                           double&                    redCost,
+                           double                     constPiValue,
+                           const VectorI&             vetDelVar) override;
 
     }; // FIM MySubProb
 
