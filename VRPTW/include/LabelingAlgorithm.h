@@ -25,7 +25,7 @@
 #include <boost/container/set.hpp>
 
 
-typedef double FloatType;
+typedef float FloatType;
 
 namespace LabelingAlgorithmNS
 {

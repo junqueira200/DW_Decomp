@@ -349,13 +349,27 @@ void BranchAndPriceNS::writeToFile(StatisticsNS::StatisticsData& statisticsD, co
     if(std::filesystem::exists(fileStr))
     {
         file.open(fileStr, std::ios_base::app);
+
+        if(!file.is_open())
+        {
+            std::cout<<"It is not possible to open: "<<fileStr<<"\n";
+            throw "ERROR FILE";
+        }
     }
     else
     {
         file.open(fileStr, std::ios_base::out);
+
+        if(!file.is_open())
+        {
+            std::cout<<"It is not possible to open: "<<fileStr<<"\n";
+            throw "ERROR FILE";
+        }
+
         file<<"#"<<statisticsD.date<<"\n";
         file<<"inst; rootLB; rootTime; LB; UB; gap; totalTime\n";
     }
+
 
     file<<statisticsD.inst<<"; "<<std::format("{:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}\n", statisticsD.rootLB,
                                                                                                        statisticsD.rootTime,

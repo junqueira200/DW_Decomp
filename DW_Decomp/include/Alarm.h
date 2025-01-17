@@ -26,10 +26,7 @@ void setAlarm(unsigned int alarmPeriod)
     if(!alarmSet)
     {
         signal(SIGALRM, on_alarm);
-        signal(SIGINT, on_alarm);
-
         alarm(alarmPeriod);
-
         alarmSet = true;
     }
 }

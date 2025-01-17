@@ -734,7 +734,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
     while(subProbCustR_neg)
     {
-        uRmlp->update();
+        if(!missPricing)
+            uRmlp->update();
         subProbCustR_neg = false;
 
         //uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
@@ -768,24 +769,23 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
         updateRmlpPi(auxVect.vetRowRmlpPi);
 
-        if(Stabilization)
+        if(Stabilization && numLimit < 5)
         {
             auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpSmoothPi + StabilizationAlpha * (auxVect.vetRowRmlpPi-auxVect.vetRowRmlpSmoothPi);
-            std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
+            //std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
         }
         else
+        {
             auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpPi;
+            numLimit = 0;
+        }
 
         double constVal = 0;
-
-        for(int i=0; i < info.numConstrsConv; ++i)
-            constVal += -auxVect.vetRowRmlpSmoothPi[i];
-
 
 /*        if(!doubleEqual(constVal, 0.0))
             std::cout<<"ConstVal: "<<constVal<<"\n";*/
 
-        for(int i=info.numConstrsOrignalProblem+info.numConstrsConv; i < info.numConstrsMaster; ++i)
+        for(int i=info.numConstrsOrignalProblem; i < info.numConstrsMaster; ++i)
             constVal += -auxVect.vetRowRmlpSmoothPi[i];
 
 
@@ -863,6 +863,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
             {
                 std::cout<<"MISS PRICING\n";
                 missPricing = true;
+                numLimit += 1;
             }
             else
                 missPricing = false;
@@ -876,15 +877,16 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
             privObjRmlp = objRmlp;
         }
 
-        if(missPricing)
-        {//numLimit = 0;
 
+        if(missPricing)
+        {
             uRmlp->write("missPricing.lp");
             std::cout<<"miss pricing\n";
             std::cout<<auxVect.vetRowRmlpPi<<"\n";
             PRINT_DEBUG("", "");
             throw "MISS_PRICING";
         }
+
 
 
         //lagrangeDualBound = getLagrangeDualBound(objRmlp, redCost);
