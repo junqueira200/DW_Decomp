@@ -99,10 +99,11 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int             numRes,
                                               int&                  numSol,
                                               const FloatType       labelStart,
                                               int                   NumMaxLabePerBucket,
-                                              const bool            dominaceCheck,
+                                              bool                  dominaceCheck,
                                               FloatType&            maxDist,
                                               FloatType&            redCost)
 {
+    //dominaceCheck = false;
 
     if(NumMaxLabePerBucket == -1)
         NumMaxLabePerBucket = std::numeric_limits<int>::max();
@@ -306,7 +307,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int             numRes,
                             std::cout << "\t\t\tcheckDominance " << bucket.vetPtrLabel[k] << ": "
                                       << *bucket.vetPtrLabel[k] << "\n";
 
-                        if(checkDominance(*labelPtrAux, *bucket.vetPtrLabel[k], numRes) && !checkDominance(*bucket.vetPtrLabel[k], *labelPtrAux, numRes))
+                        if(checkDominance(*labelPtrAux, *bucket.vetPtrLabel[k], numRes))// && !checkDominance(*bucket.vetPtrLabel[k], *labelPtrAux, numRes))
                         {
                             if(bucket.vetPtrLabel[k] == labelPtrBest)
                                 labelPtrBest = nullptr;
@@ -330,8 +331,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int             numRes,
                             bucket.sizeVetPtrLabel -= 1;
                             continue;
                         }
-
-                        if(checkDominance(*bucket.vetPtrLabel[k], *labelPtrAux, numRes))
+                        else if(checkDominance(*bucket.vetPtrLabel[k], *labelPtrAux, numRes))
                         {
                             if(Print)
                                 std::cout << "\t\t\t\t<" << bucket.vetPtrLabel[k] << ">> domina <<" << labelPtrAux
@@ -431,7 +431,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int             numRes,
         {
             vetLabel[l]->vetRoute[vetLabel[l]->tamRoute-1] = vetLabel[l]->vetRoute[0];
 
-            //std::cout << "BEST LABEL: "<<vetLabel[l]<<" "<< *vetLabel[l] << "\n";
+            std::cout << "BEST LABEL: "<<vetLabel[l]<<" "<< *vetLabel[l] << "\n";
 
             auto &vetRoute = vetLabel[l]->vetRoute;
 
@@ -442,6 +442,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int             numRes,
         }
 
         //std::cout<<"Dest: "<<dest<<"\n\n";
+        std::cout<<"\n\n";
 
         return true;
     }

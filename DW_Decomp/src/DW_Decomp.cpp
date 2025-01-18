@@ -782,12 +782,21 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
         double constVal = 0;
 
+        for(int i=0; i < info.numConstrsConv; ++i)
+        {
+            constVal += -auxVect.vetRowRmlpSmoothPi[i];
+            std::cout<<auxVect.vetRowRmlpSmoothPi[i]<<" ";
+        }
+
+
 /*        if(!doubleEqual(constVal, 0.0))
             std::cout<<"ConstVal: "<<constVal<<"\n";*/
 
-        for(int i=info.numConstrsOrignalProblem; i < info.numConstrsMaster; ++i)
+        for(int i=info.numConstrsOrignalProblem+info.numConstrsConv; i < info.numConstrsMaster; ++i)
+        {
             constVal += -auxVect.vetRowRmlpSmoothPi[i];
-
+            std::cout<<auxVect.vetRowRmlpSmoothPi[i]<<" ";
+        }
 
 /*        if(!doubleEqual(constVal, 0.0))
             std::cout<<"*ConstVal: "<<constVal<<"\n";*/
@@ -841,6 +850,12 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
                 {
                     numSolRep += 1;
                     vetVarLambdaCol.pop_back();
+
+                    uRmlp->write("missPricing.lp");
+
+                    PRINT_DEBUG("", "");
+                    throw "MISS_PRICING";
+
                     continue;
                 }
                 else
@@ -855,6 +870,9 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
                 //std::cout<<"numConstrsMaster: "<<info.numConstrsMaster<<"\n";
                 auxVect.vetColCooef.segment(info.numConstrsConv, info.numConstrsMaster) = matA * vetSol;
+
+                std::cout<<"cooef: \n"<<auxVect.vetColCooef<<"\n\n";
+
 
                 addColumn(cgCooefObj, l, auxVect);
             }
@@ -929,6 +947,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
     delete []vetRmlpConstr;
     vetRmlpConstr = nullptr;
 
+    uRmlp->write("lpFinal.lp");
 
     //std::cout<<"PI: "<<auxVect.vetRowRmlpPi<<"\n\n";
 
@@ -953,7 +972,7 @@ void DW_DecompNS::DW_DecompNode::updateRmlpPi(Eigen::RowVectorXd &vetRowRmlpPi)
             vetRowRmlpPi.coeffRef(0, i) = val;
     }
 
-//std::cout<<"PI: "<<vetRowRmlpPi<<"\n\n";
+std::cout<<"PI: "<<vetRowRmlpPi<<"\n\n";
 
 }
 
@@ -988,7 +1007,7 @@ void DW_DecompNS::DW_DecompNode::addColumn(const double cost, int k, AuxData &au
 
     auxVect.updateAuxVetCooef();
     GRBColumn grbColumn;
-    grbColumn.addTerms(auxVect.auxVetCooef, vetRmlpConstr, info.numConstrsMaster);
+    grbColumn.addTerms(auxVect.auxVetCooef, vetRmlpConstr, info.numConstrsMaster+info.numConstrsConv);
 
     uRmlp->addVar(0.0, GRB_INFINITY, cost, GRB_CONTINUOUS, grbColumn,
                 "l_"+std::to_string(itCG)+"_"+std::to_string(k));

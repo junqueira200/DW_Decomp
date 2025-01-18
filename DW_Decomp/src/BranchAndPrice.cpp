@@ -199,6 +199,9 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
 
     int it = -1;
 
+    //PRINT_DEBUG("", "");
+    //throw "NAO EH ERRO";
+
     while(!searchD->empty() && gap > gapLimit && !alarm_stopG)
     {
 

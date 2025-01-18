@@ -223,7 +223,7 @@ namespace LabelingAlgorithmNS
                                   int&                  numSol,
                                   const FloatType       labelStart,
                                   int                   NumMaxLabePerBucket,
-                                  const bool            dominaceCheck,
+                                  bool                  dominaceCheck,
                                   FloatType&            maxDist,
                                   FloatType&            redCost);
 
