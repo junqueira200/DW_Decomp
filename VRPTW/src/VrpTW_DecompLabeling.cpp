@@ -114,8 +114,8 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, v
 
 
     GRBLinExpr linExpr;
-    GRBVar a = rmlp.addVar(0, GRB_INFINITY, custoVarA, GRB_CONTINUOUS);
-    linExpr += -a;
+    //GRBVar a = rmlp.addVar(0, GRB_INFINITY, custoVarA, GRB_CONTINUOUS);
+    //linExpr += -a;
 
     rmlp.addConstr(linExpr, '<', instVrpTw->numVeic, "convConstr");
 
@@ -139,8 +139,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                                const VectorI&             vetDelVar)
 {
 
-std::cout<<"constPiValue: "<<constPiValue<<"\n";
-    FloatType redCostFT = 0;
+//std::cout<<"constPiValue: "<<constPiValue<<"\n";
+    static Eigen::VectorX<FloatType> vetRedCostFT(DW_DecompNS::NumMaxSolSubProb);
 
     vetMatResCost[0].setZero();
     //constPiValue += -vetRowPi[0];
@@ -152,13 +152,13 @@ std::cout<<"constPiValue: "<<constPiValue<<"\n";
             if(i == j)
                 continue;
 
-            vetMatResCost[0](i, j) = (FloatType)instVrpTw->matDist(i, j) - vetRowPi[j+1];
+            vetMatResCost[0](i, j) = (FloatType)instVrpTw->matDist(i, j) - (FloatType)vetRowPi[j+1];
         }
 
         if(i != 0)
         {
             //vetMatResCost[0](i, 0) = instVrpTw->matDist(i, 0);
-            vetMatResCost[0](i, instVrpTw->numClientes) = (FloatType)instVrpTw->matDist(i, 0) - vetRowPi[1];
+            vetMatResCost[0](i, instVrpTw->numClientes) = (FloatType)instVrpTw->matDist(i, 0) - (FloatType)vetRowPi[1];
         }
     }
 
@@ -199,7 +199,7 @@ std::cout<<"constPiValue: "<<constPiValue<<"\n";
                                                i,
                                                true,
                                                maxDist,
-                                               redCostFT);
+                                               vetRedCostFT);
 
         it += 1;
         if(custoRedNeg)
@@ -223,7 +223,7 @@ std::cout<<"constPiValue: "<<constPiValue<<"\n";
                                                -1,
                                                true,
                                                maxDist,
-                                               redCostFT);
+                                               vetRedCostFT);
 
 
         if(!custoRedNeg)
@@ -244,12 +244,41 @@ std::cout<<"constPiValue: "<<constPiValue<<"\n";
                                                    -1,
                                                    true,
                                                    maxDist,
-                                                   redCostFT);
+                                                   vetRedCostFT);
         }
     }
 
-    redCost = (double)redCostFT;
+    //redCost = (double)redCostFT;
     vetCooefRestConv[0] = 1;
+
+    // Check if solution have a negative reduced cost
+    FloatType redCostTemp = 0.0;
+    for(int j=0; j < numSol; ++j)
+    {
+        redCostTemp = constPiValue;
+
+        for(int i=0; i < (instVrpTw->numClientes*instVrpTw->numClientes); ++i)
+        {
+            if(doubleEqual(matColX(i,j), 0.0))
+                continue;
+
+            int ii = i/instVrpTw->numClientes;
+            int jj = i%instVrpTw->numClientes;
+
+            redCostTemp += (instVrpTw->matDist(ii, jj) - vetRowPi[jj+1]);
+            //std::cout<<"("<<ii<<","<<jj<<"); ";
+
+        }
+
+        if(redCostTemp >= -DW_DecompNS::TolObjSubProb || !doubleEqual(redCostTemp, vetRedCostFT[j], 1E-4))
+        {
+            std::cout<<"\nERROR, custo reduzido calculado: ("<<redCostTemp<<") \n";
+            std::cout<<"redCost: "<<vetRedCostFT[j]<<"\n\n";
+            PRINT_DEBUG("", "");
+            throw "ERROR";
+        }
+
+    }
 
 
     return 0;

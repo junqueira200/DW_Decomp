@@ -24,7 +24,7 @@ namespace DW_DecompNS
 {
 
     constexpr double TolObjSubProb       = 1E-5;
-    constexpr int    NumMaxSolSubProb    = 1;
+    constexpr int    NumMaxSolSubProb    = 25;
     constexpr double StabilizationAlpha  = 0.6;
     constexpr bool   Stabilization       = false;
     constexpr double gapLimit            = 1E-2;
@@ -250,6 +250,7 @@ namespace DW_DecompNS
         void addColumn(const double cost, int k, AuxData &auxVect);
         void updateRmlpPi(Eigen::RowVectorXd &vetRowRmlpPi);
         double getLagrangeDualBound(double objRmlp, double redCost);
+        void getSolX();
 
 
         DW_DecompNode(const DW_DecompNode &decomp);

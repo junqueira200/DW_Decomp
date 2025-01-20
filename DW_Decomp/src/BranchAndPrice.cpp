@@ -55,6 +55,12 @@ void BranchAndPriceNS::addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &
 
         // Update columns coef
         GRBLinExpr linExpr;
+        //GRBVar var = decompNode.uRmlp->addVar(0, GRB_INFINITY, decompNode.info.costA_Var, GRB_CONTINUOUS, "a_"+std::to_string(num));
+        //double mult = 1.0;
+        //if(cut.sense == '<')
+        //    mult = -1.0;
+
+        //linExpr += mult*var;
 
         //decompNode.uRmlp->update();
         //decompNode.uRmlp->optimize();
@@ -193,6 +199,9 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
         vetX_best.setZero();
         return vetX_best;
     }
+
+    delete rootNode;
+    return vetX_best;
 
     searchD->insert(rootNode);
     rootNode = nullptr;

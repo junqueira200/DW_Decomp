@@ -25,7 +25,7 @@
 #include <boost/container/set.hpp>
 
 
-typedef float FloatType;
+typedef double FloatType;
 
 namespace LabelingAlgorithmNS
 {
@@ -212,20 +212,20 @@ namespace LabelingAlgorithmNS
     };
 
 
-    bool forwardLabelingAlgorithm(const int             numRes,
-                                  const int             numCust,
-                                  const VetMatResCost&  vetMatResCost,
-                                  const VetVetResBound& vetVetBound,
-                                  const int             dest,
-                                  const NgSet&          ngSet,
-                                  LabelingData&         lData,
-                                  Eigen::MatrixXd&      matColX,
-                                  int&                  numSol,
-                                  const FloatType       labelStart,
-                                  int                   NumMaxLabePerBucket,
-                                  bool                  dominaceCheck,
-                                  FloatType&            maxDist,
-                                  FloatType&            redCost);
+    bool forwardLabelingAlgorithm(const int                     numRes,
+                                  const int                     numCust,
+                                  const VetMatResCost&          vetMatResCost,
+                                  const VetVetResBound&         vetVetBound,
+                                  const int                     dest,
+                                  const NgSet&                  ngSet,
+                                  LabelingData&                 lData,
+                                  Eigen::MatrixXd&              matColX,
+                                  int&                          numSol,
+                                  const FloatType               labelStart,
+                                  int                           NumMaxLabePerBucket,
+                                  bool                          dominaceCheck,
+                                  FloatType&                    maxDist,
+                                  Eigen::VectorX<FloatType>&    vetRedCost);
 
     inline __attribute__((always_inline))
     bool checkDominance(const Label& l0, const Label& l1, int numResources)
@@ -262,7 +262,8 @@ namespace LabelingAlgorithmNS
                      int                   numResources);
 
     void removeCycles(Label &label, const int numCust);
-    void updateLabelCost(Label &label, const VetMatResCost &vetMatResCost);
+    void removeCycles2(Label &label, const int numCust);
+    void updateLabelCost(Label &label, const VetMatResCost &vetMatResCost, FloatType labelStart);
 
     // Linear index for a nxn matrix
     inline __attribute__((always_inline))

@@ -88,20 +88,20 @@ void LabelingAlgorithmNS::NgSet::setNgSets(const EigenMatrixRowD &matDist)
 inline MemoryPool_NS::Pool<LabelingAlgorithmNS::Label> labelPoolG;
 
 bool
-LabelingAlgorithmNS::forwardLabelingAlgorithm(const int             numRes,
-                                              const int             numCust,
-                                              const VetMatResCost&  vetMatResCost,
-                                              const VetVetResBound& vetVetBound,
-                                              const int             dest,
-                                              const NgSet&          ngSet,
-                                              LabelingData&         lData,
-                                              Eigen::MatrixXd&      matColX,
-                                              int&                  numSol,
-                                              const FloatType       labelStart,
-                                              int                   NumMaxLabePerBucket,
-                                              bool                  dominaceCheck,
-                                              FloatType&            maxDist,
-                                              FloatType&            redCost)
+LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numRes,
+                                              const int                     numCust,
+                                              const VetMatResCost&          vetMatResCost,
+                                              const VetVetResBound&         vetVetBound,
+                                              const int                     dest,
+                                              const NgSet&                  ngSet,
+                                              LabelingData&                 lData,
+                                              Eigen::MatrixXd&              matColX,
+                                              int&                          numSol,
+                                              const FloatType               labelStart,
+                                              int                           NumMaxLabePerBucket,
+                                              bool                          dominaceCheck,
+                                              FloatType&                    maxDist,
+                                              Eigen::VectorX<FloatType>&    vetRedCost)
 {
     //dominaceCheck = false;
 
@@ -123,7 +123,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int             numRes,
     vetLabel.setZero();
 
     maxDist = -std::numeric_limits<FloatType>::max();
-    redCost = std::numeric_limits<FloatType>::max();
+    //redCost = std::numeric_limits<FloatType>::max();
 
     if(Print)
     {
@@ -372,22 +372,23 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int             numRes,
                 if(labelPtrAux->cust == dest && labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb)
                 {
 
+                    // TODO print
 //std::cout<<*labelPtrAux<<"\n";
 
                     removeCycles(*labelPtrAux, numCust);
-                    updateLabelCost(*labelPtrAux, vetMatResCost);
+                    updateLabelCost(*labelPtrAux, vetMatResCost, labelStart);
 
-                    if(Print)
-                        std::cout<<"*"<<*labelPtrAux<<"\n\n";
+
+                    // TODO print
+                    //if(Print)
+                    //    std::cout<<"*"<<*labelPtrAux<<"\n\n";
 
                     if(labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb && !containRoute(vetLabel, numSol, labelPtrAux))
                     {
                         //std::cout<<"*"<<*labelPtrAux<<"\n\n";
                         vetLabel[numSol] = labelPtrAux;
+                        vetRedCost[numSol] = labelPtrAux->vetResources[0];
                         numSol += 1;
-
-                        if(labelPtrAux->vetResources[0] < redCost)
-                            redCost = labelPtrAux->vetResources[0];
                     }
                     else
                         labelPoolG.delT(labelPtrAux);
@@ -422,6 +423,9 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int             numRes,
         numIt += 1;
     }
 
+    // TODO print
+    //std::cout<<"\n########################################################################################\n\n";
+
     //std::cout<<"Max dist: "<<maxDist<<"\n";
     //std::cout<<"maxSizeVetPtrLabel: "<<maxSizeVetPtrLabel<<"\n";
 
@@ -431,7 +435,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int             numRes,
         {
             vetLabel[l]->vetRoute[vetLabel[l]->tamRoute-1] = vetLabel[l]->vetRoute[0];
 
-            std::cout << "BEST LABEL: "<<vetLabel[l]<<" "<< *vetLabel[l] << "\n";
+            //std::cout << "BEST LABEL: "<<vetLabel[l]<<" "<< *vetLabel[l] << "\n";
 
             auto &vetRoute = vetLabel[l]->vetRoute;
 
@@ -442,7 +446,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int             numRes,
         }
 
         //std::cout<<"Dest: "<<dest<<"\n\n";
-        std::cout<<"\n\n";
+        //std::cout<<"\n\n";
 
         return true;
     }
@@ -806,13 +810,18 @@ void LabelingAlgorithmNS::removeCycles(Label &label, const int numCust)
         }
     }
 
+}
+
+
+void LabelingAlgorithmNS::removeCycles2(Label &label, const int numCust)
+{
 
 }
 
-void LabelingAlgorithmNS::updateLabelCost(Label &label, const VetMatResCost &vetMatResCost)
+void LabelingAlgorithmNS::updateLabelCost(Label &label, const VetMatResCost &vetMatResCost, FloatType labelStart)
 {
 
-    label.vetResources[0] = 0.0;
+    label.vetResources[0] = labelStart;
     for(int i=0; i < (label.tamRoute-1); ++i)
     {
         label.vetResources[0] += vetMatResCost[0](label.vetRoute[i], label.vetRoute[i+1]);

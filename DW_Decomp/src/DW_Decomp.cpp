@@ -697,7 +697,7 @@ std::cout<<"info set\n";
     uRmlp->write("rmlp_"+std::to_string(-1)+".lp");
     vetRmlpConstr = uRmlp->getConstrs();
 
-    uRmlp->set(GRB_IntParam_Method, GRB_METHOD_DUAL);
+    uRmlp->set(GRB_IntParam_Method, GRB_METHOD_PRIMAL);
     //uRmlp->set(GRB_IntParam_Presolve, GRB_PRESOLVE_OFF);
     uRmlp->set(GRB_IntParam_OutputFlag, 0);
 
@@ -731,6 +731,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
     uRmlp->update();
     vetRmlpConstr = uRmlp->getConstrs();
+    
 
     while(subProbCustR_neg)
     {
@@ -750,6 +751,8 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
         double objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
 
 
+        //getSolX();
+        //std::cout<<"vetX: \n"<<vetSolX.transpose()<<"\n";
 
         gap = (std::abs(objRmlp-privObjRmlp)/objRmlp)*100.0;
             //std::cout<<"GAP("<<gap<<"%)\n";
@@ -785,7 +788,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
         for(int i=0; i < info.numConstrsConv; ++i)
         {
             constVal += -auxVect.vetRowRmlpSmoothPi[i];
-            std::cout<<auxVect.vetRowRmlpSmoothPi[i]<<" ";
+            //std::cout<<auxVect.vetRowRmlpSmoothPi[i]<<" ";
         }
 
 
@@ -795,7 +798,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
         for(int i=info.numConstrsOrignalProblem+info.numConstrsConv; i < info.numConstrsMaster; ++i)
         {
             constVal += -auxVect.vetRowRmlpSmoothPi[i];
-            std::cout<<auxVect.vetRowRmlpSmoothPi[i]<<" ";
+            //std::cout<<auxVect.vetRowRmlpSmoothPi[i]<<" ";
         }
 
 /*        if(!doubleEqual(constVal, 0.0))
@@ -871,7 +874,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
                 //std::cout<<"numConstrsMaster: "<<info.numConstrsMaster<<"\n";
                 auxVect.vetColCooef.segment(info.numConstrsConv, info.numConstrsMaster) = matA * vetSol;
 
-                std::cout<<"cooef: \n"<<auxVect.vetColCooef<<"\n\n";
+                //std::cout<<"cooef: \n"<<auxVect.vetColCooef<<"\n\n";
 
 
                 addColumn(cgCooefObj, l, auxVect);
@@ -933,17 +936,11 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
     std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG-1, uRmlp->get(GRB_DoubleAttr_ObjVal), gap);
     //uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
 
-    GRBVar *vetVar        = uRmlp->getVars();
-    double *vetRmlpLambda = uRmlp->get(GRB_DoubleAttr_X, vetVar, uRmlp->get(GRB_IntAttr_NumVars));
+
+    getSolX();
+    //std::cout<<"vetX: \n"<<vetSolX<<"\n";
 
 
-    vetSolX.setZero();
-    for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
-        vetSolX += vetRmlpLambda[i]*(*vetVarLambdaCol[i]);
-
-
-    delete []vetRmlpLambda;
-    delete []vetVar;
     delete []vetRmlpConstr;
     vetRmlpConstr = nullptr;
 
@@ -972,7 +969,7 @@ void DW_DecompNS::DW_DecompNode::updateRmlpPi(Eigen::RowVectorXd &vetRowRmlpPi)
             vetRowRmlpPi.coeffRef(0, i) = val;
     }
 
-std::cout<<"PI: "<<vetRowRmlpPi<<"\n\n";
+//std::cout<<"PI: "<<vetRowRmlpPi<<"\n\n";
 
 }
 
@@ -1064,6 +1061,30 @@ DW_DecompNS::DW_DecompNode::DW_DecompNode(const DW_DecompNS::DW_DecompNode &deco
     vetRmlpConstr = nullptr;
 
 
+}
+
+void DW_DecompNS::DW_DecompNode::getSolX()
+{
+
+    GRBVar *vetVar        = uRmlp->getVars();
+    double *vetRmlpLambda = uRmlp->get(GRB_DoubleAttr_X, vetVar, uRmlp->get(GRB_IntAttr_NumVars));
+    double sum = 0.0;
+
+    std::cout<<"Lambda: ";
+    for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
+    {
+        std::cout << vetRmlpLambda[i] << " ";
+        sum += vetRmlpLambda[i];
+    }
+    std::cout<<"sum: "<<sum<<"\n\n";
+    std::cout<<"vetVarLambdaCol.size(): "<<vetVarLambdaCol.size()<<"\n";
+
+    vetSolX.setZero();
+    for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
+        vetSolX += vetRmlpLambda[i]*(*vetVarLambdaCol[i]);
+
+    delete []vetRmlpLambda;
+    delete []vetVar;
 }
 
 void DW_DecompNS::AuxData::updateSizes(DW_DecompNS::DW_DecompNode &e)

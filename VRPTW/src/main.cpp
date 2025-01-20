@@ -77,7 +77,9 @@ int main(int argv, char **argc)
                                 (BranchInter*)&branch,
                                 statisticD);
 
-        Eigen::MatrixXi matSol(instVrpTw.numVeic, instVrpTw.numClientes/2);
+
+
+/*        Eigen::MatrixXi matSol(instVrpTw.numVeic, instVrpTw.numClientes/2);
         matSol.setZero();
 
         int pos = 1;
@@ -126,7 +128,7 @@ int main(int argv, char **argc)
             }
         }
 
-        std::cout<<"\n\n"<<matSol<<"\n";
+        std::cout<<"\n\n"<<matSol<<"\n";*/
 
         statisticD.inst = fileName;
         writeToFile(statisticD, "result.csv");
