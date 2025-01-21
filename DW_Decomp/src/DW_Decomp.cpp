@@ -543,34 +543,26 @@ void DW_DecompNS::dwDecomp(GRBEnv &env,
 } // FIM DW_Decomp::dwDecomp
 
 
-DW_DecompNS::DW_DecompNode::DW_DecompNode(GRBEnv &env_,
-                                          GRBModel &master,
-                                          double costA_Var_,
-                                          SubProb *ptrSubProb_,
+DW_DecompNS::DW_DecompNode::DW_DecompNode(GRBEnv&   env_,
+                                          GRBModel& master,
+                                          double    costA_Var_,
+                                          SubProb*  ptrSubProb_,
                                           const int numSubProb_,
-                                          AuxData &auxVect):
+                                          AuxData&  auxVect):
                                                                          ptrSubProb(ptrSubProb_)
 {
     vetDelVar = VectorI();
 
 std::cout<<"ini DW_DecompNode\n";
 
-    info.costA_Var  = costA_Var_;
-    info.numSubProb = numSubProb_;
-std::cout<<"antes\n";
-    info.numConstrsConv = ptrSubProb->getNumConvConstr();
-std::cout<<"depois\n";
-
-    info.numConstrsMaster = master.get(GRB_IntAttr_NumConstrs);
+    info.costA_Var                = costA_Var_;
+    info.numSubProb               = numSubProb_;
+    info.numConstrsConv           = ptrSubProb->getNumConvConstr();
+    info.numConstrsMaster         = master.get(GRB_IntAttr_NumConstrs);
     info.numConstrsOrignalProblem = info.numConstrsMaster;
-    info.numVarMaster     = master.get(GRB_IntAttr_NumVars);
-
-std::cout<<"info set\n";
+    info.numVarMaster             = master.get(GRB_IntAttr_NumVars);
 
     getSparseMatModel(master, matA);
-
-//std::cout<<TempSpMatPrint(matA)<<"\n";
-
     getVetC_Model(master, auxVect.vetRowC);
 
 //std::cout << "vetC: "<<auxVect.vetRowC<< "\n";
@@ -914,7 +906,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
         //gap = (std::abs(redCost)/objRmlp)*100.0;
         //std::cout<<"GAP("<<gap<<"%)\n";
 
-        if((itCG%10) == 0)
+        if((itCG%1) == 0)
         {
             //std::cout<<"\t"<<itCG<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"%\"\n";
             std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG, uRmlp->get(GRB_DoubleAttr_ObjVal), gap);

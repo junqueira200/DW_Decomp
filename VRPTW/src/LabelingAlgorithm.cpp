@@ -307,7 +307,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                             std::cout << "\t\t\tcheckDominance " << bucket.vetPtrLabel[k] << ": "
                                       << *bucket.vetPtrLabel[k] << "\n";
 
-                        if(checkDominance(*labelPtrAux, *bucket.vetPtrLabel[k], numRes))// && !checkDominance(*bucket.vetPtrLabel[k], *labelPtrAux, numRes))
+                        if(checkDominance(*labelPtrAux, *bucket.vetPtrLabel[k], numRes) && !checkDominance(*bucket.vetPtrLabel[k], *labelPtrAux, numRes))
                         {
                             if(bucket.vetPtrLabel[k] == labelPtrBest)
                                 labelPtrBest = nullptr;
@@ -322,10 +322,9 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                                 bucket.vetPtrLabel[k] = nullptr;
                             } else
                             {
-                                std::swap(bucket.vetPtrLabel[k], bucket.vetPtrLabel[bucket.sizeVetPtrLabel - 1]);
+                                std::swap(bucket.vetPtrLabel[k], bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1]);
                                 //labelPool.delT(bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1]);
-                                bucket.vetPtrLabel[bucket.sizeVetPtrLabel - 1] = nullptr;
-
+                                bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1] = nullptr;
                             }
 
                             bucket.sizeVetPtrLabel -= 1;
@@ -373,7 +372,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                 {
 
                     // TODO print
-//std::cout<<*labelPtrAux<<"\n";
+                    if(!dominaceCheck)
+                        std::cout<<*labelPtrAux<<"\n";
 
                     removeCycles(*labelPtrAux, numCust);
                     updateLabelCost(*labelPtrAux, vetMatResCost, labelStart);
@@ -381,7 +381,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
 
                     // TODO print
                     //if(Print)
-                    //    std::cout<<"*"<<*labelPtrAux<<"\n\n";
+                    if(!dominaceCheck)
+                        std::cout<<"*"<<*labelPtrAux<<"\n\n";
 
                     if(labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb && !containRoute(vetLabel, numSol, labelPtrAux))
                     {
@@ -750,7 +751,7 @@ void LabelingAlgorithmNS::Bucket::addLabel(LabelingAlgorithmNS::Label *labelPtr)
     if(sizeVetPtrLabel == vetPtrLabel.size())
     {
         vetPtrLabel.conservativeResize(2 * (sizeVetPtrLabel + 1));
-        for(int i=sizeVetPtrLabel; i < 2*sizeVetPtrLabel; ++i)
+        for(int i=sizeVetPtrLabel; i < 2*(sizeVetPtrLabel+1); ++i)
             vetPtrLabel[i] = nullptr;
     }
 
@@ -932,7 +933,7 @@ void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(std::multiset<Labe
 
                                 Label *label1 = b1.vetPtrLabel[t1];
 
-                                if(checkDominance(*label0, *label1, numRes) && !checkDominance(*label1, *label0, numRes))
+                                if(checkDominance(*label0, *label1, numRes) && !checkDominance(&label1, &label0, numRes))
                                 {
                                     //std::cout<<"Domina\n";
                                     // Rm label1
@@ -955,7 +956,7 @@ void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(std::multiset<Labe
                                     b1.sizeVetPtrLabel -= 1;
 
                                     numDel += 1;
-                                    if(setLabel.size() < localNumMaxLabel/2)
+                                    if((int)setLabel.size() < localNumMaxLabel/2)
                                     {
                                         if(Print)
                                             std::cout<<"\t"<<"FORAM DELETADOS: "<<numDel<<" LABELS\n\n";

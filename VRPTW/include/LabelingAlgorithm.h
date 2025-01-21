@@ -241,7 +241,7 @@ namespace LabelingAlgorithmNS
         //#pragma GCC unroll NumMaxResources
         for(int i=0; i < NumMaxResources; ++i)
         {
-            if(l0.vetResources[i] > l1.vetResources[i])
+            if(l0.vetResources[i] >= l1.vetResources[i] || doubleEqual(l0.vetResources[i], l1.vetResources[i]))
                 return false;
 
             if((i+1) == numResources)

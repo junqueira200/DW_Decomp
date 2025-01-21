@@ -24,12 +24,12 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     instVrpTw = &instVrpTw_;
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 50; // 50
+    vetStepSize[0].stepSize = 25; // 50
     vetStepSize[0].start    = (FloatType)-startDist;
     vetStepSize[0].end      = (FloatType)startDist;
 
     //vetStepSize[1].stepSize = 5;
-    vetStepSize[1].stepSize = 5;
+    vetStepSize[1].stepSize = 5;  //5
     vetStepSize[1].start    = 0;
     vetStepSize[1].end      = (FloatType)instVrpTw->capVeic;
 
@@ -230,7 +230,6 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
         {
             matColX.setZero();
             ngSet.active = false;
-            //std::cout<<"Ultimo forwardLabelingAlgorithm\n\n";
             custoRedNeg = forwardLabelingAlgorithm(2,
                                                    instVrpTw->numClientes+1,
                                                    vetMatResCost,
@@ -246,6 +245,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                    maxDist,
                                                    vetRedCostFT);
         }
+
     }
 
     //redCost = (double)redCostFT;
