@@ -14,6 +14,8 @@
 #include "Aux.h"
 #include "Sparse.h"
 #include <boost/unordered_set.hpp>
+#include <set>
+
 
 #ifndef DW_DECOMP_DW_DECOMP_H
 #define DW_DECOMP_DW_DECOMP_H
@@ -23,12 +25,14 @@ using namespace SparseNS;
 namespace DW_DecompNS
 {
 
-    constexpr double TolObjSubProb       = 1E-12;
+    constexpr double TolObjSubProb       = 1E-5;
     constexpr int    NumMaxSolSubProb    = 25;
-    constexpr double StabilizationAlpha  = 0.6;
+    constexpr double StabilizationAlpha  = 0.7;
     constexpr bool   Stabilization       = false;
     constexpr double gapLimit            = 1E-2;
     constexpr int    NumCandidatesBranch = 3;
+    constexpr bool   PrintDebug          = false;
+    constexpr int    BigM_maxMult        = 10;
 
 
     Eigen::MatrixXd getMatA_Model(GRBModel &mestre);
@@ -48,6 +52,13 @@ namespace DW_DecompNS
         StatusSubProb_Inviavel,
         StatusSubProb_Unbounded,
         StatusSubProb_Outro
+    };
+
+    enum class PhaseStatus
+    {
+        PhaseStatusColGen   = 0,
+        PhaseStatusBigM     = 1,
+        PhaseStatusTwoPhase = 2
     };
 
 
@@ -101,7 +112,9 @@ namespace DW_DecompNS
                        int &numSol,
                        double &redCost,
                        double constPiValue,
-                       const VectorI &vetDelVar) =0;
+                       const VectorI &vetVar0,
+                       const VectorI &vetVar1,
+                       PhaseStatus phaseStatus) =0;
 
 
         //virtual int64_t getNumberOfConvConstr() = 0;
@@ -215,6 +228,8 @@ namespace DW_DecompNS
     std::size_t  hash_value(const SolXHash& solXHash){return solXHash.hashVal;}
 
 
+
+
     class DW_DecompNode
     {
     public:
@@ -233,7 +248,8 @@ namespace DW_DecompNS
         GRBConstr* vetRmlpConstr = nullptr;
         GRBVar* vetVarArtifRmlp  = nullptr;
 
-        VectorI vetDelVar;
+        VectorI vetVar0;   // set of variables with have x_i <= 0
+        VectorI vetVar1;   // set of variables with have x_i >= 1
 
 
 

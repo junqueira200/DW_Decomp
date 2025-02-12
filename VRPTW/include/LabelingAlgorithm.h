@@ -197,6 +197,7 @@ namespace LabelingAlgorithmNS
         void removeLabel(Label *label);
         Label* getBestLabel(int cust);
 
+        void checkMat();
 
         inline __attribute__((always_inline))
         int getIndexGraphBucket(int i, int j)
@@ -241,7 +242,7 @@ namespace LabelingAlgorithmNS
         //#pragma GCC unroll NumMaxResources
         for(int i=0; i < NumMaxResources; ++i)
         {
-            if(l0.vetResources[i] >= l1.vetResources[i] || doubleEqual(l0.vetResources[i], l1.vetResources[i]))
+            if(l0.vetResources[i] > l1.vetResources[i])// || !doubleEqual(l0.vetResources[i], l1.vetResources[i], 1E-5))
                 return false;
 
             if((i+1) == numResources)
@@ -271,6 +272,7 @@ namespace LabelingAlgorithmNS
 
     bool checkDistance(const Eigen::Matrix<FloatType, -1, -1, Eigen::RowMajor> &matDist);
     bool containRoute(const Eigen::Array<Label*, 1, DW_DecompNS::NumMaxSolSubProb> &vetLabel, int numSol, Label* label);
+
 
 
 }

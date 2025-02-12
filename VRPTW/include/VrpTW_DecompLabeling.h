@@ -43,21 +43,24 @@ namespace VrpTW_DecompLabelingNS
         //int64_t getNumberOfConvConstr() override{return 0;};// {return numSubProb;}
         ~VrpLabelingSubProb() override =default;
         void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
-        int resolveSubProb(const Eigen::VectorXd&     vetC,
-                           const Eigen::RowVectorXd&  vetRowPi,
-                           GRBModel&                  mestre,
-                           int                        itCG,
-                           bool&                      custoRedNeg,
-                           void*                      data,
-                           const int                  iniConv,
-                           int                        indSubProb,
-                           Eigen::VectorXd&           vetCooefRestConv,
-                           const std::pair<int, int>& pairSubProb,
-                           Eigen::MatrixXd&           matColX,
-                           int&                       numSol,
-                           double&                    redCost,
-                           double                     constPiValue,
-                           const VectorI&             vetDelVar) override;
+
+        int resolveSubProb(const Eigen::VectorXd &vetC,
+                           const Eigen::RowVectorXd &vetRowPi,
+                           GRBModel &mestre,
+                           int itCG,
+                           bool &custoRedNeg,
+                           void *data,
+                           const int iniConv,
+                           int indSubProb,
+                           Eigen::VectorXd &vetCooefRestConv,
+                           const std::pair<int, int> &pairSubProb,
+                           Eigen::MatrixXd &matColX,
+                           int &numSol,
+                           double &redCost,
+                           double constPiValue,
+                           const VectorI &vetVar0,
+                           const VectorI &vetVar1,
+                           DW_DecompNS::PhaseStatus phaseStatus) override;
 
     }; // FIM MySubProb
 

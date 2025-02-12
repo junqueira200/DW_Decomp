@@ -57,7 +57,8 @@ int main(int argv, char **argc)
         //DepthFirst depthFirst;
         MinFuncObj minFuncObj;
         SimpleDiving simpleDiving;
-        StrongBranch branch;
+        //StrongBranch branch;
+        SimpleStrongBranch branch;
 
         StatisticsData statisticD;
 

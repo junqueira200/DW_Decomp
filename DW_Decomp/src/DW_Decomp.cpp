@@ -551,7 +551,7 @@ DW_DecompNS::DW_DecompNode::DW_DecompNode(GRBEnv&   env_,
                                           AuxData&  auxVect):
                                                                          ptrSubProb(ptrSubProb_)
 {
-    vetDelVar = VectorI();
+    vetVar0 = VectorI();
 
 std::cout<<"ini DW_DecompNode\n";
 
@@ -708,6 +708,8 @@ std::cout<<"ini DW_DecompNode\n";
 DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &auxVect)
 {
 
+std::cout<<"*******************Column Generation*******************\n\n";
+
     bool subProbCustR_neg = true;
     itCG = 0;
 
@@ -723,7 +725,11 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
     uRmlp->update();
     vetRmlpConstr = uRmlp->getConstrs();
-    
+
+    PhaseStatus phaseStatus = PhaseStatus::PhaseStatusBigM;
+    VectorD vetMult(info.numConstrsOrignalProblem+info.numConstrsConv, 1.0);
+    VectorI vetLastIt(info.numConstrsOrignalProblem+info.numConstrsConv, -1);    // The last iteration the artificial variable is different from 0
+
 
     while(subProbCustR_neg)
     {
@@ -731,9 +737,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
             uRmlp->update();
         subProbCustR_neg = false;
 
-        //uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
-
-        //if(!missPricing)
+        if(!missPricing)
             uRmlp->optimize();
 
         if(uRmlp->get(GRB_IntAttr_Status) != GRB_OPTIMAL)
@@ -743,8 +747,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
         double objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
 
 
-        //getSolX();
-        //std::cout<<"vetX: \n"<<vetSolX.transpose()<<"\n";
+
 
         gap = (std::abs(objRmlp-privObjRmlp)/objRmlp)*100.0;
             //std::cout<<"GAP("<<gap<<"%)\n";
@@ -757,14 +760,64 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
             //std::cout<<"numLimit: "<<numLimit<<"\n";
 
 
+        GRBVar *vetVar = uRmlp->getVars();
+
+        if(phaseStatus == PhaseStatus::PhaseStatusBigM)
+        {
+            bool allZero = true;
+            for(int i = 0; i < info.numConstrsOrignalProblem + info.numConstrsConv; ++i)
+            {
+                if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0))
+                {
+                    allZero = false;
+                    vetMult[i] += 1;
+
+                    if(vetMult[i] >= BigM_maxMult)
+                    {
+                        phaseStatus = PhaseStatus::PhaseStatusTwoPhase;
+                        break;
+                    }
+
+                    vetVar[i].set(GRB_DoubleAttr_ObjVal, vetMult[i]*info.costA_Var);
+
+                }
+                else
+                {
+                    vetVar[i].set(GRB_DoubleAttr_LB, 0.0);
+                    vetVar[i].set(GRB_DoubleAttr_UB, 0.0);
+                }
+            }
+        }
+
+        if(phaseStatus == PhaseStatus::PhaseStatusTwoPhase)
+        {
+            GRBLinExpr linExpr;
+
+            for(int i = 0; i < info.numConstrsOrignalProblem + info.numConstrsConv; ++i)
+            {
+                if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0))
+                {
+                    linExpr += vetVar[i];
+                }
+            }
+
+            uRmlp->setObjective(linExpr, GRB_MINIMIZE);
+        }
+
+        delete []vetVar;
 
 
         //GRBVar *vetVar        = uRmlp->getVars();
         //double *vetRmlpLambda = uRmlp->get(GRB_DoubleAttr_X, vetVar, uRmlp->get(GRB_IntAttr_NumVars));
+        if(PrintDebug)
+            std::cout<<"UpdatePi\n";
 
         updateRmlpPi(auxVect.vetRowRmlpPi);
 
-        if(Stabilization && numLimit < 5)
+        if(PrintDebug)
+            std::cout<<"~UpdatePi\n";
+
+        if(Stabilization)// && numLimit < 5)
         {
             auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpSmoothPi + StabilizationAlpha * (auxVect.vetRowRmlpPi-auxVect.vetRowRmlpSmoothPi);
             //std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
@@ -777,25 +830,28 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
         double constVal = 0;
 
-        for(int i=0; i < info.numConstrsConv; ++i)
+        if(PrintDebug)
+            std::cout<<"ConstVal conv\n";
+
+        for(int i=0; i < (int)info.numConstrsConv; ++i)
         {
             constVal += -auxVect.vetRowRmlpSmoothPi[i];
-            //std::cout<<auxVect.vetRowRmlpSmoothPi[i]<<" ";
+            if(PrintDebug)
+                std::cout<<auxVect.vetRowRmlpSmoothPi[i]<<" ";
         }
 
+        if(PrintDebug)
+            std::cout<<"\n\n~ConstVal conv\n";
 
-/*        if(!doubleEqual(constVal, 0.0))
-            std::cout<<"ConstVal: "<<constVal<<"\n";*/
+        if(!doubleEqual(constVal, 0.0) && PrintDebug)
+            std::cout<<"ConstVal: "<<constVal<<"\n";
 
-        for(int i=info.numConstrsOrignalProblem+info.numConstrsConv; i < info.numConstrsMaster; ++i)
+        if(PrintDebug)
         {
-            constVal += -auxVect.vetRowRmlpSmoothPi[i];
-            //std::cout<<auxVect.vetRowRmlpSmoothPi[i]<<" ";
+            std::cout << "\n\n~ConstVal Branching\n\n";
+            if(!doubleEqual(constVal, 0.0))
+                std::cout << "*ConstVal: " << constVal << "\n";
         }
-
-/*        if(!doubleEqual(constVal, 0.0))
-            std::cout<<"*ConstVal: "<<constVal<<"\n";*/
-
 
         // Update and solve the subproblems
         for(int k=0; k < info.numSubProb; ++k)
@@ -822,7 +878,9 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
                                        numSol,
                                        redCost,
                                        constVal,
-                                       vetDelVar);
+                                       vetVar0,
+                                       vetVar1,
+                                       phaseStatus);
 
             if(!subProbK_CustoR_neg)
                 continue;
@@ -832,40 +890,69 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
             for(int l=0; l < numSol; ++l)
             {
+                if(PrintDebug)
+                    std::cout<<"Processando "<<l<<" Coluna\n";
                 // Create a new lambda variable
                 vetVarLambdaCol.push_back(std::make_unique<Eigen::VectorXd>(info.numVarMaster));
-                Eigen::VectorXd &vetSol = *vetVarLambdaCol[vetVarLambdaCol.size()-1];
+                Eigen::VectorXd& vetSol = *vetVarLambdaCol[vetVarLambdaCol.size()-1];
                 vetSol.setZero();
+
+                if(PrintDebug)
+                    std::cout<<"Shift X\n";
 
                 // Shift the x solution
                 for(int i = 0; i < auxVect.vetPairSubProb[k].second; ++i)
-                    vetSol[auxVect.vetPairSubProb[k].first + i] = auxVect.matColX_solSubProb(i, l);
+                    vetSol[auxVect.vetPairSubProb[k].first+i] = auxVect.matColX_solSubProb(i, l);
+
+                if(PrintDebug)
+                    std::cout<<"~Shift X\n";
 
                 if(setVarLamdaCol.count(SolXHash(vetSol)) == 1)
                 {
                     numSolRep += 1;
                     vetVarLambdaCol.pop_back();
 
-                    uRmlp->write("missPricing.lp");
-
-                    PRINT_DEBUG("", "");
-                    throw "MISS_PRICING";
+/*                    if(!Stabilization)
+                    {
+                        uRmlp->write("missPricing.lp");
+                        PRINT_DEBUG("", "");
+                        throw "MISS_PRICING";
+                    }*/
 
                     continue;
                 }
                 else
                     setVarLamdaCol.emplace(vetSol);
 
-
+                if(PrintDebug)
+                    std::cout<<"cgCooefObj\n";
                 double cgCooefObj = vetSol.dot(auxVect.vetRowC);
+
+                if(phaseStatus == PhaseStatus::PhaseStatusTwoPhase)
+                    cgCooefObj = 0.0;
+
+                if(PrintDebug)
+                    std::cout<<"~cgCooefObj\n";
+
                 auxVect.vetColCooef.setZero();
                 //std::cout<<"numConstrsConv: "<<info.numConstrsConv<<"\n";
                 if(info.numConstrsConv > 0)
                     auxVect.vetColCooef.segment(0, info.numConstrsConv) = auxVect.vetColConvCooef;
 
-                //std::cout<<"numConstrsMaster: "<<info.numConstrsMaster<<"\n";
-                auxVect.vetColCooef.segment(info.numConstrsConv, info.numConstrsMaster) = matA * vetSol;
+                if(PrintDebug)
+                {
+                    std::cout << "A*X\n";
+                    std::cout << "\tA(" << matA.rows() << "," << matA.cols() << ")\n";
+                    std::cout << "\tvetSol: " << vetSol.size() << "\n";
+                    std::cout << "\tinfo.numConstrsMaster: " << (info.numConstrsMaster) << "\n";
+                    std::cout << "\tnumConstrsConv: " << info.numConstrsConv << "\n";
+                    std::cout << "\tauxVect.vetColCooef.size: " << auxVect.vetColCooef.size() << "\n";
+                }
 
+                auxVect.vetColCooef.segment(info.numConstrsConv, (info.numConstrsMaster)) = matA * vetSol;
+
+                if(PrintDebug)
+                    std::cout<<"~A*X\n\n";
                 //std::cout<<"cooef: \n"<<auxVect.vetColCooef<<"\n\n";
 
 
@@ -874,7 +961,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
             if(numSolRep == numSol)
             {
-                std::cout<<"MISS PRICING\n";
+                //std::cout<<"MISS PRICING\n";
                 missPricing = true;
                 numLimit += 1;
             }
@@ -884,6 +971,33 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
             break;
         }
 
+
+        bool allZero = true;
+        vetVar = uRmlp->getVars();
+
+        for(int i = 0; i < info.numConstrsOrignalProblem + info.numConstrsConv; ++i)
+        {
+            if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0))
+            {
+                allZero = false;
+                break;
+            }
+        }
+
+        delete []vetVar;
+
+        if(phaseStatus == PhaseStatus::PhaseStatusTwoPhase && allZero)
+        {
+
+            phaseStatus = PhaseStatus::PhaseStatusColGen;
+        }
+
+
+        if(!subProbCustR_neg && phaseStatus == PhaseStatus::PhaseStatusTwoPhase && !allZero)
+            return StatusSubProb_Inviavel;
+
+
+
         //if(!missPricing)
         {
             objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
@@ -891,12 +1005,16 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
         }
 
 
-        if(missPricing)
+        if(missPricing && !Stabilization)
         {
             uRmlp->write("missPricing.lp");
             std::cout<<"miss pricing\n";
             std::cout<<auxVect.vetRowRmlpPi<<"\n";
             PRINT_DEBUG("", "");
+
+            std::cout<<"vet0: "<<vetVar0<<"\n";
+            std::cout<<"vet1: "<<vetVar1<<"\n";
+
             throw "MISS_PRICING";
         }
 
@@ -906,7 +1024,7 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
         //gap = (std::abs(redCost)/objRmlp)*100.0;
         //std::cout<<"GAP("<<gap<<"%)\n";
 
-        if((itCG%1) == 0)
+        if((itCG%10) == 0)
         {
             //std::cout<<"\t"<<itCG<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"%\"\n";
             std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG, uRmlp->get(GRB_DoubleAttr_ObjVal), gap);
@@ -929,18 +1047,34 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
     //uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
 
 
+
     getSolX();
-    //std::cout<<"vetX: \n"<<vetSolX<<"\n";
+    //std::cout<<"vetX: \n"<<<<"\n";
 
+    StatusProb status = DW_DecompNS::StatusProb::StatusSubProb_Otimo;
+//std::cout<<"numConstrsOrignalProblem: "<<info.numConstrsOrignalProblem+info.numConstrsConv<<"\n\n";
+    GRBVar *vetVar        = uRmlp->getVars();
+    for(int i=0; i < info.numConstrsOrignalProblem+info.numConstrsConv; ++i)
+    {
+        if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0))
+        {
+            //std::cout<<"!0\n";
+            status = DW_DecompNS::StatusProb::StatusSubProb_Inviavel;
+            break;
+        }
+    }
 
+    delete []vetVar;
     delete []vetRmlpConstr;
     vetRmlpConstr = nullptr;
 
-    uRmlp->write("lpFinal.lp");
+    //uRmlp->write("lpFinal.lp");
+
+std::cout<<"*******************~Column Generation*******************\n\n";
 
     //std::cout<<"PI: "<<auxVect.vetRowRmlpPi<<"\n\n";
 
-    return DW_DecompNS::StatusSubProb_Otimo;
+    return status;
 
 
 }
@@ -961,7 +1095,8 @@ void DW_DecompNS::DW_DecompNode::updateRmlpPi(Eigen::RowVectorXd &vetRowRmlpPi)
             vetRowRmlpPi.coeffRef(0, i) = val;
     }
 
-//std::cout<<"PI: "<<vetRowRmlpPi<<"\n\n";
+    if(PrintDebug)
+        std::cout<<"PI: "<<vetRowRmlpPi<<"\n\n";
 
 }
 
@@ -1018,7 +1153,7 @@ DW_DecompNS::DW_DecompNode::DW_DecompNode(const DW_DecompNS::DW_DecompNode &deco
     itCG       = 0;
     matA       = decomp.matA;
     vetVarArtifRmlp = nullptr;
-    vetDelVar  = decomp.vetDelVar;
+    vetVar0  = decomp.vetVar0;
 
 
     vetVarLambdaCol.reserve(decomp.vetVarLambdaCol.size());
@@ -1062,14 +1197,14 @@ void DW_DecompNS::DW_DecompNode::getSolX()
     double *vetRmlpLambda = uRmlp->get(GRB_DoubleAttr_X, vetVar, uRmlp->get(GRB_IntAttr_NumVars));
     double sum = 0.0;
 
-    std::cout<<"Lambda: ";
+    //std::cout<<"Lambda: ";
     for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
     {
-        std::cout << vetRmlpLambda[i] << " ";
+        //std::cout << vetRmlpLambda[i] << " ";
         sum += vetRmlpLambda[i];
     }
-    std::cout<<"sum: "<<sum<<"\n\n";
-    std::cout<<"vetVarLambdaCol.size(): "<<vetVarLambdaCol.size()<<"\n";
+    //std::cout<<"\nsum: "<<sum<<"\n\n";
+    //std::cout<<"vetVarLambdaCol.size(): "<<vetVarLambdaCol.size()<<"\n";
 
     vetSolX.setZero();
     for(int i=0; i < uRmlp->get(GRB_IntAttr_NumVars); ++i)
@@ -1082,10 +1217,10 @@ void DW_DecompNS::DW_DecompNode::getSolX()
 void DW_DecompNS::AuxData::updateSizes(DW_DecompNS::DW_DecompNode &e)
 {
     Info &info = e.info;
-    int numConstrsMaster = info.numConstrsMaster;
+    int numConstrsMaster = info.numConstrsMaster + (int)info.numConstrsConv;
 
 
-    if(vetRowRmlpPi.size() >= info.numConstrsMaster)
+    if(vetRowRmlpPi.size() >= numConstrsMaster)
         return;
 
     vetRowRmlpPi.resize(numConstrsMaster);
