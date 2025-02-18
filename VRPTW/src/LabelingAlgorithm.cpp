@@ -103,20 +103,24 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                                               FloatType&                    maxDist,
                                               Eigen::VectorX<FloatType>&    vetRedCost)
 {
+    if(vetRoteG.size() > 0)
+    {
+        std::cout<<"vetRoteG: ";
+        for(int i:vetRoteG)
+            std::cout<<i<<" ";
+        std::cout<<"\n";
+
+        std::cout<<"*********************LABELING*********************\n\n";
+    }
+
+    checkDistance(vetMatResCost[0]);
+
     //dominaceCheck = false;
 
     if(NumMaxLabePerBucket == -1)
         NumMaxLabePerBucket = std::numeric_limits<int>::max();
 
     //std::cout<<"NumMaxLabePerBucket: "<<NumMaxLabePerBucket<<"\n\n";
-
-    if(checkDistance(vetMatResCost[0]))
-    {
-        std::cout<<"dist > 0\n";
-        numSol = 0;
-        return false;
-
-    }
 
     numSol = 0;
     Eigen::Array<Label*, 1, DW_DecompNS::NumMaxSolSubProb> vetLabel;
@@ -228,7 +232,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
             throw "ERRO";
         }
 
-        if(Print)
+        if(Print || labelHaveRoute(vetRoteG, labelPtr))
         {
             std::cout << "labelPtr: " << labelPtr << "\n";
             std::cout << *labelPtr << "\n\n";
@@ -281,9 +285,10 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
             if(extendLabel(*labelPtr, *labelPtrAux, vetMatResCost, vetVetBound, labelPtr->cust, t, ngSet, numRes))
             {
 
+
                 maxDist = std::max(maxDist, labelPtrAux->vetResources[0]);
 
-                if(Print)
+                if(Print || labelHaveRoute(vetRoteG, labelPtrAux))
                     std::cout<<"\t\textendLabel "<<labelPtrAux<<": "<<*labelPtrAux<<"\n";
 
                 // Find index from resources
@@ -317,6 +322,11 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                         {
                             if(bucket.vetPtrLabel[k] == labelPtrBest)
                                 labelPtrBest = nullptr;
+
+                            if(labelHaveRoute(vetRoteG, bucket.vetPtrLabel[k]))
+                            {
+                                std::cout<<"\t"<<*labelPtrAux<<" DOMINA: "<<*bucket.vetPtrLabel[k]<<"\n";
+                            }
 
                             dom = 1;
 
@@ -361,7 +371,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                     }
                 }
 
-                if(!labelPtrAux)
+                if(labelPtrAux == nullptr)
                     continue;
 
                 if((bucket.sizeVetPtrLabel+1) > NumMaxLabePerBucket && t != dest)
@@ -391,7 +401,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                     if(!dominaceCheck)
                         std::cout<<*labelPtrAux<<"\n";
 
-                    removeCycles(*labelPtrAux, numCust);
+                    removeCycles2(*labelPtrAux, numCust);
                     updateLabelCost(*labelPtrAux, vetMatResCost, labelStart);
 
 
@@ -495,16 +505,16 @@ bool LabelingAlgorithmNS::extendLabel(const Label &label,
 
 
         // Check the bound
-        if(newLabel.vetResources[i] > vetVetBound[i][custJ].upperBound &&
-           !doubleEqual(newLabel.vetResources[i], vetVetBound[i][custJ].upperBound, 1E-5))
+        if(newLabel.vetResources[i] > vetVetBound[i][custJ].upperBound)
+        //&&!doubleEqual(newLabel.vetResources[i], vetVetBound[i][custJ].upperBound, 1E-5))
         {
             if(Print)
                 std::cout<<"\tUpperBound\n";
             return false;
         }
 
-        else if(newLabel.vetResources[i] < vetVetBound[i][custJ].lowerBound &&
-                !doubleEqual(newLabel.vetResources[i], vetVetBound[i][custJ].lowerBound, 1E-5))
+        else if(newLabel.vetResources[i] < vetVetBound[i][custJ].lowerBound)
+        //&&!doubleEqual(newLabel.vetResources[i], vetVetBound[i][custJ].lowerBound, 1E-5))
         {
             if(Print)
                 std::cout<<"\tLowerBound\n";
@@ -804,6 +814,7 @@ void LabelingAlgorithmNS::removeCycles(Label &label, const int numCust)
     static Eigen::VectorXi vetCust(numCust);
     vetCust.setConstant(-1);
 
+
     int i=0;
 
     if(Print)
@@ -838,6 +849,29 @@ void LabelingAlgorithmNS::removeCycles(Label &label, const int numCust)
 
 void LabelingAlgorithmNS::removeCycles2(Label &label, const int numCust)
 {
+
+    static Eigen::VectorXi vetCust(numCust);
+    vetCust.setConstant(-1);
+
+    boost::array<int, NumMaxRoute> vetRoute;
+    int num = 0;
+    vetRoute.fill(0);
+
+    for(int i=0; i < label.tamRoute; ++i)
+    {
+        if(vetCust[label.vetRoute[i]] == -1)
+        {
+            vetCust[label.vetRoute[i]] = i;
+            vetRoute[num] = label.vetRoute[i];
+            num += 1;
+        }
+    }
+
+    for(int i=0; i < num; ++i)
+        label.vetRoute[i] = vetRoute[i];
+
+    label.tamRoute = num;
+
 
 }
 
@@ -1046,7 +1080,7 @@ bool LabelingAlgorithmNS::checkDistance(const Eigen::Matrix<FloatType, -1, -1, E
     {
         for(int j=0; j < matDist.cols(); ++j)
         {
-            if(matDist(i, j) < -DW_DecompNS::TolObjSubProb)
+            if(matDist(i, j) < 0.0)
                 return false;
         }
     }
@@ -1080,4 +1114,19 @@ bool LabelingAlgorithmNS::containRoute(const Eigen::Array<Label*, 1, DW_DecompNS
     }
 
     return false;
+}
+
+bool LabelingAlgorithmNS::labelHaveRoute(std::vector<int> &vetRoute, Label *label)
+{
+    if(vetRoute.empty())
+        return false;
+    int min = std::min((int)vetRoute.size(), label->tamRoute);
+
+    for(int i=0; i < min; ++i)
+    {
+        if(vetRoute[i] != label->vetRoute[i] && vetRoute[i] != 0)
+            return false;
+    }
+
+    return true;
 }

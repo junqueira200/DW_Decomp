@@ -29,6 +29,7 @@ typedef double FloatType;
 
 namespace LabelingAlgorithmNS
 {
+    inline std::vector<int> vetRoteG;
 
     constexpr int   NumMaxResources   = 2;
     constexpr int   NumMaxRoute       = 300;
@@ -242,12 +243,17 @@ namespace LabelingAlgorithmNS
         //#pragma GCC unroll NumMaxResources
         for(int i=0; i < NumMaxResources; ++i)
         {
-            if(l0.vetResources[i] > l1.vetResources[i])// || !doubleEqual(l0.vetResources[i], l1.vetResources[i], 1E-5))
+            // l0.vetResources[i] > l1.vetResources[i]
+            if(doubleLess(l1.vetResources[i], l0.vetResources[i], std::numeric_limits<FloatType>::epsilon()))
                 return false;
 
             if((i+1) == numResources)
                 break;
         }
+
+        // TODO errado?
+        if(l0.bitSetNg == 0)
+            return false;
 
         // Check if l0 is a subset of l1
         return (l0.bitSetNg & l1.bitSetNg) == l0.bitSetNg;
@@ -273,6 +279,7 @@ namespace LabelingAlgorithmNS
     bool checkDistance(const Eigen::Matrix<FloatType, -1, -1, Eigen::RowMajor> &matDist);
     bool containRoute(const Eigen::Array<Label*, 1, DW_DecompNS::NumMaxSolSubProb> &vetLabel, int numSol, Label* label);
 
+    bool labelHaveRoute(std::vector<int> &vetRoute, Label *label);
 
 
 }

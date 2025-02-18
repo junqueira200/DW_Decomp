@@ -24,14 +24,15 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     instVrpTw = &instVrpTw_;
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 25; // 50
+    vetStepSize[0].stepSize = 50; // 50
     vetStepSize[0].start    = (FloatType)-startDist;
     vetStepSize[0].end      = (FloatType)startDist;
 
     //vetStepSize[1].stepSize = 5;
-    vetStepSize[1].stepSize = 5;  //5
+    vetStepSize[1].stepSize = 10;  //5
     vetStepSize[1].start    = 0;
     vetStepSize[1].end      = (FloatType)instVrpTw->capVeic;
+
 
     labelingData = LabelingAlgorithmNS::LabelingData(vetStepSize, 2, instVrpTw->numClientes+1);
 
@@ -116,7 +117,7 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, v
 }
 
 int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::VectorXd &vetC,
-                                                               const Eigen::RowVectorXd &vetRowPi,
+                                                               Eigen::RowVectorXd &vetRowPi,
                                                                GRBModel &mestre,
                                                                int itCG,
                                                                bool &custoRedNeg,
@@ -133,6 +134,16 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                                const VectorI &vetVar1,
                                                                DW_DecompNS::PhaseStatus phaseStatus)
 {
+    /*
+    constPiValue = 151;
+    std::vector<double> vet{0, 27, 40,   24,   37,   22,   41,   23,   38,   29,   18,   24,   19   ,37   ,25   ,36   ,32   ,22   ,25};
+
+    for(int i=0; i < (int)vet.size(); ++i)
+        vetRowPi[i] = vet[i];
+
+
+    phaseStatus = DW_DecompNS::PhaseStatus::PhaseStatusColGen;
+    */
 
 //std::cout<<"constPiValue: "<<constPiValue<<"\n";
     static Eigen::VectorX<FloatType> vetRedCostFT(DW_DecompNS::NumMaxSolSubProb);
@@ -147,19 +158,19 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
             if(i == j)
                 continue;
 
-            if(phaseStatus != DW_DecompNS::PhaseStatus::PhaseStatusTwoPhase)
+            if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusTwoPhase)
                 vetMatResCost[0](i, j) =  - (FloatType)vetRowPi[j+1];
-            else if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusTwoPhase)
+            else
                 vetMatResCost[0](i, j) = (FloatType)instVrpTw->matDist(i, j) - (FloatType)vetRowPi[j+1];
         }
 
         if(i != 0)
         {
             //vetMatResCost[0](i, 0) = instVrpTw->matDist(i, 0);
-            if(phaseStatus != DW_DecompNS::PhaseStatus::PhaseStatusTwoPhase)
-                vetMatResCost[0](i, instVrpTw->numClientes) = (FloatType)instVrpTw->matDist(i, 0) - (FloatType)vetRowPi[1];
-            else if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusTwoPhase)
+            if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusTwoPhase)
                 vetMatResCost[0](i, instVrpTw->numClientes) = - (FloatType)vetRowPi[1];
+            else
+                vetMatResCost[0](i, instVrpTw->numClientes) = (FloatType)instVrpTw->matDist(i, 0) - (FloatType)vetRowPi[1];
         }
     }
 
@@ -178,6 +189,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
     std::set<int> setI;
     int t = 0;
 
+    /*
     for(int varId:vetVar1)
     {
         int i = varId/instVrpTw->numClientes;
@@ -224,6 +236,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
 
         t += 1;
     }
+    */
 
     //std::cout<<"Custo Reduzido: \n"<<vetMatResCost[0]<<"\n\n";
     //std::cout<<"Peso: "<<vetMatResCost[1]<<"\n\n";
@@ -232,6 +245,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
     FloatType maxDist;
 
     ngSet.active = true;
+    numSol = 0;
 
     for(int i=1; i <= 16; i += 5)
     {
@@ -258,9 +272,11 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
 
     }
 
+
     if(!custoRedNeg)
     {
         matColX.setZero();
+
         custoRedNeg = forwardLabelingAlgorithm(2,
                                                instVrpTw->numClientes+1,
                                                vetMatResCost,
@@ -303,6 +319,54 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
     vetCooefRestConv[0] = 1;
 
 
+    if(numSol == 0)
+    {
+        std::cout<<"CALL EXACT PRICING!\n\n";
+
+        Eigen::Matrix<double, -1, 1, Eigen::ColMajor> matCol(instVrpTw->numClientes*instVrpTw->numClientes, 1);
+
+        if(exactPricing(vetMatResCost, constPiValue, matCol, *instVrpTw, vetRedCostFT[0]))
+        {
+
+            custoRedNeg = forwardLabelingAlgorithm(2,
+                                                   instVrpTw->numClientes+1,
+                                                   vetMatResCost,
+                                                   vetVetResBound,
+                                                   instVrpTw->numClientes,
+                                                   ngSet,
+                                                   labelingData,
+                                                   matColX,
+                                                   numSol,
+                                                   (FloatType)constPiValue,
+                                                   -1,
+                                                   true,
+                                                   maxDist,
+                                                   vetRedCostFT);
+
+            if(custoRedNeg)
+            {
+                std::cout<<"WTF?\n";
+                PRINT_DEBUG("", "");
+                throw "ERROR";
+            }
+            else
+            {   std::cout<<"\nERROR, labeling falhou na ultima execucao!";
+                PRINT_DEBUG("", "");
+                throw "ERROR";
+            }
+
+
+            for(int i=0; i < instVrpTw->numClientes*instVrpTw->numClientes; ++i)
+                matColX(i, 0) = matCol[i];
+
+            custoRedNeg = true;
+            numSol = 1;
+
+
+
+        }
+    }
+
     // Check if solution have a negative reduced cost
     FloatType redCostTemp = 0.0;
     for(int j=0; j < numSol; ++j)
@@ -327,12 +391,162 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
             std::cout<<"\nERROR, custo reduzido calculado: ("<<redCostTemp<<") \n";
             std::cout<<"redCost: "<<vetRedCostFT[j]<<"\n\n";
             PRINT_DEBUG("", "");
+            std::cout<<"phaseStatus: "<<(int)phaseStatus<<"\n\n";
             throw "ERROR";
         }
 
     }
 
-
-
     return 0;
+}
+
+
+bool VrpTW_DecompLabelingNS::exactPricing(const LabelingAlgorithmNS::VetMatResCost&          vetMatResCost,
+                                          const FloatType                                    startVal,
+                                          Eigen::Matrix<double, -1, 1, Eigen::ColMajor>&     vetColSolX,
+                                          InstanciaNS::InstVRP_TW&                           instVrpTw,
+                                          double&                                            cost)
+{
+
+    static GRBEnv env;
+    static GRBModel* ptrModel = nullptr;
+    static GRBVar* vetVarX    = nullptr;
+    static GRBVar* vetVarU    = nullptr;
+
+    if(!ptrModel)
+    {
+
+        ptrModel = new GRBModel(env);
+        vetVarX  = ptrModel->addVars(instVrpTw.numClientes*instVrpTw.numClientes, GRB_BINARY);
+        vetVarU  = ptrModel->addVars(instVrpTw.numClientes, GRB_CONTINUOUS);
+
+
+
+        GRBLinExpr linExpr;
+        for(int j=1; j < instVrpTw.numClientes; ++j)
+        {
+
+            linExpr += vetVarX[getIndex(0, j, instVrpTw.numClientes)];
+        }
+
+        ptrModel->addConstr(linExpr, '=', 1, "Constr_0");
+
+        // \sum_{j \in V, j \not = 0} x_{j,0} = numVeic
+        linExpr = 0;
+        for(int j=1; j < instVrpTw.numClientes; ++j)
+        {
+
+            linExpr += vetVarX[getIndex(j, 0, instVrpTw.numClientes)];
+        }
+
+        ptrModel->addConstr(linExpr, '=', 1, "Constr_1");
+
+
+
+        for(int j=1; j < instVrpTw.numClientes; ++j)
+        {
+
+            GRBLinExpr grbLinExpr = 0;
+
+            for(int i = 0; i < instVrpTw.numClientes; ++i)
+            {
+                if(i != j)
+                    grbLinExpr += vetVarX[getIndex(i, j, instVrpTw.numClientes)];
+            }
+
+            GRBLinExpr grbLinExpr1 = 0;
+
+            for(int i = 0; i < instVrpTw.numClientes; ++i)
+            {
+                if(i != j)
+                    grbLinExpr += -vetVarX[getIndex(j, i, instVrpTw.numClientes)];
+            }
+
+
+            //if(modelo3Index)
+            ptrModel->addConstr(grbLinExpr + grbLinExpr1 == 0, "Restricao_2_j_" + std::to_string(j));
+        }
+
+        const int capacidade = instVrpTw.capVeic;
+        for(int i=1; i < instVrpTw.numClientes; ++i)
+        {
+            for(int j=1; j < instVrpTw.numClientes; ++j)
+            {
+                if(i != j)
+                {
+                    GRBLinExpr linExpr = 0;
+
+                    // uj - ui + Q(1-xijk)>=  qj
+                    linExpr = -vetVarU[i] + vetVarU[j] + capacidade * (1-vetVarX[getIndex(i, j, instVrpTw.numClientes)]);
+                    double rhs = instVrpTw.vetClieDem[j];
+                    ptrModel->addConstr(linExpr >= rhs, "Restricao_3_ij_" + std::to_string(i)+"_"+std::to_string(j));
+                }
+            }
+        }
+
+        ptrModel->addConstr(vetVarU[0] <= 0, "Restricao_6_i_" + std::to_string(0));
+        ptrModel->addConstr(vetVarU[0] >= 0, "Restricao_7_i_" + std::to_string(0));
+
+    }
+
+    GRBLinExpr funcObj = startVal;
+
+    for(int i=0; i < instVrpTw.numClientes; ++i)
+    {
+        for(int j=0; j < instVrpTw.numClientes; ++j)
+        {
+            if(i == j)
+                continue;
+
+            FloatType coeef = vetMatResCost[0](i, j);
+            funcObj += coeef*vetVarX[getIndex(i, j, instVrpTw.numClientes)];
+        }
+    }
+
+    ptrModel->setObjective(funcObj, GRB_MINIMIZE);
+    ptrModel->set(GRB_DoubleParam_BestObjStop, -0.00000009);
+    ptrModel->set(GRB_IntParam_MIPFocus, 1);
+    ptrModel->set(GRB_IntParam_Threads, 4);
+    ptrModel->set(GRB_StringParam_NodefileDir, "nodeDir");
+
+    ptrModel->update();
+    ptrModel->optimize();
+
+
+    vetColSolX.setZero();
+
+
+    int i = 0;
+    const int num = instVrpTw.numClientes*instVrpTw.numClientes;
+
+    std::cout<<"0 ";
+    vetRoteG.push_back(0);
+
+    do
+    {
+        int j;
+        for(j=0; j < num; ++j)
+        {
+            if(vetVarX[getIndex(i, j, instVrpTw.numClientes)].get(GRB_DoubleAttr_X) >= 0.99)
+            {
+                vetColSolX[getIndex(i, j, instVrpTw.numClientes)] = 1.0;
+                std::cout<<j<<" ";
+                vetRoteG.push_back(j);
+                break;
+            }
+        }
+
+        i = j;
+    }
+    while(i != 0);
+
+    std::cout<<"\n";
+
+    cost = ptrModel->get(GRB_DoubleAttr_ObjVal);
+
+    if(cost < -DW_DecompNS::TolObjSubProb)
+        return true;
+    else
+        return false;
+
 }

@@ -100,4 +100,23 @@ bool doubleEqual(float a, float b, double ep=std::numeric_limits<double>::epsilo
     return (diff / std::max(abs_a, abs_b)) <= ep;
 }
 
+
+inline __attribute__((always_inline))
+bool doubleEqual(long double a, long double b, long double ep=std::numeric_limits<long double>::epsilon())
+{
+    //return std::fabs(a-b) < ep;
+    constexpr float normal_min = std::numeric_limits<float>::min();
+
+    if (!std::isfinite(a) || !std::isfinite(b)) // a = ±∞, NaN or b = ±∞, NaN
+        return false;
+    double diff = std::abs(a - b);
+    // if "a" and "b" are near to zero, the relative error is less effective
+    if (diff <= normal_min) // or also: user_epsilon * normal_min
+        return true;
+
+    float abs_a = std::abs(a);
+    float abs_b = std::abs(b);
+    return (diff / std::max(abs_a, abs_b)) <= ep;
+}
+
 #endif //DW_DECOMP_AUX_H

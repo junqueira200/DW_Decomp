@@ -653,7 +653,11 @@ std::cout<<"ini DW_DecompNode\n";
 
         if(sense != '<')
         {
-            vetVarArtifRmlp[i].set(GRB_DoubleAttr_Obj, info.costA_Var);
+            if(this->phaseStatus == PhaseStatus::PhaseStatusBigM)
+                vetVarArtifRmlp[i].set(GRB_DoubleAttr_Obj, info.costA_Var);
+            else
+                vetVarArtifRmlp[i].set(GRB_DoubleAttr_Obj, 1);
+
             vetLinExprRmlp[i] = vetVarArtifRmlp[i];
         }
         //if(i < numConstrsMestre)
@@ -692,6 +696,7 @@ std::cout<<"ini DW_DecompNode\n";
     uRmlp->set(GRB_IntParam_Method, GRB_METHOD_PRIMAL);
     //uRmlp->set(GRB_IntParam_Presolve, GRB_PRESOLVE_OFF);
     uRmlp->set(GRB_IntParam_OutputFlag, 0);
+    uRmlp->set(GRB_IntParam_Quad, 1);
 
 
     delete []vetRmlpConstrsSense;
@@ -726,9 +731,18 @@ std::cout<<"*******************Column Generation*******************\n\n";
     uRmlp->update();
     vetRmlpConstr = uRmlp->getConstrs();
 
-    PhaseStatus phaseStatus = PhaseStatus::PhaseStatusBigM;
+    //PhaseStatus phaseStatus = PhaseStatus::PhaseStatusBigM;
     VectorD vetMult(info.numConstrsOrignalProblem+info.numConstrsConv, 1.0);
     VectorI vetLastIt(info.numConstrsOrignalProblem+info.numConstrsConv, -1);    // The last iteration the artificial variable is different from 0
+
+
+    if(uRmlp->get(GRB_IntAttr_NumVars) != (int)vetVarLambdaCol.size())
+    {
+        std::cout<<"ERROR\n";
+        std::cout<<"LP: "<<uRmlp->get(GRB_IntAttr_NumVars)<<"; vet: "<<vetVarLambdaCol.size()<<"\n";
+        PRINT_DEBUG("", "");
+        throw "ERROR";
+    }
 
 
     while(subProbCustR_neg)
@@ -736,6 +750,16 @@ std::cout<<"*******************Column Generation*******************\n\n";
         if(!missPricing)
             uRmlp->update();
         subProbCustR_neg = false;
+
+        if(uRmlp->get(GRB_IntAttr_NumVars) != (int)vetVarLambdaCol.size())
+        {
+            std::cout<<"ERROR\n";
+            std::cout<<"LP: "<<uRmlp->get(GRB_IntAttr_NumVars)<<"; vet: "<<vetVarLambdaCol.size()<<"\n";
+            PRINT_DEBUG("", "");
+            throw "ERROR";
+        }
+
+        //std::cout<<"LP: "<<uRmlp->get(GRB_IntAttr_NumVars)<<"; vet: "<<vetVarLambdaCol.size()<<"\n";
 
         if(!missPricing)
             uRmlp->optimize();
@@ -762,7 +786,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
         GRBVar *vetVar = uRmlp->getVars();
 
-        if(phaseStatus == PhaseStatus::PhaseStatusBigM)
+        if(phaseStatus == PhaseStatus::PhaseStatusBigM && itCG > 0)
         {
             bool allZero = true;
             for(int i = 0; i < info.numConstrsOrignalProblem + info.numConstrsConv; ++i)
@@ -770,15 +794,17 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0))
                 {
                     allZero = false;
-                    vetMult[i] += 1;
+                    vetMult[i] += 1.0;
 
                     if(vetMult[i] >= BigM_maxMult)
                     {
                         phaseStatus = PhaseStatus::PhaseStatusTwoPhase;
+                        std::cout<<"Start PhaseStatusTwoPhase\n";
                         break;
                     }
 
-                    vetVar[i].set(GRB_DoubleAttr_ObjVal, vetMult[i]*info.costA_Var);
+                    //std::cout<<"set "<<i<<" variable to: "<<vetMult[i]*info.costA_Var<<"\n";
+                    vetVar[i].set(GRB_DoubleAttr_Obj, vetMult[i]*info.costA_Var);
 
                 }
                 else
@@ -786,6 +812,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
                     vetVar[i].set(GRB_DoubleAttr_LB, 0.0);
                     vetVar[i].set(GRB_DoubleAttr_UB, 0.0);
                 }
+
             }
         }
 
@@ -798,6 +825,11 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0))
                 {
                     linExpr += vetVar[i];
+                }
+                else
+                {
+                    vetVar[i].set(GRB_DoubleAttr_LB, 0.0);
+                    vetVar[i].set(GRB_DoubleAttr_UB, 0.0);
                 }
             }
 
@@ -817,7 +849,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         if(PrintDebug)
             std::cout<<"~UpdatePi\n";
 
-        if(Stabilization)// && numLimit < 5)
+        if(Stabilization && phaseStatus != PhaseStatus::PhaseStatusTwoPhase)// && numLimit < 5)
         {
             auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpSmoothPi + StabilizationAlpha * (auxVect.vetRowRmlpPi-auxVect.vetRowRmlpSmoothPi);
             //std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
@@ -912,12 +944,12 @@ std::cout<<"*******************Column Generation*******************\n\n";
                     numSolRep += 1;
                     vetVarLambdaCol.pop_back();
 
-/*                    if(!Stabilization)
+                    if(!Stabilization)
                     {
                         uRmlp->write("missPricing.lp");
                         PRINT_DEBUG("", "");
                         throw "MISS_PRICING";
-                    }*/
+                    }
 
                     continue;
                 }
@@ -926,10 +958,12 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
                 if(PrintDebug)
                     std::cout<<"cgCooefObj\n";
-                double cgCooefObj = vetSol.dot(auxVect.vetRowC);
+                double cgCooefObj = 0.0;//vetSol.dot(auxVect.vetRowC);
 
                 if(phaseStatus == PhaseStatus::PhaseStatusTwoPhase)
                     cgCooefObj = 0.0;
+                else
+                    cgCooefObj = vetSol.dot(auxVect.vetRowC);
 
                 if(PrintDebug)
                     std::cout<<"~cgCooefObj\n";
@@ -971,31 +1005,9 @@ std::cout<<"*******************Column Generation*******************\n\n";
             break;
         }
 
+        //uRmlp->update();
 
         bool allZero = true;
-        vetVar = uRmlp->getVars();
-
-        for(int i = 0; i < info.numConstrsOrignalProblem + info.numConstrsConv; ++i)
-        {
-            if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0))
-            {
-                allZero = false;
-                break;
-            }
-        }
-
-        delete []vetVar;
-
-        if(phaseStatus == PhaseStatus::PhaseStatusTwoPhase && allZero)
-        {
-
-            phaseStatus = PhaseStatus::PhaseStatusColGen;
-        }
-
-
-        if(!subProbCustR_neg && phaseStatus == PhaseStatus::PhaseStatusTwoPhase && !allZero)
-            return StatusSubProb_Inviavel;
-
 
 
         //if(!missPricing)
@@ -1003,6 +1015,92 @@ std::cout<<"*******************Column Generation*******************\n\n";
             objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
             privObjRmlp = objRmlp;
         }
+
+        if(phaseStatus != PhaseStatus::PhaseStatusColGen)
+        {
+
+            vetVar = uRmlp->getVars();
+
+            for(int i = 0; i < info.numConstrsOrignalProblem + info.numConstrsConv; ++i)
+            {
+                if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0))
+                {
+                    allZero = false;
+                    break;
+                }
+            }
+
+
+            if(phaseStatus == PhaseStatus::PhaseStatusTwoPhase && allZero)
+            {
+                delete []vetVar;
+                uRmlp->update();
+                vetVar = uRmlp->getVars();
+
+                // Recreate the obj function with the distance of the columns
+                GRBLinExpr newObj;
+                int ini = (int) info.numConstrsOrignalProblem + info.numConstrsConv;
+
+                if(uRmlp->get(GRB_IntAttr_NumVars) != (int) vetVarLambdaCol.size())
+                {
+                    std::cout << "ERROR\n";
+                    std::cout << "LP: " << uRmlp->get(GRB_IntAttr_NumVars) << "; vet: " << vetVarLambdaCol.size()
+                              << "\n";
+                    PRINT_DEBUG("", "");
+                    throw "ERROR";
+                }
+
+                for(int i = ini; i < (int) vetVarLambdaCol.size(); ++i)
+                {
+                    Eigen::VectorXd &vetSol = *vetVarLambdaCol[i];
+                    double cgCooefObj = vetSol.dot(auxVect.vetRowC);
+                    newObj += cgCooefObj * vetVar[i];
+
+                }
+
+                // "delete" all artificial variables
+                for(int i = 0; i < ini; ++i)
+                {
+                    vetVar[i].set(GRB_DoubleAttr_LB, 0.0);
+                    vetVar[i].set(GRB_DoubleAttr_UB, 0.0);
+                }
+
+                uRmlp->setObjective(newObj, GRB_MINIMIZE);
+                phaseStatus = PhaseStatus::PhaseStatusColGen;
+                subProbCustR_neg = true;
+
+                std::cout<<"Change to second phase!\n";
+            }
+
+            if(phaseStatus == PhaseStatus::PhaseStatusBigM && allZero)
+            {
+                int ini = (int) info.numConstrsOrignalProblem + info.numConstrsConv;
+
+                // "delete" all artificial variables
+                for(int i = 0; i < ini; ++i)
+                {
+                    vetVar[i].set(GRB_DoubleAttr_LB, 0.0);
+                    vetVar[i].set(GRB_DoubleAttr_UB, 0.0);
+                }
+
+                phaseStatus = PhaseStatus::PhaseStatusColGen;
+            }
+
+            delete[]vetVar;
+
+            if(!subProbCustR_neg && phaseStatus == PhaseStatus::PhaseStatusTwoPhase && !allZero)
+                return StatusSubProb_Inviavel;
+
+        }
+
+
+        //if(!missPricing)
+        /*
+        {
+            objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
+            privObjRmlp = objRmlp;
+        }
+        */
 
 
         if(missPricing && !Stabilization)
@@ -1015,6 +1113,8 @@ std::cout<<"*******************Column Generation*******************\n\n";
             std::cout<<"vet0: "<<vetVar0<<"\n";
             std::cout<<"vet1: "<<vetVar1<<"\n";
 
+            std::cout<<"phaseStatus: "<<(int)phaseStatus<<"\n";
+
             throw "MISS_PRICING";
         }
 
@@ -1024,10 +1124,10 @@ std::cout<<"*******************Column Generation*******************\n\n";
         //gap = (std::abs(redCost)/objRmlp)*100.0;
         //std::cout<<"GAP("<<gap<<"%)\n";
 
-        if((itCG%10) == 0)
+        //if((itCG%10) == 0)
         {
             //std::cout<<"\t"<<itCG<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"%\"\n";
-            std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG, uRmlp->get(GRB_DoubleAttr_ObjVal), gap);
+            std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG, objRmlp, gap);
         }
 
         itCG += 1;
@@ -1070,9 +1170,10 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
     //uRmlp->write("lpFinal.lp");
 
-std::cout<<"*******************~Column Generation*******************\n\n";
 
-    //std::cout<<"PI: "<<auxVect.vetRowRmlpPi<<"\n\n";
+    std::cout<<"PI: "<<auxVect.vetRowRmlpPi<<"\n\n";
+
+    std::cout<<"*******************~Column Generation*******************\n\n";
 
     return status;
 
@@ -1095,8 +1196,8 @@ void DW_DecompNS::DW_DecompNode::updateRmlpPi(Eigen::RowVectorXd &vetRowRmlpPi)
             vetRowRmlpPi.coeffRef(0, i) = val;
     }
 
-    if(PrintDebug)
-        std::cout<<"PI: "<<vetRowRmlpPi<<"\n\n";
+    //if(PrintDebug)
+    //    std::cout<<"PI: "<<vetRowRmlpPi<<"\n\n";
 
 }
 

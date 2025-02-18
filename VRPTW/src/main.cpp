@@ -44,7 +44,7 @@ int main(int argv, char **argc)
         GRBModel model(grbEnv);
         criaMestre(instVrpTw, model);
 
-        double distVarA = somaDist(instVrpTw);
+        double distVarA = std::max(somaDist(instVrpTw), 1E6);
         //VrpSubProb vrpSubProb(grbEnv, instVrpTw);
 
         DW_DecompNS::AuxData auxVectors;
@@ -70,6 +70,7 @@ int main(int argv, char **argc)
         std::cout<<"start r0: "<<vrpLabelingSubProb.labelingData.vetStepSize[0].start<<"\n";
         std::cout<<"vetNumSteps r1: "<<vrpLabelingSubProb.labelingData.vetNumSteps[1]<<"\n";
         std::cout<<"numClien: "<<instVrpTw.numClientes<<"\n";
+        std::cout<<"Cost Var A.: "<<distVarA<<"\n\n";
 
         vetSol = branchAndPrice(decompNode,
                                 auxVectors,
@@ -152,11 +153,11 @@ int main(int argv, char **argc)
         std::printf("%s", str);
         std::cout<<"\n\n";
     }
-    catch(GRBException &e)
+/*    catch(GRBException &e)
     {
         std::cout<<"GRBException:\n"<<e.getMessage()<<"\n";
         std::cout<<"Code: "<<e.getErrorCode()<<"\n\n";
-    }
+    }*/
 
     return 0;
 }

@@ -124,7 +124,7 @@ void BranchAndPriceNS::addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &
         //std::cout<<"X_"<<varId<<" <= 0\n";
 
         VectorI vetRmColumns;
-        vetRmColumns.reserve(50);
+        vetRmColumns.reserve(10);
 
         // Removes all columns with X_<varId> variable
         for(int i=0; i < (int)decompNode.vetVarLambdaCol.size(); ++i)
@@ -202,18 +202,17 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
 
    if(status != StatusSubProb_Otimo)
     {
-        delete ptrPrimalH;
         std::cout<<"Root node can't be soved\n";
         delete rootNode;
         vetX_best.setZero();
         return vetX_best;
     }
 
-/*
+
     delete rootNode;
     return vetX_best;
 
-*/
+
 
     searchD->insert(rootNode);
     rootNode = nullptr;
@@ -235,7 +234,7 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
         //DW_DecompNode* ptrDecomNode = listDecomNode.back();
         DW_DecompNode* ptrDecomNode = searchD->pop();
 
-        if(ptrPrimalH)
+        if(ptrPrimalH && !isInteger(ptrDecomNode->vetSolX))
         {
             std::cout << "Diving Heuristic\n";
             DW_DecompNode *primalNode = (*ptrPrimalH)(ptrDecomNode, auxVectors, upperBound);
@@ -296,9 +295,13 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
         cut.vetX.resize(ptrDecomNode->vetSolX.size());
         cut.vetX.coeffRef(varId) = 1;
 
+
+        const double objNode = ptrDecomNode->funcObj;
+
         DW_DecompNode* ptrNodeGreater = new DW_DecompNode(*ptrDecomNode);
         DW_DecompNode* ptrNodeSmaller = ptrDecomNode;
         ptrDecomNode = nullptr;
+
 
         cut.sense = '>';
         cut.rhs   = std::ceil(varValue);
@@ -314,15 +317,34 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
 
         int statusSubProb = ptrNodeSmaller->columnGeneration(auxVectors);
         if(statusSubProb == StatusSubProb_Otimo)
+        {
+            if(doubleLess(ptrNodeSmaller->funcObj, objNode, 1E-5))
+            {
+                std::cout<<"ERROR, child node have a smaller objective function!\n";
+                PRINT_DEBUG("", "");
+                throw "ERROR";
+            }
+
             searchD->insert(ptrNodeSmaller);
+        }
         else
             delete ptrNodeSmaller;
 
         statusSubProb = ptrNodeGreater->columnGeneration(auxVectors);
         if(statusSubProb == StatusSubProb_Otimo)
+        {
+            if(doubleLess(ptrNodeGreater->funcObj, objNode, 1E-5))
+            {
+                std::cout<<"ERROR, child node have a smaller objective function!\n";
+                PRINT_DEBUG("", "");
+                throw "ERROR";
+            }
+
             searchD->insert(ptrNodeGreater);
+        }
         else
             delete ptrNodeGreater;
+
 
         delete ptrDecomNode;
 

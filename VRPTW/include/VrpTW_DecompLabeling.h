@@ -45,7 +45,7 @@ namespace VrpTW_DecompLabelingNS
         void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
 
         int resolveSubProb(const Eigen::VectorXd &vetC,
-                           const Eigen::RowVectorXd &vetRowPi,
+                           Eigen::RowVectorXd &vetRowPi,
                            GRBModel &mestre,
                            int itCG,
                            bool &custoRedNeg,
@@ -63,6 +63,14 @@ namespace VrpTW_DecompLabelingNS
                            DW_DecompNS::PhaseStatus phaseStatus) override;
 
     }; // FIM MySubProb
+
+    bool exactPricing(const LabelingAlgorithmNS::VetMatResCost&          vetMatResCost,
+                      const FloatType                                    startVal,
+                      Eigen::Matrix<double, -1, 1, Eigen::ColMajor>&     vetColSolX,
+                      InstanciaNS::InstVRP_TW&                           instVrpTw,
+                      double&                                            cost);
+
+
 
 }
 

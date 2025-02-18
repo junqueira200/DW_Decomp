@@ -25,14 +25,14 @@ using namespace SparseNS;
 namespace DW_DecompNS
 {
 
-    constexpr double TolObjSubProb       = 1E-5;
+    constexpr double TolObjSubProb       = 1E-7;
     constexpr int    NumMaxSolSubProb    = 25;
-    constexpr double StabilizationAlpha  = 0.7;
+    constexpr double StabilizationAlpha  = 0.4;
     constexpr bool   Stabilization       = false;
     constexpr double gapLimit            = 1E-2;
     constexpr int    NumCandidatesBranch = 3;
     constexpr bool   PrintDebug          = false;
-    constexpr int    BigM_maxMult        = 10;
+    constexpr int    BigM_maxMult        = 50;
 
 
     Eigen::MatrixXd getMatA_Model(GRBModel &mestre);
@@ -99,7 +99,7 @@ namespace DW_DecompNS
 
         virtual int
         resolveSubProb(const Eigen::VectorXd &vetC,
-                       const Eigen::RowVectorXd &vetRowPi,
+                       Eigen::RowVectorXd &vetRowPi,
                        GRBModel &rmlp,
                        int itCG,
                        bool &custoRedNeg,
@@ -251,8 +251,10 @@ namespace DW_DecompNS
         VectorI vetVar0;   // set of variables with have x_i <= 0
         VectorI vetVar1;   // set of variables with have x_i >= 1
 
+        VectorD vetObjCof;
 
 
+        PhaseStatus phaseStatus = PhaseStatus::PhaseStatusTwoPhase;
 
         DW_DecompNode(GRBEnv &env_,
                       GRBModel &master_,
