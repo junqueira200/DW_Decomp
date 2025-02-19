@@ -27,12 +27,12 @@ namespace DW_DecompNS
 
     constexpr double TolObjSubProb       = 1E-7;
     constexpr int    NumMaxSolSubProb    = 25;
-    constexpr double StabilizationAlpha  = 0.4;
+    constexpr double StabilizationAlpha  = 0.1;
     constexpr bool   Stabilization       = false;
     constexpr double gapLimit            = 1E-2;
     constexpr int    NumCandidatesBranch = 3;
     constexpr bool   PrintDebug          = false;
-    constexpr int    BigM_maxMult        = 50;
+    constexpr int    BigM_maxMult        = 400;
 
 
     Eigen::MatrixXd getMatA_Model(GRBModel &mestre);

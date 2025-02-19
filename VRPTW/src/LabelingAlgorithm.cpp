@@ -13,9 +13,11 @@
 #include <list>
 #include <boost/container/set.hpp>
 
+using namespace LabelingAlgorithmNS;
+
 LabelingAlgorithmNS::NgSet::NgSet()
 {
-    matNgSet = Eigen::MatrixXi(NumMaxCust, NgSetSize);
+    matNgSet = EigenMatrixRowI(NumMaxCust, NgSetSize);//Eigen::MatrixXi(NumMaxCust, NgSetSize);
     matNgSet.setConstant(-1);
 }
 
@@ -158,6 +160,12 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
         throw "ERRO";
     }
 
+    if(!labelPtr->it)
+    {
+        LabelSetIt* labelSetIt = new LabelSetIt;
+        labelPtr->it = (void*)labelSetIt;
+    }
+
     //labelPtr->vetRoute.resize(10);
     labelPtr->tamRoute = 1;
 
@@ -184,7 +192,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
     lData.vetMatBucket[0].mat(i, j).sizeVetPtrLabel = 1;
 
     //listLabel.push_back(labelPtr);
-    setLabel.insert(labelPtr);
+
+    (*(LabelSetIt*)labelPtr->it) = setLabel.insert(labelPtr);
     labelPtr = nullptr;
 
     int numIt = 0;
@@ -194,12 +203,19 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
     int maxSizeVetPtrLabel = 0;
     int localNumMaxLabel = NumMaxLabel;
 
+    Label* ptrLabelTarget = nullptr;
+
     //while(!listLabel.empty() && !labelPtrBest)
     while(!setLabel.empty() && numSol < DW_DecompNS::NumMaxSolSubProb)
     {
 
         // TODO remover
         //lData.checkMat();
+
+        if(ptrLabelTarget)
+        {
+            std::cout<<"ptrLabelTarget("<<ptrLabelTarget->active<<"): "<<*ptrLabelTarget<<"\n\n";
+        }
 
         if(int(setLabel.size()) > localNumMaxLabel && DominaIterBuckets && dominaceCheck)
         {
@@ -222,7 +238,9 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
         //labelPtr = listLabel.back();
         //listLabel.pop_back();
         labelPtr = (*setLabel.begin());
-        setLabel.erase(setLabel.begin());
+
+        //setLabel.erase(setLabel.begin());
+        eraseLabelFromSet(labelPtr, setLabel);
 
         if(labelPtr == nullptr)
         {
@@ -282,14 +300,18 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                 throw "ERRO";
             }
 
+
+            if(labelPtrAux->it == nullptr)
+            {
+                LabelSetIt* labelSetIt = new LabelSetIt;
+                labelPtrAux->it = (void*)labelSetIt;
+            }
+
             if(extendLabel(*labelPtr, *labelPtrAux, vetMatResCost, vetVetBound, labelPtr->cust, t, ngSet, numRes))
             {
 
 
                 maxDist = std::max(maxDist, labelPtrAux->vetResources[0]);
-
-                if(Print || labelHaveRoute(vetRoteG, labelPtrAux))
-                    std::cout<<"\t\textendLabel "<<labelPtrAux<<": "<<*labelPtrAux<<"\n";
 
                 // Find index from resources
                 i = lData.getIndex(0, labelPtrAux->vetResources[0]);
@@ -330,7 +352,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
 
                             dom = 1;
 
-                            setLabel.erase(bucket.vetPtrLabel[k]);
+                            //setLabel.erase(bucket.vetPtrLabel[k]);
+                            eraseLabelFromSet(bucket.vetPtrLabel[k], setLabel);
                             bucket.vetPtrLabel[k]->active = false;
                             labelPoolG.delT(bucket.vetPtrLabel[k]);
 
@@ -423,7 +446,9 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                 else
                 {
                     bucket.addLabel(labelPtrAux);
-                    setLabel.insert(labelPtrAux);
+                    auto it = setLabel.insert(labelPtrAux);
+                    (*(LabelSetIt*)labelPtrAux->it) = it;
+
                 }
 
 
@@ -450,6 +475,12 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
         numIt += 1;
     }
 
+
+    if(ptrLabelTarget)
+    {
+        std::cout<<"ptrLabelTarget("<<ptrLabelTarget->active<<"): "<<*ptrLabelTarget<<"\n\n";
+    }
+
     // TODO print
     //std::cout<<"\n########################################################################################\n\n";
 
@@ -462,7 +493,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
         {
             vetLabel[l]->vetRoute[vetLabel[l]->tamRoute-1] = vetLabel[l]->vetRoute[0];
 
-            //std::cout << "BEST LABEL: "<<vetLabel[l]<<" "<< *vetLabel[l] << "\n";
+            if(ptrLabelTarget)
+                std::cout << "BEST LABEL: "<<vetLabel[l]<<" "<< *vetLabel[l] << "\n";
 
             auto &vetRoute = vetLabel[l]->vetRoute;
 
@@ -497,7 +529,7 @@ bool LabelingAlgorithmNS::extendLabel(const Label &label,
 
 
     // Goes through resources
-    for(int i=0; i < NumMaxResources; ++i)
+    for(int i=0; i < numResources; ++i)//NumMaxResources; ++i)
     {
 
         // Extend the iº resource
@@ -521,12 +553,9 @@ bool LabelingAlgorithmNS::extendLabel(const Label &label,
             return false;
             newLabel.vetResources[i] = vetVetBound[i][custJ].lowerBound;
         }
-
-        if((i+1) == numResources)
-            break;
     }
 
-    newLabel.bitSetNg   = 0;
+    //newLabel.bitSetNg   = 0;
     newLabel.bitSetNg   = label.bitSetNg;
 
     // Checks if custJ its in custI ngSet
@@ -993,7 +1022,8 @@ void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(std::multiset<Labe
                                 {
                                     //std::cout<<"Domina\n";
                                     // Rm label1
-                                    setLabel.erase(b1.vetPtrLabel[t1]);
+                                    //setLabel.erase(b1.vetPtrLabel[t1]);
+                                    eraseLabelFromSet(b1.vetPtrLabel[t1], setLabel);
                                     //bucket.vetPtrLabel[k]->active = false;
                                     labelPoolG.delT(b1.vetPtrLabel[t1]);
 
@@ -1129,4 +1159,49 @@ bool LabelingAlgorithmNS::labelHaveRoute(std::vector<int> &vetRoute, Label *labe
     }
 
     return true;
+}
+
+void LabelingAlgorithmNS::checkDataStructs(Label* ptrLabel, LabelingData& lData, std::multiset<Label*, LabelCmp>& set)
+{
+
+    if(!ptrLabel)
+        return;
+
+
+}
+
+void LabelingAlgorithmNS::eraseLabelFromSet(Label* ptrLabel, std::multiset<Label*, LabelCmp>& set)
+{
+    if(!ptrLabel)
+    {
+        std::cout<<"ERROR, ptrLabel is equal to null!\n";
+        PRINT_DEBUG("", "");
+        throw "ERROR";
+    }
+
+    /*
+    std::multiset<Label*, LabelCmp>::iterator itTarget = set.end();
+
+    for(auto it=set.find(ptrLabel); it != set.end(); ++it)
+    {
+        if(*it == ptrLabel)
+        {
+            itTarget = it;
+            break;
+        }
+    }
+
+    if(itTarget == set.end())
+    {
+        std::cout<<"";
+        PRINT_DEBUG("", "");
+        throw "ERROR";
+    }*/
+
+    set.erase((*(LabelSetIt*)ptrLabel->it));
+}
+
+Label* LabelingAlgorithmNS::dominanceIntraBucket(Label* label, Bucket &bucket, LabelSetIt& set)
+{
+
 }

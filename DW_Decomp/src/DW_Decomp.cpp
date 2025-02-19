@@ -849,9 +849,9 @@ std::cout<<"*******************Column Generation*******************\n\n";
         if(PrintDebug)
             std::cout<<"~UpdatePi\n";
 
-        if(Stabilization && phaseStatus != PhaseStatus::PhaseStatusTwoPhase)// && numLimit < 5)
+        if(Stabilization)// && phaseStatus != PhaseStatus::PhaseStatusTwoPhase)// && numLimit < 5)
         {
-            auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpSmoothPi + StabilizationAlpha * (auxVect.vetRowRmlpPi-auxVect.vetRowRmlpSmoothPi);
+            auxVect.vetRowRmlpSmoothPi = (1.0-StabilizationAlpha)*auxVect.vetRowRmlpSmoothPi + StabilizationAlpha * (auxVect.vetRowRmlpPi);//-auxVect.vetRowRmlpSmoothPi);
             //std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
         }
         else
@@ -1068,6 +1068,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 uRmlp->setObjective(newObj, GRB_MINIMIZE);
                 phaseStatus = PhaseStatus::PhaseStatusColGen;
                 subProbCustR_neg = true;
+                auxVect.vetRowRmlpSmoothPi.setZero();
 
                 std::cout<<"Change to second phase!\n";
             }
@@ -1084,6 +1085,8 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 }
 
                 phaseStatus = PhaseStatus::PhaseStatusColGen;
+                auxVect.vetRowRmlpSmoothPi.setZero();
+                subProbCustR_neg = true;
             }
 
             delete[]vetVar;
@@ -1124,7 +1127,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         //gap = (std::abs(redCost)/objRmlp)*100.0;
         //std::cout<<"GAP("<<gap<<"%)\n";
 
-        //if((itCG%10) == 0)
+        if((itCG%10) == 0)
         {
             //std::cout<<"\t"<<itCG<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"%\"\n";
             std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG, objRmlp, gap);
@@ -1133,6 +1136,18 @@ std::cout<<"*******************Column Generation*******************\n\n";
         itCG += 1;
 
         //delete []vetRmlpConstr;
+
+
+        /*
+        if(itCG == 200)
+        {
+            std::cout<<"itCG("<<itCG<<")\nStopping CG!\n";
+            PRINT_DEBUG("", "");
+            return DW_DecompNS::StatusProb::StatusSubProb_Outro;
+
+        }
+        */
+
 
     }
 

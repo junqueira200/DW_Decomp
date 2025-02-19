@@ -23,6 +23,7 @@
 //#include "MemoryPool.h"
 #include "Aux.h"
 #include <boost/container/set.hpp>
+#include <bits/stdc++.h>
 
 
 typedef double FloatType;
@@ -39,12 +40,12 @@ namespace LabelingAlgorithmNS
     constexpr int   vetPtrLabelSize   = 5;
     constexpr bool  NullFlush         = false;
     constexpr bool  Print             = false;
-    constexpr int   NumMaxLabel       = 5000;
+    constexpr int   NumMaxLabel       = 10000;
     constexpr bool  DominaIterBuckets = true;
 
     class LabelSet;
 
-    typedef std::set<LabelSet>::iterator LabelIt;
+    //typedef std::set<LabelSet>::iterator LabelIt;
 
     struct Bound
     {
@@ -87,6 +88,7 @@ namespace LabelingAlgorithmNS
         }
     };
 
+
     class Label
     {
     public:
@@ -97,13 +99,11 @@ namespace LabelingAlgorithmNS
         int     cust     = -1;
         int     pos      = -1;
         int     tamRoute = 0;
-        LabelIt labelIt;
-
+        void*   it;
         //int numResources = 1;
         Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
         std::bitset<NumMaxCust>                     bitSetNg;
         boost::array<int, NumMaxRoute>              vetRoute;
-
 
 
         Label() = default;
@@ -115,7 +115,10 @@ namespace LabelingAlgorithmNS
     public:
 
         bool operator()(Label *l0, Label *l1) const
-        {return l0->vetResources[0] < l1->vetResources[0];}
+        {
+            //return doubleLess(l0->vetResources[0], l1->vetResources[0], std::numeric_limits<FloatType>::epsilon());
+            return l0->vetResources[0] < l1->vetResources[0];
+        }
 
     };
 
@@ -213,6 +216,8 @@ namespace LabelingAlgorithmNS
 
     };
 
+    typedef std::multiset<Label*, LabelCmp>::iterator LabelSetIt;
+
 
     bool forwardLabelingAlgorithm(const int                     numRes,
                                   const int                     numCust,
@@ -252,8 +257,8 @@ namespace LabelingAlgorithmNS
         }
 
         // TODO errado?
-        if(l0.bitSetNg == 0)
-            return false;
+        //if(l0.bitSetNg == 0)
+        //    return false;
 
         // Check if l0 is a subset of l1
         return (l0.bitSetNg & l1.bitSetNg) == l0.bitSetNg;
@@ -280,7 +285,9 @@ namespace LabelingAlgorithmNS
     bool containRoute(const Eigen::Array<Label*, 1, DW_DecompNS::NumMaxSolSubProb> &vetLabel, int numSol, Label* label);
 
     bool labelHaveRoute(std::vector<int> &vetRoute, Label *label);
-
+    void checkDataStructs(Label* ptrLabel, LabelingData& lData, std::multiset<Label*, LabelCmp>& set);
+    void eraseLabelFromSet(Label* ptrLabel, std::multiset<Label*, LabelCmp>& set);
+    Label* dominanceIntraBucket(Label* label, Bucket &bucket, LabelSetIt& set);
 
 }
 #endif //DW_LABELINGALGORITHM_H

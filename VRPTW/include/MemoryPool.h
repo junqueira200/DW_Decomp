@@ -102,11 +102,11 @@ namespace MemoryPool_NS
 
 
 
-#if VAR_POOL_SET_MEM_PAGES == 1
+//#if VAR_POOL_SET_MEM_PAGES == 1
             std::cout<<"memset pages!\n";
             memset(p_t, 0, bucketSize);
             memset(p_tDelT, 0, vetDelSizePage*bucketSize);
-#endif
+//#endif
 
             listT.push_back(p_t);
 
@@ -150,9 +150,9 @@ namespace MemoryPool_NS
                 T *p_tNew = nullptr;
                 assertm(posix_memalign((void**)&p_tNew, pageSize, bucketSize), "Bay more memory!");
 
-#ifdef POOL_SET_MEM_PAGES
+//#ifdef POOL_SET_MEM_PAGES
                 memset(p_tNew, 0, bucketSize);
-#endif
+//#endif
 
                 listT.push_back(p_tNew);
                 proxT.iterator = (--listT.end());

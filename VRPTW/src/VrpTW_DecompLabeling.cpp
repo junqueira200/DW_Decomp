@@ -29,7 +29,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     vetStepSize[0].end      = (FloatType)startDist;
 
     //vetStepSize[1].stepSize = 5;
-    vetStepSize[1].stepSize = 10;  //5
+    vetStepSize[1].stepSize = 5;  //5
     vetStepSize[1].start    = 0;
     vetStepSize[1].end      = (FloatType)instVrpTw->capVeic;
 
@@ -319,7 +319,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
     vetCooefRestConv[0] = 1;
 
 
-    if(numSol == 0)
+/*    if(numSol == 0)
     {
         std::cout<<"CALL EXACT PRICING!\n\n";
 
@@ -365,7 +365,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
 
 
         }
-    }
+    }*/
 
     // Check if solution have a negative reduced cost
     FloatType redCostTemp = 0.0;
