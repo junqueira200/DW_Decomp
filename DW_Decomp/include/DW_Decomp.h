@@ -25,14 +25,14 @@ using namespace SparseNS;
 namespace DW_DecompNS
 {
 
-    constexpr double TolObjSubProb       = 1E-7;
-    constexpr int    NumMaxSolSubProb    = 25;
-    constexpr double StabilizationAlpha  = 0.1;
-    constexpr bool   Stabilization       = false;
-    constexpr double gapLimit            = 1E-2;
+    constexpr double TolObjSubProb       = 1E-4;
+    constexpr int    NumMaxSolSubProb    = 5;//10;
+    constexpr double StabilizationAlpha  = 0.55;
+    constexpr bool   Stabilization       = true;
+    constexpr double gapLimit            = 1E-3;
     constexpr int    NumCandidatesBranch = 3;
     constexpr bool   PrintDebug          = false;
-    constexpr int    BigM_maxMult        = 400;
+    constexpr int    BigM_maxMult        = 40;
 
 
     Eigen::MatrixXd getMatA_Model(GRBModel &mestre);
@@ -254,7 +254,7 @@ namespace DW_DecompNS
         VectorD vetObjCof;
 
 
-        PhaseStatus phaseStatus = PhaseStatus::PhaseStatusTwoPhase;
+        PhaseStatus phaseStatus = PhaseStatus::PhaseStatusBigM;
 
         DW_DecompNode(GRBEnv &env_,
                       GRBModel &master_,

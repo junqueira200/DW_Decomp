@@ -19,14 +19,16 @@
 #include <cassert>
 
 
+/*
 class M_Coluna{M_Coluna()=default;};
 class M_Linha{M_Linha()=default;};
 class M_TrianngSup{M_TrianngSup()=default;};
 class M_TrianngInf{M_TrianngInf()=default;};
 
+*/
 
 // Wrapper around std::vector, has temporary sanity checks in the operators [].
-template <typename T, typename M=M_Linha>
+template <typename T, bool C=true>
 class Matrix : public std::vector<T>
 {
 private:
@@ -37,30 +39,14 @@ private:
 
 public:
 
-    explicit Matrix(size_t n_, size_t m_): std::vector<T>(n_*m_), n(n_), m(m_)
-    {
+    explicit Matrix(size_t n_, size_t m_): std::vector<T>(n_*m_), n(n_), m(m_){}
 
-        if(std::is_same<M, M_TrianngInf>() || std::is_same<M, M_TrianngSup>())
-        {
-            std::cout<<"Erro, M nao pode ser M_TrianngInf ou M_TrianngSup\n";
-            exit(-1);
-            //static_assert(false, "Erro, M nao pode ser M_TrianngInf ou M_TrianngSup");
-        }
-    }
-
-    Matrix(size_t n_, size_t m_, const T& value): std::vector<T>(n_*m_, value), n(n_), m(m_)
-    {
-        if(std::is_same_v<M, M_TrianngInf>() || std::is_same_v<M, M_TrianngSup>())
-        {
-            std::cout<<"Erro, M nao pode ser M_TrianngInf ou M_TrianngSup\n";
-            exit(-1);
-            //static_assert(false, "Erro, M nao pode ser M_TrianngInf ou M_TrianngSup");
-        }
-    }
+    Matrix(size_t n_, size_t m_, const T& value): std::vector<T>(n_*m_, value), n(n_), m(m_){}
 
     Matrix(size_t n): std::vector<T>(n){}
+    Matrix(){}
 
-    Matrix(const Matrix<T,M> &temp):n(temp.n), m(temp.n), std::vector<T>(temp.n*temp.m)
+    Matrix(const Matrix<T> &temp):n(temp.n), m(temp.n), std::vector<T>(temp.n*temp.m)
     {
         for(int i=0; i < n*m; ++i)
             std::vector<T>::operator[](i) = temp.get(i);
@@ -78,76 +64,76 @@ public:
 
     virtual inline __attribute__((always_inline)) T operator()(size_t indexI, size_t indexJ) const
     {
-        if constexpr(std::is_same_v<M,M_Coluna>)
-            std::swap(indexI, indexJ);
 
         size_t index = indexI*m+indexJ;
 
+        if constexpr(C)
+        {
+
 #if VAR_VECTOR_SANITY_CHECK
-        if(indexI >= n)
-        {
-            std::cout<<"Erro indice i: "<<indexI<<" esta errado para matrix de tam "<<n<<" x "<<m<<"\n";
-            throw std::out_of_range("");
-        }
+            if(indexI >= n)
+            {
+                std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam " << n << " x " << m
+                          << "\n";
+                throw std::out_of_range("");
+            }
 
 
-        if(indexJ >= m)
-        {
-            std::cout<<"Erro indice j: "<<indexJ<<" esta errado para matrix de tam "<<n<<" x "<<m<<"\n";
-            throw std::out_of_range("");
-        }
+            if(indexJ >= m)
+            {
+                std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam " << n << " x " << m
+                          << "\n";
+                throw std::out_of_range("");
+            }
 
+            if(index >= m * n)
+            {
+                std::cout << "Erro indice(" << index << ") >= " << m * n << "\n";
+                std::cout << "i=" << indexI << "; j=" << indexJ << "\n";
+                std::cout << "n=" << n << "\n";
 
-        if constexpr(std::is_same_v<M,M_Coluna>)
-            index = indexJ*n+indexI;
-
-        if(index >= m*n)
-        {
-            std::cout<<"Erro indice("<<index<<") >= "<<m*n<<"\n";
-            std::cout<<"i="<<indexI<<"; j="<<indexJ<<"\n";
-            std::cout<<"n="<<n<<"\n";
-
-            throw std::out_of_range("");
-        }
+                throw std::out_of_range("");
+            }
 #endif
+        }
 
         return std::vector<T>::operator[](index);
     }
 
     virtual inline __attribute__((always_inline)) T& get(size_t indexI, size_t indexJ)
     {
-        if constexpr(std::is_same_v<M,M_Coluna>)
-            std::swap(indexI, indexJ);
 
         size_t index = indexI*m+indexJ;
 
+        if constexpr(C)
+        {
 #if VAR_VECTOR_SANITY_CHECK
-        if(indexI >= n)
-        {
-            std::cout<<"Erro indice i: "<<indexI<<" esta errado para matrix de tam "<<n<<" x "<<m<<"\n";
-            throw std::out_of_range("");
-        }
+            if(indexI >= n)
+            {
+                std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam " << n << " x " << m
+                          << "\n";
+                throw std::out_of_range("");
+            }
 
 
-        if(indexJ >= m)
-        {
-            std::cout<<"Erro indice j: "<<indexJ<<" esta errado para matrix de tam "<<n<<" x "<<m<<"\n";
-            throw std::out_of_range("");
-        }
+            if(indexJ >= m)
+            {
+                std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam " << n << " x " << m
+                          << "\n";
+                throw std::out_of_range("");
+            }
 
 
-        if constexpr(std::is_same_v<M,M_Coluna>)
-            index = indexJ*n+indexI;
+            if(index >= m * n)
+            {
+                std::cout << "Erro indice(" << index << ") >= " << m * n << "\n";
+                std::cout << "i=" << indexI << "; j=" << indexJ << "\n";
+                std::cout << "n=" << n << "\n";
 
-        if(index >= m*n)
-        {
-            std::cout<<"Erro indice("<<index<<") >= "<<m*n<<"\n";
-            std::cout<<"i="<<indexI<<"; j="<<indexJ<<"\n";
-            std::cout<<"n="<<n<<"\n";
-
-            throw std::out_of_range("");
-        }
+                throw std::out_of_range("");
+            }
 #endif
+        }
 
         return std::vector<T>::operator[](index);
     }
@@ -173,28 +159,29 @@ public:
         for(int i=0; i < m*n; ++i)
             std::vector<T>::operator[](i) = val;
     }
-    inline __attribute__((always_inline)) bool ehTransposta()const{return (std::is_same_v<M,M_Coluna>);};
 
     inline __attribute__((always_inline))  auto getIterator(size_t indexI, size_t indexJ)
     {
 
-        if constexpr(std::is_same_v<M,M_Coluna>)
-            std::swap(indexI, indexJ);
-
+        if constexpr(C)
+        {
 #if VAR_VECTOR_SANITY_CHECK
-        if(indexI >= n)
-        {
-            std::cout<<"Erro indice i: "<<indexI<<" esta errado para matrix de tam "<<n<<" x "<<m<<"\n";
-            throw std::out_of_range("");
-        }
+            if(indexI >= n)
+            {
+                std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam " << n << " x " << m
+                          << "\n";
+                throw std::out_of_range("");
+            }
 
 
-        if(indexJ >= m)
-        {
-            std::cout<<"Erro indice j: "<<indexJ<<" esta errado para matrix de tam "<<n<<" x "<<m<<"\n";
-            throw std::out_of_range("");
-        }
+            if(indexJ >= m)
+            {
+                std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam " << n << " x " << m
+                          << "\n";
+                throw std::out_of_range("");
+            }
 #endif
+        }
         return (std::vector<T>::begin()+(indexI*m+indexJ));
     }
 
@@ -214,205 +201,9 @@ public:
 
 };
 
-template <typename T, typename M=M_TrianngSup>
-class MatrixTriangular : public Matrix<T>
-{
 
-public:
-
-    explicit MatrixTriangular(size_t n_): Matrix<T>((n_+1)*(n_/2))
-    {
-        std::cout<<"Construtivo MatrixTriangular(size_t n_ = 0)\n";
-
-        if(!(std::is_same_v<M, M_TrianngInf> || std::is_same_v<M, M_TrianngSup>))
-        {
-            std::cout<<"Erro, M tem que ser M_TrianngInf ou M_TrianngSup\n";
-            exit(-1);
-        }
-
-        n = n_;
-
-    }
-
-    MatrixTriangular(size_t n_, const T& value): Matrix<T>((n_+1)*(n_/2))
-    {
-        if(!(std::is_same_v<M, M_TrianngInf> || std::is_same_v<M, M_TrianngSup>))
-        {
-            std::cout<<"Erro, M tem que ser M_TrianngInf ou M_TrianngSup\n";
-            exit(-1);
-        }
-
-        for(int i=0; i < (n_+1)*(n_/2); ++i)
-            this->std::vector<T>::operator[](i) = value;
-
-        n = n_;
-    }
-
-
-
-//    template <class InputIterator> Vector (InputIterator first, InputIterator last): std::vector<T>(first, last){}
-
-    // Note: we do not provide a copy-ctor and assignment operator.
-    // we rely on default versions of these methods generated by the compiler.
-
-    T& operator[](size_t index) = delete;
-    const T& operator[](size_t index) const = delete;
-
-
-
-    inline __attribute__((always_inline)) T operator()(size_t indexI, size_t indexJ)
-    {
-        //std::cout<<"("<<indexI<<", "<<indexJ<<") = ";
-        size_t index = 0;
-
-        if constexpr(std::is_same_v<M, M_TrianngInf>)
-        {
-            index = indexI * (indexI + 1)/2 + indexJ;
-            if(indexI < indexJ)
-            {
-                //std::cout<<"!0\n";
-                return T(0);
-            }
-        }
-        else
-        {
-            index = indexI*n-indexI*(indexI+1)/2+indexJ;
-            if(indexI > indexJ)
-            {
-                return T(0);
-            }
-        }
-
-        //std::cout<<index<<"\n";
-
-#if VAR_VECTOR_SANITY_CHECK
-        if(indexI >= n)
-        {
-            std::cout<<"Erro indice i: "<<indexI<<" esta errado para matrix de tam "<<n<<" x "<<n<<"\n";
-            throw std::out_of_range("");
-        }
-
-#endif
-
-        return std::vector<T>::operator[](index);
-    }
-
-    inline __attribute__((always_inline)) T& get(size_t indexI, size_t indexJ)
-    {
-        size_t index = 0;
-
-        if(std::is_same_v<M, M_TrianngInf>)
-        {
-            index = indexI * (indexI + 1)/2 + indexJ;
-            if(indexI < indexJ)
-            {
-                std::cout<<"Erro, tentando acessar elem 0\n";
-                std::cout<<"("<<indexI<<", "<<indexJ<<")\n";
-                throw "Erro";
-            }
-        }
-        else
-        {
-            index = indexI*n-indexI*(indexI+1)/2+indexJ;
-            if(indexI > indexJ)
-            {
-                std::cout<<"Erro, tentando acessar elem 0\n";
-                std::cout<<"("<<indexI<<", "<<indexJ<<")\n";
-                throw "Erro";
-            }
-        }
-
-
-#if VAR_VECTOR_SANITY_CHECK
-        if(indexI >= n)
-        {
-            std::cout<<"Erro indice i: "<<indexI<<" esta errado para matrix de tam "<<n<<" x "<<n<<"\n";
-            throw std::out_of_range("");
-        }
-
-#endif
-
-        return std::vector<T>::operator[](index);
-    }
-
-
-
-    [[nodiscard]] size_t inline __attribute__((always_inline)) getNumLinhas() const
-    {
-        return n;
-    }
-
-
-    [[nodiscard]] size_t inline __attribute__((always_inline)) getNumColunas() const
-    {
-        return n;
-    }
-
-    /*
-    void setVal(const T &val)
-    {
-        for(int i=0; i < n; ++i)
-            std::vector<T>::operator[](i) = val;
-    }
-    void setVal(const T &&val)
-    {
-        for(int i=0; i < n; ++i)
-            std::vector<T>::operator[](i) = val;
-    }
-    inline __attribute__((always_inline)) bool ehTransposta()const{return (std::is_same_v<M,M_Coluna>);};
-
-    inline __attribute__((always_inline)) auto getIterator(size_t indexI, size_t indexJ)
-    {
-
-
-
-#if VAR_VECTOR_SANITY_CHECK
-        if(indexI >= n)
-        {
-            std::cout<<"Erro indice i: "<<indexI<<" esta errado para matrix de tam "<<n<<" x "<<m<<"\n";
-            throw std::out_of_range("");
-        }
-
-
-        if(indexJ >= m)
-        {
-            std::cout<<"Erro indice j: "<<indexJ<<" esta errado para matrix de tam "<<n<<" x "<<m<<"\n";
-            throw std::out_of_range("");
-        }
-#endif
-        return (std::vector<T>::begin()+(indexI*m+indexJ));
-    }
-
-    */
-
-    void printVector()
-    {
-        for(int i=0; i < n; ++i)
-        {
-            for(int j=0; j < n; ++j)
-            {
-                if(i <= j)
-                    this->get(i,j) = i*n-i*(i+1)/2+j;
-                std::cout<<this->operator()(i, j)<<" ";
-            }
-
-            std::cout<<"\n";
-        }
-
-        std::cout<<"\n";
-    }
-
-
-private:
-
-    size_t n=0;
-
-
-};
-
-
-template <typename T, typename M>
-inline __attribute__((always_inline)) std::ostream& operator << (std::ostream& os, Matrix<T,M>& mat)
+template <typename T, bool C>
+inline __attribute__((always_inline)) std::ostream& operator << (std::ostream& os, Matrix<T,C>& mat)
 {
     for(size_t i=0; i < mat.getNumLinhas(); ++i)
     {
@@ -430,8 +221,8 @@ inline __attribute__((always_inline)) std::ostream& operator << (std::ostream& o
 }
 
 
-template <typename T, typename M>
-bool matrixsIguais(const Matrix<T,M> &mat0, const Matrix<T,M> &mat1)
+template <typename T, bool C>
+bool matrixsIguais(const Matrix<T, C> &mat0, const Matrix<T,C> &mat1)
 {
     const T epsilon = 1E-5;
 
@@ -439,9 +230,6 @@ bool matrixsIguais(const Matrix<T,M> &mat0, const Matrix<T,M> &mat1)
        mat0.getNumColunas() != mat1.getNumColunas())
         return false;
 
-
-    if constexpr(std::is_same_v<M,M_Linha>)
-    {
         for(size_t i = 0; i < mat0.getNumLinhas(); ++i)
         {
             for(size_t j = 0; j < mat1.getNumColunas(); ++j)
@@ -467,42 +255,14 @@ bool matrixsIguais(const Matrix<T,M> &mat0, const Matrix<T,M> &mat1)
                 }
             }
         }
-    }
-    else
-    {
-        for(size_t j = 0; j < mat0.getNumColunas(); ++j)
-        {
-            for(size_t i = 0; i < mat1.getNumLinhas(); ++i)
-            {
-                if constexpr(std::is_same_v<T,double>)
-                {
-                    if(fabs(mat0(i,j)-mat1(i,j)) > epsilon)
-                        return false;
 
-                }
-                else if constexpr(std::is_same_v<T,float>)
-                {
-                    if(fabsf(mat0(i,j)-mat1(i,j)) > epsilon)
-                        return false;
-                }
-                else
-                {
-                    if(mat0(i, j) != mat1(i, j))
-                    {
-                        std::cout << mat0(i, j) << " != " << mat1(i, j) << "\n";
-                        return false;
-                    }
-                }
-            }
-        }
-    }
 
     return true;
 }
 
 
-template <typename T, typename M>
-void multMatrix(const Matrix<T> &mat0, const Matrix<T,M> &mat1, Matrix<T> &matResult)
+template <typename T, bool C>
+void multMatrix(const Matrix<T,C> &mat0, const Matrix<T,C> &mat1, Matrix<T,C> &matResult)
 {
 
     if(mat0.getNumLinhas() != mat1.getNumColunas() ||

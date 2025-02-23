@@ -87,6 +87,7 @@ set(public_headers
     include/SparseOp.h
     include/safe_matrix.h
     include/safe_vector.h
+    include/safe_3D_matrix.h
     include/BranchAndPrice.h
     include/SearchStrategy.h
     include/PrimalHeuristic.h

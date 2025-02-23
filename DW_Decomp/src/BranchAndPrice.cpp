@@ -187,13 +187,13 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
 
     int numVars = rootNode->uRmlp->get(GRB_IntAttr_NumVars);
 
-    if(numVars != int(rootNode->vetVarLambdaCol.size()))
+/*    if(numVars != int(rootNode->vetVarLambdaCol.size()))
     {
         std::cout << "Num Vars is wrong;\n\t Model: " << numVars << "; vetVarLamdaCol: "
                   << rootNode->vetVarLambdaCol.size() << "\n";
         PRINT_DEBUG("", "");
         throw "ERROR";
-    }
+    }*/
 
 
     clock_t end = clock();

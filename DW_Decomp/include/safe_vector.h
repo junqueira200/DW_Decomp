@@ -16,7 +16,7 @@
 #include <ostream>
 
 // Wrapper around std::vector, has temporary sanity checks in the operators [].
-template <typename T>
+template <typename T, bool C=true>
 class Vector : public std::vector<T>
 {
 public:
@@ -33,24 +33,31 @@ public:
 
     inline __attribute__((always_inline)) T& operator[](size_t index)
     {
-#if VAR_VECTOR_SANITY_CHECK
-        if(index >= std::vector<T>::size())
+        if constexpr(C)
         {
-            std::cout<<"Erro indice "<<index<<" esta errado para vetor de tam "<<std::vector<T>::size()<<"\n";
-            throw std::out_of_range("");
-        }
+#if VAR_VECTOR_SANITY_CHECK
+            if(index >= std::vector<T>::size())
+            {
+                std::cout << "Erro indice " << index << " esta errado para vetor de tam " << std::vector<T>::size()
+                          << "\n";
+                throw std::out_of_range("");
+            }
 #endif
+        }
         return std::vector<T>::operator[](index);
     }
     inline __attribute__((always_inline)) const T& operator[](size_t index) const
     {
-#if VAR_VECTOR_SANITY_CHECK
-        if(index >= std::vector<T>::size())
+        if constexpr(C)
         {
-            std::cout<<"ERRO!\n";
-            throw "ERRO";
-        }
+#if VAR_VECTOR_SANITY_CHECK
+            if(index >= std::vector<T>::size())
+            {
+                std::cout << "ERRO!\n";
+                throw "ERRO";
+            }
 #endif
+        }
         return std::vector<T>::operator[](index);
     }
 
@@ -94,8 +101,8 @@ typedef Vector<double> VectorD;
 typedef Vector<int> VectorI;
 typedef Vector<int64_t> VectorI64;
 
-template <typename T>
-inline __attribute__((always_inline)) std::ostream& operator << (std::ostream& os, const Vector<T>& v)
+template <typename T, bool C>
+inline __attribute__((always_inline)) std::ostream& operator << (std::ostream& os, const Vector<T,C>& v)
 {
     for(unsigned i=0; i<v.size(); ++i) 
     {

@@ -33,8 +33,8 @@ namespace VrpTW_DecompLabelingNS
 
         Eigen::Vector<LabelingAlgorithmNS::Step, 2> vetStepSize;
         LabelingAlgorithmNS::LabelingData           labelingData;
-        LabelingAlgorithmNS::VetMatResCost          vetMatResCost;
-        LabelingAlgorithmNS::VetVetResBound         vetVetResBound;
+        LabelingAlgorithmNS::Vet3D_ResCost          vetMatResCost;
+        LabelingAlgorithmNS::MatBoundRes            vetVetResBound;
         LabelingAlgorithmNS::NgSet                  ngSet;
 
         int getNumConvConstr() override {return 1;}
@@ -64,7 +64,7 @@ namespace VrpTW_DecompLabelingNS
 
     }; // FIM MySubProb
 
-    bool exactPricing(const LabelingAlgorithmNS::VetMatResCost&          vetMatResCost,
+    bool exactPricing(const LabelingAlgorithmNS::Vet3D_ResCost&          vetMatResCost,
                       const FloatType                                    startVal,
                       Eigen::Matrix<double, -1, 1, Eigen::ColMajor>&     vetColSolX,
                       InstanciaNS::InstVRP_TW&                           instVrpTw,

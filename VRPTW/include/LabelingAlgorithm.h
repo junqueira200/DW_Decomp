@@ -17,20 +17,25 @@
 #include "Aux.h"
 #include "DW_Decomp.h"
 #include "safe_vector.h"
+#include "safe_matrix.h"
 #include <boost/array.hpp>
 #include <set>
 #include "Grafo.h"
-//#include "MemoryPool.h"
 #include "Aux.h"
 #include <boost/container/set.hpp>
 #include <bits/stdc++.h>
+#include "safe_3D_matrix.h"
 
 
 typedef double FloatType;
 
 namespace LabelingAlgorithmNS
 {
+
     inline std::vector<int> vetRoteG;
+    inline FloatType minDistG = std::numeric_limits<FloatType>::max();
+    inline FloatType maxDistG = std::numeric_limits<FloatType>::min();
+    inline bool exactLabelingG = false;
 
     constexpr int   NumMaxResources   = 2;
     constexpr int   NumMaxRoute       = 300;
@@ -40,7 +45,8 @@ namespace LabelingAlgorithmNS
     constexpr int   vetPtrLabelSize   = 5;
     constexpr bool  NullFlush         = false;
     constexpr bool  Print             = false;
-    constexpr int   NumMaxLabel       = 10000;
+    inline    int   numMaxLabelG      = 5000; // 5000
+
     constexpr bool  DominaIterBuckets = true;
 
     class LabelSet;
@@ -56,11 +62,13 @@ namespace LabelingAlgorithmNS
     std::ostream& operator<< (std::ostream& out, const Bound &bound);
 
     // TODO Fix!
-    // Fist access the resource, and then the cost of an arc (i,j)
-    typedef Eigen::Array<Eigen::Matrix<FloatType, -1, -1, Eigen::RowMajor>, 1, -1> VetMatResCost;
+    // Access the (i,j,r) where (i,j) is an arc and r a resource
+    typedef Vector3D<FloatType, false> Vet3D_ResCost;
+    //typedef Eigen::Matrix<Eigen::Array<FloatType , 1, -1>, -1, -1, Eigen::RowMajor> VetMatResCost;
 
     // Fist access the resource, and then the bound of a customer
-    typedef Eigen::Vector<Eigen::Vector<Bound, -1>, -1> VetVetResBound;
+    // Access (i,r) where i is a customer and r a resource
+    typedef Matrix<Bound, false> MatBoundRes;
 
     class NgSet
     {
@@ -117,9 +125,30 @@ namespace LabelingAlgorithmNS
         bool operator()(Label *l0, Label *l1) const
         {
             //return doubleLess(l0->vetResources[0], l1->vetResources[0], std::numeric_limits<FloatType>::epsilon());
-            return l0->vetResources[0] < l1->vetResources[0];
+            return l0->vetResources[0] < l1->vetResources[0] && l0->vetResources[1] < l1->vetResources[1];
         }
 
+    };
+
+    class LabelHeap
+    {
+    public:
+
+        Vector<Label*> vet;
+        int heapSize = 0;
+
+        explicit LabelHeap(int tam){vet = Vector<Label*>(tam, nullptr);}
+        int parent(int i) { return (i-1)/2;}
+        int left(int i) { return (2*i + 1);}
+        int right(int i) { return (2*i + 2);}
+        bool empty(){return heapSize==0;}
+
+        void heapify(int i);
+        [[nodiscard]]Label* extractMin();
+        void decreaseKey(int i, FloatType val);
+        [[nodiscard]]Label* getMin(){return vet[0];}
+        void deleteKey(int i);
+        void insertKey(Label* label);
     };
 
 
@@ -179,11 +208,12 @@ namespace LabelingAlgorithmNS
         /** Access first the customer and after (i,j), where i is the component of the first resource
           *  and j the component of the second one.
           */
-        Eigen::VectorX<MatBucket>                                       vetMatBucket;
-        Eigen::Matrix<Eigen::Vector<Bound, 2>, -1, -1, Eigen::RowMajor> matBound;
-        Eigen::Vector<Step, 2>                                          vetStepSize;
-        Eigen::Vector<int, 2>                                           vetNumSteps;
-        EigenMatrixRowI                                                 matBucketIndex; // Given a bucket index (i, j)
+        Eigen::VectorX<MatBucket>       vetMatBucket;
+        // Access first the resorce
+        Vector<Matrix<Bound, false>>    vetMatBound;
+        Eigen::Vector<Step, 2>          vetStepSize;
+        Eigen::Vector<int, 2>           vetNumSteps;
+        EigenMatrixRowI                 matBucketIndex; // Given a bucket index (i, j)
 
         int numMainResources;
         int numCust;
@@ -211,18 +241,19 @@ namespace LabelingAlgorithmNS
 
 
         // std::set<Label*, LabelCmp> &setLabel
-        void dominanceInterBuckets(std::multiset<Label*, LabelCmp> &setLabel, int numRes, int localNumMaxLabel);//, MemoryPool_NS::Pool<Label> &poolTemp);
+        void dominanceInterBuckets(LabelHeap& labelHeap, int numRes, const int localNumMaxLabel);//, MemoryPool_NS::Pool<Label> &poolTemp);
+
         void setupGraphBucket();
 
     };
 
-    typedef std::multiset<Label*, LabelCmp>::iterator LabelSetIt;
+    typedef boost::container::multiset<Label*, LabelCmp>::iterator LabelSetIt;
 
 
     bool forwardLabelingAlgorithm(const int                     numRes,
                                   const int                     numCust,
-                                  const VetMatResCost&          vetMatResCost,
-                                  const VetVetResBound&         vetVetBound,
+                                  const Vet3D_ResCost&          vetMatResCost,
+                                  const MatBoundRes&            vetVetBound,
                                   const int                     dest,
                                   const NgSet&                  ngSet,
                                   LabelingData&                 lData,
@@ -234,40 +265,13 @@ namespace LabelingAlgorithmNS
                                   FloatType&                    maxDist,
                                   Eigen::VectorX<FloatType>&    vetRedCost);
 
-    inline __attribute__((always_inline))
-    bool checkDominance(const Label& l0, const Label& l1, int numResources)
-    {
-        if(l0.cust != l1.cust)
-        {
-            std::cout<<"ERROR, lo.cust("<<l0.cust<<") != l1.cust("<<l1.cust<<")\n\n";
-            PRINT_DEBUG("", "");
-            throw "ERROR";
-        }
-
-        // Check the resources
-        //#pragma GCC unroll NumMaxResources
-        for(int i=0; i < NumMaxResources; ++i)
-        {
-            // l0.vetResources[i] > l1.vetResources[i]
-            if(doubleLess(l1.vetResources[i], l0.vetResources[i], std::numeric_limits<FloatType>::epsilon()))
-                return false;
-
-            if((i+1) == numResources)
-                break;
-        }
-
-        // TODO errado?
-        //if(l0.bitSetNg == 0)
-        //    return false;
-
-        // Check if l0 is a subset of l1
-        return (l0.bitSetNg & l1.bitSetNg) == l0.bitSetNg;
-    }
+    //inline __attribute__((always_inline))
+    bool checkDominance(const Label& l0, const Label& l1, int numResources);
 
     bool extendLabel(const Label&          label,
                      Label&                newLabel,
-                     const VetMatResCost&  vetMatResCost,
-                     const VetVetResBound& vetVetBound,
+                     const Vet3D_ResCost&  vetMatResCost,
+                     const MatBoundRes&    vetVetBound,
                      int                   custI,
                      int                   custJ,
                      const NgSet&          ngSet,
@@ -275,7 +279,7 @@ namespace LabelingAlgorithmNS
 
     void removeCycles(Label &label, const int numCust);
     void removeCycles2(Label &label, const int numCust);
-    void updateLabelCost(Label &label, const VetMatResCost &vetMatResCost, FloatType labelStart);
+    void updateLabelCost(Label &label, const Vet3D_ResCost &vetMatResCost, FloatType labelStart);
 
     // Linear index for a nxn matrix
     inline __attribute__((always_inline))
@@ -285,8 +289,8 @@ namespace LabelingAlgorithmNS
     bool containRoute(const Eigen::Array<Label*, 1, DW_DecompNS::NumMaxSolSubProb> &vetLabel, int numSol, Label* label);
 
     bool labelHaveRoute(std::vector<int> &vetRoute, Label *label);
-    void checkDataStructs(Label* ptrLabel, LabelingData& lData, std::multiset<Label*, LabelCmp>& set);
-    void eraseLabelFromSet(Label* ptrLabel, std::multiset<Label*, LabelCmp>& set);
+    void checkDataStructs(Label* ptrLabel, LabelingData& lData, boost::container::multiset<Label*, LabelCmp>& set);
+    void eraseLabelFromSet(Label* ptrLabel, boost::container::multiset<Label*, LabelCmp>& set);
     Label* dominanceIntraBucket(Label* label, Bucket &bucket, LabelSetIt& set);
 
 }

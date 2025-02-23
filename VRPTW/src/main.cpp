@@ -38,7 +38,7 @@ int main(int argv, char **argc)
         else
             leInstanciaSalomon(strFile, instVrpTw);
 
-        VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, 0.01*instVrpTw.sumDist());
+        VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
 
         GRBEnv grbEnv;
         GRBModel model(grbEnv);
@@ -144,20 +144,22 @@ int main(int argv, char **argc)
         std::cout<<"vetNumSteps r1: "<<vrpLabelingSubProb.labelingData.vetNumSteps[1]<<"\n";
         std::cout<<"numClien: "<<instVrpTw.numClientes<<"\n";
 
+        std::cout<<"DistMin: "<<minDistG<<"\nDistMax: "<<maxDistG<<"\n\n";
+
 
 
     }
-    catch(char const* str)
+/*    catch(char const* str)
     {
         std::cout<<"catch(char* ):\n";
         std::printf("%s", str);
         std::cout<<"\n\n";
-    }
-/*    catch(GRBException &e)
+    }*/
+    catch(GRBException &e)
     {
         std::cout<<"GRBException:\n"<<e.getMessage()<<"\n";
         std::cout<<"Code: "<<e.getErrorCode()<<"\n\n";
-    }*/
+    }
 
     return 0;
 }

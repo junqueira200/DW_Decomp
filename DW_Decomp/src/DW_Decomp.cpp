@@ -727,6 +727,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
     double privObjRmlp = gap;
     int numLimit = 0;
     bool missPricing = false;
+    bool exactPi = false;
 
     uRmlp->update();
     vetRmlpConstr = uRmlp->getConstrs();
@@ -814,15 +815,17 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 }
 
             }
+
         }
 
         if(phaseStatus == PhaseStatus::PhaseStatusTwoPhase)
         {
             GRBLinExpr linExpr;
 
+
             for(int i = 0; i < info.numConstrsOrignalProblem + info.numConstrsConv; ++i)
             {
-                if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0))
+                if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0, 1E-5))
                 {
                     linExpr += vetVar[i];
                 }
@@ -849,7 +852,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         if(PrintDebug)
             std::cout<<"~UpdatePi\n";
 
-        if(Stabilization)// && phaseStatus != PhaseStatus::PhaseStatusTwoPhase)// && numLimit < 5)
+        if(Stabilization && !exactPi)// && phaseStatus != PhaseStatus::PhaseStatusTwoPhase)// && numLimit < 5)
         {
             auxVect.vetRowRmlpSmoothPi = (1.0-StabilizationAlpha)*auxVect.vetRowRmlpSmoothPi + StabilizationAlpha * (auxVect.vetRowRmlpPi);//-auxVect.vetRowRmlpSmoothPi);
             //std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
@@ -858,6 +861,8 @@ std::cout<<"*******************Column Generation*******************\n\n";
         {
             auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpPi;
             numLimit = 0;
+            //if(exactPi)
+            //    std::cout<<"exactPi\n";
         }
 
         double constVal = 0;
@@ -995,7 +1000,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
             if(numSolRep == numSol)
             {
-                //std::cout<<"MISS PRICING\n";
+                std::cout<<"MISS PRICING\n";
                 missPricing = true;
                 numLimit += 1;
             }
@@ -1004,6 +1009,9 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
             break;
         }
+
+        if(!missPricing && !subProbCustR_neg)
+            std::cout<<"END!\n";
 
         //uRmlp->update();
 
@@ -1016,6 +1024,17 @@ std::cout<<"*******************Column Generation*******************\n\n";
             privObjRmlp = objRmlp;
         }
 
+
+/*
+        if(!subProbCustR_neg && Stabilization && !exactPi)
+        {
+            exactPi = true;
+            subProbCustR_neg = true;
+        }
+        else
+            exactPi = false;
+
+*/
         if(phaseStatus != PhaseStatus::PhaseStatusColGen)
         {
 
@@ -1023,7 +1042,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
             for(int i = 0; i < info.numConstrsOrignalProblem + info.numConstrsConv; ++i)
             {
-                if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0))
+                if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0, 1E-5))
                 {
                     allZero = false;
                     break;
@@ -1068,7 +1087,9 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 uRmlp->setObjective(newObj, GRB_MINIMIZE);
                 phaseStatus = PhaseStatus::PhaseStatusColGen;
                 subProbCustR_neg = true;
-                auxVect.vetRowRmlpSmoothPi.setZero();
+                //auxVect.vetRowRmlpSmoothPi.setZero();
+                exactPi = true;
+                continue;
 
                 std::cout<<"Change to second phase!\n";
             }
@@ -1094,6 +1115,31 @@ std::cout<<"*******************Column Generation*******************\n\n";
             if(!subProbCustR_neg && phaseStatus == PhaseStatus::PhaseStatusTwoPhase && !allZero)
                 return StatusSubProb_Inviavel;
 
+        }
+        else
+        {
+
+            if(!exactPi && Stabilization && !missPricing && !subProbCustR_neg)
+            {
+                //exactPi = true;
+                //subProbCustR_neg = true;
+                std::cout<<"Seting exactPi\n";
+            }
+            else if(exactPi && Stabilization && !missPricing && subProbCustR_neg)
+                exactPi = false;
+            else if(!exactPi && Stabilization && missPricing && subProbCustR_neg)
+            {
+                //exactPi = true;
+                //std::cout<<"Set exactPi\n";
+            }
+            /*
+            if(missPricing && exactPi)
+            {
+                std::cout<<"ERROR!m miss pricing with exact duals!\n";
+                PRINT_DEBUG("", "");
+                throw "ERROR";
+            }
+             */
         }
 
 
@@ -1122,12 +1168,11 @@ std::cout<<"*******************Column Generation*******************\n\n";
         }
 
 
-
         //lagrangeDualBound = getLagrangeDualBound(objRmlp, redCost);
         //gap = (std::abs(redCost)/objRmlp)*100.0;
         //std::cout<<"GAP("<<gap<<"%)\n";
 
-        if((itCG%10) == 0)
+        if((itCG%50) == 0 || itCG >= 950)
         {
             //std::cout<<"\t"<<itCG<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"%\"\n";
             std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG, objRmlp, gap);
@@ -1138,16 +1183,25 @@ std::cout<<"*******************Column Generation*******************\n\n";
         //delete []vetRmlpConstr;
 
 
-        /*
-        if(itCG == 200)
+
+
+
+
+
+
+
+
+/*
+        if(itCG == 1178)
         {
+
+            std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG, objRmlp, gap);
             std::cout<<"itCG("<<itCG<<")\nStopping CG!\n";
             PRINT_DEBUG("", "");
             return DW_DecompNS::StatusProb::StatusSubProb_Outro;
-
         }
-        */
 
+*/
 
     }
 
