@@ -52,6 +52,7 @@ target_sources(${PROJECT_NAME}
         src/VrpTW_Decomp.cpp
         src/Instancia.cpp
         src/SolomonInst.cpp
+        src/LowerBound.cpp
         src/main.cpp
 )
 

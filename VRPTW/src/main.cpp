@@ -50,7 +50,7 @@ int main(int argv, char **argc)
         DW_DecompNS::AuxData auxVectors;
         auxVectors.vetPairSubProb.push_back(std::make_pair(0, instVrpTw.numClientes * instVrpTw.numClientes));
 
-        setAlarm(2.5*60*60); // 2.5H timer
+        setAlarm(30.0*60); // 1.5 min timer
 
         std::cout << "Cria decompNode\n";
         DW_DecompNS::DW_DecompNode decompNode(grbEnv, model, distVarA, (DW_DecompNS::SubProb*)&vrpLabelingSubProb, 1, auxVectors);

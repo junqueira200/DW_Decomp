@@ -61,8 +61,8 @@ public:
     T& operator[](size_t index) = delete;
     const T& operator[](size_t index) const = delete;
 
-
-    virtual inline __attribute__((always_inline)) T operator()(size_t indexI, size_t indexJ) const
+    // inline __attribute__((always_inline))
+    virtual T operator()(size_t indexI, size_t indexJ) const
     {
 
         size_t index = indexI*m+indexJ;

@@ -38,14 +38,14 @@ namespace LabelingAlgorithmNS
     inline bool exactLabelingG = false;
 
     constexpr int   NumMaxResources   = 2;
-    constexpr int   NumMaxRoute       = 300;
+    constexpr int   NumMaxRoute       = 256;
     constexpr int   NumMaxCust        = 100;
     constexpr int   NgSetSize         = 5;
     constexpr int   NumBuckets        = 10;
-    constexpr int   vetPtrLabelSize   = 5;
+    constexpr int   vetPtrLabelSize   = 10;
     constexpr bool  NullFlush         = false;
     constexpr bool  Print             = false;
-    inline    int   numMaxLabelG      = 5000; // 5000
+    inline    int   numMaxLabelG      = 2000; // 500
 
     constexpr bool  DominaIterBuckets = true;
 
@@ -61,14 +61,12 @@ namespace LabelingAlgorithmNS
 
     std::ostream& operator<< (std::ostream& out, const Bound &bound);
 
-    // TODO Fix!
-    // Access the (i,j,r) where (i,j) is an arc and r a resource
+    // Access (i,j,r) where (i,j) is an arc and r a resource
     typedef Vector3D<FloatType, false> Vet3D_ResCost;
     //typedef Eigen::Matrix<Eigen::Array<FloatType , 1, -1>, -1, -1, Eigen::RowMajor> VetMatResCost;
 
-    // Fist access the resource, and then the bound of a customer
     // Access (i,r) where i is a customer and r a resource
-    typedef Matrix<Bound, false> MatBoundRes;
+    typedef Eigen::Matrix<Bound, -1, -1, Eigen::RowMajor> MatBoundRes;
 
     class NgSet
     {
@@ -81,7 +79,7 @@ namespace LabelingAlgorithmNS
 
         NgSet();
         NgSet(int numCust, int ngSetSize);
-        bool contain(int i, int j) const;
+        [[nodiscard]] bool contain(int i, int j) const;
         void setNgSets(const EigenMatrixRowD &matDist);
     };
 
@@ -125,7 +123,12 @@ namespace LabelingAlgorithmNS
         bool operator()(Label *l0, Label *l1) const
         {
             //return doubleLess(l0->vetResources[0], l1->vetResources[0], std::numeric_limits<FloatType>::epsilon());
-            return l0->vetResources[0] < l1->vetResources[0] && l0->vetResources[1] < l1->vetResources[1];
+            return l0->vetResources[0] < l1->vetResources[0];// && l0->vetResources[1] < l1->vetResources[1];
+        }
+
+        bool isGreater(Label *l0, Label *l1)const
+        {
+            return l0->vetResources[0] > l1->vetResources[0];
         }
 
     };
@@ -231,8 +234,6 @@ namespace LabelingAlgorithmNS
         void removeLabel(Label *label);
         Label* getBestLabel(int cust);
 
-        void checkMat();
-
         inline __attribute__((always_inline))
         int getIndexGraphBucket(int i, int j)
         {
@@ -266,7 +267,13 @@ namespace LabelingAlgorithmNS
                                   Eigen::VectorX<FloatType>&    vetRedCost);
 
     //inline __attribute__((always_inline))
-    bool checkDominance(const Label& l0, const Label& l1, int numResources);
+    bool checkCompleteDominance(const Label& l0, const Label& l1, int numResources);
+
+    inline __attribute__((always_inline))
+    bool checkDominanceSubSet(const Label &l0, const Label& l1)
+    {
+        return (l0.bitSetNg & l1.bitSetNg) == l0.bitSetNg;
+    }
 
     bool extendLabel(const Label&          label,
                      Label&                newLabel,
@@ -289,9 +296,13 @@ namespace LabelingAlgorithmNS
     bool containRoute(const Eigen::Array<Label*, 1, DW_DecompNS::NumMaxSolSubProb> &vetLabel, int numSol, Label* label);
 
     bool labelHaveRoute(std::vector<int> &vetRoute, Label *label);
-    void checkDataStructs(Label* ptrLabel, LabelingData& lData, boost::container::multiset<Label*, LabelCmp>& set);
-    void eraseLabelFromSet(Label* ptrLabel, boost::container::multiset<Label*, LabelCmp>& set);
-    Label* dominanceIntraBucket(Label* label, Bucket &bucket, LabelSetIt& set);
+    Bucket* dominanceIntraBucket(int           cust,
+                                 Label*        label,
+                                 LabelingData& lData,
+                                 LabelHeap&    labelHeap,
+                                 int           numRes,
+                                 int           dest,
+                                 int&          correctPos);
 
 }
 #endif //DW_LABELINGALGORITHM_H

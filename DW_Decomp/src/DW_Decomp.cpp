@@ -789,23 +789,27 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
         if(phaseStatus == PhaseStatus::PhaseStatusBigM && itCG > 0)
         {
-            bool allZero = true;
+            bool allZero  = true;
+            bool increase = true;
+            int numTotal  = 0;
+            int numMax    = 0;
+
             for(int i = 0; i < info.numConstrsOrignalProblem + info.numConstrsConv; ++i)
             {
                 if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0))
                 {
-                    allZero = false;
-                    vetMult[i] += 1.0;
+                        if(vetMult[i] == BigM_maxMult)
+                        {
+                            numMax   += 1;
+                            numTotal += 1;
+                            continue;
+                        }
 
-                    if(vetMult[i] >= BigM_maxMult)
-                    {
-                        phaseStatus = PhaseStatus::PhaseStatusTwoPhase;
-                        std::cout<<"Start PhaseStatusTwoPhase\n";
+                        vetMult[i] += 1.0;
+                        numTotal += 1;
+                        //std::cout<<"set "<<i<<" variable to: "<<vetMult[i]*info.costA_Var<<"\n";
+                        vetVar[i].set(GRB_DoubleAttr_Obj, vetMult[i] * info.costA_Var);
                         break;
-                    }
-
-                    //std::cout<<"set "<<i<<" variable to: "<<vetMult[i]*info.costA_Var<<"\n";
-                    vetVar[i].set(GRB_DoubleAttr_Obj, vetMult[i]*info.costA_Var);
 
                 }
                 else
@@ -814,6 +818,13 @@ std::cout<<"*******************Column Generation*******************\n\n";
                     vetVar[i].set(GRB_DoubleAttr_UB, 0.0);
                 }
 
+            }
+
+
+            if(numMax == numTotal)
+            {
+                phaseStatus = PhaseStatus::PhaseStatusTwoPhase;
+                std::cout << "Start PhaseStatusTwoPhase\n";
             }
 
         }
@@ -852,7 +863,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         if(PrintDebug)
             std::cout<<"~UpdatePi\n";
 
-        if(Stabilization && !exactPi)// && phaseStatus != PhaseStatus::PhaseStatusTwoPhase)// && numLimit < 5)
+        if(Stabilization && !exactPi && phaseStatus == PhaseStatus::PhaseStatusColGen)// && phaseStatus != PhaseStatus::PhaseStatusTwoPhase)// && numLimit < 5)
         {
             auxVect.vetRowRmlpSmoothPi = (1.0-StabilizationAlpha)*auxVect.vetRowRmlpSmoothPi + StabilizationAlpha * (auxVect.vetRowRmlpPi);//-auxVect.vetRowRmlpSmoothPi);
             //std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
@@ -1000,7 +1011,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
             if(numSolRep == numSol)
             {
-                std::cout<<"MISS PRICING\n";
+                //std::cout<<"MISS PRICING\n";
                 missPricing = true;
                 numLimit += 1;
             }
@@ -1172,7 +1183,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         //gap = (std::abs(redCost)/objRmlp)*100.0;
         //std::cout<<"GAP("<<gap<<"%)\n";
 
-        if((itCG%50) == 0 || itCG >= 950)
+        if((itCG%50) == 0)
         {
             //std::cout<<"\t"<<itCG<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"%\"\n";
             std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG, objRmlp, gap);
@@ -1191,8 +1202,10 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
 
 
+
+
 /*
-        if(itCG == 1178)
+        if(itCG == 750)
         {
 
             std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG, objRmlp, gap);
@@ -1202,6 +1215,8 @@ std::cout<<"*******************Column Generation*******************\n\n";
         }
 
 */
+
+
 
     }
 

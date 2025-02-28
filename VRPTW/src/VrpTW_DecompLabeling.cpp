@@ -24,38 +24,17 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     instVrpTw = &instVrpTw_;
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 12.0; // 6
+    vetStepSize[0].stepSize = 250.0; // 200
     vetStepSize[0].start    = (FloatType)-startDist;
     vetStepSize[0].end      = (FloatType)startDist;
 
-    //vetStepSize[1].stepSize = 5;
-    vetStepSize[1].stepSize = 12.0;  //6
+    vetStepSize[1].stepSize = 30.0;  //30
     vetStepSize[1].start    = 0;
     vetStepSize[1].end      = (FloatType)instVrpTw->capVeic;
 
 
-    labelingData = LabelingAlgorithmNS::LabelingData(vetStepSize, 2, instVrpTw->numClientes+1);
-
-
-/*    vetMatResCost = LabelingAlgorithmNS::Vet3D_ResCost(2);
-    vetMatResCost[0].resize(instVrpTw->matDist.rows(), instVrpTw->matDist.cols());
-    vetMatResCost[1].resize(instVrpTw->numClientes+1, instVrpTw->numClientes+1);
-    vetMatResCost[0].setZero();
-    vetMatResCost[1].setZero();*/
+    labelingData  = LabelingAlgorithmNS::LabelingData(vetStepSize, 2, instVrpTw->numClientes+1);
     vetMatResCost = Vet3D_ResCost(instVrpTw->numClientes+1, instVrpTw->numClientes+1, 2);
-
-/*    for(int i=0; i < instVrpTw->numClientes+1; ++i)
-    {
-        for(int j=0; j < instVrpTw->numClientes+1; ++j)
-        {
-
-            if(i == j || (i==0 && j == instVrpTw->numClientes) || (j==0 && i == instVrpTw->numClientes))
-                continue;
-
-            vetMatResCost[0](i, j) += -sumDist;
-        }
-    }*/
-
 
     for(int i=0; i < instVrpTw->numClientes; ++i)
     {
@@ -89,16 +68,12 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     {
         vetVetResBound(i, 0) = bound0;
         if(i > 0 && i < instVrpTw->numClientes)
-            bound1.lowerBound = (FloatType)instVrpTw->vetClieDem[i];  // TODO ERRO esta aqui?
-
+            bound1.lowerBound = (FloatType)instVrpTw->vetClieDem[i];
         else
             bound1.lowerBound = 0.0;
 
-        vetVetResBound.get(i, 1) = bound1;
+        vetVetResBound(i, 1) = bound1;
     }
-
-    for(int i=0; i < instVrpTw->numClientes+1; ++i)
-        std::cout<<vetVetResBound(i, 1)<<"\n";
 
     ngSet = NgSet(instVrpTw->numClientes+1, NgSetSize);
     ngSet.setNgSets(instVrpTw->matDist);
@@ -255,7 +230,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
 
     exactLabelingG = false;
 
-    for(int i=1; i <= 1; i += 5)
+    for(int i=2; i <= 2; i += 1)
     {
         //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
         matColX.setZero();
@@ -285,9 +260,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
     {
         matColX.setZero();
 
-        std::cout<<"EXACT LABELING\n";
+        //std::cout<<"EXACT LABELING\n";
         //exactLabelingG = true;
-        numMaxLabelG      = 10000;
         custoRedNeg = forwardLabelingAlgorithm(2,
                                                instVrpTw->numClientes+1,
                                                vetMatResCost,
@@ -304,6 +278,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                vetRedCostFT);
 
 
+        /*
         if(!custoRedNeg)
         {
             matColX.setZero();
@@ -326,6 +301,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
             if(custoRedNeg)
                 std::cout<<"IMPROVE\n";
         }
+        */
 
     }
 
