@@ -269,6 +269,8 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
         //eraseLabelFromSet(labelPtr, setLabel);
         labelPtr = labelHeap.extractMin();
 
+        std::cout<<*labelPtr<<"\n";
+
         if(labelPtr == nullptr)
         {
 
@@ -328,18 +330,23 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
             }
 
 
+            /*
             if(labelPtrAux->it == nullptr)
             {
                 LabelSetIt* labelSetIt = new LabelSetIt;
                 labelPtrAux->it = (void*)labelSetIt;
             }
+            */
 
             if(extendLabel(*labelPtr, *labelPtrAux, vetMatResCost, vetVetBound, labelPtr->cust, t, ngSet, numRes))
             {
                 int correctPos = 0;
                 Bucket* bucket = dominanceIntraBucket(t, labelPtrAux, lData, labelHeap, numRes, dest, correctPos);
                 if(!bucket)
+                {
+                    labelPoolG.delT(labelPtrAux);
                     continue;
+                }
 
                 if((bucket->sizeVetPtrLabel+1) > NumMaxLabePerBucket && t != dest)
                 {
@@ -371,15 +378,20 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                 }
                 else
                 {
-                    bucket->addLabel(labelPtrAux);
-                    labelHeap.insertKey(labelPtrAux);
+                    // TODO: ERRO?
+                    //bucket->addLabel(labelPtrAux);
+
+                    int size = bucket->sizeVetPtrLabel+1;
+                    if(size > bucket->vetPtrLabel.size())
+                    {
+                        bucket->vetPtrLabel.conservativeResize(2*size);
+                    }
 
                     if(bucket->sizeVetPtrLabel != 0)
                     {
-                        for(int i = bucket->sizeVetPtrLabel - 1; i >= correctPos; --i)
-                        {
+                        for(int i = bucket->sizeVetPtrLabel-1; i >= correctPos; --i)
                             bucket->vetPtrLabel[i+1] = bucket->vetPtrLabel[i];
-                        }
+
                     }
 
                     bucket->vetPtrLabel[correctPos] = labelPtrAux;
