@@ -365,14 +365,14 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
         std::cout<<j<<": ";
         for(int i=0; i < (instVrpTw->numClientes*instVrpTw->numClientes); ++i)
         {
-            if(matColX(i,j) !=1)
+            if(matColX(i,j) != 1.0)
                 continue;
 
             int ii = i/instVrpTw->numClientes;
             int jj = i%instVrpTw->numClientes;
 
             redCostTemp += vetMatResCost(ii, jj, 0);//instVrpTw->matDist(ii, jj);
-            std::cout<<"("<<ii<<","<<jj<<"); ";
+            std::cout<<"("<<ii<<","<<jj<<")["<<i<<"]; ";
 
         }
         std::cout<<"\n\n";

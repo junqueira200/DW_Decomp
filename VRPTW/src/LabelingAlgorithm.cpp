@@ -218,6 +218,12 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
     while(!labelHeap.empty() && numSol < DW_DecompNS::NumMaxSolSubProb)
     {
 
+        if(numSol > 23)
+        {
+            std::cout << "**23" << ": " << vetLabel[23] << ": " << *vetLabel[23] << ": ";
+        }
+
+        labelPoolG.printDelT();
 
         if((numSol >= 1 && labelHeap.heapSize > 8*numCust))
             break;
@@ -312,6 +318,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
         // Extend label
         for(int t=1; t < numCust; ++t)
         {
+            std::cout<<"t: "<<t<<"\n";
             if(t == lastCust || vetMatResCost(labelPtr->cust, t, 0) == std::numeric_limits<FloatType>::infinity())
                 continue;
 
@@ -339,10 +346,20 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
             }
             */
 
+            if(numSol > 23)
+            {
+                if(labelPtrAux == vetLabel[23])
+                {
+                    std::cout<<"ERROR, WTF!!\n";
+                    throw "ERROR";
+                }
+            }
+
             if(extendLabel(*labelPtr, *labelPtrAux, vetMatResCost, vetVetBound, labelPtr->cust, t, ngSet, numRes))
             {
                 int correctPos = 0;
                 Bucket* bucket = dominanceIntraBucket(t, labelPtrAux, lData, labelHeap, numRes, dest, correctPos);
+
                 if(!bucket)
                 {
                     labelPoolG.delT(labelPtrAux);
@@ -368,23 +385,28 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                     removeCycles2(*labelPtrAux, numCust);
                     updateLabelCost(*labelPtrAux, vetMatResCost, labelStart);
 
-                    std::cout<<"Add: ("<<numSol<<"): "<<*labelPtrAux<<"\n";
-
                     if(labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb &&
                        !containRoute(vetLabel, numSol, labelPtrAux))
                     {
+                        std::cout<<"Add: ("<<numSol<<"): "<<labelPtrAux<<": "<<*labelPtrAux<<"\n";
+                        labelPoolG.printDelT();
                         vetLabel[numSol] = labelPtrAux;
                         vetRedCost[numSol] = labelPtrAux->vetResources[0];
                         numSol += 1;
+
+                        if(numSol == 24)
+                        {
+                            labelPoolG.printDelT();
+                        }
                     }
                     else
                         labelPoolG.delT(labelPtrAux);
+
+                    continue;
+
                 }
                 else
                 {
-                    // TODO: ERRO?
-                    //bucket->addLabel(labelPtrAux);
-
                     int size = bucket->sizeVetPtrLabel+1;
                     if(size > bucket->vetPtrLabel.size())
                     {
@@ -431,15 +453,22 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
             vetLabel[l]->vetRoute[vetLabel[l]->tamRoute-1] = vetLabel[l]->vetRoute[0];
 
             if(ptrLabelTarget)
-                std::cout << "BEST LABEL: "<<vetLabel[l]<<" "<< *vetLabel[l] << "\n";
+                std::cout << "BEST LABEL: "<<vetLabel[l]<<" "<< *vetLabel[l] << "; ";
 
             auto &vetRoute = vetLabel[l]->vetRoute;
 
+            std::cout<<l<<": "<<vetLabel[l]<<": "<<*vetLabel[l]<<": ";
+
             for(int i = 0; i < (vetLabel[l]->tamRoute - 1); ++i)
             {
-                matColX((getIndex(vetRoute[i], vetRoute[i+1], numCust-1)), l) = 1.0;
+                int index = getIndex(vetRoute[i], vetRoute[i+1], numCust-1);
+                std::cout<<"(("<<vetRoute[i]<<", "<<vetRoute[i+1]<<"): "<<index<<"); ";
+                matColX(index, l) = 1.0;
             }
+            std::cout<<"\n";
         }
+
+        std::cout<<"\n";
 
         return true;
     }

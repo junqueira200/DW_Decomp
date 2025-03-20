@@ -73,7 +73,13 @@ namespace MemoryPool_NS
         long getNumDel()const{return nextPosVetSolDel;}
         long getNumBuckets()const{return listT.size();}
 
-
+        void printDelT()
+        {
+            std::cout<<"\n";
+            for(int i=0; i < nextPosVetSolDel; ++i)
+                std::cout<<p_tDelT[i]<<" ";
+            std::cout<<"\n";
+        }
 
         Pool(int bucketSizePage, int vetDelSizePage)
         {
@@ -138,7 +144,9 @@ namespace MemoryPool_NS
             const long lastPosDel = nextPosVetSolDel-1;
             if(lastPosDel >= 0)
             {
+                std::cout<<"From p_tDelT\n";
                 p_tTemp = p_tDelT[lastPosDel];
+                p_tDelT[lastPosDel] = nullptr;
                 nextPosVetSolDel = lastPosDel;
                 return p_tTemp;
                 //return p_tTemp;
@@ -147,6 +155,7 @@ namespace MemoryPool_NS
             if(proxT.iterator == listT.end())
             {
 
+                std::cout<<"Net bucket\n";
                 T *p_tNew = nullptr;
                 assertm(posix_memalign((void**)&p_tNew, pageSize, bucketSize), "Bay more memory!");
 
