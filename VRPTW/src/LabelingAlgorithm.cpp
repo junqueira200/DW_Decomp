@@ -106,6 +106,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                                               FloatType&                    maxDist,
                                               Eigen::VectorX<FloatType>&    vetRedCost)
 {
+    matColX.setZero();
     if(vetRoteG.size() > 0)
     {
         std::cout<<"vetRoteG: ";
@@ -367,7 +368,10 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                     removeCycles2(*labelPtrAux, numCust);
                     updateLabelCost(*labelPtrAux, vetMatResCost, labelStart);
 
-                    if(labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb && !containRoute(vetLabel, numSol, labelPtrAux))
+                    std::cout<<"Add: ("<<numSol<<"): "<<*labelPtrAux<<"\n";
+
+                    if(labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb &&
+                       !containRoute(vetLabel, numSol, labelPtrAux))
                     {
                         vetLabel[numSol] = labelPtrAux;
                         vetRedCost[numSol] = labelPtrAux->vetResources[0];
@@ -395,6 +399,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                     }
 
                     bucket->vetPtrLabel[correctPos] = labelPtrAux;
+                    bucket->sizeVetPtrLabel += 1;
                     labelHeap.insertKey(labelPtrAux);
                 }
 
@@ -490,14 +495,13 @@ bool LabelingAlgorithmNS::extendLabel(const Label&          label,
     */
 
     // Copy route
-    newLabel.vetRoute = label.vetRoute;
+    //newLabel.vetRoute = label.vetRoute;
 
-    /*
+
     for(int i=0; i < label.tamRoute; ++i)
-    {
         newLabel.vetRoute[i] = label.vetRoute[i];
-    }
-    */
+
+
 
     if(Print)
         std::cout<<"APOS COPY ROUTE\n";
@@ -680,12 +684,15 @@ void LabelingAlgorithmNS::LabelingData::removeLabel(Label *label)
 
     for(int t=0; t < vetMatBucket[cust].mat(i, j).sizeVetPtrLabel; ++t)
     {
+        std::cout<<"\t"<<*vetMatBucket[cust].mat(i, j).vetPtrLabel[t]<<"; ";
         if(vetMatBucket[cust].mat(i, j).vetPtrLabel[t] == label)
         {
             pos = t;
             break;
         }
     }
+
+    std::cout<<"\n";
 
     if(pos == -1)
     {
@@ -1079,7 +1086,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int           cust,
     correctPos = 0;
     while(correctPos < bucket.sizeVetPtrLabel)
     {
-        if(bucket.vetPtrLabel[0]->vetResources[0] <= labelPtrAux->vetResources[0])
+        if(bucket.vetPtrLabel[correctPos]->vetResources[0] <= labelPtrAux->vetResources[0])
             correctPos += 1;
         else
             break;
@@ -1136,9 +1143,8 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int           cust,
                 labelPoolG.delT(bucket.vetPtrLabel[ii]);
 
                 for(int t=ii; t < (bucket.sizeVetPtrLabel-1); ++t)
-                {
                     bucket.vetPtrLabel[t] = bucket.vetPtrLabel[t+1];
-                }
+
 
                 bucket.sizeVetPtrLabel -= 1;
                 bucketSizeVetPtrLabel  -= 1;

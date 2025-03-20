@@ -362,26 +362,28 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
     for(int j=0; j < numSol; ++j)
     {
         redCostTemp = constPiValue;
-
+        std::cout<<j<<": ";
         for(int i=0; i < (instVrpTw->numClientes*instVrpTw->numClientes); ++i)
         {
-            if(doubleEqual(matColX(i,j), 0.0))
+            if(matColX(i,j) !=1)
                 continue;
 
             int ii = i/instVrpTw->numClientes;
             int jj = i%instVrpTw->numClientes;
 
             redCostTemp += vetMatResCost(ii, jj, 0);//instVrpTw->matDist(ii, jj);
-            //std::cout<<"("<<ii<<","<<jj<<"); ";
+            std::cout<<"("<<ii<<","<<jj<<"); ";
 
         }
-
-        if(redCostTemp >= -DW_DecompNS::TolObjSubProb || !doubleEqual(redCostTemp, vetRedCostFT[j], 1E-4))
+        std::cout<<"\n\n";
+        if(redCostTemp >= -DW_DecompNS::TolObjSubProb || !doubleEqual(vetRedCostFT[j], redCostTemp, 1E-3))
         {
             std::cout<<"\nERROR, custo reduzido calculado: ("<<redCostTemp<<") \n";
+            std::cout<<"dif: "<<(vetRedCostFT[j]-redCostTemp)<<"\n";
             std::cout<<"redCost: "<<vetRedCostFT[j]<<"\n\n";
             PRINT_DEBUG("", "");
             std::cout<<"phaseStatus: "<<(int)phaseStatus<<"\n\n";
+            std::cout<<(redCostTemp >= -DW_DecompNS::TolObjSubProb)<<"\n";
             throw "ERROR";
         }
 
