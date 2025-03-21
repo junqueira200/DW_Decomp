@@ -15,7 +15,6 @@ void on_alarm(int signal)
 {
     alarm_stopG = true;
     std::cout<<"TIME OUT!\n\n";
-    exit(-1);
 }
 
 

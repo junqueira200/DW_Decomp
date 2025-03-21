@@ -362,7 +362,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
     for(int j=0; j < numSol; ++j)
     {
         redCostTemp = constPiValue;
-        std::cout<<j<<": ";
+        //std::cout<<j<<": ";
         for(int i=0; i < (instVrpTw->numClientes*instVrpTw->numClientes); ++i)
         {
             if(matColX(i,j) != 1.0)
@@ -372,10 +372,10 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
             int jj = i%instVrpTw->numClientes;
 
             redCostTemp += vetMatResCost(ii, jj, 0);//instVrpTw->matDist(ii, jj);
-            std::cout<<"("<<ii<<","<<jj<<")["<<i<<"]; ";
+            //std::cout<<"("<<ii<<","<<jj<<")["<<i<<"]; ";
 
         }
-        std::cout<<"\n\n";
+        //std::cout<<"\n\n";
         if(redCostTemp >= -DW_DecompNS::TolObjSubProb || !doubleEqual(vetRedCostFT[j], redCostTemp, 1E-3))
         {
             std::cout<<"\nERROR, custo reduzido calculado: ("<<redCostTemp<<") \n";

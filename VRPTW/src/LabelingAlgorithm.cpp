@@ -218,12 +218,6 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
     while(!labelHeap.empty() && numSol < DW_DecompNS::NumMaxSolSubProb)
     {
 
-        if(numSol > 23)
-        {
-            std::cout << "**23" << ": " << vetLabel[23] << ": " << *vetLabel[23] << ": ";
-        }
-
-        labelPoolG.printDelT();
 
         if((numSol >= 1 && labelHeap.heapSize > 8*numCust))
             break;
@@ -276,7 +270,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
         //eraseLabelFromSet(labelPtr, setLabel);
         labelPtr = labelHeap.extractMin();
 
-        std::cout<<*labelPtr<<"\n";
+        //std::cout<<*labelPtr<<"\n";
 
         if(labelPtr == nullptr)
         {
@@ -318,7 +312,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
         // Extend label
         for(int t=1; t < numCust; ++t)
         {
-            std::cout<<"t: "<<t<<"\n";
+            //std::cout<<"t: "<<t<<"\n";
             if(t == lastCust || vetMatResCost(labelPtr->cust, t, 0) == std::numeric_limits<FloatType>::infinity())
                 continue;
 
@@ -346,14 +340,6 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
             }
             */
 
-            if(numSol > 23)
-            {
-                if(labelPtrAux == vetLabel[23])
-                {
-                    std::cout<<"ERROR, WTF!!\n";
-                    throw "ERROR";
-                }
-            }
 
             if(extendLabel(*labelPtr, *labelPtrAux, vetMatResCost, vetVetBound, labelPtr->cust, t, ngSet, numRes))
             {
@@ -388,16 +374,12 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
                     if(labelPtrAux->vetResources[0] < -DW_DecompNS::TolObjSubProb &&
                        !containRoute(vetLabel, numSol, labelPtrAux))
                     {
-                        std::cout<<"Add: ("<<numSol<<"): "<<labelPtrAux<<": "<<*labelPtrAux<<"\n";
-                        labelPoolG.printDelT();
+                        //std::cout<<"Add: ("<<numSol<<"): "<<labelPtrAux<<": "<<*labelPtrAux<<"\n";
+                        //labelPoolG.printDelT();
                         vetLabel[numSol] = labelPtrAux;
                         vetRedCost[numSol] = labelPtrAux->vetResources[0];
                         numSol += 1;
 
-                        if(numSol == 24)
-                        {
-                            labelPoolG.printDelT();
-                        }
                     }
                     else
                         labelPoolG.delT(labelPtrAux);
@@ -457,18 +439,18 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
 
             auto &vetRoute = vetLabel[l]->vetRoute;
 
-            std::cout<<l<<": "<<vetLabel[l]<<": "<<*vetLabel[l]<<": ";
+            //std::cout<<l<<": "<<vetLabel[l]<<": "<<*vetLabel[l]<<": ";
 
             for(int i = 0; i < (vetLabel[l]->tamRoute - 1); ++i)
             {
                 int index = getIndex(vetRoute[i], vetRoute[i+1], numCust-1);
-                std::cout<<"(("<<vetRoute[i]<<", "<<vetRoute[i+1]<<"): "<<index<<"); ";
+                //std::cout<<"(("<<vetRoute[i]<<", "<<vetRoute[i+1]<<"): "<<index<<"); ";
                 matColX(index, l) = 1.0;
             }
-            std::cout<<"\n";
+            //std::cout<<"\n";
         }
 
-        std::cout<<"\n";
+        //std::cout<<"\n";
 
         return true;
     }
@@ -713,7 +695,7 @@ void LabelingAlgorithmNS::LabelingData::removeLabel(Label *label)
 
     for(int t=0; t < vetMatBucket[cust].mat(i, j).sizeVetPtrLabel; ++t)
     {
-        std::cout<<"\t"<<*vetMatBucket[cust].mat(i, j).vetPtrLabel[t]<<"; ";
+        //std::cout<<"\t"<<*vetMatBucket[cust].mat(i, j).vetPtrLabel[t]<<"; ";
         if(vetMatBucket[cust].mat(i, j).vetPtrLabel[t] == label)
         {
             pos = t;
@@ -721,7 +703,7 @@ void LabelingAlgorithmNS::LabelingData::removeLabel(Label *label)
         }
     }
 
-    std::cout<<"\n";
+    //std::cout<<"\n";
 
     if(pos == -1)
     {
@@ -1122,8 +1104,6 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int           cust,
     }
 
     // Labels before correctPos can dominate labelPtrAux;
-    // Labels after correctPos (inclusive) can be dominated by labelPtrAux
-
     for(int ii=0; ii < correctPos; ++ii)
     {
         bool canDomindate = true;
@@ -1141,13 +1121,14 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int           cust,
             if(checkDominanceSubSet(*bucket.vetPtrLabel[ii], *labelPtrAux))
             {
 
-                labelPoolG.delT(labelPtrAux);
+                //labelPoolG.delT(labelPtrAux);
                 labelPtrAux = nullptr;
                 return nullptr;
             }
         }
     }
 
+    // Labels after correctPos (inclusive) can be dominated by labelPtrAux
     int bucketSizeVetPtrLabel = bucket.sizeVetPtrLabel;
     int ii = correctPos;
 
@@ -1183,70 +1164,6 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int           cust,
 
         ii += 1;
     }
-
-    /*
-    while(k < bucket.sizeVetPtrLabel)
-    {
-        if(Print)
-            std::cout << "\t\t\tcheckDominance " << bucket.vetPtrLabel[k] << ": "
-                      << *bucket.vetPtrLabel[k] << "\n";
-
-        if(checkCompleteDominance(*labelPtrAux, *bucket.vetPtrLabel[k], numRes))
-        {
-
-            dom = 1;
-
-            //setLabel.erase(bucket.vetPtrLabel[k]);
-            //eraseLabelFromSet(bucket.vetPtrLabel[k], setLabel);
-            Label* label = bucket.vetPtrLabel[k];
-            if(label != labelHeap.vet[label->pos])
-            {
-                std::cout<<"ERROR, label("<<label<<") != labelHeap.vet[label->pos]("<<labelHeap.vet[label->pos]<<"\n\n";
-                PRINT_DEBUG("", "");
-                throw "ERROR";
-            }
-
-            labelHeap.deleteKey(label->pos);
-
-            bucket.vetPtrLabel[k]->active = false;
-            labelPoolG.delT(bucket.vetPtrLabel[k]);
-
-            if(k == (bucket.sizeVetPtrLabel - 1))
-            {
-                //labelPool.delT(bucket.vetPtrLabel[k]);
-                bucket.vetPtrLabel[k] = nullptr;
-            } else
-            {
-                std::swap(bucket.vetPtrLabel[k], bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1]);
-                //labelPool.delT(bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1]);
-                bucket.vetPtrLabel[bucket.sizeVetPtrLabel-1] = nullptr;
-            }
-
-            bucket.sizeVetPtrLabel -= 1;
-            continue;
-        }
-        else if(checkCompleteDominance(*bucket.vetPtrLabel[k], *labelPtrAux, numRes))
-        {
-
-            if(dom == 1)
-            {
-                std::cout<<"ERROR dominancia\n";
-                PRINT_DEBUG("", "");
-                throw "ERROR";
-            }
-
-            if(Print)
-                std::cout << "\t\t\t\t<" << bucket.vetPtrLabel[k] << ">> domina <<" << labelPtrAux
-                          << ">>\n";
-
-            labelPoolG.delT(labelPtrAux);
-            labelPtrAux = nullptr;
-            break;
-        }
-
-        k += 1;
-    }
-    */
 
     if(labelPtrAux == nullptr)
         return nullptr;
