@@ -344,7 +344,14 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
             if(extendLabel(*labelPtr, *labelPtrAux, vetMatResCost, vetVetBound, labelPtr->cust, t, ngSet, numRes))
             {
                 int correctPos = 0;
-                Bucket* bucket = dominanceIntraBucket(t, labelPtrAux, lData, labelHeap, numRes, dest, correctPos);
+                Bucket* bucket = dominanceIntraBucket(t,
+                                                      labelPtrAux,
+                                                      lData,
+                                                      labelHeap,
+                                                      numRes,
+                                                      dest,
+                                                      correctPos,
+                                                      nullptr);
 
                 if(!bucket)
                 {
@@ -1066,38 +1073,71 @@ bool LabelingAlgorithmNS::labelHaveRoute(std::vector<int> &vetRoute, Label *labe
 }
 
 
+/** **********************************************************************************************
+ *  **********************************************************************************************
+ *
+ * @brief Performs intra-bucket dominance check for a given label
+ *
+ * Performs an intra-bucket dominance check for a given label. Since the labels are
+ *  sorted by reduced cost, this function is responsible for finding the correct
+ *  position of (@param labelPtrAux) in the bucket. It first locates the correct
+ *  position while testing the dominance of (<label>, @param labelPtrAux). After
+ *  finding the correct position, it then tests the dominance of the others labels
+ *  (@param labelPtrAux, <label>), where <label> are labels which are greater then
+ *  @param labelPtrAux in the reduced cost.
+ *
+ * @param cust          Customer node
+ * @param labelPtrAux   Pointer to the label being checked
+ * @param lData         Reference to the labeling data structure
+ * @param labelHeap     Reference to the heap of labels
+ * @param numRes        Number of resources being considered
+ * @param dest          Destination node
+ * @param correctPos    Reference to an integer storing the correct position
+ *                          for insertion or modification
+ * @param bucketPtr     Pointer to the bucket where dominance is checked (optional parameter)
+ *
+ * @return              Pointer to the modified or resulting bucket after dominance check.
 
+ *  **********************************************************************************************
+ *  **********************************************************************************************
+ */
 Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int           cust,
                                                   Label*        labelPtrAux,
                                                   LabelingData& lData,
                                                   LabelHeap&    labelHeap,
                                                   int           numRes,
                                                   int           dest,
-                                                  int&          correctPos)
+                                                  int&          correctPos,
+                                                  Bucket*       bucketPtr)
 {
+    const bool rmFromHeap = (bool)bucketPtr;
 
-    // Find index from resources
-    int i = lData.getIndex(0, labelPtrAux->vetResources[0]);
-    int j = 0;
-    if(lData.numMainResources > 1)
-        j = lData.getIndex(1, labelPtrAux->vetResources[1]);
+    if(!bucketPtr)
+    {
+        // Find index from resources
+        int i = lData.getIndex(0, labelPtrAux->vetResources[0]);
+        int j = 0;
+        if(lData.numMainResources > 1)
+            j = lData.getIndex(1, labelPtrAux->vetResources[1]);
 
-    labelPtrAux->i = i;
-    labelPtrAux->j = j;
-    labelPtrAux->cust = cust;
+        labelPtrAux->i = i;
+        labelPtrAux->j = j;
+        labelPtrAux->cust = cust;
 
-    if(Print)
-        std::cout<<"\t\ti("<<i<<"); j("<<j<<")\n";
+        if(Print)
+            std::cout << "\t\ti(" << i << "); j(" << j << ")\n";
 
-    Bucket &bucket = lData.vetMatBucket[cust].mat(i, j);
+        bucketPtr = &lData.vetMatBucket[cust].mat(i, j);
+    }
+
     int k=0;
 
     int dom = 0;
 
     correctPos = 0;
-    while(correctPos < bucket.sizeVetPtrLabel)
+    while(correctPos < bucketPtr->sizeVetPtrLabel)
     {
-        if(bucket.vetPtrLabel[correctPos]->vetResources[0] <= labelPtrAux->vetResources[0])
+        if(bucketPtr->vetPtrLabel[correctPos]->vetResources[0] <= labelPtrAux->vetResources[0])
             correctPos += 1;
         else
             break;
@@ -1109,7 +1149,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int           cust,
         bool canDomindate = true;
         for(int r=1; r < numRes; ++r)
         {
-            if(bucket.vetPtrLabel[ii]->vetResources[r] > labelPtrAux->vetResources[r])
+            if(bucketPtr->vetPtrLabel[ii]->vetResources[r] > labelPtrAux->vetResources[r])
             {
                 canDomindate = false;
                 break;
@@ -1118,7 +1158,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int           cust,
 
         if(canDomindate)
         {
-            if(checkDominanceSubSet(*bucket.vetPtrLabel[ii], *labelPtrAux))
+            if(checkDominanceSubSet(*bucketPtr->vetPtrLabel[ii], *labelPtrAux))
             {
 
                 //labelPoolG.delT(labelPtrAux);
@@ -1129,7 +1169,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int           cust,
     }
 
     // Labels after correctPos (inclusive) can be dominated by labelPtrAux
-    int bucketSizeVetPtrLabel = bucket.sizeVetPtrLabel;
+    int bucketSizeVetPtrLabel = bucketPtr->sizeVetPtrLabel;
     int ii = correctPos;
 
     while(ii < bucketSizeVetPtrLabel)
@@ -1137,7 +1177,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int           cust,
         bool canDominate = true;
         for(int r=1; r < numRes; ++r)
         {
-            if(labelPtrAux->vetResources[r] > bucket.vetPtrLabel[ii]->vetResources[r])
+            if(labelPtrAux->vetResources[r] > bucketPtr->vetPtrLabel[ii]->vetResources[r])
             {
                 canDominate = false;
                 break;
@@ -1146,17 +1186,19 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int           cust,
 
         if(canDominate)
         {
-            if(checkDominanceSubSet(*labelPtrAux, *bucket.vetPtrLabel[ii]))
+            if(checkDominanceSubSet(*labelPtrAux, *bucketPtr->vetPtrLabel[ii]))
             {
                 // Remove bucket.vetPtrLabel[ii]
-                labelHeap.deleteKey(bucket.vetPtrLabel[ii]->pos);
-                labelPoolG.delT(bucket.vetPtrLabel[ii]);
+                if(rmFromHeap)
+                    labelHeap.deleteKey(bucketPtr->vetPtrLabel[ii]->pos);
 
-                for(int t=ii; t < (bucket.sizeVetPtrLabel-1); ++t)
-                    bucket.vetPtrLabel[t] = bucket.vetPtrLabel[t+1];
+                labelPoolG.delT(bucketPtr->vetPtrLabel[ii]);
+
+                for(int t=ii; t < (bucketPtr->sizeVetPtrLabel-1); ++t)
+                    bucketPtr->vetPtrLabel[t] = bucketPtr->vetPtrLabel[t+1];
 
 
-                bucket.sizeVetPtrLabel -= 1;
+                bucketPtr->sizeVetPtrLabel -= 1;
                 bucketSizeVetPtrLabel  -= 1;
                 continue; // while ii
             }
@@ -1173,7 +1215,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int           cust,
 
     labelPtrAux->active = true;
 
-    return &bucket;
+    return bucketPtr;
 
 }
 

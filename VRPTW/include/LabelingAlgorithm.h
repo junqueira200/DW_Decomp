@@ -45,7 +45,7 @@ namespace LabelingAlgorithmNS
     constexpr int   vetPtrLabelSize   = 10;
     constexpr bool  NullFlush         = false;
     constexpr bool  Print             = false;
-    inline    int   numMaxLabelG      = 2000; // 500
+    inline    int   numMaxLabelG      = 200; // 500
 
     constexpr bool  DominaIterBuckets = true;
 
@@ -296,13 +296,16 @@ namespace LabelingAlgorithmNS
     bool containRoute(const Eigen::Array<Label*, 1, DW_DecompNS::NumMaxSolSubProb> &vetLabel, int numSol, Label* label);
 
     bool labelHaveRoute(std::vector<int> &vetRoute, Label *label);
+
+
     Bucket* dominanceIntraBucket(int           cust,
                                  Label*        label,
                                  LabelingData& lData,
                                  LabelHeap&    labelHeap,
                                  int           numRes,
                                  int           dest,
-                                 int&          correctPos);
+                                 int&          correctPos,
+                                 Bucket*       bucketPtr);
 
 }
 #endif //DW_LABELINGALGORITHM_H

@@ -24,11 +24,11 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     instVrpTw = &instVrpTw_;
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 250.0; // 200
-    vetStepSize[0].start    = (FloatType)-startDist;
-    vetStepSize[0].end      = (FloatType)startDist;
+    vetStepSize[0].stepSize = 1700.0; // 200
+    vetStepSize[0].start    = (FloatType)-1.0*startDist;
+    vetStepSize[0].end      = (FloatType) 1.0*startDist;
 
-    vetStepSize[1].stepSize = 30.0;  //30
+    vetStepSize[1].stepSize = 50.0;  //30
     vetStepSize[1].start    = 0;
     vetStepSize[1].end      = (FloatType)instVrpTw->capVeic;
 
