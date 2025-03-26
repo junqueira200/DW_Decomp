@@ -61,11 +61,10 @@ namespace LabelingAlgorithmNS
 
     std::ostream& operator<< (std::ostream& out, const Bound &bound);
 
-    // Access (i,j,r) where (i,j) is an arc and r a resource
+    /// Access (i,j,r) where (i,j) is an arc and r a resource
     typedef Vector3D<FloatType, false> Vet3D_ResCost;
-    //typedef Eigen::Matrix<Eigen::Array<FloatType , 1, -1>, -1, -1, Eigen::RowMajor> VetMatResCost;
 
-    // Access (i,r) where i is a customer and r a resource
+    /// Access (i,r) where i is a customer and r a resource
     typedef Eigen::Matrix<Bound, -1, -1, Eigen::RowMajor> MatBoundRes;
 
     class NgSet
@@ -161,8 +160,6 @@ namespace LabelingAlgorithmNS
     class Bucket
     {
     public:
-        // Bound: [lower;upper)
-        // Eigen::Vector<Bound, 2> vetBound;
         Eigen::VectorX<Label*> vetPtrLabel;
         int                    sizeVetPtrLabel;
 
@@ -208,15 +205,19 @@ namespace LabelingAlgorithmNS
     {
     public:
 
-        /** Access first the customer and after (i,j), where i is the component of the first resource
-          *  and j the component of the second one.
-          */
+        /// Access first the customer and after (i,j), where i is the component of the first resource and j
+        ///     the component of the second one.
         Eigen::VectorX<MatBucket>       vetMatBucket;
-        // Access first the resorce
+
+        /// Access first the resorce
         Vector<Matrix<Bound, false>>    vetMatBound;
+
         Eigen::Vector<Step, 2>          vetStepSize;
+
         Eigen::Vector<int, 2>           vetNumSteps;
-        EigenMatrixRowI                 matBucketIndex; // Given a bucket index (i, j)
+
+        /// Given a bucket index (i, j)
+        EigenMatrixRowI                 matBucketIndex;
 
         int numMainResources;
         int numCust;
@@ -224,9 +225,7 @@ namespace LabelingAlgorithmNS
 
         GraphNS::Graph<int> graphBucket;
 
-        LabelingData(const Eigen::Vector<Step, 2> &vetStepSize_,
-                     int numMainResources_,
-                     int numCust_);
+        LabelingData(const Eigen::Vector<Step, 2> &vetStepSize_, int numMainResources_, int numCust_);
         LabelingData()=default;
 
         void flushLabel();
@@ -242,7 +241,7 @@ namespace LabelingAlgorithmNS
 
 
         // std::set<Label*, LabelCmp> &setLabel
-        void dominanceInterBuckets(LabelHeap& labelHeap, int numRes, const int localNumMaxLabel);//, MemoryPool_NS::Pool<Label> &poolTemp);
+        void dominanceInterBuckets(LabelHeap& labelHeap, int numRes, const int localNumMaxLabel);
 
         void setupGraphBucket();
 
@@ -304,8 +303,7 @@ namespace LabelingAlgorithmNS
                                  LabelHeap&    labelHeap,
                                  int           numRes,
                                  int           dest,
-                                 int&          correctPos,
-                                 Bucket*       bucketPtr);
+                                 int&          correctPos);
 
 }
 #endif //DW_LABELINGALGORITHM_H
