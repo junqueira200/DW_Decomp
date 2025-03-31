@@ -45,7 +45,7 @@ namespace LabelingAlgorithmNS
     constexpr int   vetPtrLabelSize   = 10;
     constexpr bool  NullFlush         = false;
     constexpr bool  Print             = false;
-    inline    int   numMaxLabelG      = 200; // 500
+    inline    int   numMaxLabelG      = 2000; // 500
 
     constexpr bool  DominaIterBuckets = true;
 

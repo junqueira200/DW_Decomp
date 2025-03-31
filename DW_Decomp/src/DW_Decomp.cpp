@@ -1183,7 +1183,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         //gap = (std::abs(redCost)/objRmlp)*100.0;
         //std::cout<<"GAP("<<gap<<"%)\n";
 
-        if((itCG%50) == 0)
+        if((itCG%5) == 0)
         {
             //std::cout<<"\t"<<itCG<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"%\"\n";
             std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG, objRmlp, gap);
@@ -1201,20 +1201,6 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
 
 
-
-
-
-/*
-        if(itCG == 750)
-        {
-
-            std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG, objRmlp, gap);
-            std::cout<<"itCG("<<itCG<<")\nStopping CG!\n";
-            PRINT_DEBUG("", "");
-            return DW_DecompNS::StatusProb::StatusSubProb_Outro;
-        }
-
-*/
 
 
 

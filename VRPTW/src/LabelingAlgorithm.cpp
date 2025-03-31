@@ -212,9 +212,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
 
     while(!labelHeap.empty() && lData.vetMatBucket[dest].mat(0,0).sizeVetPtrLabel < DW_DecompNS::NumMaxSolSubProb)
     {
-
-
-        if((numSol >= 1 && labelHeap.heapSize > 8*numCust))
+        if((lData.vetMatBucket[dest].mat(0, 0).sizeVetPtrLabel >= 10 && labelHeap.heapSize >= 25*numCust))
             break;
 
         // TODO remover
@@ -330,8 +328,23 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
 
                 if(t == dest)
                 {
+                    if(labelPtrAux->vetResources[0] >= -DW_DecompNS::TolObjSubProb)
+                    {
+
+                        labelPoolG.delT(labelPtrAux);
+                        continue;
+                    }
+
                     removeCycles2(*labelPtrAux, numCust);
                     updateLabelCost(*labelPtrAux, vetMatResCost, labelStart);
+
+
+                    if(labelPtrAux->vetResources[0] >= -DW_DecompNS::TolObjSubProb)
+                    {
+
+                        labelPoolG.delT(labelPtrAux);
+                        continue;
+                    }
                 }
 
                 Bucket* bucket = dominanceIntraBucket(t, labelPtrAux, lData, labelHeap, numRes, dest, correctPos);
@@ -370,6 +383,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
 
                 bucket->vetPtrLabel[correctPos] = labelPtrAux;
                 bucket->sizeVetPtrLabel += 1;
+
                 if(t != dest)
                     labelHeap.insertKey(labelPtrAux);
 
@@ -390,34 +404,24 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
     }
 
 
-    if(ptrLabelTarget)
-    {
-        std::cout<<"ptrLabelTarget("<<ptrLabelTarget->active<<"): "<<*ptrLabelTarget<<"\n\n";
-    }
-
     if(lData.vetMatBucket[dest].mat(0,0).sizeVetPtrLabel > 0)
     {
+        numSol = lData.vetMatBucket[dest].mat(0,0).sizeVetPtrLabel;
         for(int l=0; l < numSol; ++l)
         {
-            vetLabel[l]->vetRoute[vetLabel[l]->tamRoute-1] = vetLabel[l]->vetRoute[0];
+            Label* label = lData.vetMatBucket[dest].mat(0,0).vetPtrLabel[l];
+            label->vetRoute[label->tamRoute-1] = label->vetRoute[0];
+            auto &vetRoute = label->vetRoute;
 
-            if(ptrLabelTarget)
-                std::cout << "BEST LABEL: "<<vetLabel[l]<<" "<< *vetLabel[l] << "; ";
 
-            auto &vetRoute = vetLabel[l]->vetRoute;
-
-            //std::cout<<l<<": "<<vetLabel[l]<<": "<<*vetLabel[l]<<": ";
-
-            for(int i = 0; i < (vetLabel[l]->tamRoute - 1); ++i)
+            for(int i = 0; i < (label->tamRoute - 1); ++i)
             {
                 int index = getIndex(vetRoute[i], vetRoute[i+1], numCust-1);
-                //std::cout<<"(("<<vetRoute[i]<<", "<<vetRoute[i+1]<<"): "<<index<<"); ";
                 matColX(index, l) = 1.0;
             }
-            //std::cout<<"\n";
-        }
 
-        //std::cout<<"\n";
+            vetRedCost[l] = label->vetResources[0];
+        }
 
         return true;
     }
