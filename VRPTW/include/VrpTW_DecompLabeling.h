@@ -60,7 +60,8 @@ namespace VrpTW_DecompLabelingNS
                            double constPiValue,
                            const VectorI &vetVar0,
                            const VectorI &vetVar1,
-                           DW_DecompNS::PhaseStatus phaseStatus) override;
+                           DW_DecompNS::PhaseStatus phaseStatus,
+                           bool exact) override;
 
     }; // FIM MySubProb
 

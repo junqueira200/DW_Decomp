@@ -45,7 +45,7 @@ namespace LabelingAlgorithmNS
     constexpr int   vetPtrLabelSize   = 10;
     constexpr bool  NullFlush         = false;
     constexpr bool  Print             = false;
-    inline    int   numMaxLabelG      = 2000; // 500
+    inline    int   numMaxLabelG      = 2000; // 2000
 
     constexpr bool  DominaIterBuckets = true;
 
@@ -94,18 +94,22 @@ namespace LabelingAlgorithmNS
     };
 
 
+    /// Label must be a FLAT data structure
     class Label
     {
     public:
 
-        bool    active   = false;
-        int     i        = -1;
-        int     j        = -1;
-        int     cust     = -1;
-        int     pos      = -1;
-        int     tamRoute = 0;
-        void*   it;
-        //int numResources = 1;
+        bool    active    = false;
+        // First dimension for MatBucket
+        int     i         = -1;
+        // Second dimension for MatBucket
+        int     j         = -1;
+        int     cust      = -1;
+        int     posHeap   = -1;
+        int     tamRoute  = 0;
+        // Position of the label from vetPtrLabel in Bucket class
+        int     posBucket = -1;
+
         Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
         std::bitset<NumMaxCust>                     bitSetNg;
         boost::array<int, NumMaxRoute>              vetRoute;
@@ -263,7 +267,8 @@ namespace LabelingAlgorithmNS
                                   int                           NumMaxLabePerBucket,
                                   bool                          dominaceCheck,
                                   FloatType&                    maxDist,
-                                  Eigen::VectorX<FloatType>&    vetRedCost);
+                                  Eigen::VectorX<FloatType>&    vetRedCost,
+                                  bool                          exact);
 
     //inline __attribute__((always_inline))
     bool checkCompleteDominance(const Label& l0, const Label& l1, int numResources);

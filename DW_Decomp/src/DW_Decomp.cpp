@@ -722,7 +722,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
     //bool setAllVarAZero = false;
     int numSol = 0;
     double redCost = 0.0;
-    //double lagrangeDualBound = std::numeric_limits<double>::max();
+    double lagrangeDualBound = std::numeric_limits<double>::infinity();
     double gap = std::numeric_limits<double>::infinity();
     double privObjRmlp = gap;
     int numLimit = 0;
@@ -865,7 +865,8 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
         if(Stabilization && !exactPi && phaseStatus == PhaseStatus::PhaseStatusColGen)// && phaseStatus != PhaseStatus::PhaseStatusTwoPhase)// && numLimit < 5)
         {
-            auxVect.vetRowRmlpSmoothPi = (1.0-StabilizationAlpha)*auxVect.vetRowRmlpSmoothPi + StabilizationAlpha * (auxVect.vetRowRmlpPi);//-auxVect.vetRowRmlpSmoothPi);
+            auxVect.vetRowRmlpSmoothPi = (1.0-StabilizationAlpha)*auxVect.vetRowRmlpSmoothPi +
+                                          StabilizationAlpha * (auxVect.vetRowRmlpPi);
             //std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
         }
         else
@@ -928,7 +929,10 @@ std::cout<<"*******************Column Generation*******************\n\n";
                                        constVal,
                                        vetVar0,
                                        vetVar1,
-                                       phaseStatus);
+                                       phaseStatus,
+                                       false);
+
+            // TODO Calcular o larange dual baound e decidir se chama o subproblema exato
 
             if(!subProbK_CustoR_neg)
                 continue;

@@ -24,11 +24,11 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     instVrpTw = &instVrpTw_;
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 1700.0; // 200
-    vetStepSize[0].start    = (FloatType)-1.0*startDist;
-    vetStepSize[0].end      = (FloatType) 1.0*startDist;
+    vetStepSize[0].stepSize = 1700.0; // 1700
+    vetStepSize[0].start    = (FloatType)-1.0*startDist;  // 1.0
+    vetStepSize[0].end      = (FloatType) 1.0*startDist; // 1.0
 
-    vetStepSize[1].stepSize = 50.0;  //30
+    vetStepSize[1].stepSize = 50.0;  //50
     vetStepSize[1].start    = 0;
     vetStepSize[1].end      = (FloatType)instVrpTw->capVeic;
 
@@ -111,7 +111,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                                double constPiValue,
                                                                const VectorI &vetVar0,
                                                                const VectorI &vetVar1,
-                                                               DW_DecompNS::PhaseStatus phaseStatus)
+                                                               DW_DecompNS::PhaseStatus phaseStatus,
+                                                               bool exact)
 {
 
     static DW_DecompNS::PhaseStatus phase = phaseStatus;
@@ -230,31 +231,34 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
 
     exactLabelingG = false;
 
-    for(int i=2; i <= 2; i += 1)
+    if(!exact)
     {
-        //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
-        matColX.setZero();
-        custoRedNeg = forwardLabelingAlgorithm(2,
-                                               instVrpTw->numClientes + 1,
-                                               vetMatResCost,
-                                               vetVetResBound,
-                                               instVrpTw->numClientes,
-                                               ngSet,
-                                               labelingData,
-                                               matColX,
-                                               numSol,
-                                               (FloatType)constPiValue,
-                                               i,
-                                               true,
-                                               maxDist,
-                                               vetRedCostFT);
+        for(int i = 2; i <= 2; i += 1)
+        {
+            //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
+            matColX.setZero();
+            custoRedNeg = forwardLabelingAlgorithm(2,
+                                                   instVrpTw->numClientes + 1,
+                                                   vetMatResCost,
+                                                   vetVetResBound,
+                                                   instVrpTw->numClientes,
+                                                   ngSet,
+                                                   labelingData,
+                                                   matColX,
+                                                   numSol,
+                                                   (FloatType) constPiValue,
+                                                   i,
+                                                   true,
+                                                   maxDist,
+                                                   vetRedCostFT,
+                                                   false);
 
-        it += 1;
-        if(custoRedNeg)
-            break;
+            it += 1;
+            if(custoRedNeg)
+                break;
 
+        }
     }
-
 
     if(!custoRedNeg)
     {
@@ -275,7 +279,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                -1,
                                                true,
                                                maxDist,
-                                               vetRedCostFT);
+                                               vetRedCostFT,
+                                               exact);
 
 
         /*

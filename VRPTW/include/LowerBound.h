@@ -38,6 +38,15 @@ namespace LowerBoundNS
         void insertKey(FloatType val);
     };
 
+    [[nodiscard]]
+    bool bellmanFord(const LabelingAlgorithmNS::Vet3D_ResCost& vetMatResCost,
+                     Eigen::VectorX<FloatType>&                vetDist,
+                     int                                       src);
+
+    [[nodiscard]]
+    bool getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost& vetMatResCost,
+                           Eigen::VectorX<FloatType>&                vetDist);
+
 }
 
 #endif //DW_LOWERBOUND_H

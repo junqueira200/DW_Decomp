@@ -114,7 +114,8 @@ namespace DW_DecompNS
                        double constPiValue,
                        const VectorI &vetVar0,
                        const VectorI &vetVar1,
-                       PhaseStatus phaseStatus) =0;
+                       PhaseStatus phaseStatus,
+                       bool exact) =0;
 
 
         //virtual int64_t getNumberOfConvConstr() = 0;
