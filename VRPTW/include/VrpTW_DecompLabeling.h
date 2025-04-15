@@ -56,7 +56,7 @@ namespace VrpTW_DecompLabelingNS
                            const std::pair<int, int> &pairSubProb,
                            Eigen::MatrixXd &matColX,
                            int &numSol,
-                           double &redCost,
+                           Eigen::Array<double, 1, DW_DecompNS::NumMaxSolSubProb>& vetRedCost,
                            double constPiValue,
                            const VectorI &vetVar0,
                            const VectorI &vetVar1,

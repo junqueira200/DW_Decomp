@@ -715,19 +715,23 @@ DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &au
 
 std::cout<<"*******************Column Generation*******************\n\n";
 
+
+    std::cout<<"rhsConv: "<<rhsConv<<"\n";
     bool subProbCustR_neg = true;
     itCG = 0;
 
     const int iniConv = 0;
     //bool setAllVarAZero = false;
     int numSol = 0;
-    double redCost = 0.0;
+    //double redCost = 0.0;
+    Eigen::Array<double, 1, NumMaxSolSubProb> vetRedCost;
     double lagrangeDualBound = std::numeric_limits<double>::infinity();
     double gap = std::numeric_limits<double>::infinity();
     double privObjRmlp = gap;
     int numLimit = 0;
     bool missPricing = false;
     bool exactPi = false;
+    bool exactPricing = false;
 
     uRmlp->update();
     vetRmlpConstr = uRmlp->getConstrs();
@@ -771,10 +775,6 @@ std::cout<<"*******************Column Generation*******************\n\n";
         //std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
         double objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
 
-
-
-
-        gap = (std::abs(objRmlp-privObjRmlp)/objRmlp)*100.0;
             //std::cout<<"GAP("<<gap<<"%)\n";
         /*
             if(gap <= gapLimit)
@@ -925,17 +925,19 @@ std::cout<<"*******************Column Generation*******************\n\n";
                                        auxVect.vetPairSubProb[k],
                                        auxVect.matColX_solSubProb,
                                        numSol,
-                                       redCost,
+                                       vetRedCost,
                                        constVal,
                                        vetVar0,
                                        vetVar1,
                                        phaseStatus,
-                                       false);
+                                       exactPricing);
 
             // TODO Calcular o larange dual baound e decidir se chama o subproblema exato
 
             if(!subProbK_CustoR_neg)
                 continue;
+
+            double minRedCost = std::numeric_limits<double>::infinity();
 
             subProbCustR_neg = true;
             int numSolRep = 0;
@@ -975,6 +977,8 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 }
                 else
                     setVarLamdaCol.emplace(vetSol);
+
+                minRedCost = std::min(minRedCost, vetRedCost[l]);
 
                 if(PrintDebug)
                     std::cout<<"cgCooefObj\n";
@@ -1018,9 +1022,29 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 //std::cout<<"MISS PRICING\n";
                 missPricing = true;
                 numLimit += 1;
+                lagrangeDualBound = std::numeric_limits<double>::infinity();
             }
             else
+            {
                 missPricing = false;
+
+                lagrangeDualBound = objRmlp + rhsConv*minRedCost;
+                gap = (std::abs(rhsConv*minRedCost)/objRmlp)*100.0;
+
+                if(exactPricing && gap <= GapTolStop)
+                     subProbCustR_neg = false;
+
+                if(exactPricing)
+                    std::cout<<"*";
+
+                if(gap <= GapExactPricing)
+                {
+                    exactPricing = true;
+                    std::cout<<"exactPricing\n";
+                }
+                else
+                    exactPricing = false;
+            }
 
             break;
         }
@@ -1184,29 +1208,18 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
 
         //lagrangeDualBound = getLagrangeDualBound(objRmlp, redCost);
-        //gap = (std::abs(redCost)/objRmlp)*100.0;
+
         //std::cout<<"GAP("<<gap<<"%)\n";
 
         if((itCG%5) == 0)
         {
             //std::cout<<"\t"<<itCG<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"%\"\n";
-            std::cout<<std::format("\t{0}\t{1:.2f}\t{2:.2f}%\n", itCG, objRmlp, gap);
+            std::cout<<std::format("\t{0}\t{1:.1f}\t{2:.1f}\t{3:.1f}%\n", itCG, objRmlp, lagrangeDualBound, gap);
         }
 
         itCG += 1;
 
         //delete []vetRmlpConstr;
-
-
-
-
-
-
-
-
-
-
-
 
     }
 
@@ -1329,6 +1342,7 @@ DW_DecompNS::DW_DecompNode::DW_DecompNode(const DW_DecompNS::DW_DecompNode &deco
     matA       = decomp.matA;
     vetVarArtifRmlp = nullptr;
     vetVar0  = decomp.vetVar0;
+    rhsConv  = decomp.rhsConv;
 
 
     vetVarLambdaCol.reserve(decomp.vetVarLambdaCol.size());

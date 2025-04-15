@@ -54,6 +54,7 @@ int main(int argv, char **argc)
 
         std::cout << "Cria decompNode\n";
         DW_DecompNS::DW_DecompNode decompNode(grbEnv, model, distVarA, (DW_DecompNS::SubProb*)&vrpLabelingSubProb, 1, auxVectors);
+        decompNode.rhsConv = instVrpTw.numVeic;
         //DepthFirst depthFirst;
         MinFuncObj minFuncObj;
         SimpleDiving simpleDiving;

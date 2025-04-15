@@ -107,7 +107,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
                                                                const std::pair<int, int> &pairSubProb,
                                                                Eigen::MatrixXd &matColX,
                                                                int &numSol,
-                                                               double& redCost,
+                                                               Eigen::Array<double, 1, DW_DecompNS::NumMaxSolSubProb>& vetRedCost,
                                                                double constPiValue,
                                                                const VectorI &vetVar0,
                                                                const VectorI &vetVar1,
@@ -393,6 +393,9 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
         }
 
     }
+
+    for(int i=0; i < numSol; ++i)
+        vetRedCost[i] = (double)vetRedCostFT[i];
 
     //std::cout<<"["<<minDistG<<", "<<maxDistG<<"]; numSol("<<numSol<<")\n";
 

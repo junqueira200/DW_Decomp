@@ -45,7 +45,7 @@ namespace LabelingAlgorithmNS
     constexpr int   vetPtrLabelSize   = 10;
     constexpr bool  NullFlush         = false;
     constexpr bool  Print             = false;
-    inline    int   numMaxLabelG      = 2000; // 2000
+    constexpr int   numMaxLabelG      = 2000; // 2000
 
     constexpr bool  DominaIterBuckets = true;
 
@@ -56,7 +56,7 @@ namespace LabelingAlgorithmNS
     struct Bound
     {
         FloatType lowerBound = -std::numeric_limits<FloatType>::infinity();
-        FloatType upperBound = std::numeric_limits<FloatType>::infinity();
+        FloatType upperBound =  std::numeric_limits<FloatType>::infinity();
     };
 
     std::ostream& operator<< (std::ostream& out, const Bound &bound);
@@ -93,22 +93,29 @@ namespace LabelingAlgorithmNS
         }
     };
 
+    enum TypeLabel
+    {
+        forward,
+        backward
+    };
 
     /// Label must be a FLAT data structure
     class Label
     {
     public:
 
-        bool    active    = false;
+
+        bool        active    = false;
+        TypeLabel   typeLabel = forward;
         // First dimension for MatBucket
-        int     i         = -1;
+        int         i         = -1;
         // Second dimension for MatBucket
-        int     j         = -1;
-        int     cust      = -1;
-        int     posHeap   = -1;
-        int     tamRoute  = 0;
+        int         j         = -1;
+        int         cust      = -1;
+        int         posHeap   = -1;
+        int         tamRoute  = 0;
         // Position of the label from vetPtrLabel in Bucket class
-        int     posBucket = -1;
+        int         posBucket = -1;
 
         Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
         std::bitset<NumMaxCust>                     bitSetNg;
@@ -211,7 +218,8 @@ namespace LabelingAlgorithmNS
 
         /// Access first the customer and after (i,j), where i is the component of the first resource and j
         ///     the component of the second one.
-        Eigen::VectorX<MatBucket>       vetMatBucket;
+        Eigen::VectorX<MatBucket>       vetMatBucketForward;
+        Eigen::VectorX<MatBucket>       vetMatBucketBackward;
 
         /// Access first the resorce
         Vector<Matrix<Bound, false>>    vetMatBound;
@@ -269,6 +277,23 @@ namespace LabelingAlgorithmNS
                                   FloatType&                    maxDist,
                                   Eigen::VectorX<FloatType>&    vetRedCost,
                                   bool                          exact);
+
+
+    bool bidirectionalAlgorithm(const int                     numRes,
+                                const int                     numCust,
+                                const Vet3D_ResCost&          vetMatResCost,
+                                const MatBoundRes&            vetVetBound,
+                                const int                     dest,
+                                const NgSet&                  ngSet,
+                                LabelingData&                 lData,
+                                Eigen::MatrixXd&              matColX,
+                                int&                          numSol,
+                                const FloatType               labelStart,
+                                int                           NumMaxLabePerBucket,
+                                bool                          dominaceCheck,
+                                FloatType&                    maxDist,
+                                Eigen::VectorX<FloatType>&    vetRedCost,
+                                bool                          exact);
 
     //inline __attribute__((always_inline))
     bool checkCompleteDominance(const Label& l0, const Label& l1, int numResources);
