@@ -22,6 +22,20 @@ using namespace StatisticsNS;
 
 int main(int argv, char **argc)
 {
+    /*
+    std::bitset<10> bitset0 = 0;
+    std::bitset<10> bitset1 = 0;
+
+    bitset0[4] = true;
+    bitset1[5] = true;
+
+    std::bitset<10> result = bitset0&bitset1;
+    std::cout<<result<<"\n";
+
+    std::cout<<"==0: "<<((bitset0&bitset1) == 0)<<"\n";
+
+    return 0;
+    */
 
     try
     {

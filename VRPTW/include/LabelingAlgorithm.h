@@ -253,7 +253,10 @@ namespace LabelingAlgorithmNS
 
 
         // std::set<Label*, LabelCmp> &setLabel
-        void dominanceInterBuckets(LabelHeap& labelHeap, int numRes, const int localNumMaxLabel);
+        void dominanceInterBuckets(LabelHeap& labelHeap,
+                                   int numRes,
+                                   const int localNumMaxLabel,
+                                   Eigen::VectorX<MatBucket>& vetMatBucket);
 
         void setupGraphBucket();
 

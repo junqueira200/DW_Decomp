@@ -260,7 +260,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
 
         if(labelHeap.heapSize > localNumMaxLabel && DominaIterBuckets)
         {
-            lData.dominanceInterBuckets(labelHeap, numRes, localNumMaxLabel);
+            lData.dominanceInterBuckets(labelHeap, numRes, localNumMaxLabel, lData.vetMatBucketForward);
 
 
             if(labelHeap.heapSize > localNumMaxLabel)
@@ -608,14 +608,15 @@ LabelingAlgorithmNS::bidirectionalAlgorithm(const int                     numRes
     labelBackwardPtr->posBucket       = 0;
 
 
+    /*
     lData.vetMatBucketBackward[dest].mat(i, j).vetPtrLabel.resize(10);
     lData.vetMatBucketBackward[dest].mat(i, j).vetPtrLabel[0]  = labelBackwardPtr;
     lData.vetMatBucketBackward[dest].mat(i, j).sizeVetPtrLabel = 1;
-    //listLabel.push_back(labelPtr);
-
-    //(*(LabelSetIt*)labelPtr->it) = setLabel.insert(labelPtr);
-    labelHeap.insertKey(labelForwardPtr);
     labelHeap.insertKey(labelBackwardPtr);
+    */
+
+
+    labelHeap.insertKey(labelForwardPtr);
     labelForwardPtr = nullptr;
     labelBackwardPtr = nullptr;
 
@@ -643,7 +644,8 @@ LabelingAlgorithmNS::bidirectionalAlgorithm(const int                     numRes
 
         if(labelHeap.heapSize > localNumMaxLabel && DominaIterBuckets)
         {
-            lData.dominanceInterBuckets(labelHeap, numRes, localNumMaxLabel);
+            lData.dominanceInterBuckets(labelHeap, numRes, localNumMaxLabel, lData.vetMatBucketForward);
+
 
 
             if(labelHeap.heapSize > localNumMaxLabel)
@@ -712,18 +714,23 @@ LabelingAlgorithmNS::bidirectionalAlgorithm(const int                     numRes
         // Extend label
         for(int t=0; t < numCust; ++t)
         {
+
+
             int tAux = t;
             //std::cout<<"t: "<<t<<"\n";
             if(labelForwardPtr->typeLabel  == forward &&
                vetMatResCost(labelForwardPtr->cust, t, 0) == std::numeric_limits<FloatType>::infinity())
                 continue;
 
-            if(labelForwardPtr->typeLabel  == backward &&
+            else if(labelForwardPtr->typeLabel  == backward &&
                vetMatResCost(t, labelForwardPtr->cust, 0) == std::numeric_limits<FloatType>::infinity())
                 continue;
 
 
             if(labelForwardPtr->bitSetNg[t] == 1)
+                continue;
+
+            if(t == labelForwardPtr->cust)
                 continue;
 
 
@@ -747,7 +754,6 @@ LabelingAlgorithmNS::bidirectionalAlgorithm(const int                     numRes
             }
             */
 
-            // Parei aqui!
             if(extendLabel(*labelForwardPtr, *labelPtrAux, vetMatResCost, vetVetBound, labelForwardPtr->cust, t, ngSet,
                            numRes))
             {
@@ -815,7 +821,7 @@ LabelingAlgorithmNS::bidirectionalAlgorithm(const int                     numRes
                     continue;
                 }
 
-                if((bucket->sizeVetPtrLabel+1) > NumMaxLabePerBucket && (t != dest || t != 0))
+                if((bucket->sizeVetPtrLabel+1) > NumMaxLabePerBucket && t != dest && t != 0)
                 {
                     labelPoolG.delT(labelPtrAux);
                     continue;
@@ -918,8 +924,8 @@ bool LabelingAlgorithmNS::extendLabel(const Label&          label,
                                       Label&                newLabel,
                                       const Vet3D_ResCost&  vetMatResCost,
                                       const MatBoundRes&    vetVetBound,
-                                      const int             custI,
-                                      const int             custJ,
+                                      int                   custI,
+                                      int                   custJ,
                                       const NgSet&          ngSet,
                                       const int             numResources)
 {
@@ -927,6 +933,12 @@ bool LabelingAlgorithmNS::extendLabel(const Label&          label,
 
     // Goes through resources
     bool boundOk = true;
+
+    if(label.typeLabel == backward)
+        std::swap(custI, custJ);
+
+    newLabel.typeLabel = label.typeLabel;
+
     for(int i=0; i < numResources; ++i)//NumMaxResources; ++i)
     {
 
@@ -938,7 +950,6 @@ bool LabelingAlgorithmNS::extendLabel(const Label&          label,
     if(!boundOk)
         return false;
 
-    //newLabel.bitSetNg   = 0;
     newLabel.bitSetNg   = label.bitSetNg;
 
     // Checks if custJ its in custI ngSet
@@ -948,23 +959,8 @@ bool LabelingAlgorithmNS::extendLabel(const Label&          label,
     }
 
 
-
-    /*
-    if(((int)newLabel.vetRoute.size()) < label.tamRoute+1)
-    {   std::cout<<"ini resize\n";
-        //newLabel.vetRoute.resize(label.vetRoute.size() + 1);
-        std::cout<<"end resize\n";
-        throw "ERROR, OUT OF MEMORY";
-    }
-    */
-
-    // Copy route
-    //newLabel.vetRoute = label.vetRoute;
-
-
     for(int i=0; i < label.tamRoute; ++i)
         newLabel.vetRoute[i] = label.vetRoute[i];
-
 
 
     if(Print)
@@ -1153,30 +1149,21 @@ void LabelingAlgorithmNS::LabelingData::removeLabel(Label *label)
     int i    = label->i;
     int j    = label->j;
 
-    int pos = label->posBucket;
+    int pos  = label->posBucket;
+    int size = 0;
 
-    /*
-    for(int t=0; t < vetMatBucket[cust].mat(i, j).sizeVetPtrLabel; ++t)
-    {
-        if(vetMatBucket[cust].mat(i, j).vetPtrLabel[t] == label)
-        {
-            pos = t;
-            break;
-        }
-    }
+    Bucket *bucket = nullptr;
+
+    if(label->typeLabel == forward)
+        bucket = &vetMatBucketForward[cust].mat(i, j);
+
+    else
+        bucket = &vetMatBucketBackward[cust].mat(i,j);
 
 
-    if(pos == -1)
-    {
-        PRINT_DEBUG("", "Label not found");
-        throw "ERRO";
-    }
-    */
+    size = bucket->sizeVetPtrLabel;
 
-    int size = vetMatBucketForward[cust].mat(i, j).sizeVetPtrLabel;
-    Bucket &bucket = vetMatBucketForward[cust].mat(i, j);
-
-    if(bucket.vetPtrLabel[pos] != label)
+    if(bucket->vetPtrLabel[pos] != label)
     {
         std::cout<<"ERROR in posBucket!\n";
         PRINT_DEBUG("", "");
@@ -1185,14 +1172,14 @@ void LabelingAlgorithmNS::LabelingData::removeLabel(Label *label)
 
     if(size > 1)
     {
-        for(int t=pos; t < (bucket.sizeVetPtrLabel-1); ++t)
+        for(int t=pos; t < (bucket->sizeVetPtrLabel-1); ++t)
         {
-            bucket.vetPtrLabel[t] = bucket.vetPtrLabel[t+1];
-            bucket.vetPtrLabel[t]->posBucket = t;
+            bucket->vetPtrLabel[t] = bucket->vetPtrLabel[t+1];
+            bucket->vetPtrLabel[t]->posBucket = t;
         }
     }
 
-    bucket.sizeVetPtrLabel -= 1;
+    bucket->sizeVetPtrLabel -= 1;
 }
 
 void LabelingAlgorithmNS::Bucket::addLabel(LabelingAlgorithmNS::Label *labelPtr)
@@ -1369,9 +1356,10 @@ void LabelingAlgorithmNS::LabelingData::setupGraphBucket()
 }
 
 
-void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(LabelHeap& labelHeap,
-                                                              int        numRes,
-                                                              const int  localNumMaxLabel)
+void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(LabelHeap&                 labelHeap,
+                                                              int                        numRes,
+                                                              const int                  localNumMaxLabel,
+                                                              Eigen::VectorX<MatBucket>& vetMatBucket)
 {
     if(Print)
         std::cout<<"dominanceInterBuckets\n\n";
@@ -1386,7 +1374,7 @@ void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(LabelHeap& labelHe
             for(int j=0; j < vetNumSteps[1]; ++j)
             {
                 int nodeId0 = getIndexGraphBucket(i, j);
-                Bucket &b0 = vetMatBucketForward[cust].mat(i, j);
+                Bucket &b0 = vetMatBucket[cust].mat(i, j);
                 if(b0.sizeVetPtrLabel == 0)
                     continue;
 
@@ -1397,7 +1385,7 @@ void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(LabelHeap& labelHe
                         if(ii == i && jj == j)
                             continue;
 
-                        Bucket &b1 = vetMatBucketForward[cust].mat(ii, jj);
+                        Bucket &b1 = vetMatBucket[cust].mat(ii, jj);
                         if(b1.sizeVetPtrLabel == 0)
                             continue;
 
@@ -1601,7 +1589,10 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int           cust,
         if(Print)
             std::cout << "\t\ti(" << i << "); j(" << j << ")\n";
 
-        bucketPtr = &lData.vetMatBucketForward[cust].mat(i, j);
+        if(labelPtrAux->typeLabel == forward)
+            bucketPtr = &lData.vetMatBucketForward[cust].mat(i, j);
+        else
+            bucketPtr = &lData.vetMatBucketBackward[cust].mat(i, j);
     }
     else
     {
