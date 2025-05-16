@@ -34,16 +34,18 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
 
 
     labelingData  = LabelingAlgorithmNS::LabelingData(vetStepSize, 2, instVrpTw->numClientes+1);
-    vetMatResCost = Vet3D_ResCost(instVrpTw->numClientes+1, instVrpTw->numClientes+1, 2);
+    vetMatResCostForward  = Vet3D_ResCost(instVrpTw->numClientes+1, instVrpTw->numClientes+1, 2);
+    vetMatResCostBackward = Vet3D_ResCost(instVrpTw->numClientes+1, instVrpTw->numClientes+1, 2);
 
-    for(int i=0; i < instVrpTw->numClientes; ++i)
+    for(int i=0; i < instVrpTw->numClientes+1; ++i)
     {
         for(int j=0; j < (instVrpTw->numClientes+1); ++j)
         {
             if(i == j)
                 continue;
 
-            vetMatResCost.get(i, j, 1) = (FloatType)instVrpTw->vetClieDem[j];
+            vetMatResCostForward.get(i, j, 1)  = (FloatType)instVrpTw->vetClieDem[j];
+            vetMatResCostBackward.get(j, i, 1) = (FloatType)instVrpTw->vetClieDem[j];
         }
     }
 
@@ -139,20 +141,32 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
             if(i == j)
                 continue;
 
+            FloatType value = 0.0;
+
             if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusTwoPhase)
-                vetMatResCost.get(i, j, 0) =  - (FloatType)vetRowPi[j+1];
+                value =  - (FloatType)vetRowPi[j+1];
             else
-                vetMatResCost.get(i, j, 0) = (FloatType)instVrpTw->matDist(i, j) - (FloatType)vetRowPi[j+1];
+                value = (FloatType)instVrpTw->matDist(i, j) - (FloatType)vetRowPi[j+1];
+
+             vetMatResCostForward.get(i, j, 0) = value;
+             vetMatResCostBackward.get(i, j, 0) = value;
+
         }
 
         if(i != 0)
         {
+
+            FloatType value = 0.0;
+
+
             //vetMatResCost[0](i, 0) = instVrpTw->matDist(i, 0);
             if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusTwoPhase)
-                vetMatResCost.get(i, instVrpTw->numClientes, 0) = - (FloatType)vetRowPi[1];
+                value = - (FloatType)vetRowPi[1];
             else
-                vetMatResCost.get(i, instVrpTw->numClientes, 0) = (FloatType)instVrpTw->matDist(i, 0) -
-                                                                  (FloatType)vetRowPi[1];
+                value = (FloatType)instVrpTw->matDist(i, 0) - (FloatType)vetRowPi[1];
+
+              vetMatResCostForward.get(i, instVrpTw->numClientes, 0)  = value;
+              vetMatResCostBackward.get(i, instVrpTw->numClientes, 0) = value;
         }
     }
 
@@ -164,7 +178,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
         if(j == 0)
             j = instVrpTw->numClientes;
 
-        vetMatResCost.get(i, j, 0) = std::numeric_limits<FloatType>::infinity();
+        vetMatResCostForward.get(i, j, 0) = std::numeric_limits<FloatType>::infinity();
         //std::cout<<varId<<"\n";
     }
 
@@ -239,7 +253,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
             matColX.setZero();
             custoRedNeg = bidirectionalAlgorithm  (2,
                                                    instVrpTw->numClientes + 1,
-                                                   vetMatResCost,
+                                                   vetMatResCostForward,
+                                                   vetMatResCostBackward,
                                                    vetVetResBound,
                                                    instVrpTw->numClientes,
                                                    ngSet,
@@ -268,7 +283,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
         //exactLabelingG = true;
         custoRedNeg = bidirectionalAlgorithm  (2,
                                                instVrpTw->numClientes+1,
-                                               vetMatResCost,
+                                               vetMatResCostForward,
+                                               vetMatResCostBackward,
                                                vetVetResBound,
                                                instVrpTw->numClientes,
                                                ngSet,
@@ -376,7 +392,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
             int ii = i/instVrpTw->numClientes;
             int jj = i%instVrpTw->numClientes;
 
-            redCostTemp += vetMatResCost(ii, jj, 0);//instVrpTw->matDist(ii, jj);
+            redCostTemp += vetMatResCostForward(ii, jj, 0);//instVrpTw->matDist(ii, jj);
             //std::cout<<"("<<ii<<","<<jj<<")["<<i<<"]; ";
 
         }

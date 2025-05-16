@@ -43,7 +43,7 @@ namespace LabelingAlgorithmNS
     constexpr int   NgSetSize         = 5;
     constexpr int   NumBuckets        = 10;
     constexpr int   vetPtrLabelSize   = 10;
-    constexpr bool  NullFlush         = false;
+    constexpr bool  NullFlush         = true;
     constexpr bool  Print             = false;
     constexpr int   numMaxLabelG      = 2000; // 2000
 
@@ -95,8 +95,8 @@ namespace LabelingAlgorithmNS
 
     enum TypeLabel
     {
-        forward,
-        backward
+        Forward,
+        Backward
     };
 
     /// Label must be a FLAT data structure
@@ -106,7 +106,7 @@ namespace LabelingAlgorithmNS
 
 
         bool        active    = false;
-        TypeLabel   typeLabel = forward;
+        TypeLabel   typeLabel = Forward;
         // First dimension for MatBucket
         int         i         = -1;
         // Second dimension for MatBucket
@@ -215,11 +215,12 @@ namespace LabelingAlgorithmNS
     class LabelingData
     {
     public:
-
         /// Access first the customer and after (i,j), where i is the component of the first resource and j
         ///     the component of the second one.
         Eigen::VectorX<MatBucket>       vetMatBucketForward;
         Eigen::VectorX<MatBucket>       vetMatBucketBackward;
+
+    public:
 
         /// Access first the resorce
         Vector<Matrix<Bound, false>>    vetMatBound;
@@ -251,6 +252,14 @@ namespace LabelingAlgorithmNS
             return i*vetNumSteps[1] + j;
         }
 
+        Bucket* getBucket(Label* label)
+        {
+
+            if(label->typeLabel == Forward)
+                return &vetMatBucketForward[label->cust].mat(label->i, label->j);
+            else
+                return &vetMatBucketBackward[label->cust].mat(label->i, label->j);
+        }
 
         // std::set<Label*, LabelCmp> &setLabel
         void dominanceInterBuckets(LabelHeap& labelHeap,
@@ -281,10 +290,10 @@ namespace LabelingAlgorithmNS
                                   Eigen::VectorX<FloatType>&    vetRedCost,
                                   bool                          exact);
 
-
     bool bidirectionalAlgorithm(const int                     numRes,
                                 const int                     numCust,
-                                const Vet3D_ResCost&          vetMatResCost,
+                                const Vet3D_ResCost&          vetMatResCostForward,
+                                const Vet3D_ResCost&          vetMatResCostBackward,
                                 const MatBoundRes&            vetVetBound,
                                 const int                     dest,
                                 const NgSet&                  ngSet,
@@ -307,14 +316,63 @@ namespace LabelingAlgorithmNS
         return (l0.bitSetNg & l1.bitSetNg) == l0.bitSetNg;
     }
 
-    bool extendLabel(const Label&          label,
-                     Label&                newLabel,
-                     const Vet3D_ResCost&  vetMatResCost,
-                     const MatBoundRes&    vetVetBound,
-                     int                   custI,
-                     int                   custJ,
-                     const NgSet&          ngSet,
-                     int                   numResources);
+    typedef Eigen::Array<FloatType, 1, NumMaxResources> VetBackwardMask;
+
+    bool extendLabelForward(const Label&          label,
+                            Label&                newLabel,
+                            const Vet3D_ResCost&  vetMatResCost,
+                            const MatBoundRes&    vetVetBound,
+                            int                   custI,
+                            int                   t,
+                            const NgSet&          ngSet,
+                            int                   numResources);
+
+    bool extendLabelBackward(const Label&          	label,
+                             Label&                	newLabel,
+                             const Vet3D_ResCost&  	vetMatResCost,
+                             const MatBoundRes&    	vetVetBound,
+                             int                   	custI,
+                             int                   	t,
+                             const NgSet&          	ngSet,
+                             int                   	numResources,
+                             const VetBackwardMask& vetBackwardMask);
+
+    inline __attribute__((always_inline))
+    bool extendLabel(const Label&           label,
+                     Label&                 newLabel,
+                     const Vet3D_ResCost&   vetMatResCostForward,
+                     const Vet3D_ResCost&   vetMatResCostBackward,
+                     const MatBoundRes&     vetVetBound,
+                     int                    custI,
+                     int                    t,
+                     const NgSet&           ngSet,
+                     int                    numResources,
+                     const VetBackwardMask& vetBackwardMask)
+    {
+        if(label.typeLabel == Forward)
+            return extendLabelForward(label, newLabel, vetMatResCostForward, vetVetBound, custI, t, ngSet, numResources);
+        else
+            return extendLabelBackward(label, newLabel, vetMatResCostBackward, vetVetBound, custI, t, ngSet,
+                                       numResources, vetBackwardMask);
+    }
+
+    inline __attribute__((always_inline))
+    void applyLabelMask(Label* label, int numResorces, const VetBackwardMask& vetBackwardMask)
+    {
+        for(int i=0; i < numResorces; ++i)
+            label->vetResources[i] *= vetBackwardMask[i];
+    }
+
+    void startBackwardLabel(Label* 			   labelPtr,
+                            VetBackwardMask&   vetBackwardMask,
+                            const MatBoundRes& vetVetBound,
+                            int				   numResources,
+                            int				   dest,
+                            double			   labelStart,
+                            int				   i,
+                            int				   j);
+
+
 
     void removeCycles(Label &label, const int numCust);
     void removeCycles2(Label &label, const int numCust);
@@ -329,14 +387,39 @@ namespace LabelingAlgorithmNS
 
     bool labelHaveRoute(std::vector<int> &vetRoute, Label *label);
 
+    Bucket* dominanceIntraBucketForward(int           cust,
+                                        Label*        label,
+                                        LabelingData& lData,
+                                        LabelHeap&    labelHeap,
+                                        int           numRes,
+                                        int           dest,
+                                        int&          correctPos);
 
-    Bucket* dominanceIntraBucket(int           cust,
-                                 Label*        label,
-                                 LabelingData& lData,
-                                 LabelHeap&    labelHeap,
-                                 int           numRes,
-                                 int           dest,
-                                 int&          correctPos);
+    Bucket* dominanceIntraBucketBackward(int           			cust,
+                                        Label*        			label,
+                                        LabelingData& 			lData,
+                                        LabelHeap&    			labelHeap,
+                                        int           			numRes,
+                                        int           			dest,
+                                        int&          			correctPos);
+
+    inline __attribute__((always_inline))
+    Bucket* dominanceIntraBucket(int           			cust,
+                                 Label*        			label,
+                                 LabelingData& 			lData,
+                                 LabelHeap&    			labelHeap,
+                                 int           			numRes,
+                                 int           			dest,
+                                 int&          			correctPos)
+    {
+        if(label->typeLabel == Forward)
+            return dominanceIntraBucketForward(cust, label, lData, labelHeap, numRes, dest, correctPos);
+        else
+            return dominanceIntraBucketBackward(cust, label, lData, labelHeap, numRes, 0, correctPos);
+    }
+
+    void checkHeap(LabelHeap& heap, LabelingData& lData);
+
 
 }
 #endif //DW_LABELINGALGORITHM_H
