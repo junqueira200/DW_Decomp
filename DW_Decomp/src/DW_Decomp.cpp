@@ -787,7 +787,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
         GRBVar *vetVar = uRmlp->getVars();
 
-        if(phaseStatus == PhaseStatus::PhaseStatusBigM && itCG > 0)
+        if(phaseStatus == PhaseStatus::PhaseStatusBigM && itCG > 0 && (itCG % 2 == 0))
         {
             bool allZero  = true;
             bool increase = true;
@@ -863,7 +863,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         if(PrintDebug)
             std::cout<<"~UpdatePi\n";
 
-        if(Stabilization && !exactPi && phaseStatus == PhaseStatus::PhaseStatusColGen)// && phaseStatus != PhaseStatus::PhaseStatusTwoPhase)// && numLimit < 5)
+        if(Stabilization && !exactPi && phaseStatus == PhaseStatus::PhaseStatusColGen)// && numLimit < 5)
         {
             auxVect.vetRowRmlpSmoothPi = (1.0-StabilizationAlpha)*auxVect.vetRowRmlpSmoothPi +
                                           StabilizationAlpha * (auxVect.vetRowRmlpPi);
@@ -1037,7 +1037,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 if(exactPricing)
                     std::cout<<"*";
 
-                if(gap <= GapExactPricing)
+                if(gap <= GapExactPricing && phaseStatus == PhaseStatus::PhaseStatusColGen)
                 {
                     exactPricing = true;
                     std::cout<<"exactPricing\n";
@@ -1211,13 +1211,15 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
         //std::cout<<"GAP("<<gap<<"%)\n";
 
-        if((itCG%5) == 0)
+        //if((itCG%5) == 0)
         {
             //std::cout<<"\t"<<itCG<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"%\"\n";
             std::cout<<std::format("\t{0}\t{1:.1f}\t{2:.1f}\t{3:.1f}%\n", itCG, objRmlp, lagrangeDualBound, gap);
         }
 
         itCG += 1;
+
+        //std::cout<<"PI: "<<auxVect.vetRowRmlpPi<<"\n\n";
 
         //delete []vetRmlpConstr;
 
