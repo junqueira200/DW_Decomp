@@ -39,14 +39,13 @@ namespace LabelingAlgorithmNS
 
     constexpr int   NumMaxResources   = 2;
     constexpr int   NumMaxRoute       = 256;
-    constexpr int   NumMaxCust        = 100;
+    constexpr int   NumMaxCust        = 25; //100
     constexpr int   NgSetSize         = 5;
     constexpr int   NumBuckets        = 10;
     constexpr int   vetPtrLabelSize   = 10;
     constexpr bool  NullFlush         = true;
     constexpr bool  Print             = false;
     constexpr int   numMaxLabelG      = 2000; // 2000
-
     constexpr bool  DominaIterBuckets = true;
 
     class LabelSet;
@@ -63,9 +62,10 @@ namespace LabelingAlgorithmNS
 
     /// Access (i,j,r) where (i,j) is an arc and r a resource
     typedef Vector3D<FloatType, false> Vet3D_ResCost;
-
     /// Access (i,r) where i is a customer and r a resource
     typedef Eigen::Matrix<Bound, -1, -1, Eigen::RowMajor> MatBoundRes;
+    typedef Eigen::Array<FloatType, 1, NumMaxResources> ArrayResources;
+
 
     class NgSet
     {
@@ -419,7 +419,6 @@ namespace LabelingAlgorithmNS
     }
 
     void checkHeap(LabelHeap& heap, LabelingData& lData);
-
-
+    void convertLabelBackwardToForward(Label* label, const ArrayResources &vetMaxResources, int numResources);
 }
 #endif //DW_LABELINGALGORITHM_H
