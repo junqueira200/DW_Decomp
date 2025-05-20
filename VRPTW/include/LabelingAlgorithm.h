@@ -44,7 +44,7 @@ namespace LabelingAlgorithmNS
     constexpr int   NumBuckets        = 10;
     constexpr int   vetPtrLabelSize   = 10;
     constexpr bool  NullFlush         = true;
-    constexpr bool  Print             = false;
+    constexpr bool  Print             = true;
     constexpr int   numMaxLabelG      = 2000; // 2000
     constexpr bool  DominaIterBuckets = true;
 
@@ -268,8 +268,11 @@ namespace LabelingAlgorithmNS
                                    Eigen::VectorX<MatBucket>& vetMatBucket);
 
         void setupGraphBucket();
+        bool compareVetMatBucket(const ArrayResources& vetMaxResouces);
 
     };
+
+    bool searchLabel(Label* label, Bucket& bucket);
 
     typedef boost::container::multiset<Label*, LabelCmp>::iterator LabelSetIt;
 
@@ -420,5 +423,6 @@ namespace LabelingAlgorithmNS
 
     void checkHeap(LabelHeap& heap, LabelingData& lData);
     void convertLabelBackwardToForward(Label* label, const ArrayResources &vetMaxResources, int numResources);
+    void copyLabel(const Label& labelSrc, Label& labelDest, int numResorces);
 }
 #endif //DW_LABELINGALGORITHM_H

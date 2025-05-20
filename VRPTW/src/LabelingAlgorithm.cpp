@@ -447,6 +447,14 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
 
         labelPoolG.delT(labelPtr);
         numIt += 1;
+
+        if(numIt == 5)
+        {
+            std::cout<<"Error!\n";
+            PRINT_DEBUG("", "");
+            exit(-1);
+        }
+
     }
 
 
@@ -706,6 +714,9 @@ LabelingAlgorithmNS::bidirectionalAlgorithm(const int                     numRes
 
         if(labelHeap.heapSize > localNumMaxLabel && DominaIterBuckets)
         {
+
+            std::cout<<"DominaIterBuckets\n";
+
             lData.dominanceInterBuckets(labelHeap, numRes, localNumMaxLabel, lData.vetMatBucketForward);
 
             if(labelHeap.heapSize > localNumMaxLabel)
@@ -958,9 +969,15 @@ LabelingAlgorithmNS::bidirectionalAlgorithm(const int                     numRes
         labelPoolG.delT(labelPtr);
         numIt += 1;
 
+        if(numIt == 5)
+        {
+            std::cout<<"Error!\n";
+            PRINT_DEBUG("", "");
+            exit(-1);
+        }
     }
 
-    //std::cout<<"Primeiras Solucoes: \n";
+    std::cout<<"Primeiras Solucoes: \n";
 
     if(lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel > 0)
     {
@@ -968,7 +985,7 @@ LabelingAlgorithmNS::bidirectionalAlgorithm(const int                     numRes
         for(int l=0; l < numSol; ++l)
         {
             Label* label = lData.vetMatBucketForward[dest].mat(0, 0).vetPtrLabel[l];
-            //std::cout<<*label<<"\n";
+            std::cout<<*label<<"\n";
             label->vetRoute[label->tamRoute-1] = label->vetRoute[0];
             auto &vetRoute = label->vetRoute;
 
@@ -981,8 +998,8 @@ LabelingAlgorithmNS::bidirectionalAlgorithm(const int                     numRes
 
             vetRedCost[l] = label->vetResources[0];
         }
-
-        //exit(-1);
+        // TODO remover
+        exit(-1);
         return true;
     }
     else
@@ -1615,10 +1632,12 @@ void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(LabelHeap&        
                             continue;
 
                         int t1;
-
-                        bool completeDominance = true;
+                        // TODO: FIX
+                        bool completeDominance = true;//true;
+                        /*
                         if(ii > i && jj > j)
                             completeDominance = false;
+                        */
 
                         for(int t0=0; t0 < b0.sizeVetPtrLabel; ++t0)
                         {
@@ -2265,4 +2284,88 @@ void LabelingAlgorithmNS::convertLabelBackwardToForward(Label* label, const Arra
         label->vetResources[r] = vetMaxResources[r] - label->vetResources[r];
 
     label->typeLabel = Forward;
+}
+
+bool LabelingAlgorithmNS::LabelingData::compareVetMatBucket(const ArrayResources& vetMaxResouces)
+{
+
+    Label* labelPtr = labelPoolG.getT();
+
+    for(int cust=1; cust < (numCust-1); ++cust)
+    {
+        for(int i=0; i < vetNumSteps[0]; ++i)
+        {
+            for(int j=0; j < vetNumSteps[1]; ++j)
+            {
+                Bucket& bucket = vetMatBucketBackward[cust].mat(i, j);
+                for(int k=0; k < bucket.sizeVetPtrLabel; ++k)
+                {
+                    Label* labelBackward = bucket.vetPtrLabel[k];
+                    copyLabel(*labelBackward, *labelPtr, 2);
+                    convertLabelBackwardToForward(labelPtr, vetMaxResouces, 2);
+
+                    labelPtr->i = getIndex(0, labelPtr->vetResources[0]);
+                    labelPtr->j = getIndex(1, labelPtr->vetResources[1]);
+
+                    Bucket& bucketForward = vetMatBucketForward[cust].mat(labelPtr->i, labelPtr->j);
+
+                    if(!searchLabel(labelPtr, bucketForward))
+                    {
+                        std::cout<<"ERROR\nLabel: "<<*labelPtr<<", nao foi achado em vetMatBucketForwar\n";
+                        PRINT_DEBUG("", "");
+                        exit(-1);
+                    }
+                }
+
+            }
+        }
+    }
+
+}
+
+/// Search the label in the bucket. The variable label(pointer) is NOT in the bucket, it is search using the
+/// 	resorces and the route
+bool LabelingAlgorithmNS::searchLabel(Label* label, Bucket& bucket)
+{
+    for(int i=0; i < bucket.sizeVetPtrLabel; ++i)
+    {
+        Label* labelAux = bucket.vetPtrLabel[i];
+        if(doubleEqual(label->vetResources[0], labelAux->vetResources[0]) &&
+           doubleEqual(label->vetResources[1], labelAux->vetResources[1]))
+        {
+            if(labelAux->tamRoute != label->tamRoute)
+                return false;
+
+            for(int j=0; j < label->tamRoute; ++j)
+            {
+                if(label->vetRoute[i] != labelAux->vetRoute[i])
+                    return false;
+            }
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void  LabelingAlgorithmNS::copyLabel(const Label& labelSrc, Label& labelDest, int numResorces)
+{
+    for(int r=0; r < numResorces; ++r)
+        labelDest.vetResources[r] = labelSrc.vetResources[r];
+
+    for(int i=0; i < labelSrc.tamRoute; ++i)
+        labelDest.vetRoute[i] = labelSrc.vetRoute[i];
+
+    labelDest.tamRoute  = labelSrc.tamRoute;
+    labelDest.active    = labelSrc.active;
+    labelDest.bitSetNg  = labelSrc.bitSetNg;
+    labelDest.i		    = labelSrc.i;
+    labelDest.j         = labelSrc.j;
+    labelDest.typeLabel = labelSrc.typeLabel;
+
+    labelDest.posBucket = -1;
+    labelDest.posHeap   = -1;
+
+
 }
