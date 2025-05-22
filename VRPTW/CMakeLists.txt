@@ -32,7 +32,12 @@ find_package(Boost CONFIG)
 #add_directory(../Grafo)
 #include_directories(../Grafo/include)
 
-add_executable(${PROJECT_NAME})
+add_executable(${PROJECT_NAME}
+    include/LabelingConstants.h
+    include/Label.h
+    include/NgSet.h
+    include/LabelingUtils.h
+    src/Label.cpp)
 
 
 #target_sources(${PROJECT_NAME}
@@ -53,6 +58,7 @@ target_sources(${PROJECT_NAME}
         src/Instancia.cpp
         src/SolomonInst.cpp
         src/LowerBound.cpp
+        src/Label.cpp
         src/main.cpp
 )
 

@@ -752,6 +752,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
     while(subProbCustR_neg)
     {
+        //std::cout<<"ItCG("<<itCG<<")\n\n";
         if(!missPricing)
             uRmlp->update();
         subProbCustR_neg = false;
@@ -789,7 +790,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
         GRBVar *vetVar = uRmlp->getVars();
 
-        if(phaseStatus == PhaseStatus::PhaseStatusBigM && itCG > 0 && (itCG % 2 == 0))
+        if(phaseStatus == PhaseStatus::PhaseStatusBigM && itCG > 0 && (itCG % 1 == 0))
         {
             bool allZero  = true;
             bool increase = true;
@@ -798,7 +799,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
             for(int i = 0; i < info.numConstrsOrignalProblem + info.numConstrsConv; ++i)
             {
-                if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0))
+                if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0, 1E-5))
                 {
                         if(vetMult[i] == BigM_maxMult)
                         {
@@ -809,7 +810,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
                         vetMult[i] += 1.0;
                         numTotal += 1;
-                        std::cout<<"set "<<i<<"("<<vetVar[i].get(GRB_DoubleAttr_X)<<") variable to: "<<vetMult[i]*info.costA_Var<<"\n";
+                        std::cout<<"set "<<i<<"_"<<vetVar[i].get(GRB_StringAttr_VarName)<<"("<<vetVar[i].get(GRB_DoubleAttr_X)<<") variable to: "<<vetMult[i]*info.costA_Var<<"\n";
                         vetVar[i].set(GRB_DoubleAttr_Obj, vetMult[i] * info.costA_Var);
                         break;
 
@@ -1015,6 +1016,28 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
                 auxVect.vetColCooef.segment(info.numConstrsConv, (info.numConstrsMaster)) = matA * vetSol;
 
+                /*
+                if(phaseStatus != PhaseStatus::PhaseStatusColGen)
+                {
+                    //uRmlp->update();
+
+                    vetVar = uRmlp->getVars();
+
+                    for(int i=1; i < info.numVarRmlpPi; ++i)
+                    {
+                        if(!doubleEqual(auxVect.vetColCooef[i], 0.0))
+                        {
+                            vetVar[i-1].set(GRB_DoubleAttr_UB, 0.0);
+                            vetVar[i-1].set(GRB_DoubleAttr_LB, 0.0);
+
+                            std::cout<<"seting var("<<vetVar[i-1].get(GRB_StringAttr_VarName)<<") to 0\n";
+                        }
+                    }
+                }
+                */
+
+                //std::cout<<"\n";
+
                 if(PrintDebug)
                     std::cout<<"~A*X\n\n";
                 //std::cout<<"cooef: \n"<<auxVect.vetColCooef<<"\n\n";
@@ -1057,6 +1080,9 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
         if(!missPricing && !subProbCustR_neg)
             std::cout<<"END!\n";
+
+        if(!subProbCustR_neg)
+            std::cout<<"Sub Problem have a positive value!\n";
 
         //uRmlp->update();
 

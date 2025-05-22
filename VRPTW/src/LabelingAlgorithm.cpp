@@ -13,6 +13,8 @@
 #include <list>
 #include <algorithm>
 #include "LowerBound.h"
+//#include "NgSet.h"
+#include "LabelingUtils.h"
 
 using namespace LabelingAlgorithmNS;
 using namespace LowerBoundNS;
@@ -482,7 +484,7 @@ LabelingAlgorithmNS::forwardLabelingAlgorithm(const int                     numR
             vetRedCost[l] = label->vetResources[0];
         }
 
-        exit(-1);
+        //exit(-1);
         return true;
     }
     else
@@ -702,6 +704,7 @@ LabelingAlgorithmNS::bidirectionalAlgorithm(const int                     numRes
             break;
 
         //checkHeap(labelHeap, lData);
+        lData.checkVetMatBucketBackward();
 
         if(ptrLabelTarget)
         {
@@ -1956,7 +1959,6 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketBackward(int           			cust,
                                                           int           			dest,
                                                           int&          			correctPos)
 {
-
     // TODO Altera vetMatBucketBackward
 
     const bool rmFromHeap = (cust != dest);
@@ -2001,8 +2003,22 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketBackward(int           			cust,
     correctPos = 0;
     while(correctPos < bucketPtr->sizeVetPtrLabel)
     {
-        if(bucketPtr->vetPtrLabel[correctPos]->vetResources[0] <= labelPtrAux->vetResources[0])
+        if(bucketPtr->vetPtrLabel[correctPos]->vetResources[0] < labelPtrAux->vetResources[0])
             correctPos += 1;
+        else
+            break;
+    }
+
+    // TODO check
+    while(correctPos < bucketPtr->sizeVetPtrLabel)
+    {
+        if(doubleEqual(bucketPtr->vetPtrLabel[correctPos]->vetResources[0], labelPtrAux->vetResources[0], 1E-5))
+        {
+            if(labelPtrAux->vetResources[1] <= bucketPtr->vetPtrLabel[correctPos]->vetResources[1])
+            correctPos += 1;
+        else
+            break;
+        }
         else
             break;
     }
@@ -2012,6 +2028,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketBackward(int           			cust,
     for(int ii=0; ii < correctPos; ++ii)
     {
         bool canDomindate = true;
+        /*
         for(int r=1; r < numRes; ++r)
         {
             if(bucketPtr->vetPtrLabel[ii]->vetResources[r] < labelPtrAux->vetResources[r])
@@ -2020,7 +2037,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketBackward(int           			cust,
                 break;
             }
         }
-
+        */
         if(canDomindate)
         {
             if(checkDominanceSubSet(*bucketPtr->vetPtrLabel[ii], *labelPtrAux))

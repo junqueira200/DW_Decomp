@@ -17,6 +17,7 @@ namespace LowerBoundNS
 {
 
 
+
     class FloatTypeHeap
     {
     public:

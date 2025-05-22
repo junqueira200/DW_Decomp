@@ -9,6 +9,9 @@
 #define __PRETTYFILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #define PRINT_DEBUG(inicio, texto) std::cout<<inicio<<"DEBUG: "<<texto<<"  FILE: "<<__PRETTYFILE__<<"  FUNC: "<<__PRETTY_FUNCTION__<<"  LINHA: "<<__LINE__<<"\n";
 
+#define PRINT_EXIT() std::cout<<"  FILE: "<<__PRETTYFILE__<<"  FUNC: "<<__PRETTY_FUNCTION__<<"  LINHA: "<<__LINE__<<"\n"; exit(-1);
+#define PRINT_THROW() std::cout<<"  FILE: "<<__PRETTYFILE__<<"  FUNC: "<<__PRETTY_FUNCTION__<<"  LINHA: "<<__LINE__<<"\n"; throw "ERROR";
+
 #define assertm(exp, msg) if(exp){std::cout<<msg<<"\n\nLINE: "<<__LINE__<<"\nFILE: "<<__PRETTYFILE__<<"\nFUNC: "<<__PRETTY_FUNCTION__<<"\n\n"; throw "ERROR";}
 
 
@@ -57,11 +60,31 @@ typedef Eigen::Matrix<double, -1, -1, Eigen::RowMajor> EigenMatrixRowD;
 
 
 inline __attribute__((always_inline))
-bool doubleLess(double a, double b, double ep=1E-3)
+bool doubleLess(double a, double b, double ep=std::numeric_limits<double>::epsilon())
 {
     return (a-b) < -ep;
 }
 
+
+inline __attribute__((always_inline))
+bool doubleLess(float a, float b, float ep=std::numeric_limits<float>::epsilon())
+{
+    return (a-b) < -ep;
+}
+
+
+inline __attribute__((always_inline))
+bool doubleGreater(double a, double b, double ep=std::numeric_limits<double>::epsilon())
+{
+    return (a-b) > ep;
+}
+
+
+inline __attribute__((always_inline))
+bool doubleGreater(float a, float b, float ep=std::numeric_limits<float>::epsilon())
+{
+    return (a-b) > ep;
+}
 
 inline __attribute__((always_inline))
 bool doubleEqual(double a, double b, double ep=std::numeric_limits<double>::epsilon())
@@ -118,5 +141,36 @@ bool doubleEqual(long double a, long double b, long double ep=std::numeric_limit
     float abs_b = std::abs(b);
     return (diff / std::max(abs_a, abs_b)) <= ep;
 }
+
+
+inline __attribute__((always_inline))
+bool doubleGreaterEqual(double a, double b, double ep=std::numeric_limits<double>::epsilon())
+{
+    return doubleGreater(a, b, ep) || doubleEqual(a, b, ep);
+}
+
+
+inline __attribute__((always_inline))
+bool doubleGreaterEqual(float a, float b, float ep=std::numeric_limits<float>::epsilon())
+{
+    return doubleGreater(a, b, ep) || doubleEqual(a, b, ep);
+}
+
+
+inline __attribute__((always_inline))
+bool doubleLessEqual(double a, double b, double ep=std::numeric_limits<double>::epsilon())
+{
+    return doubleLess(a, b, ep) || doubleEqual(a, b, ep);
+}
+
+
+inline __attribute__((always_inline))
+bool doubleLessEqual(float a, float b, float ep=std::numeric_limits<double>::epsilon())
+{
+    return doubleLess(a, b, ep) || doubleEqual(a, b, ep);
+}
+
+
+
 
 #endif //DW_DECOMP_AUX_H
