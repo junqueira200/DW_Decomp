@@ -769,6 +769,8 @@ std::cout<<"*******************Column Generation*******************\n\n";
         if(!missPricing)
             uRmlp->optimize();
 
+        uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
+
         if(uRmlp->get(GRB_IntAttr_Status) != GRB_OPTIMAL)
             return StatusSubProb_Inviavel;
 
@@ -807,7 +809,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
                         vetMult[i] += 1.0;
                         numTotal += 1;
-                        //std::cout<<"set "<<i<<" variable to: "<<vetMult[i]*info.costA_Var<<"\n";
+                        std::cout<<"set "<<i<<"("<<vetVar[i].get(GRB_DoubleAttr_X)<<") variable to: "<<vetMult[i]*info.costA_Var<<"\n";
                         vetVar[i].set(GRB_DoubleAttr_Obj, vetMult[i] * info.costA_Var);
                         break;
 
@@ -839,6 +841,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0, 1E-5))
                 {
                     linExpr += vetVar[i];
+                    std::cout<<i<<"("<<vetVar[i].get(GRB_DoubleAttr_X)<<"); ";
                 }
                 else
                 {
@@ -847,6 +850,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 }
             }
 
+            std::cout<<"\n";
             uRmlp->setObjective(linExpr, GRB_MINIMIZE);
         }
 
@@ -867,12 +871,14 @@ std::cout<<"*******************Column Generation*******************\n\n";
         {
             auxVect.vetRowRmlpSmoothPi = (1.0-StabilizationAlpha)*auxVect.vetRowRmlpSmoothPi +
                                           StabilizationAlpha * (auxVect.vetRowRmlpPi);
-            //std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
+            std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
         }
         else
         {
             auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpPi;
             numLimit = 0;
+            std::cout << "PI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
+
             //if(exactPi)
             //    std::cout<<"exactPi\n";
         }

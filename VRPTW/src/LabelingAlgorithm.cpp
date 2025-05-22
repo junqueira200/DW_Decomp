@@ -710,9 +710,6 @@ LabelingAlgorithmNS::bidirectionalAlgorithm(const int                     numRes
 
         if(labelHeap.heapSize > localNumMaxLabel && DominaIterBuckets)
         {
-
-            std::cout<<"DominaIterBuckets\n";
-
             lData.dominanceInterBuckets(labelHeap, numRes, localNumMaxLabel, lData.vetMatBucketForward);
 
             if(labelHeap.heapSize > localNumMaxLabel)
@@ -973,7 +970,7 @@ LabelingAlgorithmNS::bidirectionalAlgorithm(const int                     numRes
         */
     }
 
-    //std::cout<<"Primeiras Solucoes: \n";
+    std::cout<<"Solucoes: \n";
 
     if(lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel > 0)
     {
@@ -981,7 +978,7 @@ LabelingAlgorithmNS::bidirectionalAlgorithm(const int                     numRes
         for(int l=0; l < numSol; ++l)
         {
             Label* label = lData.vetMatBucketForward[dest].mat(0, 0).vetPtrLabel[l];
-            //std::cout<<*label<<"\n";
+            std::cout<<*label<<"\n";
             label->vetRoute[label->tamRoute-1] = label->vetRoute[0];
             auto &vetRoute = label->vetRoute;
 
@@ -994,8 +991,10 @@ LabelingAlgorithmNS::bidirectionalAlgorithm(const int                     numRes
 
             vetRedCost[l] = label->vetResources[0];
         }
+
         // TODO remover
         //exit(-1);
+        std::cout<<"*************************************************************************************\n\n";
         return true;
     }
     else

@@ -58,7 +58,7 @@ int main(int argv, char **argc)
         GRBModel model(grbEnv);
         criaMestre(instVrpTw, model);
 
-        double distVarA = std::max(somaDist(instVrpTw), 1E6);
+        double distVarA = std::max(somaDist(instVrpTw), 0.0);
         //VrpSubProb vrpSubProb(grbEnv, instVrpTw);
 
         DW_DecompNS::AuxData auxVectors;

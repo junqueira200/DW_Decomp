@@ -259,7 +259,7 @@ namespace DW_DecompNS
         VectorD vetObjCof;
 
 
-        PhaseStatus phaseStatus = PhaseStatus::PhaseStatusBigM;
+        PhaseStatus phaseStatus = PhaseStatus::PhaseStatusTwoPhase;
 
         DW_DecompNode(GRBEnv &env_,
                       GRBModel &master_,
