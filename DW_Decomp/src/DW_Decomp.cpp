@@ -770,7 +770,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         if(!missPricing)
             uRmlp->optimize();
 
-        uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
+        //uRmlp->write("rmlp_"+std::to_string(itCG)+".lp");
 
         if(uRmlp->get(GRB_IntAttr_Status) != GRB_OPTIMAL)
             return StatusSubProb_Inviavel;
@@ -872,13 +872,13 @@ std::cout<<"*******************Column Generation*******************\n\n";
         {
             auxVect.vetRowRmlpSmoothPi = (1.0-StabilizationAlpha)*auxVect.vetRowRmlpSmoothPi +
                                           StabilizationAlpha * (auxVect.vetRowRmlpPi);
-            std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
+            //std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
         }
         else
         {
             auxVect.vetRowRmlpSmoothPi = auxVect.vetRowRmlpPi;
             numLimit = 0;
-            std::cout << "PI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
+            //std::cout << "PI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
 
             //if(exactPi)
             //    std::cout<<"exactPi\n";
