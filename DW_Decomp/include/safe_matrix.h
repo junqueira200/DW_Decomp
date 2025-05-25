@@ -151,12 +151,12 @@ public:
 
     virtual void setVal(const T &val)
     {
-        for(int i=0; i < m*n; ++i)
+        for(size_t i=0; i < m*n; ++i)
             std::vector<T>::operator[](i) = val;
     }
     virtual void setVal(const T &&val)
     {
-        for(int i=0; i < m*n; ++i)
+        for(size_t i=0; i < m*n; ++i)
             std::vector<T>::operator[](i) = val;
     }
 
@@ -187,7 +187,7 @@ public:
 
     virtual void printVector()
     {
-        for(int i=0; i < m*n; ++i)
+        for(size_t i=0; i < m*n; ++i)
             std::cout<<std::vector<T>::operator[](i)<<" ";
         std::cout<<"\n";
     }
@@ -226,12 +226,13 @@ bool matrixsIguais(const Matrix<T, C> &mat0, const Matrix<T,C> &mat1)
 {
     const T epsilon = 1E-5;
 
-    if(mat0.getNumLinhas()  != mat1.getNumLinhas() ||
-       mat0.getNumColunas() != mat1.getNumColunas())
+    if(mat0.getNumLinhas()  != mat1.getNumLinhas() || mat0.getNumColunas() != mat1.getNumColunas())
+    {
         return false;
+    }
 
-        for(size_t i = 0; i < mat0.getNumLinhas(); ++i)
-        {
+    for(size_t i = 0; i < mat0.getNumLinhas(); ++i)
+    {
             for(size_t j = 0; j < mat1.getNumColunas(); ++j)
             {
                 if constexpr(std::is_same_v<T,double>)
@@ -254,7 +255,7 @@ bool matrixsIguais(const Matrix<T, C> &mat0, const Matrix<T,C> &mat1)
                     }
                 }
             }
-        }
+    }
 
 
     return true;

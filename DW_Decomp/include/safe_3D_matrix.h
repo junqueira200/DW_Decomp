@@ -37,7 +37,7 @@ public:
 
     Vector3D(const Vector3D<T> &temp):n(temp.n), m(temp.n), p(temp.p), std::vector<T>(temp.n*temp.m*temp.p)
     {
-        for(int i=0; i < n*m*p; ++i)
+        for(size_t i=0; i < n*m*p; ++i)
             std::vector<T>::operator[](i) = temp.get(i);
     }
 
@@ -157,18 +157,18 @@ public:
 
     virtual void setVal(const T &val)
     {
-        for(int i=0; i < m*n*p; ++i)
+        for(size_t i=0; i < m*n*p; ++i)
             std::vector<T>::operator[](i) = val;
     }
     virtual void setVal(const T &&val)
     {
-        for(int i=0; i < m*n*p; ++i)
+        for(size_t i=0; i < m*n*p; ++i)
             std::vector<T>::operator[](i) = val;
     }
 
     virtual void printVector()
     {
-        for(int i=0; i < m*n*p; ++i)
+        for(size_t i=0; i < m*n*p; ++i)
             std::cout<<std::vector<T>::operator[](i)<<" ";
         std::cout<<"\n";
     }

@@ -68,7 +68,8 @@ void LabelingAlgorithmNS::LabelingData::checkVetMatBucketForward()
                     bool equal = true;
                     for(int tt=(t+1); tt < bucket.sizeVetPtrLabel; ++tt)
                     {
-                        if(bucket.vetPtrLabel[t]->vetResources[0] == bucket.vetPtrLabel[tt]->vetResources[0] && !equal)
+                        if(doubleEqual(bucket.vetPtrLabel[t]->vetResources[0], bucket.vetPtrLabel[tt]->vetResources[0],
+                                       FloatEp) && !equal)
                         {
                             std::cout<<"ERROR\n"<<*bucket.vetPtrLabel[t]<<"\n"<<*bucket.vetPtrLabel[tt]<<"\n";
                             std::cout<<"Reduced Costs are equal, but equal(false)\n";
@@ -76,9 +77,11 @@ void LabelingAlgorithmNS::LabelingData::checkVetMatBucketForward()
 
                         }
 
-                        if(bucket.vetPtrLabel[t]->vetResources[0] == bucket.vetPtrLabel[tt]->vetResources[0])
+                        if(doubleEqual(bucket.vetPtrLabel[t]->vetResources[0], bucket.vetPtrLabel[tt]->vetResources[0],
+                                       FloatEp))
                         {
-                            if(!(bucket.vetPtrLabel[t]->vetResources[1] <= bucket.vetPtrLabel[tt]->vetResources[1]))
+                            if((!doubleLessEqual(bucket.vetPtrLabel[t]->vetResources[1],
+                                                  bucket.vetPtrLabel[tt]->vetResources[1], FloatEp)))
                             {
                                 std::cout<<"ERROR:\n"<<*bucket.vetPtrLabel[t]<<"\n"<<*bucket.vetPtrLabel[tt]<<"\n";
                                 std::cout<<bucket.vetPtrLabel[t]->vetResources[0]<<"\n"<<bucket.vetPtrLabel[tt]->vetResources[0]<<"\n";
@@ -86,7 +89,8 @@ void LabelingAlgorithmNS::LabelingData::checkVetMatBucketForward()
                                 PRINT_EXIT();
                             }
                         }
-                        else if(bucket.vetPtrLabel[t]->vetResources[0] > bucket.vetPtrLabel[tt]->vetResources[0])
+                        else if(doubleGreater(bucket.vetPtrLabel[t]->vetResources[0],
+                                              bucket.vetPtrLabel[tt]->vetResources[0], FloatEp))
                         {
                             std::cout<<"ERROR\n"<<*bucket.vetPtrLabel[t]<<"\n"<<*bucket.vetPtrLabel[tt]<<"\n";
                             std::cout<<bucket.vetPtrLabel[t]->vetResources[0]<<"\n"<<bucket.vetPtrLabel[tt]->vetResources[0]<<"\n";

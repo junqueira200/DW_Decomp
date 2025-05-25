@@ -1,12 +1,1 @@
-. Como realizar a dominancia quando o label é do tipo Backward?
-    Custo reduzido: igual ao Forward.
-    Outros: l0 domina l1 se: demanda(l0) >= demanda(l1)?
-
-    Pode existir recursos que não possuiem upper bound igual ao custo reduzido ??
-
-. Última iteração pode utilizar o ng-routes?
-
-. Quando o labing falha em gerar uma rota quando é utilizado a estabilização da CG, a CG realmente terminou?
-
-
-- Label foi removido da tabela mas não foi removido da heap!!
+Lagrange Dual bound da CG!

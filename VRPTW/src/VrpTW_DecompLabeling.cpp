@@ -271,11 +271,11 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
         {
             //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
             matColX.setZero();
-            custoRedNeg = bidirectionalAlgorithm(2,
-                            //forwardLabelingAlgorithm(2,
+            custoRedNeg = //bidirectionalAlgorithm(2,
+                            forwardLabelingAlgorithm(2,
                                                    instVrpTw->numClientes + 1,
                                                    vetMatResCostForward,
-                                                   vetMatResCostBackward,
+                                                   //vetMatResCostBackward,
                                                    vetVetResBound,
                                                    instVrpTw->numClientes,
                                                    ngSet,
@@ -302,11 +302,11 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
 
         //std::cout<<"EXACT LABELING\n";
         //exactLabelingG = true;
-        custoRedNeg = bidirectionalAlgorithm(2,
-                      //forwardLabelingAlgorithm(2,
+        custoRedNeg = //bidirectionalAlgorithm(2,
+                      forwardLabelingAlgorithm(2,
                                                instVrpTw->numClientes+1,
                                                vetMatResCostForward,
-                                               vetMatResCostBackward,
+                                               //vetMatResCostBackward,
                                                vetVetResBound,
                                                instVrpTw->numClientes,
                                                ngSet,
