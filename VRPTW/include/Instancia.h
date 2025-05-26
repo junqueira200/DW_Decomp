@@ -31,6 +31,7 @@ namespace InstanciaNS
         Eigen::VectorX<ClieTime> vetClieTime;
         Eigen::VectorXi vetClieDem;
         std::string instName;
+        bool subInstancia = false;
 
         explicit InstVRP_TW(int numClie);
         InstVRP_TW()=default;
@@ -44,6 +45,7 @@ namespace InstanciaNS
     double calculateDistance(double x1, double y1, double x2, double y2);
     double somaDist(const InstVRP_TW &instVrpTw);
 
+    void getSubInstancia(int numClientes, InstVRP_TW& instVrpTw);
 
     enum DataIndex
     {

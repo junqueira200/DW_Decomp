@@ -89,7 +89,7 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, v
 
 
     GRBLinExpr linExpr;
-    GRBVar a = rmlp.addVar(0, GRB_INFINITY, custoVarA, GRB_CONTINUOUS);
+    GRBVar a = rmlp.addVar(0, GRB_INFINITY, 1.0, GRB_CONTINUOUS);
     //linExpr += -a;
 
     rmlp.addConstr(linExpr, '<', instVrpTw->numVeic, "convConstr");

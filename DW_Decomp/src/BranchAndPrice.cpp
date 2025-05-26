@@ -208,7 +208,10 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
         return vetX_best;
     }
 
+   if(isInteger(rootNode->vetSolX))
+       statisticD.rootInt = true;
 
+   // TODO Remove to make branch and price
     delete rootNode;
     return vetX_best;
 
@@ -417,16 +420,18 @@ void BranchAndPriceNS::writeToFile(StatisticsNS::StatisticsData& statisticsD, co
         }
 
         file<<"#"<<statisticsD.date<<"\n";
-        file<<"inst; rootLB; rootTime; LB; UB; gap; totalTime\n";
+        file<<"inst; rootLB; rootTime; LB; UB; gap; totalTime; numNodes; rootInt\n";
     }
 
 
-    file<<statisticsD.inst<<"; "<<std::format("{:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}\n", statisticsD.rootLB,
+    file<<statisticsD.inst<<"; "<<std::format("{:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:d}; {:d}\n", statisticsD.rootLB,
                                                                                                        statisticsD.rootTime,
                                                                                                        statisticsD.lowerBound,
                                                                                                        statisticsD.upperBound,
                                                                                                        statisticsD.gap,
-                                                                                                       statisticsD.totalTime);
+                                                                                                       statisticsD.totalTime,
+                                                                                                       statisticsD.numNodes,
+                                                                                                       (int)statisticsD.rootInt);
 
     file.close();
 

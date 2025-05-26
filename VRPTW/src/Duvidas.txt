@@ -1,1 +1,4 @@
-Lagrange Dual bound da CG!
+
+- Lagrange Dual bound da CG! É valido quando o pricing é heurístico?
+- Critério para dominancia inter buckets
+- Miss pricing?

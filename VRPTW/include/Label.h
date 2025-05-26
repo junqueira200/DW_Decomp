@@ -182,7 +182,7 @@ namespace LabelingAlgorithmNS
 
         // std::set<Label*, LabelCmp> &setLabel
         void dominanceInterBuckets(LabelHeap& labelHeap, int numRes, int localNumMaxLabel,
-                                   Eigen::VectorX<MatBucket>& vetMatBucket);
+                                   Eigen::VectorX<MatBucket>& vetMatBucket, TypeLabel typeLabel);
 
         void setupGraphBucket();
         bool compareVetMatBucket(const ArrayResources& vetMaxResouces);

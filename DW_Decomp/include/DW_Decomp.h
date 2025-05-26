@@ -32,9 +32,9 @@ namespace DW_DecompNS
     constexpr double gapLimit            = 1E-3;
     constexpr int    NumCandidatesBranch = 3;
     constexpr bool   PrintDebug          = false;
-    constexpr int    BigM_maxMult        = 40;
-    constexpr double GapExactPricing     = 0.0001; // gap  <= ExactPricingTol%
-    constexpr double GapTolStop          = 0.0001; // gap* <= GapTolStop%
+    constexpr int    BigM_maxMult        = 10;
+    constexpr double GapExactPricing     = 1E-1; // gap  <= ExactPricingTol%
+    constexpr double GapTolStop          = 1E-1; // gap* <= GapTolStop%
 
 
 
@@ -257,7 +257,6 @@ namespace DW_DecompNS
         VectorI vetVar1;   // set of variables with have x_i >= 1
 
         VectorD vetObjCof;
-
 
         PhaseStatus phaseStatus = PhaseStatus::PhaseStatusBigM;
 

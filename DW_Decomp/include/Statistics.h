@@ -11,6 +11,8 @@
 #ifndef DW_STATISTICS_H
 #define DW_STATISTICS_H
 
+#include <iostream>
+
 namespace StatisticsNS
 {
 
@@ -26,6 +28,8 @@ namespace StatisticsNS
         double      upperBound = 0.0;
         double      gap        = 0.0;
         double      totalTime  = 0.0;
+        int			numNodes   = 0;
+        bool 	    rootInt    = false;
         std::string date       = "";
         std::string inst       = "";
 

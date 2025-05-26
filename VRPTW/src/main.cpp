@@ -52,6 +52,8 @@ int main(int argv, char **argc)
         else
             leInstanciaSalomon(strFile, instVrpTw);
 
+        getSubInstancia(16, instVrpTw);
+
         VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
 
         GRBEnv grbEnv;
@@ -87,12 +89,8 @@ int main(int argv, char **argc)
         std::cout<<"numClien: "<<instVrpTw.numClientes<<"\n";
         std::cout<<"Cost Var A.: "<<distVarA<<"\n\n";
 
-        vetSol = branchAndPrice(decompNode,
-                                auxVectors,
-                                (SearchDataInter*)&minFuncObj,
-                                (PrimalHeuristicInter*)&simpleDiving,
-                                (BranchInter*)&branch,
-                                statisticD);
+        vetSol = branchAndPrice(decompNode, auxVectors, (SearchDataInter*)&minFuncObj,
+                                (PrimalHeuristicInter*)&simpleDiving, (BranchInter*)&branch, statisticD);
 
 
 
@@ -148,6 +146,7 @@ int main(int argv, char **argc)
         std::cout<<"\n\n"<<matSol<<"\n";*/
 
         statisticD.inst = fileName;
+        statisticD.numNodes = instVrpTw.numClientes;
         writeToFile(statisticD, "result.csv");
 
         //decompNode.columnGeneration(auxVectors);

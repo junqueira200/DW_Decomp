@@ -248,3 +248,30 @@ double InstanciaNS::somaDist(const InstVRP_TW &instVrpTw)
 
     return dist;
 }
+
+void InstanciaNS::getSubInstancia(int numClientes, InstVRP_TW& instVrpTw)
+{
+    if(numClientes == instVrpTw.numClientes)
+        return;
+
+    std::cout<<"Criando sub instancia de "<<numClientes<<" nos\n\n";
+
+    instVrpTw.numClientes = numClientes;
+    int demTotal = 0;
+
+    for(int i=0; i < numClientes; ++i)
+    {
+        demTotal += instVrpTw.vetClieDem[i];
+    }
+
+
+    instVrpTw.numVeic = ceil(demTotal/double(instVrpTw.capVeic));
+    std::cout<<"Num. Veiculos: "<<instVrpTw.numVeic<<"\n";
+    if(instVrpTw.numVeic <= 1)
+    {
+        std::cout<<"Num de veiculos eh igual a 1\n";
+        PRINT_EXIT();
+    }
+    instVrpTw.subInstancia = true;
+}
+
