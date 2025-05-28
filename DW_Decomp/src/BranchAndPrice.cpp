@@ -424,14 +424,10 @@ void BranchAndPriceNS::writeToFile(StatisticsNS::StatisticsData& statisticsD, co
     }
 
 
-    file<<statisticsD.inst<<"; "<<std::format("{:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:d}; {:d}\n", statisticsD.rootLB,
-                                                                                                       statisticsD.rootTime,
-                                                                                                       statisticsD.lowerBound,
-                                                                                                       statisticsD.upperBound,
-                                                                                                       statisticsD.gap,
-                                                                                                       statisticsD.totalTime,
-                                                                                                       statisticsD.numNodes,
-                                                                                                       (int)statisticsD.rootInt);
+    file<<statisticsD.inst<<"; "<<std::format("{:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:d}; {:d}\n",
+                                              statisticsD.rootLB, statisticsD.rootTime, statisticsD.lowerBound,
+                                              statisticsD.upperBound, statisticsD.gap, statisticsD.totalTime,
+                                              statisticsD.numNodes, (int)statisticsD.rootInt);
 
     file.close();
 

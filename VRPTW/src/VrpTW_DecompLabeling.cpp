@@ -97,24 +97,12 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, v
 
 }
 
-int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::VectorXd &vetC,
-                                                               Eigen::RowVectorXd &vetRowPi,
-                                                               GRBModel &mestre,
-                                                               int itCG,
-                                                               bool &custoRedNeg,
-                                                               void *data,
-                                                               const int iniConv,
-                                                               int indSubProb,
-                                                               Eigen::VectorXd &vetCooefRestConv,
-                                                               const std::pair<int, int> &pairSubProb,
-                                                               Eigen::MatrixXd &matColX,
-                                                               int &numSol,
-                                                               Eigen::Array<double, 1, DW_DecompNS::NumMaxSolSubProb>& vetRedCost,
-                                                               double constPiValue,
-                                                               const VectorI &vetVar0,
-                                                               const VectorI &vetVar1,
-                                                               DW_DecompNS::PhaseStatus phaseStatus,
-                                                               bool exact)
+int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
+    resolveSubProb(const Eigen::VectorXd &vetC, Eigen::RowVectorXd &vetRowPi, GRBModel &mestre, int itCG,
+                   bool &custoRedNeg, void *data, const int iniConv, int indSubProb, Eigen::VectorXd &vetCooefRestConv,
+                   const std::pair<int, int> &pairSubProb, Eigen::MatrixXd &matColX, int &numSol,
+                   Eigen::Array<double, 1, DW_DecompNS::NumMaxSolSubProb>& vetRedCost, double constPiValue,
+                   const VectorI &vetVar0, const VectorI &vetVar1, DW_DecompNS::PhaseStatus phaseStatus, bool exact)
 {
 
     static DW_DecompNS::PhaseStatus phase = phaseStatus;
@@ -271,23 +259,10 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
         {
             //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
             matColX.setZero();
-            custoRedNeg = //bidirectionalAlgorithm(2,
-                            forwardLabelingAlgorithm(2,
-                                                   instVrpTw->numClientes + 1,
-                                                   vetMatResCostForward,
-                                                   //vetMatResCostBackward,
-                                                   vetVetResBound,
-                                                   instVrpTw->numClientes,
-                                                   ngSet,
-                                                   labelingData,
-                                                   matColX,
-                                                   numSol,
-                                                   (FloatType) constPiValue,
-                                                   i,
-                                                   true,
-                                                   maxDist,
-                                                   vetRedCostFT,
-                                                   false);
+            custoRedNeg = labelingAlgorithmm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
+                                             vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
+                                             numSol, (FloatType) constPiValue, i, true, maxDist, vetRedCostFT, false,
+                                             typeLabel);
 
             it += 1;
             if(custoRedNeg)
@@ -302,50 +277,10 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(const Eigen::Vect
 
         //std::cout<<"EXACT LABELING\n";
         //exactLabelingG = true;
-        custoRedNeg = //bidirectionalAlgorithm(2,
-                      forwardLabelingAlgorithm(2,
-                                               instVrpTw->numClientes+1,
-                                               vetMatResCostForward,
-                                               //vetMatResCostBackward,
-                                               vetVetResBound,
-                                               instVrpTw->numClientes,
-                                               ngSet,
-                                               labelingData,
-                                               matColX,
-                                               numSol,
-                                               (FloatType)constPiValue,
-                                               -1,
-                                               true,
-                                               maxDist,
-                                               vetRedCostFT,
-                                               exact);
-
-
-        /*
-        if(!custoRedNeg)
-        {
-            matColX.setZero();
-            ngSet.active = false;
-            custoRedNeg = forwardLabelingAlgorithm(2,
-                                                   instVrpTw->numClientes+1,
-                                                   vetMatResCost,
-                                                   vetVetResBound,
-                                                   instVrpTw->numClientes,
-                                                   ngSet,
-                                                   labelingData,
-                                                   matColX,
-                                                   numSol,
-                                                   (FloatType)constPiValue,
-                                                   -1,
-                                                   true,
-                                                   maxDist,
-                                                   vetRedCostFT);
-
-            if(custoRedNeg)
-                std::cout<<"IMPROVE\n";
-        }
-        */
-
+        custoRedNeg = labelingAlgorithmm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
+                                         vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
+                                         numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
+                                         typeLabel);
     }
 
     //redCost = (double)redCostFT;
@@ -589,4 +524,15 @@ bool VrpTW_DecompLabelingNS::exactPricing(const LabelingAlgorithmNS::Vet3D_ResCo
     else
         return false;
 
+}
+
+
+void VrpTW_DecompLabelingNS::VrpLabelingSubProb::setTypeLabelToForward()
+{
+    typeLabel = LabelingAlgorithmNS::AlgForward;
+}
+
+void VrpTW_DecompLabelingNS::VrpLabelingSubProb::setTypeLabelToBackward()
+{
+    typeLabel = LabelingAlgorithmNS::AlgBackward;
 }

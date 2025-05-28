@@ -56,6 +56,18 @@ int main(int argv, char **argc)
 
         VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
 
+        if(argv == 3)
+        {
+            int option = atoi(argc[2]);
+            if(option == 1)
+            {
+                vrpLabelingSubProb.setTypeLabelToBackward();
+                std::cout<<"Seting typeLabel to backward\n";
+            }
+            else
+                std::cout<<"Seting typeLabel to forward\n";
+        }
+
         GRBEnv grbEnv;
         GRBModel model(grbEnv);
         criaMestre(instVrpTw, model);

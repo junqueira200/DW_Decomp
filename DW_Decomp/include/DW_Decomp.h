@@ -32,7 +32,7 @@ namespace DW_DecompNS
     constexpr double gapLimit            = 1E-3;
     constexpr int    NumCandidatesBranch = 3;
     constexpr bool   PrintDebug          = false;
-    constexpr int    BigM_maxMult        = 10;
+    constexpr int    BigM_maxMult        = 50;
     constexpr double GapExactPricing     = 1E-1; // gap  <= ExactPricingTol%
     constexpr double GapTolStop          = 1E-1; // gap* <= GapTolStop%
 

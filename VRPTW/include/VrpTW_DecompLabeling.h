@@ -38,6 +38,11 @@ namespace VrpTW_DecompLabelingNS
         LabelingAlgorithmNS::MatBoundRes            vetVetResBound;
         LabelingAlgorithmNS::NgSet                  ngSet;
 
+        LabelingAlgorithmNS::LabelingTypeAlg              typeLabel = LabelingAlgorithmNS::AlgForward;
+
+        void setTypeLabelToForward();
+        void setTypeLabelToBackward();
+
         int getNumConvConstr() override {return 1;}
         VrpLabelingSubProb()=default;
         explicit VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw, double startDis);
@@ -45,23 +50,12 @@ namespace VrpTW_DecompLabelingNS
         ~VrpLabelingSubProb() override =default;
         void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
 
-        int resolveSubProb(const Eigen::VectorXd &vetC,
-                           Eigen::RowVectorXd &vetRowPi,
-                           GRBModel &mestre,
-                           int itCG,
-                           bool &custoRedNeg,
-                           void *data,
-                           const int iniConv,
-                           int indSubProb,
-                           Eigen::VectorXd &vetCooefRestConv,
-                           const std::pair<int, int> &pairSubProb,
-                           Eigen::MatrixXd &matColX,
-                           int &numSol,
-                           Eigen::Array<double, 1, DW_DecompNS::NumMaxSolSubProb>& vetRedCost,
-                           double constPiValue,
-                           const VectorI &vetVar0,
-                           const VectorI &vetVar1,
-                           DW_DecompNS::PhaseStatus phaseStatus,
+        int resolveSubProb(const Eigen::VectorXd &vetC, Eigen::RowVectorXd &vetRowPi, GRBModel &mestre, int itCG,
+                           bool &custoRedNeg, void *data, const int iniConv, int indSubProb,
+                           Eigen::VectorXd &vetCooefRestConv, const std::pair<int, int> &pairSubProb,
+                           Eigen::MatrixXd &matColX, int &numSol,
+                           Eigen::Array<double, 1, DW_DecompNS::NumMaxSolSubProb>& vetRedCost, double constPiValue,
+                           const VectorI &vetVar0, const VectorI &vetVar1, DW_DecompNS::PhaseStatus phaseStatus,
                            bool exact) override;
 
     }; // FIM MySubProb

@@ -25,7 +25,7 @@ namespace LabelingAlgorithmNS
     constexpr bool  Print             = false;
     constexpr int   numMaxLabelG      = 2000; // 2000
     constexpr bool  DominaIterBuckets = true;
-    constexpr FloatType FloatEp       = 1E-5;
+    constexpr FloatType FloatEp       = 1E-4;
 
     struct Bound
     {

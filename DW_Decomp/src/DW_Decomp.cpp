@@ -794,22 +794,24 @@ std::cout<<"*******************Column Generation*******************\n\n";
         {
             bool allZero  = true;
             bool increase = true;
-            int numTotal  = 0;
-            int numMax    = 0;
+
+            int numTotal   = 0;
+            int numReached = 0;
 
             for(int i = 0; i < info.numConstrsOrignalProblem + info.numConstrsConv; ++i)
             {
                 if(!doubleEqual(vetVar[i].get(GRB_DoubleAttr_X), 0.0, 1E-5))
                 {
+                        numTotal += 1;
+
                         if(vetMult[i] == BigM_maxMult)
                         {
-                            numMax   += 1;
-                            numTotal += 1;
+                            numReached += 1;
                             continue;
                         }
 
                         vetMult[i] += 1.0;
-                        numTotal += 1;
+
                         std::cout<<"set "<<i<<"_"<<vetVar[i].get(GRB_StringAttr_VarName)<<"("<<vetVar[i].get(GRB_DoubleAttr_X)<<") variable to: "<<vetMult[i]*info.costA_Var<<"\n";
                         vetVar[i].set(GRB_DoubleAttr_Obj, vetMult[i] * info.costA_Var);
                         break;
@@ -824,15 +826,16 @@ std::cout<<"*******************Column Generation*******************\n\n";
             }
 
 
-            if(numMax == numTotal && numTotal != 0)
-            {	std::cout<<"numMax("<<numMax<<") numTotal("<<numTotal<<")\n";
+            if(numTotal > 0 && numTotal == numReached)
+            {
+                std::cout<<"numTotal("<<numTotal<<"), numReached("<<numReached<<")\n";
                 phaseStatus = PhaseStatus::PhaseStatusTwoPhase;
                 std::cout << "Start PhaseStatusTwoPhase\n";
             }
 
         }
 
-        if(phaseStatus == PhaseStatus::PhaseStatusTwoPhase)
+        else if(phaseStatus == PhaseStatus::PhaseStatusTwoPhase)
         {
             GRBLinExpr linExpr;
 
@@ -907,7 +910,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         if(PrintDebug)
             std::cout<<"~UpdatePi\n";
 
-        if(Stabilization && !exactPi && phaseStatus == PhaseStatus::PhaseStatusColGen)// && numLimit < 5)
+        if(Stabilization && !exactPi && phaseStatus == PhaseStatus::PhaseStatusColGen)
         {
             auxVect.vetRowRmlpSmoothPi = (1.0-StabilizationAlpha)*auxVect.vetRowRmlpSmoothPi +
                                           StabilizationAlpha * (auxVect.vetRowRmlpPi);
@@ -959,26 +962,10 @@ std::cout<<"*******************Column Generation*******************\n\n";
             numSol = 0;
             Eigen::VectorXd vetX;
 
-            ptrSubProb->resolveSubProb(auxVect.vetRowC,
-                                       auxVect.vetRowRmlpSmoothPi,
-                                       *uRmlp,
-                                       itCG,
-                                       subProbK_CustoR_neg,
-                                       nullptr,
-                                       iniConv,
-                                       k,
-                                       auxVect.vetColConvCooef,
-                                       auxVect.vetPairSubProb[k],
-                                       auxVect.matColX_solSubProb,
-                                       numSol,
-                                       vetRedCost,
-                                       constVal,
-                                       vetVar0,
-                                       vetVar1,
-                                       phaseStatus,
-                                       exactPricing);
-
-            // TODO Calcular o larange dual baound e decidir se chama o subproblema exato
+            ptrSubProb->resolveSubProb(auxVect.vetRowC, auxVect.vetRowRmlpSmoothPi, *uRmlp, itCG, subProbK_CustoR_neg,
+                                       nullptr, iniConv, k, auxVect.vetColConvCooef, auxVect.vetPairSubProb[k],
+                                       auxVect.matColX_solSubProb, numSol, vetRedCost, constVal, vetVar0, vetVar1,
+                                       phaseStatus, exactPricing);
 
             if(!subProbK_CustoR_neg)
                 continue;
@@ -1149,6 +1136,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
             exactPi = false;
 
 */
+        /*
         if(phaseStatus != PhaseStatus::PhaseStatusColGen)
         {
 
@@ -1234,6 +1222,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
         }
         else
+        */
         {
 
             if(!exactPi && Stabilization && !missPricing && !subProbCustR_neg)

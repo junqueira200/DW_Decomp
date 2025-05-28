@@ -26,6 +26,12 @@
 
 namespace LabelingAlgorithmNS
 {
+    enum LabelingTypeAlg
+    {
+        AlgForward,
+        AlgBackward,
+        AlgBidirectional
+    };
 
     bool forwardLabelingAlgorithm(int numRes, int numCust, const Vet3D_ResCost& vetMatResCost,
                                   const MatBoundRes& vetVetBound, int dest, const NgSet& ngSet, LabelingData& lData,
@@ -38,6 +44,13 @@ namespace LabelingAlgorithmNS
                                 const NgSet& ngSet, LabelingData& lData, Eigen::MatrixXd& matColX, int& numSol,
                                 FloatType labelStart, int NumMaxLabePerBucket, bool dominaceCheck, FloatType& maxDist,
                                 Eigen::VectorX<FloatType>& vetRedCost, bool exact);
+
+    bool labelingAlgorithmm(int numRes, int numCust, const Vet3D_ResCost& vetMatResCostForward,
+                            const Vet3D_ResCost& vetMatResCostBackward, const MatBoundRes& vetVetBound, int dest,
+                            const NgSet& ngSet, LabelingData& lData, Eigen::MatrixXd& matColX, int& numSol,
+                            FloatType labelStart, int NumMaxLabePerBucket, bool dominaceCheck, FloatType& maxDist,
+                            Eigen::VectorX<FloatType>& vetRedCost, bool exact, LabelingTypeAlg labelingTypeAlg);
+
 
     //inline __attribute__((always_inline))
     bool checkCompleteDominance(const Label& l0, const Label& l1, int numResources);
