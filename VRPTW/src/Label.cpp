@@ -4,6 +4,8 @@ using namespace LabelingAlgorithmNS;
 
 void LabelingAlgorithmNS::LabelingData::checkVetMatBucketBackward()
 {
+    // TODO remover
+    return;
     for(int k=1; k < vetMatBucketBackward.size(); ++k)
     {
         for(int i=0; i < vetNumSteps[0]; ++i)
@@ -16,12 +18,17 @@ void LabelingAlgorithmNS::LabelingData::checkVetMatBucketBackward()
                 {
                     for(int tt=(t+1); tt < bucket.sizeVetPtrLabel; ++tt)
                     {
-                        if(doubleGreater(bucket.vetPtrLabel[t]->vetResources[0],
-                                         bucket.vetPtrLabel[tt]->vetResources[0], 1E-3))
+                        FloatType a = bucket.vetPtrLabel[t]->vetResources[0];
+                        FloatType b = bucket.vetPtrLabel[tt]->vetResources[0];
+
+                        if(doubleGreater(a, b, 1E-3))
                         {
                             std::cout<<"ERROR\n"<<*bucket.vetPtrLabel[t]<<"\n"<<*bucket.vetPtrLabel[tt]<<"\n";
-                            std::cout<<bucket.vetPtrLabel[t]->vetResources[0]<<"\n"<<
-                                       bucket.vetPtrLabel[tt]->vetResources[0]<<"\n";
+                            std::cout<<a<<"\n"<<b<<"\n";
+                            std::cout<<"doubleGreater("<<doubleGreater(a, b, 1E-3)<<"); >"<<(a>b)<<"\n";
+
+                            std::cout<<bucket.print(2)<<"\n";
+
                             PRINT_EXIT();
                         }
                     }
@@ -33,6 +40,7 @@ void LabelingAlgorithmNS::LabelingData::checkVetMatBucketBackward()
 
 void LabelingAlgorithmNS::LabelingData::checkVetMatBucketForward()
 {
+    // TODO remover
     return;
     for(int k=1; k < vetMatBucketBackward.size(); ++k)
     {
@@ -190,4 +198,27 @@ void LabelHeap::insertKey(Label *label)
         i = iParent;
         iParent = parent(i);
     }
+}
+
+std::string LabelingAlgorithmNS::Bucket::print(int numResorces)
+{
+    std::string str;
+
+    for(int i=0; i < sizeVetPtrLabel; ++i)
+    {
+        Label* label = vetPtrLabel[i];
+        if(label)
+        {
+
+            str += "("+std::to_string(label->cust)+"[";
+            for(int t=0; t < numResorces; ++t)
+                str += std::format("{:.5f}", label->vetResources[t]) + ", ";
+            str += "]; ";
+            for(int t=0; t < label->tamRoute; ++t)
+                str += std::to_string(label->vetRoute[t]) + " ";
+            str += ");  ";
+        }
+    }
+
+    return str;
 }

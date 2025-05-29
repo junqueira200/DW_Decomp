@@ -1410,7 +1410,7 @@ void LabelingAlgorithmNS::Bucket::addLabel(LabelingAlgorithmNS::Label *labelPtr)
     }
 
     vetPtrLabel[sizeVetPtrLabel] = labelPtr;
-    labelPtr->posHeap = sizeVetPtrLabel;
+    labelPtr->posBucket = sizeVetPtrLabel;
     sizeVetPtrLabel += 1;
 }
 
@@ -1609,10 +1609,10 @@ void LabelingAlgorithmNS::LabelingData::
                         // TODO: FIX
                         bool completeDominance = true;//true;
 
-                        if(typeLabel == Forward && ii > i && jj > j)
-                            completeDominance = false;
-                        else if(typeLabel == Forward && ii > i && jj < j)
-                            completeDominance = false;
+                        //if(typeLabel == Forward && ii > i && jj > j)
+                        //    completeDominance = false;
+                        //else if(typeLabel == Forward && ii > i && jj < j)
+                        //    completeDominance = false;
 
 
                         for(int t0=0; t0 < b0.sizeVetPtrLabel; ++t0)
@@ -2270,10 +2270,37 @@ Bucket* LabelingAlgorithmNS::
                                      int dest, int& correctPos)
 {
 
+    //std::cout<<"dominanceIntraBucketBackward\n\n";
+
     const bool rmFromHeap = (cust != dest);
     Bucket* bucketPtr = nullptr;
 
-    if(cust != dest)
+    // RM ini
+
+    /*
+    Label l0;
+    Label l1;
+
+    l0.active          = true;
+    l0.vetResources[0] = -14007.0;
+    l0.vetResources[1] = 600.0;
+
+    l1.active          = true;
+    l1.vetResources[0] = -14008.0;
+    l1.vetResources[1] = 600.0;
+
+    std::cout<<"Aqui\n";
+
+    bucketPtr = new Bucket();
+    bucketPtr->addLabel(&l0);
+    bucketPtr->sizeVetPtrLabel = 1;
+    labelPtrAux = &l1;
+
+    std::cout<<bucketPtr->print(2)<<"\n";
+    */
+    // RM end
+
+    if(cust != dest || true)
     {
         // Find index from resources
         int i = lData.getIndex(0, labelPtrAux->vetResources[0]);
@@ -2299,6 +2326,9 @@ Bucket* LabelingAlgorithmNS::
         bucketPtr = &lData.vetMatBucketForward[cust].mat(0, 0);
     }
 
+
+    //std::cout<<"\t"<<bucketPtr->print(2)<<"\n";
+
     // Get the correct possition
     correctPos = 0;
     while(correctPos < bucketPtr->sizeVetPtrLabel)
@@ -2309,6 +2339,8 @@ Bucket* LabelingAlgorithmNS::
         correctPos += 1;
     }
 
+    //std::cout<<"correctPos: "<<correctPos<<"\n";
+
     int before = correctPos;
 
     // Search for labels with have equal resources
@@ -2316,6 +2348,13 @@ Bucket* LabelingAlgorithmNS::
     {
         if(doubleEqual(bucketPtr->vetPtrLabel[correctPos]->vetResources[0], labelPtrAux->vetResources[0], FloatEp))
         {
+            //FloatType a = bucketPtr->vetPtrLabel[correctPos]->vetResources[0];
+            //FloatType b = labelPtrAux->vetResources[0];
+
+            //std::cout<<"a == b("<<(a == b)<<"float: "<<doubleEqual(a, b, FloatEp)<<")\n";
+            //std::cout<<"a = "<<a<<"; b = "<<b<<"\n\n";
+
+            //std::cout<<"equal\n";
             bool equal = true;
             for(int r=1; r < numRes; ++r)
             {
@@ -2332,6 +2371,7 @@ Bucket* LabelingAlgorithmNS::
                 if(checkDominanceSubSet(*bucketPtr->vetPtrLabel[correctPos], *labelPtrAux))
                 {
                     labelPtrAux = nullptr;
+                    //std::cout<<"\nRet null\n";
                     return nullptr;
                 }
                 else if(checkDominanceSubSet(*labelPtrAux, *bucketPtr->vetPtrLabel[correctPos]))
@@ -2361,6 +2401,8 @@ Bucket* LabelingAlgorithmNS::
             break;
     }
 
+    //std::cout<<"correctPos: "<<correctPos<<"\n";
+
     //std::cout<<"end while\n\n";
 
     // Labels before correctPos can dominate labelPtrAux;
@@ -2385,6 +2427,7 @@ Bucket* LabelingAlgorithmNS::
             if(checkDominanceSubSet(*bucketPtr->vetPtrLabel[ii], *labelPtrAux))
             {
                 //labelPoolG.delT(labelPtrAux);
+                //std::cout<<"\nRet null\n";
                 labelPtrAux = nullptr;
                 return nullptr;
             }
@@ -2441,6 +2484,9 @@ Bucket* LabelingAlgorithmNS::
 
     labelPtrAux->active = true;
 
+    //std::cout<<"Correct Position is: "<<correctPos<<"\n\n";
+    //PRINT_EXIT();
+
     return bucketPtr;
 }
 
@@ -2461,16 +2507,16 @@ bool LabelingAlgorithmNS::checkCompleteDominance(const Label& l0, const Label& l
         for(int i=0; i < numResources; ++i)
         {
             //if(l0.vetResources[i] > l1.vetResources[i])
-            if(doubleGreater(l0.vetResources[i], l1.vetResources[i], FloatEp) &&
-               !doubleEqual(l0.vetResources[i], l1.vetResources[i], FloatEp))
+            if(doubleGreater(l0.vetResources[i], l1.vetResources[i], FloatEp))// &&
+               //!doubleEqual(l0.vetResources[i], l1.vetResources[i], FloatEp))
                 return false;
         }
     }
     else
     {
         //if(l0.vetResources[0] > l1.vetResources[0])
-        if(doubleGreater(l0.vetResources[0], l1.vetResources[0], FloatEp) &&
-           !doubleEqual(l0.vetResources[0], l1.vetResources[0], FloatEp))
+        if(doubleGreater(l0.vetResources[0], l1.vetResources[0], FloatEp))
+            //&&!doubleEqual(l0.vetResources[0], l1.vetResources[0], FloatEp))
             return false;
 
         // Check the resources
@@ -2478,8 +2524,8 @@ bool LabelingAlgorithmNS::checkCompleteDominance(const Label& l0, const Label& l
         for(int i=1; i < numResources; ++i)
         {
             //if(l0.vetResources[i] < l1.vetResources[i])
-            if(doubleLess(l0.vetResources[i], l1.vetResources[i], FloatEp) &&
-               !doubleEqual(l0.vetResources[i], l1.vetResources[i], FloatEp))
+            if(doubleLess(l0.vetResources[i], l1.vetResources[i], FloatEp))
+                //&&!doubleEqual(l0.vetResources[i], l1.vetResources[i], FloatEp))
                 return false;
         }
     }
@@ -2602,4 +2648,86 @@ bool LabelingAlgorithmNS::
                                       maxDist, vetRedCost, exact);
 
     }
+}
+
+
+Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int cust, Label* label, LabelingData& lData, LabelHeap& labelHeap,
+                                                  int numRes, int dest, int& correctPos)
+{
+    //std::cout<<"\t"<<lData.vetMatBucketBackward[15].mat(0,0).print(2)<<"\n\n";
+
+    bool rmFromHeap = true;
+    Bucket* bucketPtr = nullptr;
+
+    if(label->typeLabel == Forward && cust == dest)
+        rmFromHeap = false;
+    else if(label->typeLabel == Backward && cust == 0)
+        rmFromHeap = false;
+
+    if(cust != dest)
+    {
+        // Find index from resources
+        int i = lData.getIndex(0, label->vetResources[0]);
+        int j = 0;
+        if(lData.numMainResources > 1)
+            j = lData.getIndex(1, label->vetResources[1]);
+
+        label->i = i;
+        label->j = j;
+        label->cust = cust;
+
+        if(Print)
+            std::cout << "\t\ti(" << i << "); j(" << j << ")\n";
+
+        bucketPtr = &lData.vetMatBucketForward[cust].mat(i, j);
+
+         if(label->typeLabel == Backward)
+            bucketPtr = &lData.vetMatBucketBackward[cust].mat(i, j);
+    }
+    else
+    {
+
+        label->i = 0;
+        label->j = 0;
+        label->cust = cust;
+        bucketPtr = &lData.vetMatBucketForward[cust].mat(0, 0);
+    }
+
+    //std::cout<<"\t\t* "<<bucketPtr->print(2)<<"\n\n";
+
+    for(int i=0; i < bucketPtr->sizeVetPtrLabel; ++i)
+    {
+        if(checkCompleteDominance(*bucketPtr->vetPtrLabel[i], *label, numRes))
+        {
+            correctPos = -1;
+            return nullptr;
+        }
+    }
+
+    int i=0;
+    while(i < bucketPtr->sizeVetPtrLabel)
+    {
+        if(checkCompleteDominance(*label, *bucketPtr->vetPtrLabel[i], numRes))
+        {
+            if(rmFromHeap)
+                labelHeap.deleteKey(bucketPtr->vetPtrLabel[i]->posHeap);
+
+            for(int t=i; t < (bucketPtr->sizeVetPtrLabel-1); ++t)
+            {
+                bucketPtr->vetPtrLabel[t] = bucketPtr->vetPtrLabel[t+1];
+                bucketPtr->vetPtrLabel[t]->posBucket = t;
+            }
+
+            bucketPtr->sizeVetPtrLabel -= 1;
+
+            //std::cout<<"rm; size("<<bucketPtr->sizeVetPtrLabel<<"); i("<<i<<")\n";
+        }
+        else
+            i += 1;
+    }
+
+
+    correctPos = 0;
+    return bucketPtr;
+
 }

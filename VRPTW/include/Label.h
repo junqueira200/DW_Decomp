@@ -91,7 +91,7 @@ namespace LabelingAlgorithmNS
     {
     public:
         Eigen::VectorX<Label*> vetPtrLabel;
-        int                    sizeVetPtrLabel;
+        int                    sizeVetPtrLabel = 0;
 
         Bucket()
         {
@@ -109,6 +109,8 @@ namespace LabelingAlgorithmNS
         }
 
         void addLabel(Label *labelPtr);
+        std::string print(int numResorces);
+        void removeElement(int i);
 //        bool delLabel(Label *labelPtr);
 
     };

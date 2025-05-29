@@ -98,15 +98,19 @@ namespace LabelingAlgorithmNS
     Bucket* dominanceIntraBucketBackward(int cust, Label* label, LabelingData& lData, LabelHeap& labelHeap, int numRes,
                                         int dest, int& correctPos);
 
-    inline __attribute__((always_inline))
+    //inline __attribute__((always_inline))
     Bucket* dominanceIntraBucket(int cust, Label* label, LabelingData& lData, LabelHeap& labelHeap, int numRes,
-                                 int dest, int& correctPos)
+                                 int dest, int& correctPos);
+
+    /*
     {
         if(label->typeLabel == Forward)
             return dominanceIntraBucketForward(cust, label, lData, labelHeap, numRes, dest, correctPos);
         else
             return dominanceIntraBucketBackward(cust, label, lData, labelHeap, numRes, 0, correctPos);
     }
+    */
+
 
 }
 #endif //DW_LABELINGALGORITHM_H

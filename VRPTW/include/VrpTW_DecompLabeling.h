@@ -29,7 +29,7 @@ namespace VrpTW_DecompLabelingNS
 
         int numSubProb = 1;
         bool convConstIni = false;
-        InstanciaNS::InstVRP_TW* instVrpTw = nullptr;                  // NAO DELETAR
+        InstanciaNS::InstVRP_TW* instVrpTw = nullptr;                  // DON'T DELETE!
         // Forward
         Eigen::Vector<LabelingAlgorithmNS::Step, 2> vetStepSize;
         LabelingAlgorithmNS::LabelingData           labelingData;
