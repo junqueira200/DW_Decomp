@@ -259,6 +259,8 @@ void InstanciaNS::getSubInstancia(int numClientes, InstVRP_TW& instVrpTw)
     instVrpTw.numClientes = numClientes;
     int demTotal = 0;
 
+    instVrpTw.vetClieDem[numClientes] = 0;
+
     for(int i=0; i < numClientes; ++i)
     {
         demTotal += instVrpTw.vetClieDem[i];

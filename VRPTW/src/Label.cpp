@@ -21,11 +21,11 @@ void LabelingAlgorithmNS::LabelingData::checkVetMatBucketBackward()
                         FloatType a = bucket.vetPtrLabel[t]->vetResources[0];
                         FloatType b = bucket.vetPtrLabel[tt]->vetResources[0];
 
-                        if(doubleGreater(a, b, 1E-3))
+                        if(doubleGreater(a, b, (FloatType)1E-3))
                         {
                             std::cout<<"ERROR\n"<<*bucket.vetPtrLabel[t]<<"\n"<<*bucket.vetPtrLabel[tt]<<"\n";
                             std::cout<<a<<"\n"<<b<<"\n";
-                            std::cout<<"doubleGreater("<<doubleGreater(a, b, 1E-3)<<"); >"<<(a>b)<<"\n";
+                            std::cout<<"doubleGreater("<<doubleGreater(a, b, (FloatType)1E-3)<<"); >"<<(a>b)<<"\n";
 
                             std::cout<<bucket.print(2)<<"\n";
 
@@ -55,7 +55,7 @@ void LabelingAlgorithmNS::LabelingData::checkVetMatBucketForward()
                     for(int tt=(t+1); tt < bucket.sizeVetPtrLabel; ++tt)
                     {
                         if(doubleGreater(bucket.vetPtrLabel[t]->vetResources[0],
-                                         bucket.vetPtrLabel[tt]->vetResources[0], 1E-3))
+                                         bucket.vetPtrLabel[tt]->vetResources[0], (FloatType)1E-3))
                         {
                             std::cout<<"ERROR\n"<<*bucket.vetPtrLabel[t]<<"\n"<<*bucket.vetPtrLabel[tt]<<"\n";
                             std::cout<<bucket.vetPtrLabel[t]->vetResources[0]<<"\n"<<

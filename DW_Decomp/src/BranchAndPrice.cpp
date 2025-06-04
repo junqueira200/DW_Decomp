@@ -386,7 +386,8 @@ double BranchAndPriceNS::computeGap(double lb, double ub)
     return ((ub-lb)/lb)*100.0;
 }
 
-void BranchAndPriceNS::writeToFile(StatisticsNS::StatisticsData& statisticsD, const std::string& fileStr)
+void BranchAndPriceNS::writeToFile(StatisticsNS::StatisticsData& statisticsD, const std::string& fileStr,
+                                   std::string& extraHead, std::string& extraCont)
 {
 
     if(fileStr.empty())
@@ -420,14 +421,15 @@ void BranchAndPriceNS::writeToFile(StatisticsNS::StatisticsData& statisticsD, co
         }
 
         file<<"#"<<statisticsD.date<<"\n";
-        file<<"inst; rootLB; rootTime; LB; UB; gap; totalTime; numNodes; rootInt\n";
+        file<<"inst; rootLB; rootTime; LB; UB; gap; totalTime; numNodes; rootInt; "<<extraHead<<"\n";
     }
 
 
-    file<<statisticsD.inst<<"; "<<std::format("{:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:d}; {:d}\n",
+    file<<statisticsD.inst<<"; "<<std::format("{:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:d}; {:d}; ",
                                               statisticsD.rootLB, statisticsD.rootTime, statisticsD.lowerBound,
                                               statisticsD.upperBound, statisticsD.gap, statisticsD.totalTime,
                                               statisticsD.numNodes, (int)statisticsD.rootInt);
+    file<<extraCont<<"\n";
 
     file.close();
 

@@ -19,7 +19,7 @@ namespace LabelingAlgorithmNS
     };
 
     /// Label must be a FLAT data structure
-    class Label
+    struct alignas(64) Label
     {
     public:
 
@@ -87,7 +87,7 @@ namespace LabelingAlgorithmNS
     std::ostream& operator<< (std::ostream& out, const Label &label);
 
 
-    class Bucket
+    struct alignas(64)  Bucket
     {
     public:
         Eigen::VectorX<Label*> vetPtrLabel;

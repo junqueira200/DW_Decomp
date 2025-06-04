@@ -910,7 +910,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         if(PrintDebug)
             std::cout<<"~UpdatePi\n";
 
-        if(Stabilization && !exactPi && phaseStatus == PhaseStatus::PhaseStatusColGen)
+        if(Stabilization && !exactPi)// && phaseStatus == PhaseStatus::PhaseStatusColGen)
         {
             auxVect.vetRowRmlpSmoothPi = (1.0-StabilizationAlpha)*auxVect.vetRowRmlpSmoothPi +
                                           StabilizationAlpha * (auxVect.vetRowRmlpPi);
@@ -926,6 +926,18 @@ std::cout<<"*******************Column Generation*******************\n\n";
             //    std::cout<<"exactPi\n";
         }
 
+        // **********************************************************************************************
+
+        /*
+        phaseStatus = PhaseStatus::PhaseStatusTwoPhase;
+        PRINT_DEBUG("", "");
+        std::cout<<"Seting Pi\n";
+        auxVect.vetRowRmlpSmoothPi.setZero();
+        auxVect.vetRowRmlpSmoothPi[6] = 1.0;
+        std::cout << "PI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
+        //exit(-1);
+        */
+        // **********************************************************************************************
         double constVal = 0;
 
         if(PrintDebug)
@@ -1278,7 +1290,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
         //std::cout<<"GAP("<<gap<<"%)\n";
 
-        //if((itCG%5) == 0)
+        if((itCG%5) == 0)
         {
             //std::cout<<"\t"<<itCG<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"%\"\n";
             std::cout<<std::format("\t{0}\t{1:.1f}\t{2:.1f}\t{3:.1f}%\n", itCG, objRmlp, lagrangeDualBound, gap);
@@ -1289,6 +1301,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         //std::cout<<"PI: "<<auxVect.vetRowRmlpPi<<"\n\n";
 
         //delete []vetRmlpConstr;
+
 
     }
 
@@ -1328,6 +1341,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
 
     std::cout<<"PI: "<<auxVect.vetRowRmlpPi<<"\n\n";
+    uRmlp->write("lastRmlp.lp");
 
     std::cout<<"*******************~Column Generation*******************\n\n";
 

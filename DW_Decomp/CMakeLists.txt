@@ -27,7 +27,7 @@ include_directories(${GUROBI_INCLUDE_DIRS})
 link_directories($ENV{GUROBI_HOME}/lib)
 find_package(Boost)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -pedantic -Wall -Wextra -fPIC")# -fsanitize=address")# -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -pedantic -fPIC")# -Wall -Wextra -fPIC")# -fsanitize=address")# -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D __FILENAME__='\"$$(subst  ${CMAKE_SOURCE_DIR}/,,$$(abspath $$<))\"'")
 
 add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)

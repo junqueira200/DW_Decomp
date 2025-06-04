@@ -25,14 +25,14 @@ using namespace SparseNS;
 namespace DW_DecompNS
 {
 
-    constexpr double TolObjSubProb       = 1E-3;
+    constexpr double TolObjSubProb       = 1E-5;
     constexpr int    NumMaxSolSubProb    = 25;//25;
-    constexpr double StabilizationAlpha  = 0.65;
-    constexpr bool   Stabilization       = true;
+    constexpr double StabilizationAlpha  = 0.65; //0.65
+    inline bool   Stabilization       = true;
     constexpr double gapLimit            = 1E-3;
     constexpr int    NumCandidatesBranch = 3;
     constexpr bool   PrintDebug          = false;
-    constexpr int    BigM_maxMult        = 50;
+    constexpr int    BigM_maxMult        = 10;
     constexpr double GapExactPricing     = 1E-1; // gap  <= ExactPricingTol%
     constexpr double GapTolStop          = 1E-1; // gap* <= GapTolStop%
 

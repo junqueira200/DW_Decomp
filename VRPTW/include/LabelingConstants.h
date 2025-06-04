@@ -5,6 +5,7 @@
 #include <iostream>
 #include <Eigen/Eigen>
 #include "safe_3D_matrix.h"
+#include <cfenv>
 
 typedef double FloatType;
 
@@ -25,7 +26,7 @@ namespace LabelingAlgorithmNS
     constexpr bool  Print             = false;
     constexpr int   numMaxLabelG      = 2000; // 2000
     constexpr bool  DominaIterBuckets = true;
-    constexpr FloatType FloatEp       = 1E-9;
+    constexpr FloatType FloatEp       = 1E-15;
 
     struct Bound
     {

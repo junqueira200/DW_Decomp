@@ -41,7 +41,8 @@ namespace BranchAndPriceNS
                                    StatisticsNS::StatisticsData& statisticD);
 
     double computeGap(double lb, double ub);
-    void writeToFile(StatisticsNS::StatisticsData& statisticsD, const std::string& fileStr);
+    void writeToFile(StatisticsNS::StatisticsData& statisticsD, const std::string& fileStr, std::string& extraHead,
+                     std::string& extraCont);
 
     inline __attribute__((always_inline))
     bool isInteger(double val)

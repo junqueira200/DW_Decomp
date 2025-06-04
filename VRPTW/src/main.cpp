@@ -39,6 +39,9 @@ int main(int argv, char **argc)
 
     try
     {
+        std::feclearexcept(FE_OVERFLOW);
+        std::feclearexcept(FE_UNDERFLOW);
+
         std::cout<<"sizeof(Label): "<<sizeof(Label)<<"\n";
 
         InstVRP_TW instVrpTw;
@@ -52,7 +55,7 @@ int main(int argv, char **argc)
         else
             leInstanciaSalomon(strFile, instVrpTw);
 
-        getSubInstancia(16, instVrpTw);
+        getSubInstancia(15, instVrpTw);
 
         VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
 
@@ -72,7 +75,7 @@ int main(int argv, char **argc)
         GRBModel model(grbEnv);
         criaMestre(instVrpTw, model);
 
-        double distVarA = std::max(somaDist(instVrpTw), 0.0);
+        double distVarA = 100*std::max(somaDist(instVrpTw), 0.0);
         //VrpSubProb vrpSubProb(grbEnv, instVrpTw);
 
         DW_DecompNS::AuxData auxVectors;
@@ -159,7 +162,17 @@ int main(int argv, char **argc)
 
         statisticD.inst = fileName;
         statisticD.numNodes = instVrpTw.numClientes;
-        writeToFile(statisticD, "result.csv");
+        std::string extraHead = "Alg";
+        std::string extraCont;
+
+        if(vrpLabelingSubProb.typeLabel == LabelingAlgorithmNS::AlgForward)
+            extraCont += "forward";
+        else if(vrpLabelingSubProb.typeLabel == LabelingAlgorithmNS::AlgBackward)
+            extraCont += "backward";
+        else
+            extraCont += "bidirectional";
+
+        writeToFile(statisticD, "result.csv", extraHead, extraCont);
 
         //decompNode.columnGeneration(auxVectors);
 
@@ -172,7 +185,16 @@ int main(int argv, char **argc)
 
         std::cout<<"DistMin: "<<minDistG<<"\nDistMax: "<<maxDistG<<"\n\n";
 
+        if((bool)std::fetestexcept(FE_OVERFLOW))
+            std::cout << "Overflow flag after: " << (bool)std::fetestexcept(FE_OVERFLOW) << std::endl;
+        if((bool)std::fetestexcept(FE_UNDERFLOW))
+            std::cout << "Underflow flag after: " << (bool)std::fetestexcept(FE_UNDERFLOW) << std::endl;
 
+        /*
+        std::cout<<"0 < -1("<<doubleLess(0, -1.0, FloatEp)<<")\n";
+        std::cout<<"-1 == 0("<<doubleEqual(0, -1.0, FloatEp)<<")\n";
+        std::cout<<"0 <= -1("<<doubleLessEqual(0, -1.0, FloatEp)<<")\n";
+        */
 
     }
 /*    catch(char const* str)

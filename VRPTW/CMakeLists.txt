@@ -18,7 +18,7 @@ message("set vector_sanity_check=1")
 
 
 #set(CMAKE_CXX_FLAGS "-pedantic")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -pedantic -Wall -Wextra -fPIC")# -fsanitize=address") #-pedantic
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -fPIC")# -pedantic -Wall -Wextra -fPIC")
 
 find_package(Boost CONFIG)
 

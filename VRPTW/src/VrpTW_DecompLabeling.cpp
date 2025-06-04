@@ -28,14 +28,17 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     vetStepSize[0].start    = (FloatType)-1.0*startDist;  // 1.0
     vetStepSize[0].end      = (FloatType) 1.0*startDist; // 1.0
 
-    vetStepSize[1].stepSize = 50.0;  //50
+    vetStepSize[1].stepSize = 50.0;// 0.11*((FloatType)instVrpTw->capVeic);  //50
     vetStepSize[1].start    = 0;
     vetStepSize[1].end      = (FloatType)instVrpTw->capVeic;
 
 
     labelingData  = LabelingAlgorithmNS::LabelingData(vetStepSize, 2, instVrpTw->numClientes+1);
     vetMatResCostForward  = Vet3D_ResCost(instVrpTw->numClientes+1, instVrpTw->numClientes+1, 2);
+    vetMatResCostForward.setVal(0.0);
+
     vetMatResCostBackward = Vet3D_ResCost(instVrpTw->numClientes+1, instVrpTw->numClientes+1, 2);
+    vetMatResCostBackward.setVal(0.0);
 
     for(int i=0; i < instVrpTw->numClientes+1; ++i)
     {
@@ -47,7 +50,11 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
             vetMatResCostForward.get(i, j, 1)  = (FloatType)instVrpTw->vetClieDem[j];
             vetMatResCostBackward.get(j, i, 1) = (FloatType)instVrpTw->vetClieDem[j];
         }
+
     }
+
+    //std::cout<<"\n"<<instVrpTw->vetClieDem<<"\n\n";
+    //PRINT_EXIT();
 
     //vetVetResBound = LabelingAlgorithmNS::VetVetResBound(2);
 
@@ -104,6 +111,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                    Eigen::Array<double, 1, DW_DecompNS::NumMaxSolSubProb>& vetRedCost, double constPiValue,
                    const VectorI &vetVar0, const VectorI &vetVar1, DW_DecompNS::PhaseStatus phaseStatus, bool exact)
 {
+    //std::cout<<"star value: "<<constPiValue<<"\n\n";
+
 
     static DW_DecompNS::PhaseStatus phase = phaseStatus;
 
@@ -259,10 +268,10 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         {
             //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
             matColX.setZero();
-            custoRedNeg = labelingAlgorithmm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
-                                             vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
-                                             numSol, (FloatType) constPiValue, i, true, maxDist, vetRedCostFT, false,
-                                             typeLabel);
+            custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward,
+                                                 vetMatResCostBackward, vetVetResBound, instVrpTw->numClientes, ngSet,
+                                                 labelingData, matColX, numSol, (FloatType) constPiValue, i, true,
+                                                 maxDist, vetRedCostFT, exact, typeLabel);
 
             it += 1;
             if(custoRedNeg)
@@ -277,10 +286,29 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
         //std::cout<<"EXACT LABELING\n";
         //exactLabelingG = true;
-        custoRedNeg = labelingAlgorithmm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
-                                         vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
-                                         numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
-                                         typeLabel);
+        custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
+                                             vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
+                                             numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
+                                             typeLabel);
+    }
+
+    if(!custoRedNeg)
+    {
+        std::cout<<"Change Alg Type\n";
+        changeTypeAlg(typeLabel);
+
+        custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
+                                             vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
+                                             numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
+                                             typeLabel);
+
+        if(custoRedNeg)
+        {
+            std::cout<<"ERROR, alterar o algoritimo fez com que fosse gerado uma coluna com custo red. neg.\n";
+        }
+
+        changeTypeAlg(typeLabel);
+
     }
 
     //redCost = (double)redCostFT;

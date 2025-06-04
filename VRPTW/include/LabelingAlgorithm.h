@@ -43,7 +43,7 @@ namespace LabelingAlgorithmNS
                                 const Vet3D_ResCost& vetMatResCostBackward, const MatBoundRes& vetVetBound, int dest,
                                 const NgSet& ngSet, LabelingData& lData, Eigen::MatrixXd& matColX, int& numSol,
                                 FloatType labelStart, int NumMaxLabePerBucket, bool dominaceCheck, FloatType& maxDist,
-                                Eigen::VectorX<FloatType>& vetRedCost, bool exact);
+                                Eigen::VectorX<FloatType>& vetRedCost, bool exact, LabelingTypeAlg labelingTypeAlg);
 
     bool labelingAlgorithmm(int numRes, int numCust, const Vet3D_ResCost& vetMatResCostForward,
                             const Vet3D_ResCost& vetMatResCostBackward, const MatBoundRes& vetVetBound, int dest,
@@ -101,6 +101,8 @@ namespace LabelingAlgorithmNS
     //inline __attribute__((always_inline))
     Bucket* dominanceIntraBucket(int cust, Label* label, LabelingData& lData, LabelHeap& labelHeap, int numRes,
                                  int dest, int& correctPos);
+
+    void changeTypeAlg(LabelingTypeAlg& labelingTypeAlg);
 
     /*
     {
