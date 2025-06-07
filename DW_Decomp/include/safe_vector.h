@@ -25,6 +25,7 @@ public:
     explicit Vector(size_t n = 0): std::vector<T>(n){}
 
     Vector(size_t n, const T& value): std::vector<T>(n, value){}
+    Vector(const std::vector<T>& vet):std::vector<T>(vet){}
 
     template <class InputIterator> Vector (InputIterator first, InputIterator last): std::vector<T>(first, last){}
 

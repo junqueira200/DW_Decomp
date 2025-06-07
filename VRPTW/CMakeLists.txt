@@ -38,7 +38,9 @@ add_executable(${PROJECT_NAME}
     include/NgSet.h
     include/LabelingUtils.h
     src/Label.cpp
-    src/LabelingUtils.cpp)
+    src/LabelingUtils.cpp
+    include/Test.h
+    src/Test.cpp)
 
 
 #target_sources(${PROJECT_NAME}

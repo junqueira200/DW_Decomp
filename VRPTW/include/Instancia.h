@@ -58,5 +58,6 @@ namespace InstanciaNS
         ServTime
     };
 
+    inline InstVRP_TW* ptr_instVrpG = nullptr;
 }
 #endif //DW_INSTANCIA_H

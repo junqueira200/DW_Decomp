@@ -7,8 +7,10 @@
 #include "MemoryPool.h"
 #include "BranchAndPrice.h"
 #include "Alarm.h"
-
+#include "Test.h"
+#include <bits/stdc++.h>
 //import teste;
+// http://vrp.galgos.inf.puc-rio.br
 
 using namespace InstanciaNS;
 using namespace VrpTW_DecompNS;
@@ -19,9 +21,42 @@ using namespace SearchStrategyNS;
 using namespace PrimalHeuristicNS;
 using namespace BranchNS;
 using namespace StatisticsNS;
+using namespace TestNS;
+
+
 
 int main(int argv, char **argc)
 {
+    /*
+    std::vector<int> arr = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
+    VectorI vet(arr);
+    Vector<VectorI> vetRota;
+    vetRota.reserve(50);
+
+    for(int r=1; r < 5; ++r)
+    {
+        Vector<VectorI> res = TestNS::findCombination(vet, r);
+        for (auto &comb : res)
+        {
+            //if(comb.size() < 2)
+            {
+                do
+                {
+                    vetRota.push_back(VectorI(comb));
+                }
+                while(std::next_permutation(comb.begin(), comb.end()));
+            }
+
+
+        }
+    }
+
+    for(VectorI& vet:vetRota)
+        std::cout<<vet<<"\n";
+
+    return 0;
+    */
+
     /*
     std::bitset<10> bitset0 = 0;
     std::bitset<10> bitset1 = 0;
@@ -55,7 +90,12 @@ int main(int argv, char **argc)
         else
             leInstanciaSalomon(strFile, instVrpTw);
 
-        getSubInstancia(15, instVrpTw);
+        ptr_instVrpG = &instVrpTw;
+
+        Vector<Route> vetRoutes = enumerateRoutes(instVrpTw, 5);
+        return 0;
+
+        //getSubInstancia(15, instVrpTw);
 
         VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
 
