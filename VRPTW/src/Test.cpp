@@ -9,6 +9,7 @@
  *  ********************************************************************************************************************/
 
 #include "Test.h"
+#include <unordered_set>
 
 using namespace std;
 using namespace TestNS;
@@ -51,8 +52,6 @@ void TestNS::combinationUtil(int ind, int r, VectorI &data, Vector<VectorI> &res
 // in an array of size n
 Vector<VectorI> TestNS::findCombination(VectorI &arr, int r)
 {
-    int n = arr.size();
-
     // to store the result
     Vector<VectorI> result;
 
@@ -69,12 +68,14 @@ Vector<VectorI> TestNS::findCombination(VectorI &arr, int r)
 Vector<Route> TestNS::enumerateRoutes(InstanciaNS::InstVRP_TW& instVrp, int numMax)
 {
     VectorI vet;
+    Vector<VectorI> vetResult;
+    std::unordered_set<Route, RouteHash> routeHash;
+    routeHash.reserve(1000);
+
     vet.reserve(instVrp.numClientes-2);
 
     for(int i=1; i < (instVrp.numClientes-1); ++i)
         vet.push_back(i);
-
-    Vector<VectorI> vetResult;
 
     numMax = std::min(numMax, (int)vet.size());
 
@@ -84,18 +85,38 @@ Vector<Route> TestNS::enumerateRoutes(InstanciaNS::InstVRP_TW& instVrp, int numM
         std::move(vetAux.begin(), vetAux.end(), back_inserter(vetResult));
     }
 
-    int tam = 0;
-    for(auto& vet:vetResult)
+    int i = 0;
+    int numInsert = 0;
+    for(VectorI& vetIntRoute:vetResult)
     {
-        tam += vet.size();
+        if(vetIntRoute.size() <= 0)
+            continue;
+
+        int demand = computeDemand(vetIntRoute);
+        if(demand > instVrp.capVeic)
+            continue;
+
+        Route route(vetIntRoute.size()+2);
+
+        for(int i=0; i < (int)vetIntRoute.size(); ++i)
+            route.vetRoute[i+1] = vetIntRoute[i];
+
+        computeDistance(route);
+        computeHash(route);
+        //std::cout<<route.vetRoute<<"; "<<route.valHash<<"; "<<route.dist<<"\n";
+        routeHash.insert(std::move(route));
+        numInsert += 1;
     }
 
+    if(numInsert != (int)routeHash.size())
+    {
+        std::cout<<"ERROR\nnumInser("<<numInsert<<"); size("<<routeHash.size()<<")\n";
+    }
+    else
+        std::cout<<"All routes were insertd in the hash\n";
 
-    std::cout<<"Tam: "<<vetResult.size()<<"\n";
-    std::cout<<tam<<"\n";
-
-    vector<Route> vetRoute;
-    return vetRoute;
+    Vector<Route> vetTemp;
+    return vetTemp;
 }
 
 void TestNS::computeDistance(Route& route)
@@ -149,4 +170,13 @@ double TestNS::computeReducedCost(const Route& route, const Eigen::VectorXd& vet
         redCost += -vetPi[route.vetRoute[i]+1];
 
     return redCost;
+}
+
+int TestNS::computeDemand(VectorI& route)
+{
+    int demand = 0;
+    for(int i=0; i < (int)route.size(); ++i)
+        demand += ptr_instVrpG->vetClieDem[route[i]];
+
+    return demand;
 }

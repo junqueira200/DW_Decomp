@@ -45,6 +45,7 @@ namespace TestNS
     Vector<Route> enumerateRoutes(InstanciaNS::InstVRP_TW& instVrp, int numMax);
     void computeDistance(Route& route);
     void computeHash(Route& route);
+    int computeDemand(VectorI& route);
     double computeReducedCost(const Route& route, const Eigen::VectorXd& vetPi);
 
 }
