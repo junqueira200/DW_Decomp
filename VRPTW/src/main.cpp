@@ -92,10 +92,12 @@ int main(int argv, char **argc)
 
         ptr_instVrpG = &instVrpTw;
 
-        Vector<Route> vetRoutes = enumerateRoutes(instVrpTw, 5);
-        return 0;
 
-        //getSubInstancia(15, instVrpTw);
+        //RouteHash routeHash;
+        //enumerateRoutes(instVrpTw, 5, routeHash);
+        //return 0;
+
+        getSubInstancia(15, instVrpTw);
 
         VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
 

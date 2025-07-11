@@ -113,6 +113,10 @@ namespace LabelingAlgorithmNS
     }
     */
 
+    Label* getLabel();
+    void rmLabel(Label* label);
+    void writeNgSet(Label* label, const NgSet& ngset);
+
 
 }
 #endif //DW_LABELINGALGORITHM_H

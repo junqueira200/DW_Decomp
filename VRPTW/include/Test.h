@@ -15,7 +15,7 @@
 #include "safe_vector.h"
 #include "Instancia.h"
 #include <bits/stdc++.h>
-
+#include "LabelingConstants.h"
 
 namespace TestNS
 {
@@ -24,6 +24,7 @@ namespace TestNS
     {
         VectorI vetRoute;
         double dist = 0.0;
+        int demand  = 0;
         std::size_t valHash = 0;
 
         Route(int n){vetRoute.resize(n); vetRoute.setAll(0);}
@@ -34,19 +35,20 @@ namespace TestNS
 
     };
 
-    struct RouteHash
+    struct Hash
     {
         std::size_t operator()(const Route& route) const{return route.valHash;}
     };
 
+    typedef std::unordered_set<Route, Hash> RouteHash;
 
     void combinationUtil(int ind, int r, VectorI &data, Vector<VectorI> &result, VectorI &arr);
     Vector<VectorI> findCombination(VectorI &arr, int r);
-    Vector<Route> enumerateRoutes(InstanciaNS::InstVRP_TW& instVrp, int numMax);
+    void enumerateRoutes(InstanciaNS::InstVRP_TW& instVrp, int numMax, RouteHash& routeHash);
     void computeDistance(Route& route);
     void computeHash(Route& route);
     int computeDemand(VectorI& route);
-    double computeReducedCost(const Route& route, const Eigen::VectorXd& vetPi);
+    FloatType computeReducedCost(const Route& route, const Eigen::RowVectorXd& vetRowPi);
 
 }
 

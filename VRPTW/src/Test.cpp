@@ -65,11 +65,10 @@ Vector<VectorI> TestNS::findCombination(VectorI &arr, int r)
     return result;
 }
 
-Vector<Route> TestNS::enumerateRoutes(InstanciaNS::InstVRP_TW& instVrp, int numMax)
+void TestNS::enumerateRoutes(InstanciaNS::InstVRP_TW& instVrp, int numMax, RouteHash& routeHash)
 {
     VectorI vet;
     Vector<VectorI> vetResult;
-    std::unordered_set<Route, RouteHash> routeHash;
     routeHash.reserve(1000);
 
     vet.reserve(instVrp.numClientes-2);
@@ -85,7 +84,6 @@ Vector<Route> TestNS::enumerateRoutes(InstanciaNS::InstVRP_TW& instVrp, int numM
         std::move(vetAux.begin(), vetAux.end(), back_inserter(vetResult));
     }
 
-    int i = 0;
     int numInsert = 0;
     for(VectorI& vetIntRoute:vetResult)
     {
@@ -103,7 +101,7 @@ Vector<Route> TestNS::enumerateRoutes(InstanciaNS::InstVRP_TW& instVrp, int numM
 
         computeDistance(route);
         computeHash(route);
-        //std::cout<<route.vetRoute<<"; "<<route.valHash<<"; "<<route.dist<<"\n";
+        route.demand = computeDemand(route.vetRoute);
         routeHash.insert(std::move(route));
         numInsert += 1;
     }
@@ -113,10 +111,7 @@ Vector<Route> TestNS::enumerateRoutes(InstanciaNS::InstVRP_TW& instVrp, int numM
         std::cout<<"ERROR\nnumInser("<<numInsert<<"); size("<<routeHash.size()<<")\n";
     }
     else
-        std::cout<<"All routes were insertd in the hash\n";
-
-    Vector<Route> vetTemp;
-    return vetTemp;
+        std::cout<<"All routes("<<numInsert<<") were inserted in the hash\n";
 }
 
 void TestNS::computeDistance(Route& route)
@@ -162,12 +157,12 @@ bool TestNS::Route::operator == (const Route& route) const
     return true;
 }
 
-double TestNS::computeReducedCost(const Route& route, const Eigen::VectorXd& vetPi)
+FloatType TestNS::computeReducedCost(const Route& route, const Eigen::RowVectorXd& vetRowPi)
 {
-    double redCost = -vetPi[0] + route.dist;
+    double redCost = -vetRowPi[0] + route.dist;
 
     for(int i=1; i < (int)route.vetRoute.size(); ++i)
-        redCost += -vetPi[route.vetRoute[i]+1];
+        redCost += -vetRowPi[route.vetRoute[i]+1];
 
     return redCost;
 }

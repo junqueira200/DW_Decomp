@@ -11,7 +11,7 @@
 #include "VrpTW_DecompLabeling.h"
 
 using namespace LabelingAlgorithmNS;
-
+using namespace TestNS;
 
 VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw_, double startDist)
 {
@@ -88,6 +88,9 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     ngSet.setNgSets(instVrpTw->matDist);
     ngSet.active = true;
 
+    enumerateRoutes(*instVrpTw, NumNodesMaxEnumerate, routeHash);
+
+
 }
 
 
@@ -102,6 +105,122 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, v
     rmlp.addConstr(linExpr, '<', instVrpTw->numVeic, "convConstr");
 
 
+}
+
+VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb()
+{
+
+    enumerateRoutes(*instVrpTw, NumNodesMaxEnumerate, routeHash);
+
+}
+
+void VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi)
+{
+    std::cout<<"Start checkEnumeratedRoutes\n\n";
+    int t = 0;
+    for(const Route& route:routeHash)
+    {
+        FloatType redCost = computeReducedCost(route, vetRowPi);
+        if(t < 10)
+            std::cout<<redCost<<"\n";
+        t += 1;
+        if(redCost < -DW_DecompNS::TolObjSubProb)
+        {
+            std::cout<<"Route("<<route.vetRoute<<") have a NEGATIVE reduced cost!\n";
+        }
+    }
+}
+
+void  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
+      checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol)
+{
+
+    //Remove all remaining labels
+    labelingData.flushLabel();
+    static LabelHeap labelHeap(1);
+
+    for(int l=0; l < numSol; ++l)
+    {
+        Label* label = getLabel();
+
+        // Seting label data
+        label->vetRoute[0] = 0;
+        label->tamRoute    = 1;
+        label->typeLabel = LabelingAlgorithmNS::Forward;
+        label->vetResources.setZero();
+        label->vetResources[0] = -vetRowPi[0];
+        int lastCust = 0;
+
+        // Seting route
+        do
+        {
+            int cliJ = -1;
+            for(int i=0; i < instVrpTw->numClientes; ++i)
+            {
+                int index = getIndex(lastCust, i, instVrpTw->numClientes);
+                if(matColX(index, l))
+                {
+                    cliJ = i;
+                    break;
+                }
+            }
+
+            if(cliJ == -1)
+            {
+                std::cout<<"Erro!; diden't find arc ("<<lastCust<<", _)\n";
+                PRINT_EXIT();
+            }
+
+            label->vetResources[0] += instVrpTw->matDist(lastCust, cliJ) - vetRowPi[cliJ+1];
+            label->vetResources[1] += instVrpTw->vetClieDem[cliJ];
+            label->vetRoute[label->tamRoute] = cliJ;
+            label->tamRoute += 1;
+            lastCust = cliJ;
+
+        }
+        while(lastCust != 0);
+
+        label->vetRoute[label->tamRoute-1] = instVrpTw->numClientes;
+        label->cust = instVrpTw->numClientes;
+        label->active = true;
+
+        label->i = 0;
+        label->j = 0;
+        Bucket* bucket = labelingData.getBucket(label);
+        bucket->addLabel(label);
+    }
+
+    Bucket& bucket = labelingData.vetMatBucketForward[instVrpTw->numClientes].mat(0, 0);
+    if(bucket.sizeVetPtrLabel != numSol)
+    {
+        std::cout<<"Error, bucket size("<<bucket.sizeVetPtrLabel<<") is different from "<<numSol<<"\n\n";
+        PRINT_EXIT();
+    }
+
+    // Go through routes in hashRoutes
+    for(const TestNS::Route& route:routeHash)
+    {
+        FloatType redCost = computeReducedCost(route, vetRowPi);
+        if(redCost < -DW_DecompNS::TolObjSubProb)
+        {
+            Label* label = getLabel();
+            label->cust = instVrpTw->numClientes;
+            label->vetResources[0] = redCost;
+            label->vetResources[1] = route.demand;
+            label->active = true;
+            writeNgSet(label, ngSet);
+            int pos = -1;
+            Bucket* bucket = dominanceIntraBucket(instVrpTw->numClientes, label, labelingData, labelHeap, 2,
+                                                  instVrpTw->numClientes, pos);
+
+            if(bucket != nullptr)
+            {
+                std::cout<<"Error!!\nRoute("<<route.vetRoute<<") have a negative reduced cost ("<<redCost<<
+                           ") and was inserted into the bucket!\n\n";
+                PRINT_EXIT();
+            }
+        }
+    }
 }
 
 int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
@@ -262,6 +381,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     exactLabelingG = false;
 
+// TODO remove comments!
     if(!exact)
     {
         for(int i = 2; i <= 2; i += 1)
@@ -280,6 +400,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         }
     }
 
+
     if(!custoRedNeg)
     {
         matColX.setZero();
@@ -292,6 +413,16 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                                              typeLabel);
     }
 
+    if(!custoRedNeg)
+    {
+        checkEnumeratedRoutesFinal(vetRowPi);
+    }
+    else
+    {
+        checkEnumeratedRoutesMid(vetRowPi, matColX, numSol);
+    }
+
+    /*
     if(!custoRedNeg)
     {
         std::cout<<"Change Alg Type\n";
@@ -310,6 +441,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         changeTypeAlg(typeLabel);
 
     }
+    */
 
     //redCost = (double)redCostFT;
     vetCooefRestConv[0] = 1;
@@ -563,4 +695,31 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::setTypeLabelToForward()
 void VrpTW_DecompLabelingNS::VrpLabelingSubProb::setTypeLabelToBackward()
 {
     typeLabel = LabelingAlgorithmNS::AlgBackward;
+}
+
+void VrpTW_DecompLabelingNS::VrpLabelingSubProb::
+     convertRouteIntoLabel(const TestNS::Route& route, LabelingAlgorithmNS::Label* label)
+{
+    //label->vetResources.setZero();
+    label->bitSetNg = 0;
+    for(int i=0; i < (int)route.vetRoute.size(); ++i)
+    {
+        int cliI = route.vetRoute[i];
+        label->vetRoute[i] = cliI;
+
+        if((i+1) < (int)route.vetRoute.size())
+        {
+            int cliJ = route.vetRoute[i+1];
+
+            for(int r=0; r < 2; ++r)
+            {
+                label->vetResources[r] += vetMatResCostForward(cliI, cliJ, r);
+            }
+
+            if(ngSet.contain(cliJ, cliI))
+                label->bitSetNg[cliJ] = 1;
+        }
+    }
+
+    label->tamRoute = (int)route.vetRoute.size();
 }

@@ -95,6 +95,17 @@ inline MemoryPool_NS::Pool<LabelingAlgorithmNS::Label> labelPoolG;
 inline bool startLabelPoolG = false;
 
 
+Label* LabelingAlgorithmNS::getLabel()
+{
+    return labelPoolG.getT();
+}
+
+void LabelingAlgorithmNS::rmLabel(Label* label)
+{
+    labelPoolG.delT(label);
+}
+
+
 /** **********************************************************************************************************
  *  **********************************************************************************************************
  *
@@ -2766,4 +2777,17 @@ void LabelingAlgorithmNS::changeTypeAlg(LabelingTypeAlg& labelingTypeAlg)
     else if(labelingTypeAlg == AlgBackward)
         labelingTypeAlg = AlgForward;
 
+}
+
+void LabelingAlgorithmNS::writeNgSet(Label* label, const NgSet& ngSet)
+{
+    label->bitSetNg = 0;
+    for(int i=0; i < (label->tamRoute-1); ++i)
+    {
+        int cliI = label->vetRoute[i];
+        int cliJ = label->vetRoute[i+1];
+
+        if(ngSet.contain(cliJ, cliI))
+            label->bitSetNg[cliJ] = true;
+    }
 }
