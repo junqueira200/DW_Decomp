@@ -116,7 +116,10 @@ namespace LabelingAlgorithmNS
     Label* getLabel();
     void rmLabel(Label* label);
     void writeNgSet(Label* label, const NgSet& ngset);
-
-
+    void startGlobalMemory(const Vector<VectorI>& vetRoutes);
+    void addToVetRoutesG(const VectorI& route);
+    void cleanVetRouteG();
+    std::string printRoute(Label* label);
+    void invertRoutes(Vector<VectorI>& vetRoutes);
 }
 #endif //DW_LABELINGALGORITHM_H

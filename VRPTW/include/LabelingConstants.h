@@ -11,7 +11,6 @@ typedef double FloatType;
 
 namespace LabelingAlgorithmNS
 {
-    inline std::vector<int> vetRoteG;
     inline FloatType minDistG = std::numeric_limits<FloatType>::max();
     inline FloatType maxDistG = std::numeric_limits<FloatType>::min();
     inline bool exactLabelingG = false;
@@ -23,10 +22,11 @@ namespace LabelingAlgorithmNS
     constexpr int   NumBuckets        = 10;
     constexpr int   vetPtrLabelSize   = 10;
     constexpr bool  NullFlush         = true;
-    constexpr bool  Print             = false;
+    constexpr bool  Print             = true;
     constexpr int   numMaxLabelG      = 2000; // 2000
     constexpr bool  DominaIterBuckets = true;
     constexpr FloatType FloatEp       = 1E-15;
+    constexpr bool  TrackingRoutes    = true;
 
     struct Bound
     {

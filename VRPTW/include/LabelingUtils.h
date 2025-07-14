@@ -24,7 +24,7 @@ namespace LabelingAlgorithmNS
     bool checkDistance(const Eigen::Matrix<FloatType, -1, -1, Eigen::RowMajor> &matDist);
     bool containRoute(const Eigen::Array<Label*, 1, DW_DecompNS::NumMaxSolSubProb> &vetLabel, int numSol, Label* label);
 
-    bool labelHaveRoute(std::vector<int> &vetRoute, Label *label);
+    bool labelHaveRoute(Vector<VectorI> &vetRoute, Label *label);
 
 
 }

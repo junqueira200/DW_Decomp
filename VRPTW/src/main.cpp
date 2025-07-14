@@ -97,7 +97,7 @@ int main(int argv, char **argc)
         //enumerateRoutes(instVrpTw, 5, routeHash);
         //return 0;
 
-        getSubInstancia(15, instVrpTw);
+        //getSubInstancia(15, instVrpTw);
 
         VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
 

@@ -68,8 +68,8 @@ namespace VrpTW_DecompLabelingNS
                            const VectorI &vetVar0, const VectorI &vetVar1, DW_DecompNS::PhaseStatus phaseStatus,
                            bool exact) override;
 
-        void checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi);
-        void checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol);
+        bool checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi);
+        bool checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol);
         void convertRouteIntoLabel(const TestNS::Route& route, LabelingAlgorithmNS::Label* label);
 
 

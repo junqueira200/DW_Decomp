@@ -88,7 +88,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     ngSet.setNgSets(instVrpTw->matDist);
     ngSet.active = true;
 
-    enumerateRoutes(*instVrpTw, NumNodesMaxEnumerate, routeHash);
+    enumerateRoutes(*instVrpTw, instVrpTw->numClientes-1, routeHash);
 
 
 }
@@ -110,14 +110,16 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, v
 VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb()
 {
 
-    enumerateRoutes(*instVrpTw, NumNodesMaxEnumerate, routeHash);
+    //enumerateRoutes(*instVrpTw, instVrpTw->numClientes-1, routeHash);
 
 }
 
-void VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi)
+bool VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi)
 {
+    cleanVetRouteG();
     std::cout<<"Start checkEnumeratedRoutes\n\n";
     int t = 0;
+    bool ret = false;
     for(const Route& route:routeHash)
     {
         FloatType redCost = computeReducedCost(route, vetRowPi);
@@ -126,12 +128,20 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesFinal(Eige
         t += 1;
         if(redCost < -DW_DecompNS::TolObjSubProb)
         {
-            std::cout<<"Route("<<route.vetRoute<<") have a NEGATIVE reduced cost!\n";
+            std::cout<<"Route("<<route.vetRoute<<") have a NEGATIVE("<<redCost<<") reduced cost!\n";
+            if(redCost <= -1.0)
+            {
+                addToVetRoutesG(route.vetRoute);
+                ret = true;
+            }
         }
     }
+
+    return ret;
+
 }
 
-void  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
+bool  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
       checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol)
 {
 
@@ -149,6 +159,7 @@ void  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         label->typeLabel = LabelingAlgorithmNS::Forward;
         label->vetResources.setZero();
         label->vetResources[0] = -vetRowPi[0];
+        label->typeLabel = Forward;
         int lastCust = 0;
 
         // Seting route
@@ -176,7 +187,6 @@ void  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
             label->vetRoute[label->tamRoute] = cliJ;
             label->tamRoute += 1;
             lastCust = cliJ;
-
         }
         while(lastCust != 0);
 
@@ -197,6 +207,8 @@ void  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         PRINT_EXIT();
     }
 
+    bool addRoute = false;
+    cleanVetRouteG();
     // Go through routes in hashRoutes
     for(const TestNS::Route& route:routeHash)
     {
@@ -208,6 +220,8 @@ void  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
             label->vetResources[0] = redCost;
             label->vetResources[1] = route.demand;
             label->active = true;
+            label->typeLabel = Forward;
+
             writeNgSet(label, ngSet);
             int pos = -1;
             Bucket* bucket = dominanceIntraBucket(instVrpTw->numClientes, label, labelingData, labelHeap, 2,
@@ -215,12 +229,21 @@ void  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
             if(bucket != nullptr)
             {
-                std::cout<<"Error!!\nRoute("<<route.vetRoute<<") have a negative reduced cost ("<<redCost<<
-                           ") and was inserted into the bucket!\n\n";
-                PRINT_EXIT();
+                //std::cout<<"Error!!\nRoute("<<route.vetRoute<<") have a negative reduced cost ("<<redCost<<
+                //           ") and was inserted into the bucket!\n\n";
+
+                //Vector<VectorI> vetRoute;
+                //vetRoute.push_back(route.vetRoute);
+                //startGlobalMemory(vetRoute);
+                //return true;
+                addToVetRoutesG(route.vetRoute);
+                addRoute = true;
+
             }
         }
     }
+
+    return addRoute;
 }
 
 int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
@@ -415,11 +438,30 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     if(!custoRedNeg)
     {
-        checkEnumeratedRoutesFinal(vetRowPi);
+        if(checkEnumeratedRoutesFinal(vetRowPi))
+        {
+            numSol = 0;
+            custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
+                                                 vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
+                                                 numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
+                                                 typeLabel);
+
+            PRINT_EXIT();
+        }
     }
     else
     {
-        checkEnumeratedRoutesMid(vetRowPi, matColX, numSol);
+        if(checkEnumeratedRoutesMid(vetRowPi, matColX, numSol))
+        {
+            numSol = 0;
+            custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
+                                                 vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
+                                                 numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
+                                                 typeLabel);
+
+            //std::println("**************************************\n");
+            //PRINT_EXIT();
+        }
     }
 
     /*
@@ -655,6 +697,7 @@ bool VrpTW_DecompLabelingNS::exactPricing(const LabelingAlgorithmNS::Vet3D_ResCo
     const int num = instVrpTw.numClientes*instVrpTw.numClientes;
 
     std::cout<<"0 ";
+    /*
     vetRoteG.push_back(0);
 
     do
@@ -674,7 +717,7 @@ bool VrpTW_DecompLabelingNS::exactPricing(const LabelingAlgorithmNS::Vet3D_ResCo
         i = j;
     }
     while(i != 0);
-
+    */
     std::cout<<"\n";
 
     cost = ptrModel->get(GRB_DoubleAttr_ObjVal);

@@ -1,4 +1,1 @@
-
-- Lagrange Dual bound da CG! É valido quando o pricing é heurístico?
 - Critério para dominancia inter buckets
-- CG termina com variável artificial na base!
