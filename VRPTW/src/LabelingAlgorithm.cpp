@@ -623,7 +623,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
     maxDist = -std::numeric_limits<FloatType>::max();
     //redCost = std::numeric_limits<FloatType>::max();
 
-    //if(Print)
+    if(Print && PrintG)
     {
         std::cout << "******************************************************************\n";
         std::cout << "*****************BIDIRECTIONAL LABELING ALGORITHM*****************\n\n";
@@ -645,6 +645,9 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
 
     Label* labelPtr  = labelPoolG.getT();
     Label* labelBackwardPtr = labelPoolG.getT();
+
+    labelPtr->vetResources.setZero();
+    labelBackwardPtr->vetResources.setZero();
 
     int i = lData.getIndex(0, labelStart);
     int j = lData.getIndex(1, 0.0);
@@ -755,7 +758,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
         maxSize = std::max(maxSize, labelHeap.heapSize);
 
 
-        if(Print)
+        if(Print && PrintG)
             std::cout << "numIt: " << numIt << "\n";
 
         labelPtr = labelHeap.extractMin();
@@ -769,7 +772,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
 
         //bool haveRoute = labelHaveRoute(vetRoutesG, labelPtr);
 
-        if(Print || exactLabelingG)
+        if((PrintG && Print) || exactLabelingG)
         {
             std::cout << "labelPtr: " << labelPtr << "\n";
             std::cout << *labelPtr << "\n\n";
@@ -790,7 +793,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
 
         if(lastCust == dest && labelPtr->typeLabel == Forward)
         {
-            if(Print)
+            if(Print && PrintG)
                 std::cout<<"lastCust==dest("<<dest<<")\n";
             continue;
         }
@@ -822,7 +825,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                 continue;
 
 
-            if(Print)
+            if(Print && PrintG)
                 std::cout<<"\tt("<<t<<")\n";
 
             Label *labelPtrAux = labelPoolG.getT();
@@ -847,7 +850,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             {
                 bool haveRoute = labelHaveRoute(vetRoutesG, labelPtrAux);
 
-                if(Print)
+                if(Print && PrintG)
                     std::cout<<"\t"<<*labelPtrAux<<"\n";
 
                 if(haveRoute)
@@ -972,13 +975,17 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                 //checkHeap(labelHeap, lData);
             }
             else
+            {
                 labelPoolG.delT(labelPtrAux);
+                if(Print && PrintG)
+                    std::printf("\tFailed\n");
+            }
 
         }
 
 //std::cout<<"END Extend label\n";
 
-        if(Print)
+        if(Print && PrintG)
             std::cout<<"\n########################################################################################\n\n";
 
         labelPoolG.delT(labelPtr);
@@ -1127,11 +1134,17 @@ bool LabelingAlgorithmNS::
     newLabel.typeLabel = label.typeLabel;
     newLabel.vetResources[0] = label.vetResources[0] + vetMatResCostBackward(t, custI, 0);
 
-    if(Print)
+    if(Print && PrintG)
         std::cout<<"\t\t("<<t<<","<<custI<<"): "<<vetMatResCostBackward(t, custI, 0)<<"\n";
+
 
     for(int i=1; i < numResources; ++i)//NumMaxResources; ++i)
     {
+        if(Print && PrintG)
+            std::printf("\t\tcost: %.1f\n\t\tUP: %.1f\n\t\tLB: %.1f\n\n",
+                        vetMatResCostBackward(t, custI, i), vetVetBound(t, i).upperBound,
+                        vetVetBound(t, i).lowerBound);
+
         // Extend the iº resource
         newLabel.vetResources[i] = label.vetResources[i] - vetMatResCostBackward(t, custI, i);
         boundOk = boundOk && (newLabel.vetResources[i] <= vetVetBound(t, i).upperBound);
@@ -1369,9 +1382,6 @@ void LabelingAlgorithmNS::LabelingData::flushLabel()
 //                mat.mat(i, j).vetPtrLabel.conservativeResize()
                 mat.mat(i, j).flush();
             }
-
-            if(numMainResources == 1)
-                break;
         }
     }
 
@@ -1386,9 +1396,6 @@ void LabelingAlgorithmNS::LabelingData::flushLabel()
 //                mat.mat(i, j).vetPtrLabel.conservativeResize()
                 mat.mat(i, j).flush();
             }
-
-            if(numMainResources == 1)
-                break;
         }
     }
 
@@ -1402,7 +1409,7 @@ std::ostream& LabelingAlgorithmNS::operator<< (std::ostream& out, const Bound &b
 
 void LabelingAlgorithmNS::LabelingData::removeLabel(Label *label)
 {
-    if(Print)
+    if(Print && PrintG)
     {
         std::cout<<"Begin removeLabel\n";
         std::cout<<*label<<"\n";
@@ -1496,7 +1503,7 @@ void LabelingAlgorithmNS::removeCycles(Label &label, const int numCust)
 
     int i=0;
 
-    if(Print)
+    if(Print && PrintG)
         std::cout<<"Label antes: "<<label<<"\n\n";
 
     while(i < label.tamRoute)
@@ -1512,7 +1519,7 @@ void LabelingAlgorithmNS::removeCycles(Label &label, const int numCust)
 
             label.tamRoute -= 1;
 
-            if(Print)
+            if(Print && PrintG)
                 std::cout<<label<<"\n";
 
         }
@@ -1635,7 +1642,7 @@ void LabelingAlgorithmNS::LabelingData::
                            Eigen::VectorX<MatBucket>& vetMatBucket, TypeLabel typeLabel)
 {
     return;
-    if(Print)
+    if(Print && PrintG)
         std::cout<<"dominanceInterBuckets\n\n";
     // Bucked (i, j) pode dominar bucked (i', j') onde i' > i e j' > j;
 
@@ -1730,7 +1737,7 @@ void LabelingAlgorithmNS::LabelingData::
                                     numDel += 1;
                                     if(labelHeap.heapSize < int(0.7*localNumMaxLabel))
                                     {
-                                        if(Print)
+                                        if(Print && PrintG)
                                             std::cout<<"\t"<<"FORAM DELETADOS: "<<numDel<<" LABELS\n\n";
                                         return;
                                     }
@@ -1748,7 +1755,7 @@ void LabelingAlgorithmNS::LabelingData::
         }
     }
 
-    if(Print)
+    if(Print && PrintG)
         std::cout<<"\t"<<"FORAM DELETADOS: "<<numDel<<" LABELS\n\n";
 
 }
@@ -1861,7 +1868,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketForward(int cust, Label* labelP
         labelPtrAux->j = j;
         labelPtrAux->cust = cust;
 
-        if(Print)
+        if(Print && PrintG)
             std::cout << "\t\ti(" << i << "); j(" << j << ")\n";
 
         bucketPtr = &lData.vetMatBucketForward[cust].mat(i, j);
@@ -2380,7 +2387,7 @@ Bucket* LabelingAlgorithmNS::
         labelPtrAux->j = j;
         labelPtrAux->cust = cust;
 
-        if(Print)
+        if(Print && PrintG)
             std::cout << "\t\ti(" << i << "); j(" << j << ")\n";
 
         bucketPtr = &lData.vetMatBucketBackward[cust].mat(i, j);
@@ -2741,7 +2748,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int cust, Label* label, Labeli
         label->j = j;
         label->cust = cust;
 
-        if(Print)
+        if(Print && PrintG)
             std::cout << "\t\ti(" << i << "); j(" << j << ")\n";
 
         bucketPtr = &lData.vetMatBucketForward[cust].mat(i, j);

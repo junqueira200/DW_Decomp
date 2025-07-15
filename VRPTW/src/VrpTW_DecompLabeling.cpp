@@ -76,11 +76,12 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     for(int i=0; i < instVrpTw->numClientes+1; ++i)
     {
         vetVetResBound(i, 0) = bound0;
+        /*
         if(i > 0 && i < instVrpTw->numClientes)
             bound1.lowerBound = (FloatType)instVrpTw->vetClieDem[i];
         else
             bound1.lowerBound = 0.0;
-
+        */
         vetVetResBound(i, 1) = bound1;
     }
 
@@ -441,6 +442,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         if(checkEnumeratedRoutesFinal(vetRowPi))
         {
             numSol = 0;
+            PrintG = true;
             custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
                                                  vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
                                                  numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,

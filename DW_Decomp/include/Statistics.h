@@ -12,6 +12,7 @@
 #define DW_STATISTICS_H
 
 #include <iostream>
+#include <chrono>
 
 namespace StatisticsNS
 {
