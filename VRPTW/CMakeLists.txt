@@ -65,5 +65,5 @@ target_sources(${PROJECT_NAME}
         src/main.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} PRIVATE DwDecomp Eigen3::Eigen gurobi_c++ gurobi Boost::boost Grafo)
+target_link_libraries(${PROJECT_NAME} PRIVATE DwDecomp Eigen3::Eigen gurobi_c++ gurobi Boost::boost Grafo CvrpSep)
 

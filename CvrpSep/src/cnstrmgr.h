@@ -5,8 +5,6 @@
 #ifndef _H_CNSTRMGR
 #define _H_CNSTRMGR
 
-#include <stdio.h>
-
 /* Definition of constants for identification of constraint types. */
 
 #define CMGR_CT_MIN_ROUTES        101

@@ -15,6 +15,15 @@
 #include "Instancia.h"
 #include "LabelingAlgorithm.h"
 #include "Test.h"
+#include "BranchAndPrice.h"
+
+extern "C"
+{
+#include <stdio.h>
+#include "basegrph.h"
+#include "cnstrmgr.h"
+#include "capsep.h"
+}
 
 constexpr int NumNodesMaxEnumerate = 15;
 
@@ -74,6 +83,28 @@ namespace VrpTW_DecompLabelingNS
 
 
     }; // END MySubProb
+
+    class CapacityCut: public BranchAndPriceNS::RobustCutGenerator
+    {
+
+        int *edgeTail, *edgeHead, *demand;
+        int capacity, edgeSize, numCust;
+        double* edgeX;
+        int dim, maxNoOfCuts;
+
+        CnstrMgrPointer cutsCMP;
+        CnstrMgrPointer oldCutsCMP;
+
+        char integerAndFeasible;
+        double maxViolation;
+        double epsForIntegrality;
+
+    public:
+        CapacityCut(InstanciaNS::InstVRP_TW &instVrpTw, int dim_, int maxNoOfCuts_, double eps);
+        ~CapacityCut();
+        void operator()(DW_DecompNS::DW_DecompNode& decompNode) override;
+
+    };
 
     bool exactPricing(const LabelingAlgorithmNS::Vet3D_ResCost&          vetMatResCost,
                       const FloatType                                    startVal,

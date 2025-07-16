@@ -39,7 +39,7 @@ int BranchAndPriceNS::getMostFractionVariable(const Eigen::VectorXd &vetSolX)
     return id;
 }
 
-void BranchAndPriceNS::addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &decompNode, int num)
+void BranchAndPriceNS::addMasterCut(const RobustCut &cut, DW_DecompNS::DW_DecompNode &decompNode, int num)
 {
 
 
@@ -237,6 +237,8 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
         //DW_DecompNode* ptrDecomNode = listDecomNode.back();
         DW_DecompNode* ptrDecomNode = searchD->pop();
 
+
+
         if(ptrPrimalH && !isInteger(ptrDecomNode->vetSolX))
         {
             std::cout << "Diving Heuristic\n";
@@ -294,7 +296,7 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
         int varId = (*branch)(ptrDecomNode, auxVectors);
         double varValue = ptrDecomNode->vetSolX[varId];
 
-        Cut cut;
+        RobustCut cut;
         cut.vetX.resize(ptrDecomNode->vetSolX.size());
         cut.vetX.coeffRef(varId) = 1;
 

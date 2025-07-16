@@ -4,8 +4,6 @@
 
 #ifndef _H_CAPSEP
 #define _H_CAPSEP
-#include "cnstrmgr.h"
-#include "basegrph.h"
 
 void CAPSEP_GetOneVehicleCapCuts(CnstrMgrPointer CutsCMP,
                                  ReachPtr *RPtr,

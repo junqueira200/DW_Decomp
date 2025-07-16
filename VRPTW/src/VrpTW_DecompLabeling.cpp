@@ -768,3 +768,54 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     label->tamRoute = (int)route.vetRoute.size();
 }
+
+
+VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVrpTw, int dim_, int maxNoOfCuts_, double eps)
+{
+    capacity 	= instVrpTw.capVeic;
+    dim      	= dim_;
+    maxNoOfCuts = maxNoOfCuts_;
+    numCust  	= instVrpTw.numClientes - 1; // Don't count with the deposit
+    edgeSize 	= (numCust*(numCust-1))/2;
+    epsForIntegrality = eps;
+
+    edgeHead = new int[edgeSize];
+    edgeTail = new int[edgeSize];
+    edgeX    = new double[edgeSize];
+
+    CMGR_CreateCMgr(&cutsCMP, dim);
+    CMGR_CreateCMgr(&oldCutsCMP, dim);
+
+    int next = 0;
+    for(int i=0; i < numCust; ++i)
+    {
+        for(int j=(i+1); j < numCust; ++j)
+        {
+            if(next >= edgeSize)
+            {
+                std::printf("Error, next(%i) >= edgeSize(%i)\n", next, edgeSize);
+                PRINT_EXIT();
+            }
+
+            edgeHead[next] = i;
+            edgeTail[next] = j;
+
+            next += 1;
+        }
+    }
+}
+
+VrpTW_DecompLabelingNS::CapacityCut::~CapacityCut()
+{
+    delete []edgeHead;
+    delete []edgeTail;
+    delete []edgeX;
+
+    CMGR_FreeMemCMgr(&cutsCMP);
+    CMGR_FreeMemCMgr(&oldCutsCMP);
+}
+void VrpTW_DecompLabelingNS::CapacityCut::operator()(DW_DecompNS::DW_DecompNode& decompNode)
+{
+    // Convert the arc solution for the edge one
+
+};

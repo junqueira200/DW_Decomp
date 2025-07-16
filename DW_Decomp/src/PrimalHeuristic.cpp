@@ -73,7 +73,7 @@ DW_DecompNode* PrimalHeuristicNS::SimpleDiving::operator()(DW_DecompNode *node,
             if(id == -1)
                 break;
 
-            Cut cut;
+            RobustCut cut;
             cut.vetX.resize(nodeTemp->vetSolX.size());
             cut.vetX.coeffRef(id) = 1;
             cut.rhs = std::ceil(nodeTemp->vetSolX[id]);

@@ -4,7 +4,6 @@
 
 #ifndef _H_COMPCUTS
 #define _H_COMPCUTS
-#include "cnstrmgr.h"
 
 void COMPCUTS_ComputeCompCuts(ReachPtr SupportPtr,
                               int NoOfCustomers,

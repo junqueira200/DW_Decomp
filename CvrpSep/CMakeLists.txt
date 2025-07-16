@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.26)
 
 project("CvrpSep"
     VERSION 0
@@ -90,32 +90,32 @@ file(GENERATE
 
 # without it public headers won't get installed
 set(public_headers
-    include/basegrph.h
-    include/binpack.h
-    include/blocks.h
-    include/brnching.h
-    include/capsep.h
-    include/cnstrmgr.h
-    include/combsep.h
-    include/compcuts.h
-    include/compress.h
-    include/cutbase.h
-    include/fcapfix.h
-    include/fcisep.h
-    include/fcits.h
-    include/glmsep.h
-    include/grsearch.h
-    include/hpmstar.h
-    include/htoursep.h
-    include/intap.h
-    include/memmod.h
-    include/mstarsep.h
-    include/mxf.h
-    include/newhtour.h
-    include/sort.h
-    include/strcomb.h
-    include/strngcmp.h
-    include/twomatch.h
+    src/basegrph.h
+    src/binpack.h
+    src/blocks.h
+    src/brnching.h
+    src/capsep.h
+    src/cnstrmgr.h
+    src/combsep.h
+    src/compcuts.h
+    src/compress.h
+    src/cutbase.h
+    src/fcapfix.h
+    src/fcisep.h
+    src/fcits.h
+    src/glmsep.h
+    src/grsearch.h
+    src/hpmstar.h
+    src/htoursep.h
+    src/intap.h
+    src/memmod.h
+    src/mstarsep.h
+    src/mxf.h
+    src/newhtour.h
+    src/sort.h
+    src/strcomb.h
+    src/strngcmp.h
+    src/twomatch.h
 )
 
 # where to find our CMake modules

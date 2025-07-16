@@ -35,7 +35,7 @@ int BranchNS::StrongBranch::operator()(const DW_DecompNS::DW_DecompNode *const n
         }
 
         // Branch and compute the lowerBound
-        Cut cut;
+        RobustCut cut;
         cut.vetX.resize(vetSol.size());
         cut.vetX.setZero();
         cut.vetX.coeffRef(id) = 1;

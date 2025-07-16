@@ -21,18 +21,23 @@ namespace BranchAndPriceNS
 {
     constexpr double IntFeasTol = 1E-5;
 
-    struct Cut
+    struct RobustCut
     {
         Eigen::SparseVector<double> vetX;
         char sense;
         double rhs;
     };
 
-
+    class RobustCutGenerator
+    {
+    public:
+        ~RobustCutGenerator()=default;
+        virtual void operator()(DW_DecompNS::DW_DecompNode& decompNode)=0;
+    };
 
     int getMostFractionVariable(const Eigen::VectorXd &vetSolX);
     bool isInteger(const Eigen::VectorXd &vet);
-    void addMasterCut(const Cut &cut, DW_DecompNS::DW_DecompNode &decompNode, int num);
+    void addMasterCut(const RobustCut &cut, DW_DecompNS::DW_DecompNode &decompNode, int num);
     Eigen::VectorXd branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
                                    DW_DecompNS::AuxData &auxVectors,
                                    SearchStrategyNS::SearchDataInter* searchD,
