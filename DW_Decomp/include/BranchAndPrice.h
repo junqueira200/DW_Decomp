@@ -32,7 +32,7 @@ namespace BranchAndPriceNS
     {
     public:
         ~RobustCutGenerator()=default;
-        virtual void operator()(DW_DecompNS::DW_DecompNode& decompNode)=0;
+        virtual int operator()(DW_DecompNS::DW_DecompNode& decompNode)=0;
     };
 
     int getMostFractionVariable(const Eigen::VectorXd &vetSolX);

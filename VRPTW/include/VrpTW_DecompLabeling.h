@@ -98,11 +98,16 @@ namespace VrpTW_DecompLabelingNS
         char integerAndFeasible;
         double maxViolation;
         double epsForIntegrality;
+        static std::map<std::pair<int,int>, int>* mapArcToIndex;
+        static Eigen::VectorXd list;
+
 
     public:
         CapacityCut(InstanciaNS::InstVRP_TW &instVrpTw, int dim_, int maxNoOfCuts_, double eps);
         ~CapacityCut();
-        void operator()(DW_DecompNS::DW_DecompNode& decompNode) override;
+        int operator()(DW_DecompNS::DW_DecompNode& decompNode) override;
+        void convertArcSolution(const Eigen::VectorXd& vetX);
+        std::pair<int,int> getEdge(int i, int j);
 
     };
 

@@ -28,7 +28,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     vetStepSize[0].start    = (FloatType)-1.0*startDist;  // 1.0
     vetStepSize[0].end      = (FloatType) 1.0*startDist; // 1.0
 
-    vetStepSize[1].stepSize = 50.0;// 0.11*((FloatType)instVrpTw->capVeic);  //50
+    vetStepSize[1].stepSize = 100;  //50
     vetStepSize[1].start    = 0;
     vetStepSize[1].end      = (FloatType)instVrpTw->capVeic;
 
@@ -786,6 +786,10 @@ VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVr
     CMGR_CreateCMgr(&cutsCMP, dim);
     CMGR_CreateCMgr(&oldCutsCMP, dim);
 
+    bool createMap = (mapArcToIndex == nullptr);
+    if(createMap)
+        mapArcToIndex = new std::map<std::pair<int,int>, int>();
+
     int next = 0;
     for(int i=0; i < numCust; ++i)
     {
@@ -797,12 +801,18 @@ VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVr
                 PRINT_EXIT();
             }
 
+            if(createMap)
+                (*mapArcToIndex)[getEdge(i,j)] = next;
+
             edgeHead[next] = i;
             edgeTail[next] = j;
 
             next += 1;
         }
     }
+
+    if(createMap)
+        list = Eigen::VectorXd(numCust+1);
 }
 
 VrpTW_DecompLabelingNS::CapacityCut::~CapacityCut()
@@ -814,8 +824,57 @@ VrpTW_DecompLabelingNS::CapacityCut::~CapacityCut()
     CMGR_FreeMemCMgr(&cutsCMP);
     CMGR_FreeMemCMgr(&oldCutsCMP);
 }
-void VrpTW_DecompLabelingNS::CapacityCut::operator()(DW_DecompNS::DW_DecompNode& decompNode)
+int VrpTW_DecompLabelingNS::CapacityCut::operator()(DW_DecompNS::DW_DecompNode& decompNode)
 {
     // Convert the arc solution for the edge one
+    convertArcSolution(decompNode.vetSolX);
+    CAPSEP_SeparateCapCuts(numCust, demand, capacity, edgeSize, edgeTail, edgeHead, edgeX, oldCutsCMP, maxNoOfCuts,
+                           epsForIntegrality, &integerAndFeasible, &maxViolation, cutsCMP);
+
+    list.setConstant(-1);
+    int listSize = 0;
+
+    for(int i=0; i < cutsCMP->Size; ++i)
+    {
+        int listSize = 0;
+        for(int j=1; j <= cutsCMP->CPL[i]->IntListSize; ++j)
+        {
+            list[listSize] = cutsCMP->CPL[i]->IntList[j];
+        }
+
+        double rhs = cutsCMP->CPL[i]->RHS;
+    }
 
 };
+
+void VrpTW_DecompLabelingNS::CapacityCut::convertArcSolution(const Eigen::VectorXd& vetX)
+{
+
+    int numNodes = numCust+1;
+
+    for(int i=0; i < edgeSize; ++i)
+        edgeX[i] = 0.0;
+
+    int i,j, index;
+
+    for(int t=0; t < vetX.size(); ++t)
+    {
+        reverseIndex(t, numNodes, i, j);
+        if(i != j)
+        {
+            index = (*mapArcToIndex).at(getEdge(i,j));
+            edgeX[index] += vetX[t];
+        }
+    }
+
+}
+
+std::pair<int,int> VrpTW_DecompLabelingNS::CapacityCut::getEdge(int i, int j)
+{
+
+    if(i < j)
+        return {i,j};
+    else
+        return {j,i};
+}
+
