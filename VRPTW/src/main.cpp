@@ -96,6 +96,7 @@ int main(int argv, char **argc)
 
         Eigen::VectorXd vetSol;
 
+        CapacityCut capacityCut(instVrpTw, 5, 10, 0.00005);
 
         std::cout<<"sizeof(Label): "<<sizeof(Label)<<"\n";
         std::cout<<"vetNumSteps r0: "<<vrpLabelingSubProb.labelingData.vetNumSteps[0]<<"\n";
@@ -104,8 +105,13 @@ int main(int argv, char **argc)
         std::cout<<"numClien: "<<instVrpTw.numClientes<<"\n";
         std::cout<<"Cost Var A.: "<<distVarA<<"\n\n";
 
-        vetSol = branchAndPrice(decompNode, auxVectors, (SearchDataInter*)&minFuncObj,
-                                (PrimalHeuristicInter*)&simpleDiving, (BranchInter*)&branch, statisticD);
+        vetSol = branchAndPrice(decompNode,
+                                auxVectors,
+                                (SearchDataInter*)&minFuncObj,
+                                (PrimalHeuristicInter*)&simpleDiving,
+                                (BranchInter*)&branch,
+                                (RobustCutGenerator*)&capacityCut,
+                                statisticD);
 
 
 

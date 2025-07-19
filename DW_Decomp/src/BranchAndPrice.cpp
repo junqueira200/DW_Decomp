@@ -39,7 +39,15 @@ int BranchAndPriceNS::getMostFractionVariable(const Eigen::VectorXd &vetSolX)
     return id;
 }
 
-void BranchAndPriceNS::addMasterCut(const RobustCut &cut, DW_DecompNS::DW_DecompNode &decompNode, int num)
+/**
+ * @brief Add a cut in the master problem
+ * @param cut
+ * @param decompNode
+ * @param num
+ * @param isBranching   Indicates if the cut is in the form: x_i >= rhs or x_i <= RHS
+ */
+void BranchAndPriceNS::addMasterCut(const RobustCut &cut, DW_DecompNS::DW_DecompNode &decompNode, int num,
+                                    bool isBranching)
 {
 
 
@@ -53,6 +61,7 @@ void BranchAndPriceNS::addMasterCut(const RobustCut &cut, DW_DecompNS::DW_Decomp
         }
     }
 
+
     if(varId == -1)
     {
         std::cout<<"ERROR, cut.vetX is zero!\nvetX: "<<cut.vetX<<"\n";
@@ -60,65 +69,10 @@ void BranchAndPriceNS::addMasterCut(const RobustCut &cut, DW_DecompNS::DW_Decomp
         throw "ERROR";
     }
 
-    if(cut.rhs != 0 && cut.sense != '<')
-    {
-
-        // Update info
-        decompNode.info.numConstrsMaster += 1;
-        decompNode.info.numVarRmlpPi += 1;
-
-        // Add cut to matA
-        auto &matA = decompNode.matA;
-        matA.conservativeResize(matA.rows() + 1, matA.cols());
-        matA.row(matA.rows() - 1) = cut.vetX;
-
-        // Update columns coef
-        GRBLinExpr linExpr;
-        //GRBVar var = decompNode.uRmlp->addVar(0, GRB_INFINITY, decompNode.info.costA_Var, GRB_CONTINUOUS, "a_"+std::to_string(num));
-
-        //linExpr += 1*var;
-        //decompNode.vetVarLambdaCol.push_back(std::make_unique<Eigen::VectorXd>(decompNode.info.numVarMaster));
-        //Eigen::VectorXd& vetSol = *decompNode.vetVarLambdaCol[decompNode.vetVarLambdaCol.size()-1];
-        //vetSol.setZero();
-
-        //decompNode.uRmlp->update();
-        //decompNode.uRmlp->optimize();
-        GRBVar *varRmlp = decompNode.uRmlp->getVars();
 
 
-
-        // Runs through columns and compute their coefficients
-        for(int i = 0; i < int(decompNode.vetVarLambdaCol.size()); ++i)
-        {
-            auto &col = *decompNode.vetVarLambdaCol[i];
-            double coef = (cut.vetX.dot(col));
-
-            if(coef != 0.0)
-                linExpr += coef * varRmlp[i];
-
-            //exit(-1);
-        }
-
-        //std::cout << "add cut\n";
-        // Add cut to rmlp
-        decompNode.uRmlp->addConstr(linExpr, cut.sense, cut.rhs, "masterCut_" + std::to_string(num));
-        delete[]varRmlp;
-
-        decompNode.uRmlp->update();
-
-        int numVars = decompNode.uRmlp->get(GRB_IntAttr_NumVars);
-
-        if(numVars != int(decompNode.vetVarLambdaCol.size()))
-        {
-            std::cout << "Num Vars is wrong;\n\t Model: " << numVars << "; vetVarLamdaCol: "
-                      << decompNode.vetVarLambdaCol.size() << "\n";
-            PRINT_DEBUG("", "");
-            throw "ERROR";
-        }
-
-        decompNode.vetVar1.push_back(varId);
-    }
-    else
+    // Add cut x_i <= 0
+    if(cut.vetX.nonZeros() == 1 && cut.sense == '<' && cut.rhs == 0)
     {
 
         //std::cout<<"X_"<<varId<<" <= 0\n";
@@ -144,10 +98,59 @@ void BranchAndPriceNS::addMasterCut(const RobustCut &cut, DW_DecompNS::DW_Decomp
             decompNode.uRmlp->remove(varRmlp[rmId]);
         }
 
-        decompNode.vetVar0.push_back(varId);
+        if(isBranching)
+            decompNode.vetVar0.push_back(varId);
 
         delete []varRmlp;
     }
+    else
+    {
+
+        // Update info
+        decompNode.info.numConstrsMaster += 1;
+        decompNode.info.numVarRmlpPi += 1;
+
+        // Add cut to matA
+        auto &matA = decompNode.matA;
+        matA.conservativeResize(matA.rows() + 1, matA.cols());
+        matA.row(matA.rows() - 1) = cut.vetX;
+
+        // Update columns coef
+        GRBLinExpr linExpr;
+        GRBVar *varRmlp = decompNode.uRmlp->getVars();
+
+        // Runs through columns and compute their coefficients
+        for(int i = 0; i < int(decompNode.vetVarLambdaCol.size()); ++i)
+        {
+            auto &col = *decompNode.vetVarLambdaCol[i];
+            double coef = (cut.vetX.dot(col));
+
+            if(coef != 0.0)
+                linExpr += coef * varRmlp[i];
+
+            //exit(-1);
+        }
+
+        // Add cut to rmlp
+        decompNode.uRmlp->addConstr(linExpr, cut.sense, cut.rhs, "masterCut_" + std::to_string(num));
+        delete[]varRmlp;
+
+        decompNode.uRmlp->update();
+
+        int numVars = decompNode.uRmlp->get(GRB_IntAttr_NumVars);
+
+        if(numVars != int(decompNode.vetVarLambdaCol.size()))
+        {
+            std::cout << "Num Vars is wrong;\n\t Model: " << numVars << "; vetVarLamdaCol: "
+                      << decompNode.vetVarLambdaCol.size() << "\n";
+            PRINT_DEBUG("", "");
+            throw "ERROR";
+        }
+
+        if(isBranching)
+            decompNode.vetVar1.push_back(varId);
+    }
+
 }
 
 Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
@@ -155,6 +158,7 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
                                                  SearchDataInter* searchD,
                                                  PrimalHeuristicInter* ptrPrimalH,
                                                  BranchInter* branch,
+                                                 RobustCutGenerator* robustCutGenerator,
                                                  StatisticsData &statisticD)
 {
 
@@ -184,6 +188,26 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
 
     DW_DecompNode *rootNode = new DW_DecompNode(cRootNode);
     int status = rootNode->columnGeneration(auxVectors);
+   if(status != StatusSubProb_Otimo)
+    {
+        std::cout<<"Root node can't be soved\n";
+        delete rootNode;
+        vetX_best.setZero();
+        return vetX_best;
+    }
+
+
+    (*robustCutGenerator)(*rootNode);
+    status = rootNode->columnGeneration(auxVectors);
+    if(status != StatusSubProb_Otimo)
+    {
+        std::cout<<"Root node can't be soved after cuting\n";
+        delete rootNode;
+        vetX_best.setZero();
+        return vetX_best;
+    }
+
+
 
     int numVars = rootNode->uRmlp->get(GRB_IntAttr_NumVars);
 
@@ -311,12 +335,12 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
         cut.sense = '>';
         cut.rhs   = std::ceil(varValue);
         std::cout<<"x_"<<varId<<" >= "<<cut.rhs<<"\n";
-        addMasterCut(cut, *ptrNodeGreater, numIt);
+        addMasterCut(cut, *ptrNodeGreater, numIt, false);
 
         cut.sense = '<';
         cut.rhs   = std::floor(varValue);
         std::cout<<"x_"<<varId<<" <= "<<cut.rhs<<"\n";
-        addMasterCut(cut,*ptrNodeSmaller, numIt);
+        addMasterCut(cut,*ptrNodeSmaller, numIt, false);
 
         auxVectors.updateSizes(*ptrNodeGreater);
 

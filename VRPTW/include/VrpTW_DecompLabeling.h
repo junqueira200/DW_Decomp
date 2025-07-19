@@ -87,6 +87,8 @@ namespace VrpTW_DecompLabelingNS
     class CapacityCut: public BranchAndPriceNS::RobustCutGenerator
     {
 
+    public:
+
         int *edgeTail, *edgeHead, *demand;
         int capacity, edgeSize, numCust;
         double* edgeX;
@@ -98,16 +100,16 @@ namespace VrpTW_DecompLabelingNS
         char integerAndFeasible;
         double maxViolation;
         double epsForIntegrality;
-        static std::map<std::pair<int,int>, int>* mapArcToIndex;
-        static Eigen::VectorXd list;
+        std::map<std::pair<int,int>, int>* mapArcToIndex;
+        Eigen::VectorXi list;
 
 
-    public:
         CapacityCut(InstanciaNS::InstVRP_TW &instVrpTw, int dim_, int maxNoOfCuts_, double eps);
         ~CapacityCut();
         int operator()(DW_DecompNS::DW_DecompNode& decompNode) override;
         void convertArcSolution(const Eigen::VectorXd& vetX);
         std::pair<int,int> getEdge(int i, int j);
+        void createInducedSubGraphArcs(int listSize, BranchAndPriceNS::RobustCut& cut);
 
     };
 
@@ -116,6 +118,7 @@ namespace VrpTW_DecompLabelingNS
                       Eigen::Matrix<double, -1, 1, Eigen::ColMajor>&     vetColSolX,
                       InstanciaNS::InstVRP_TW&                           instVrpTw,
                       double&                                            cost);
+
 }
 
 #endif //DW_VRPTW_DECOMPLABELING_H

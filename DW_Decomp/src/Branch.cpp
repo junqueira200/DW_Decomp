@@ -43,7 +43,7 @@ int BranchNS::StrongBranch::operator()(const DW_DecompNS::DW_DecompNode *const n
         cut.sense = '>';
         cut.rhs   = std::ceil(vetSol[id]);
         DW_DecompNode* nodeAux = new DW_DecompNode(*node);
-        addMasterCut(cut, *nodeAux, -1);
+        addMasterCut(cut, *nodeAux, -1, true);
         auxVet.updateSizes(*nodeAux);
 
         int status = nodeAux->columnGeneration(auxVet);
@@ -59,7 +59,7 @@ int BranchNS::StrongBranch::operator()(const DW_DecompNS::DW_DecompNode *const n
         cut.sense = '<';
         cut.rhs   = std::floor(vetSol[id]);
 
-        addMasterCut(cut, *nodeAux, -1);
+        addMasterCut(cut, *nodeAux, -1, true);
         status = nodeAux->columnGeneration(auxVet);
         if(status == StatusSubProb_Otimo)
         {

@@ -24,8 +24,11 @@ namespace BranchAndPriceNS
     struct RobustCut
     {
         Eigen::SparseVector<double> vetX;
-        char sense;
-        double rhs;
+        char sense  = '<';
+        double rhs  = 0.0;
+
+        RobustCut()=default;
+        RobustCut(int sizeVetX){vetX = Eigen::SparseVector<double>(sizeVetX);};
     };
 
     class RobustCutGenerator
@@ -37,12 +40,15 @@ namespace BranchAndPriceNS
 
     int getMostFractionVariable(const Eigen::VectorXd &vetSolX);
     bool isInteger(const Eigen::VectorXd &vet);
-    void addMasterCut(const RobustCut &cut, DW_DecompNS::DW_DecompNode &decompNode, int num);
+    void addMasterCut(const RobustCut &cut, DW_DecompNS::DW_DecompNode &decompNode, int num,
+                      bool isBranching);
+
     Eigen::VectorXd branchAndPrice(DW_DecompNS::DW_DecompNode &cRootNode,
                                    DW_DecompNS::AuxData &auxVectors,
                                    SearchStrategyNS::SearchDataInter* searchD,
                                    PrimalHeuristicNS::PrimalHeuristicInter* ptrPrimalH,
                                    BranchNS::BranchInter* branch,
+                                   RobustCutGenerator* robustCutGenerator,
                                    StatisticsNS::StatisticsData& statisticD);
 
     double computeGap(double lb, double ub);

@@ -79,7 +79,7 @@ DW_DecompNode* PrimalHeuristicNS::SimpleDiving::operator()(DW_DecompNode *node,
             cut.rhs = std::ceil(nodeTemp->vetSolX[id]);
             cut.sense = '>';
 
-            addMasterCut(cut, *nodeTemp, numIt);
+            addMasterCut(cut, *nodeTemp, numIt, true);
             auxVet.updateSizes(*nodeTemp);
 
             nodeTemp->vetSolX[id] = std::ceil(nodeTemp->vetSolX[id]);

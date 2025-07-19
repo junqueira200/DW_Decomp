@@ -12,6 +12,7 @@
 
 using namespace LabelingAlgorithmNS;
 using namespace TestNS;
+using namespace BranchAndPriceNS;
 
 VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw_, double startDist)
 {
@@ -776,24 +777,30 @@ VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVr
     dim      	= dim_;
     maxNoOfCuts = maxNoOfCuts_;
     numCust  	= instVrpTw.numClientes - 1; // Don't count with the deposit
-    edgeSize 	= (numCust*(numCust-1))/2;
+    edgeSize 	= ((numCust+1)*(numCust))/2;
     epsForIntegrality = eps;
+
+    std::printf("EdgeSize: %d\n\n", edgeSize);
 
     edgeHead = new int[edgeSize];
     edgeTail = new int[edgeSize];
     edgeX    = new double[edgeSize];
+    demand   = new int[numCust+1];
+
+    for(int i=0; i <= numCust; ++i)
+        demand[i] = instVrpTw.vetClieDem[i];
 
     CMGR_CreateCMgr(&cutsCMP, dim);
     CMGR_CreateCMgr(&oldCutsCMP, dim);
 
-    bool createMap = (mapArcToIndex == nullptr);
-    if(createMap)
-        mapArcToIndex = new std::map<std::pair<int,int>, int>();
+    bool createMap = true;
+    //if(createMap)
+    mapArcToIndex = new std::map<std::pair<int,int>, int>();
 
     int next = 0;
-    for(int i=0; i < numCust; ++i)
+    for(int i=0; i < numCust+1; ++i)
     {
-        for(int j=(i+1); j < numCust; ++j)
+        for(int j=(i+1); j < numCust+1; ++j)
         {
             if(next >= edgeSize)
             {
@@ -802,7 +809,9 @@ VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVr
             }
 
             if(createMap)
+            {	std::printf("(%d; %d): %i\n", i, j, next);
                 (*mapArcToIndex)[getEdge(i,j)] = next;
+            }
 
             edgeHead[next] = i;
             edgeTail[next] = j;
@@ -812,7 +821,7 @@ VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVr
     }
 
     if(createMap)
-        list = Eigen::VectorXd(numCust+1);
+        list = Eigen::VectorXi(numCust+1);
 }
 
 VrpTW_DecompLabelingNS::CapacityCut::~CapacityCut()
@@ -826,25 +835,52 @@ VrpTW_DecompLabelingNS::CapacityCut::~CapacityCut()
 }
 int VrpTW_DecompLabelingNS::CapacityCut::operator()(DW_DecompNS::DW_DecompNode& decompNode)
 {
+    std::printf("*************************************************************************\n");
+    std::printf("***************************CAPACITY_CUT**********************************\n\n");
+
     // Convert the arc solution for the edge one
     convertArcSolution(decompNode.vetSolX);
+
+    // Separate the capacity cuts
     CAPSEP_SeparateCapCuts(numCust, demand, capacity, edgeSize, edgeTail, edgeHead, edgeX, oldCutsCMP, maxNoOfCuts,
                            epsForIntegrality, &integerAndFeasible, &maxViolation, cutsCMP);
 
     list.setConstant(-1);
-    int listSize = 0;
 
+    // Runs through the cuts
     for(int i=0; i < cutsCMP->Size; ++i)
     {
+
+        std::printf("Add cut %d: \n\n\t", i);
+
         int listSize = 0;
-        for(int j=1; j <= cutsCMP->CPL[i]->IntListSize; ++j)
+        // Recover the customers
+        for(int j=0; j < cutsCMP->CPL[i]->IntListSize; ++j)
         {
             list[listSize] = cutsCMP->CPL[i]->IntList[j];
+            std::printf("%d ", list[listSize]);
+            listSize += 1;
         }
 
         double rhs = cutsCMP->CPL[i]->RHS;
+        std::printf("< %f", rhs);
+        RobustCut robustCut(decompNode.vetSolX.size());
+        robustCut.sense = '<';
+        robustCut.rhs = rhs;
+
+        // Add the arcs of the clique of nodes of the list
+        createInducedSubGraphArcs(listSize, robustCut);
+        addMasterCut(robustCut, decompNode, i, false);
     }
 
+    // Move cuts in cutsCMP for oldCutsCMP
+    for(int i=0; i < cutsCMP->Size; ++i)
+        CMGR_MoveCnstr(cutsCMP, oldCutsCMP, i, 0);
+
+    int size = cutsCMP->Size;
+    cutsCMP->Size = 0;
+
+    return size;
 };
 
 void VrpTW_DecompLabelingNS::CapacityCut::convertArcSolution(const Eigen::VectorXd& vetX)
@@ -864,8 +900,26 @@ void VrpTW_DecompLabelingNS::CapacityCut::convertArcSolution(const Eigen::Vector
         {
             index = (*mapArcToIndex).at(getEdge(i,j));
             edgeX[index] += vetX[t];
+
+            if(edgeX[index] > 1.0)
+            {
+                if(j > i)
+                    std::cout<<"Edge: ("<<i<<", "<<j<<") have a value greter then 1\n";
+                else
+                    std::cout<<"Edge: ("<<j<<", "<<i<<") have a value greter then 1\n";
+            }
         }
     }
+
+    for(int i=0; i < edgeSize; ++i)
+        edgeX[i] = std::min(edgeX[i], 1.0);
+
+
+    std::printf("edgeX: ");
+    for(int i=0; i < edgeSize; ++i)
+        std::printf("%.1f ", edgeX[i]);
+
+    std::cout<<"\n\n";
 
 }
 
@@ -877,4 +931,39 @@ std::pair<int,int> VrpTW_DecompLabelingNS::CapacityCut::getEdge(int i, int j)
     else
         return {j,i};
 }
+
+void  VrpTW_DecompLabelingNS::CapacityCut::createInducedSubGraphArcs(int listSize, BranchAndPriceNS::RobustCut& cut)
+{
+
+    int numNodes = numCust + 1;
+
+    for(int i=0; i < listSize; ++i)
+    {
+        for(int j=0; j < listSize; ++j)
+        {
+            if(i == j)
+                continue;
+
+            int index0 = getIndex(i, j, numNodes);
+            int index1 = getIndex(j, i, numNodes);
+
+            cut.vetX.coeffRef(index0) = 1.0;
+            cut.vetX.coeffRef(index1) = 1.0;
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
