@@ -33,23 +33,13 @@ namespace LabelingAlgorithmNS
         AlgBidirectional
     };
 
-    bool forwardLabelingAlgorithm(int numRes, int numCust, const Vet3D_ResCost& vetMatResCost,
-                                  const MatBoundRes& vetVetBound, int dest, const NgSet& ngSet, LabelingData& lData,
-                                  Eigen::MatrixXd& matColX, int& numSol, FloatType labelStart, int NumMaxLabePerBucket,
-                                  bool dominaceCheck, FloatType& maxDist, Eigen::VectorX<FloatType>& vetRedCost,
-                                  bool exact);
 
     bool bidirectionalAlgorithm(int numRes, int numCust, const Vet3D_ResCost& vetMatResCostForward,
                                 const Vet3D_ResCost& vetMatResCostBackward, const MatBoundRes& vetVetBound, int dest,
                                 const NgSet& ngSet, LabelingData& lData, Eigen::MatrixXd& matColX, int& numSol,
                                 FloatType labelStart, int NumMaxLabePerBucket, bool dominaceCheck, FloatType& maxDist,
-                                Eigen::VectorX<FloatType>& vetRedCost, bool exact, LabelingTypeAlg labelingTypeAlg);
-
-    bool labelingAlgorithmm(int numRes, int numCust, const Vet3D_ResCost& vetMatResCostForward,
-                            const Vet3D_ResCost& vetMatResCostBackward, const MatBoundRes& vetVetBound, int dest,
-                            const NgSet& ngSet, LabelingData& lData, Eigen::MatrixXd& matColX, int& numSol,
-                            FloatType labelStart, int NumMaxLabePerBucket, bool dominaceCheck, FloatType& maxDist,
-                            Eigen::VectorX<FloatType>& vetRedCost, bool exact, LabelingTypeAlg labelingTypeAlg);
+                                Eigen::VectorX<FloatType>& vetRedCost, bool exact, LabelingTypeAlg labelingTypeAlg,
+                                bool arc);
 
 
     //inline __attribute__((always_inline))

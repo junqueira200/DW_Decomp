@@ -1,20 +1,22 @@
 /*  *****************************************************************
  *  *****************************************************************
- *  File:    VrpTW_DecompLabeling.cpp
+ *  File:    Cvrp_DecompLabeling.cpp
  *  Project: DW_Decomp
  *  Author:  Igor de Andrade Junqueira
- *  Date:    20/11/24
+ *  Date:    20/07/25
  *
  *  *****************************************************************
  *  *****************************************************************/
 
-#include "VrpTW_DecompLabeling.h"
+
+
+#include "Cvrp_DecompLabeling.h"
 
 using namespace LabelingAlgorithmNS;
 using namespace TestNS;
 using namespace BranchAndPriceNS;
 
-VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw_, double startDist)
+Cvrp_DecompLabelingNS::CvrpLabelingSubProb::CvrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw_, double startDist)
 {
     if(instVrpTw_.numClientes > NumMaxCust)
     {
@@ -92,11 +94,23 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
 
     enumerateRoutes(*instVrpTw, instVrpTw->numClientes-1, routeHash);
 
+    int k = 0;
+    for(int i=0; i < instVrpTw->numClientes; ++i)
+    {
+        for(int j=i+1; j < instVrpTw->numClientes; ++j)
+        {
+            mapEdgeToLinearIndex[{i,j}] = k;
+            mapEdgeToLinearIndex[{j,i}] = k;
+            mapLinearIndexToEdge[k] = {i,j};
+
+            k += 1;
+        }
+    }
 
 }
 
 
-void VrpTW_DecompLabelingNS::VrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA)
+void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA)
 {
 
 
@@ -109,14 +123,14 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, v
 
 }
 
-VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb()
+Cvrp_DecompLabelingNS::CvrpLabelingSubProb::CvrpLabelingSubProb()
 {
 
     //enumerateRoutes(*instVrpTw, instVrpTw->numClientes-1, routeHash);
 
 }
 
-bool VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi)
+bool Cvrp_DecompLabelingNS::CvrpLabelingSubProb::checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi)
 {
     cleanVetRouteG();
     std::cout<<"Start checkEnumeratedRoutes\n\n";
@@ -143,11 +157,13 @@ bool VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesFinal(Eige
 
 }
 
-bool  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
+bool  Cvrp_DecompLabelingNS::CvrpLabelingSubProb::
       checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol)
 {
 
+
     //Remove all remaining labels
+   /*
     labelingData.flushLabel();
     static LabelHeap labelHeap(1);
 
@@ -246,9 +262,10 @@ bool  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     }
 
     return addRoute;
+    */
 }
 
-int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
+int Cvrp_DecompLabelingNS::CvrpLabelingSubProb::
     resolveSubProb(const Eigen::VectorXd &vetC, Eigen::RowVectorXd &vetRowPi, GRBModel &mestre, int itCG,
                    bool &custoRedNeg, void *data, const int iniConv, int indSubProb, Eigen::VectorXd &vetCooefRestConv,
                    const std::pair<int, int> &pairSubProb, Eigen::MatrixXd &matColX, int &numSol,
@@ -277,25 +294,16 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     for(int i=0; i < instVrpTw->numClientes; ++i)
     {
-        for(int j=0; j < instVrpTw->numClientes; ++j)
+        for(int j=i+1; j < instVrpTw->numClientes; ++j)
         {
             if(i == j)
                 continue;
 
-            FloatType value0 = 0.0;
-            FloatType value1 = 0.0;
+            FloatType value0 = -(FloatType)((vetRowPi[j+1] + vetRowPi[i+1])/2.0);
 
+            if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusColGen)
+                value0 += (FloatType)instVrpTw->matDist(i, j);
 
-            if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusTwoPhase)
-            {
-                value0 =  - (FloatType)vetRowPi[j+1];
-                value1 =  - (FloatType)vetRowPi[i+1];
-            }
-            else
-            {
-                value0 = (FloatType)instVrpTw->matDist(i, j) - (FloatType)vetRowPi[j+1];
-                value1 = (FloatType)instVrpTw->matDist(j, i) - (FloatType)vetRowPi[i+1];
-            }
 
              vetMatResCostForward.get(i, j, 0)  = value0;
              vetMatResCostBackward.get(i, j, 0) = value0;
@@ -304,14 +312,12 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         if(i != 0)
         {
 
-            FloatType value = 0.0;
+            FloatType value = -(FloatType)((vetRowPi[1] + vetRowPi[i+1])/2.0);
 
 
             //vetMatResCost[0](i, 0) = instVrpTw->matDist(i, 0);
-            if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusTwoPhase)
-                value = - (FloatType)vetRowPi[1];
-            else
-                value = (FloatType)instVrpTw->matDist(i, 0) - (FloatType)vetRowPi[1];
+            if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusColGen)
+                value += (FloatType)instVrpTw->matDist(i, 0);
 
               vetMatResCostForward.get(i, instVrpTw->numClientes, 0)  = value;
               vetMatResCostBackward.get(i, instVrpTw->numClientes, 0) = value;
@@ -333,8 +339,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     for(int varId:vetVar0)
     {
-        int i = varId/instVrpTw->numClientes;
-        int j = varId%instVrpTw->numClientes;
+        auto [i,j] = mapLinearIndexToEdge.at(varId);
 
         if(j == 0)
             j = instVrpTw->numClientes;
@@ -398,7 +403,6 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     //std::cout<<"Custo Reduzido: \n"<<vetMatResCost[0]<<"\n\n";
     //std::cout<<"Peso: "<<vetMatResCost[1]<<"\n\n";
 
-    int it = 0;
     FloatType maxDist;
 
     ngSet.active = true;
@@ -416,9 +420,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
             custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward,
                                                  vetMatResCostBackward, vetVetResBound, instVrpTw->numClientes, ngSet,
                                                  labelingData, matColX, numSol, (FloatType) constPiValue, i, true,
-                                                 maxDist, vetRedCostFT, exact, typeLabel, true);
+                                                 maxDist, vetRedCostFT, exact, typeLabel, false);
 
-            it += 1;
             if(custoRedNeg)
                 break;
 
@@ -435,7 +438,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
                                              vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
                                              numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
-                                             typeLabel, true);
+                                             typeLabel, false);
     }
 
     if(!custoRedNeg)
@@ -447,24 +450,26 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
             custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
                                                  vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
                                                  numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
-                                                 typeLabel, true);
+                                                 typeLabel, false);
 
             PRINT_EXIT();
         }
     }
     else
     {
+        /*
         if(checkEnumeratedRoutesMid(vetRowPi, matColX, numSol))
         {
             numSol = 0;
             custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
                                                  vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
                                                  numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
-                                                 typeLabel, true);
+                                                 typeLabel, false);
 
             //std::println("**************************************\n");
             //PRINT_EXIT();
         }
+        */
     }
 
     /*
@@ -541,6 +546,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     }*/
 
     // Check if solution have a negative reduced cost
+    /*
     FloatType redCostTemp = 0.0;
     for(int j=0; j < numSol; ++j)
     {
@@ -574,176 +580,25 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     for(int i=0; i < numSol; ++i)
         vetRedCost[i] = (double)vetRedCostFT[i];
-
+    */
     //std::cout<<"["<<minDistG<<", "<<maxDistG<<"]; numSol("<<numSol<<")\n";
 
     return 0;
 }
 
 
-bool VrpTW_DecompLabelingNS::exactPricing(const LabelingAlgorithmNS::Vet3D_ResCost&          vetMatResCost,
-                                          const FloatType                                    startVal,
-                                          Eigen::Matrix<double, -1, 1, Eigen::ColMajor>&     vetColSolX,
-                                          InstanciaNS::InstVRP_TW&                           instVrpTw,
-                                          double&                                            cost)
-{
 
-    static GRBEnv env;
-    static GRBModel* ptrModel = nullptr;
-    static GRBVar* vetVarX    = nullptr;
-    static GRBVar* vetVarU    = nullptr;
-
-    if(!ptrModel)
-    {
-
-        ptrModel = new GRBModel(env);
-        vetVarX  = ptrModel->addVars(instVrpTw.numClientes*instVrpTw.numClientes, GRB_BINARY);
-        vetVarU  = ptrModel->addVars(instVrpTw.numClientes, GRB_CONTINUOUS);
-
-
-
-        GRBLinExpr linExpr;
-        for(int j=1; j < instVrpTw.numClientes; ++j)
-        {
-
-            linExpr += vetVarX[getIndex(0, j, instVrpTw.numClientes)];
-        }
-
-        ptrModel->addConstr(linExpr, '=', 1, "Constr_0");
-
-        // \sum_{j \in V, j \not = 0} x_{j,0} = numVeic
-        linExpr = 0;
-        for(int j=1; j < instVrpTw.numClientes; ++j)
-        {
-
-            linExpr += vetVarX[getIndex(j, 0, instVrpTw.numClientes)];
-        }
-
-        ptrModel->addConstr(linExpr, '=', 1, "Constr_1");
-
-
-
-        for(int j=1; j < instVrpTw.numClientes; ++j)
-        {
-
-            GRBLinExpr grbLinExpr = 0;
-
-            for(int i = 0; i < instVrpTw.numClientes; ++i)
-            {
-                if(i != j)
-                    grbLinExpr += vetVarX[getIndex(i, j, instVrpTw.numClientes)];
-            }
-
-            GRBLinExpr grbLinExpr1 = 0;
-
-            for(int i = 0; i < instVrpTw.numClientes; ++i)
-            {
-                if(i != j)
-                    grbLinExpr += -vetVarX[getIndex(j, i, instVrpTw.numClientes)];
-            }
-
-
-            //if(modelo3Index)
-            ptrModel->addConstr(grbLinExpr + grbLinExpr1 == 0, "Restricao_2_j_" + std::to_string(j));
-        }
-
-        const int capacidade = instVrpTw.capVeic;
-        for(int i=1; i < instVrpTw.numClientes; ++i)
-        {
-            for(int j=1; j < instVrpTw.numClientes; ++j)
-            {
-                if(i != j)
-                {
-                    GRBLinExpr linExpr = 0;
-
-                    // uj - ui + Q(1-xijk)>=  qj
-                    linExpr = -vetVarU[i] + vetVarU[j] + capacidade * (1-vetVarX[getIndex(i, j, instVrpTw.numClientes)]);
-                    double rhs = instVrpTw.vetClieDem[j];
-                    ptrModel->addConstr(linExpr >= rhs, "Restricao_3_ij_" + std::to_string(i)+"_"+std::to_string(j));
-                }
-            }
-        }
-
-        ptrModel->addConstr(vetVarU[0] <= 0, "Restricao_6_i_" + std::to_string(0));
-        ptrModel->addConstr(vetVarU[0] >= 0, "Restricao_7_i_" + std::to_string(0));
-
-    }
-
-    GRBLinExpr funcObj = startVal;
-
-    for(int i=0; i < instVrpTw.numClientes; ++i)
-    {
-        for(int j=0; j < instVrpTw.numClientes; ++j)
-        {
-            if(i == j)
-                continue;
-
-            FloatType coeef = vetMatResCost(i, j, 0);
-            funcObj += coeef*vetVarX[getIndex(i, j, instVrpTw.numClientes)];
-        }
-    }
-
-    ptrModel->setObjective(funcObj, GRB_MINIMIZE);
-    ptrModel->set(GRB_DoubleParam_BestObjStop, -0.00000009);
-    ptrModel->set(GRB_IntParam_MIPFocus, 1);
-    ptrModel->set(GRB_IntParam_Threads, 4);
-    ptrModel->set(GRB_StringParam_NodefileDir, "nodeDir");
-
-    ptrModel->update();
-    ptrModel->optimize();
-
-
-    vetColSolX.setZero();
-
-
-    int i = 0;
-    const int num = instVrpTw.numClientes*instVrpTw.numClientes;
-
-    std::cout<<"0 ";
-    /*
-    vetRoteG.push_back(0);
-
-    do
-    {
-        int j;
-        for(j=0; j < num; ++j)
-        {
-            if(vetVarX[getIndex(i, j, instVrpTw.numClientes)].get(GRB_DoubleAttr_X) >= 0.99)
-            {
-                vetColSolX[getIndex(i, j, instVrpTw.numClientes)] = 1.0;
-                std::cout<<j<<" ";
-                vetRoteG.push_back(j);
-                break;
-            }
-        }
-
-        i = j;
-    }
-    while(i != 0);
-    */
-    std::cout<<"\n";
-
-    cost = ptrModel->get(GRB_DoubleAttr_ObjVal);
-
-    if(cost < -DW_DecompNS::TolObjSubProb)
-        return true;
-    else
-        return false;
-
-}
-
-
-void VrpTW_DecompLabelingNS::VrpLabelingSubProb::setTypeLabelToForward()
+void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::setTypeLabelToForward()
 {
     typeLabel = LabelingAlgorithmNS::AlgForward;
 }
 
-void VrpTW_DecompLabelingNS::VrpLabelingSubProb::setTypeLabelToBackward()
+void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::setTypeLabelToBackward()
 {
     typeLabel = LabelingAlgorithmNS::AlgBackward;
 }
 
-void VrpTW_DecompLabelingNS::VrpLabelingSubProb::
+void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::
      convertRouteIntoLabel(const TestNS::Route& route, LabelingAlgorithmNS::Label* label)
 {
     //label->vetResources.setZero();
@@ -771,8 +626,12 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 }
 
 
-VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVrpTw, int dim_, int maxNoOfCuts_, double eps)
+Cvrp_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVrpTw, int dim_, int maxNoOfCuts_, double eps)
 {
+    std::printf("*****************************CREATE_CAPACITY_CUT*****************************\n");
+    std::printf("*****************************************************************************\n\n");
+
+
     capacity 	= instVrpTw.capVeic;
     dim      	= dim_;
     maxNoOfCuts = maxNoOfCuts_;
@@ -810,7 +669,7 @@ VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVr
 
             if(createMap)
             {	//std::printf("(%d; %d): %i\n", i, j, next);
-                (*mapArcToIndex)[getEdge(i,j)] = next;
+                (*mapArcToIndex)[{i,j}] = next;
             }
 
             edgeHead[next] = i;
@@ -822,24 +681,31 @@ VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVr
 
     if(createMap)
         list = Eigen::VectorXi(numCust+1);
+
+    std::printf("*****************************************************************************\n");
+    std::printf("*****************************************************************************\n\n");
 }
 
-VrpTW_DecompLabelingNS::CapacityCut::~CapacityCut()
+Cvrp_DecompLabelingNS::CapacityCut::~CapacityCut()
 {
     delete []edgeHead;
     delete []edgeTail;
     delete []edgeX;
+    delete mapArcToIndex;
 
     CMGR_FreeMemCMgr(&cutsCMP);
     CMGR_FreeMemCMgr(&oldCutsCMP);
 }
-int VrpTW_DecompLabelingNS::CapacityCut::operator()(DW_DecompNS::DW_DecompNode& decompNode)
+int Cvrp_DecompLabelingNS::CapacityCut::operator()(DW_DecompNS::DW_DecompNode& decompNode)
 {
     std::printf("*************************************************************************\n");
     std::printf("***************************CAPACITY_CUT**********************************\n\n");
 
-    // Convert the arc solution for the edge one
-    convertArcSolution(decompNode.vetSolX);
+    for(int i=0; i < edgeSize; ++i)
+        edgeX[i] = 0.0;
+
+    for(int i=0; i < edgeSize; ++i)
+        edgeX[i] = decompNode.vetSolX[i];
 
     // Separate the capacity cuts
     CAPSEP_SeparateCapCuts(numCust, demand, capacity, edgeSize, edgeTail, edgeHead, edgeX, oldCutsCMP, maxNoOfCuts,
@@ -883,77 +749,65 @@ int VrpTW_DecompLabelingNS::CapacityCut::operator()(DW_DecompNS::DW_DecompNode& 
     return size;
 };
 
-void VrpTW_DecompLabelingNS::CapacityCut::convertArcSolution(const Eigen::VectorXd& vetX)
+
+void  Cvrp_DecompLabelingNS::CapacityCut::createInducedSubGraphArcs(int listSize, BranchAndPriceNS::RobustCut& cut)
 {
-
-    int numNodes = numCust+1;
-
-    for(int i=0; i < edgeSize; ++i)
-        edgeX[i] = 0.0;
-
-    int i,j, index;
-
-    for(int t=0; t < vetX.size(); ++t)
-    {
-        reverseIndex(t, numNodes, i, j);
-        if(i != j)
-        {
-            index = (*mapArcToIndex).at(getEdge(i,j));
-            edgeX[index] += vetX[t];
-
-            if(edgeX[index] > 1.0)
-            {
-                if(j > i)
-                    std::cout<<"Edge: ("<<i<<", "<<j<<") have a value greter then 1\n";
-                else
-                    std::cout<<"Edge: ("<<j<<", "<<i<<") have a value greter then 1\n";
-            }
-        }
-    }
-
-    for(int i=0; i < edgeSize; ++i)
-        edgeX[i] = std::min(edgeX[i], 1.0);
-
-
-    std::printf("edgeX: ");
-    for(int i=0; i < edgeSize; ++i)
-        std::printf("%.1f ", edgeX[i]);
-
-    std::cout<<"\n\n";
-
-}
-
-std::pair<int,int> VrpTW_DecompLabelingNS::CapacityCut::getEdge(int i, int j)
-{
-
-    if(i < j)
-        return {i,j};
-    else
-        return {j,i};
-}
-
-void  VrpTW_DecompLabelingNS::CapacityCut::createInducedSubGraphArcs(int listSize, BranchAndPriceNS::RobustCut& cut)
-{
-
-    int numNodes = numCust + 1;
 
     for(int i=0; i < listSize; ++i)
     {
+        int custI = list[i];
+
         for(int j=0; j < listSize; ++j)
         {
             if(i == j)
                 continue;
 
-            int index0 = getIndex(i, j, numNodes);
-            int index1 = getIndex(j, i, numNodes);
+            int custJ = list[j];
 
-            cut.vetX.coeffRef(index0) = 1.0;
-            cut.vetX.coeffRef(index1) = 1.0;
+            std::pair<int, int> edege;
+            if(custI < custJ)
+                edege = {custI, custJ};
+            else
+                edege = {custJ, custI};
+
+            int index = mapArcToIndex->at(edege);
+            cut.vetX.coeffRef(index) = 1.0;
         }
     }
 }
 
+void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::createMaster(GRBModel& model)
+{
 
+    int numVars = (instVrpTw->numClientes*(instVrpTw->numClientes-1))/2;
+    GRBVar* vetVar = model.addVars(numVars, GRB_BINARY);
+
+
+    for(int i=0; i < instVrpTw->numClientes; ++i)
+    {
+        GRBLinExpr linExpr;
+
+        for(int j=0; j < instVrpTw->numClientes; ++j)
+        {
+            if(i == j)
+                continue;
+
+            std::pair<int,int> edge;
+            if(i < j)
+                edge = {i,j};
+            else
+                edge = {j,i};
+
+            int index = mapEdgeToLinearIndex.at(edge);
+            linExpr += vetVar[index];
+
+        }
+
+        model.addConstr(linExpr >= 2);
+    }
+
+
+}
 
 
 

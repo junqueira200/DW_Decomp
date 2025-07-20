@@ -162,7 +162,7 @@ namespace DW_DecompNS
 
     struct AuxData
     {
-
+        /// For each subproblem keeps the start and the size of the variables
         Vector<std::pair<int, int>> vetPairSubProb;
 
         Eigen::RowVectorXd          vetRowRmlpPi;

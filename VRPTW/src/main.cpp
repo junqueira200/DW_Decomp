@@ -3,6 +3,7 @@
 #include "VrpTW_Decomp.h"
 #include <filesystem>
 #include "VrpTW_DecompLabeling.h"
+#include "Cvrp_DecompLabeling.h"
 #include "LabelingAlgorithm.h"
 #include "MemoryPool.h"
 #include "BranchAndPrice.h"
@@ -57,7 +58,8 @@ int main(int argv, char **argc)
 
         //getSubInstancia(15, instVrpTw);
 
-        VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
+        //VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
+        Cvrp_DecompLabelingNS::CvrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
 
         if(argv == 3)
         {
@@ -79,7 +81,13 @@ int main(int argv, char **argc)
         //VrpSubProb vrpSubProb(grbEnv, instVrpTw);
 
         DW_DecompNS::AuxData auxVectors;
-        auxVectors.vetPairSubProb.push_back(std::make_pair(0, instVrpTw.numClientes * instVrpTw.numClientes));
+        //auxVectors.vetPairSubProb.push_back(std::make_pair(0, instVrpTw.numClientes * instVrpTw.numClientes));
+        auxVectors.vetPairSubProb.push_back(std::make_pair(0, ((instVrpTw.numClientes * (instVrpTw.numClientes-1))/2)));
+
+        for(std::pair<int,int>& pair:auxVectors.vetPairSubProb)
+        {
+            std::printf("%d; %d\n", pair.first, pair.second);
+        }
 
         setAlarm(30.0*60); // 1.5 min timer
 
@@ -96,7 +104,7 @@ int main(int argv, char **argc)
 
         Eigen::VectorXd vetSol;
 
-        CapacityCut capacityCut(instVrpTw, 5, 10, 0.00005);
+        //CapacityCut capacityCut(instVrpTw, 5, 10, 0.00005);
 
         std::cout<<"sizeof(Label): "<<sizeof(Label)<<"\n";
         std::cout<<"vetNumSteps r0: "<<vrpLabelingSubProb.labelingData.vetNumSteps[0]<<"\n";
@@ -110,7 +118,7 @@ int main(int argv, char **argc)
                                 (SearchDataInter*)&minFuncObj,
                                 (PrimalHeuristicInter*)&simpleDiving,
                                 (BranchInter*)&branch,
-                                (RobustCutGenerator*)&capacityCut,
+                                nullptr,//(RobustCutGenerator*)&capacityCut,
                                 statisticD);
 
 
