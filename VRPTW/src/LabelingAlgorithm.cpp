@@ -662,12 +662,14 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             label->vetRoute[label->tamRoute-1] = label->vetRoute[0];
             auto &vetRoute = label->vetRoute;
 
-
+            //std::cout<<"Index: ";
             for(int i = 0; i < (label->tamRoute - 1); ++i)
             {
                 int index = mapArcToIndex.at({vetRoute[i], vetRoute[i+1]});
+                //std::cout<<index<<" ";
                 matColX(index, l) = 1.0;
             }
+            //std::cout<<"\n\n";
 
             vetRedCost[l] = label->vetResources[0];
         }
@@ -2444,4 +2446,55 @@ void LabelingAlgorithmNS::writeNgSet(Label* label, const NgSet& ngSet)
         if(ngSet.contain(cliJ, cliI))
             label->bitSetNg[cliJ] = true;
     }
+}
+
+
+Label* LabelingAlgorithmNS::
+       mergeForwardAndBackward(const Label& forward, const Label& backward, const ArrayResources& vetMaxResources,
+                               const MatBoundRes& vetVetBound, int numResorces)
+{
+
+    if(forward.typeLabel != Forward)
+    {
+        std::printf("Error\n foreard label is not of the correct type!\n");
+        PRINT_THROW();
+    }
+
+    if(backward.typeLabel != Backward)
+    {
+        std::printf("Error\n backward label is not of the correct type!\n");
+        PRINT_THROW();
+    }
+
+    if(forward.cust != backward.cust)
+    {
+        std::printf("");
+        PRINT_THROW();
+    }
+
+    Label* result = labelPoolG.getT();
+    result->typeLabel = Forward;
+    result->vetResources[0] = forward.vetResources[0] + backward.vetResources[0];
+
+    if(result->vetResources[0] >= -DW_DecompNS::TolObjSubProb)
+    {
+        labelPoolG.delT(result);
+        return nullptr;
+    }
+
+    bool resourceOk = true;
+    for(int i=1; i < numResorces; ++i)
+    {
+        result->vetResources[i] = forward.vetResources[i] + (vetMaxResources[i]-backward.vetResources[i]);
+        resourceOk = resourceOk && result->vetResources[i] <= vetVetBound(backward.cust, i).upperBound;
+        resourceOk = resourceOk && result->vetResources[i] >= vetVetBound(backward.cust, i).lowerBound;
+    }
+
+    if(!resourceOk)
+    {
+        labelPoolG.delT(result);
+        return nullptr;
+    }
+
+    return result;
 }

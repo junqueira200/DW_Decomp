@@ -198,6 +198,9 @@ namespace LabelingAlgorithmNS
 
         void checkVetMatBucketBackward();
         void checkVetMatBucketForward();
+        Vector<std::pair<int,int>> getListOfIndexForMerge(const Label& label, const ArrayResources& vetMaxResouces,
+                                                          int numResources);
+
 
     };
 

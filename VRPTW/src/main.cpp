@@ -31,6 +31,7 @@ using namespace TestNS;
 int main(int argv, char **argc)
 {
 
+
     try
     {
         std::feclearexcept(FE_OVERFLOW);
@@ -58,8 +59,8 @@ int main(int argv, char **argc)
 
         //getSubInstancia(15, instVrpTw);
 
-        //VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
-        Cvrp_DecompLabelingNS::CvrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
+        VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
+        //Cvrp_DecompLabelingNS::CvrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
 
         if(argv == 3)
         {
@@ -76,13 +77,14 @@ int main(int argv, char **argc)
         GRBEnv grbEnv;
         GRBModel model(grbEnv);
         criaMestre(instVrpTw, model);
+        //vrpLabelingSubProb.createMaster(model);
 
         double distVarA = 100*std::max(somaDist(instVrpTw), 0.0);
         //VrpSubProb vrpSubProb(grbEnv, instVrpTw);
 
         DW_DecompNS::AuxData auxVectors;
-        //auxVectors.vetPairSubProb.push_back(std::make_pair(0, instVrpTw.numClientes * instVrpTw.numClientes));
-        auxVectors.vetPairSubProb.push_back(std::make_pair(0, ((instVrpTw.numClientes * (instVrpTw.numClientes-1))/2)));
+        auxVectors.vetPairSubProb.push_back(std::make_pair(0, instVrpTw.numClientes * instVrpTw.numClientes));
+        //auxVectors.vetPairSubProb.push_back(std::make_pair(0, ((instVrpTw.numClientes * (instVrpTw.numClientes-1))/2)));
 
         for(std::pair<int,int>& pair:auxVectors.vetPairSubProb)
         {
@@ -92,7 +94,8 @@ int main(int argv, char **argc)
         setAlarm(30.0*60); // 1.5 min timer
 
         std::cout << "Cria decompNode\n";
-        DW_DecompNS::DW_DecompNode decompNode(grbEnv, model, distVarA, (DW_DecompNS::SubProb*)&vrpLabelingSubProb, 1, auxVectors);
+        DW_DecompNS::DW_DecompNode decompNode(grbEnv, model, distVarA, (DW_DecompNS::SubProb*)&vrpLabelingSubProb, 1,
+                                              auxVectors);
         decompNode.rhsConv = instVrpTw.numVeic;
         //DepthFirst depthFirst;
         MinFuncObj minFuncObj;
@@ -104,7 +107,7 @@ int main(int argv, char **argc)
 
         Eigen::VectorXd vetSol;
 
-        //CapacityCut capacityCut(instVrpTw, 5, 10, 0.00005);
+        CapacityCut capacityCut(instVrpTw, 5, 10, 0.00005);
 
         std::cout<<"sizeof(Label): "<<sizeof(Label)<<"\n";
         std::cout<<"vetNumSteps r0: "<<vrpLabelingSubProb.labelingData.vetNumSteps[0]<<"\n";

@@ -454,6 +454,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     }
     else
     {
+        /*
         if(checkEnumeratedRoutesMid(vetRowPi, matColX, numSol))
         {
             numSol = 0;
@@ -465,6 +466,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
             //std::println("**************************************\n");
             //PRINT_EXIT();
         }
+        */
     }
 
     /*
@@ -787,8 +789,14 @@ VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVr
     edgeX    = new double[edgeSize];
     demand   = new int[numCust+1];
 
+    //std::cout<<"Demand: ";
     for(int i=0; i <= numCust; ++i)
+    {
         demand[i] = instVrpTw.vetClieDem[i];
+        //std::printf("%d ", demand[i]);
+    }
+
+    //std::println();
 
     CMGR_CreateCMgr(&cutsCMP, dim);
     CMGR_CreateCMgr(&oldCutsCMP, dim);
@@ -810,16 +818,21 @@ VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVr
 
             if(createMap)
             {	//std::printf("(%d; %d): %i\n", i, j, next);
-                (*mapArcToIndex)[getEdge(i,j)] = next;
+                (*mapArcToIndex)[{i,j}] = next;
             }
 
-            edgeHead[next] = i;
-            edgeTail[next] = j;
+            edgeHead[next] = j;
+            edgeTail[next] = i;
+            //std::printf("Add: (%d;%d)\n", i, j);
 
             next += 1;
         }
     }
 
+    //std::printf("\n\n");
+
+    if(next != edgeSize)
+        std::printf("next(%d) != edgeSize(%d)\n\n", next, edgeSize);
     if(createMap)
         list = Eigen::VectorXi(numCust+1);
 }
@@ -891,15 +904,18 @@ void VrpTW_DecompLabelingNS::CapacityCut::convertArcSolution(const Eigen::Vector
     for(int i=0; i < edgeSize; ++i)
         edgeX[i] = 0.0;
 
-    int i,j, index;
+    int index;
 
-    for(int t=0; t < vetX.size(); ++t)
+    for(int i=0; i < numNodes; ++i)
     {
-        reverseIndex(t, numNodes, i, j);
-        if(i != j)
+        for(int j=0; j < numNodes; ++j)
         {
+        //reverseIndex(t, numNodes, i, j);
+            if(i == j)
+                continue;
+
             index = (*mapArcToIndex).at(getEdge(i,j));
-            edgeX[index] += vetX[t];
+            edgeX[index] += vetX[getIndex(i, j, numNodes)];
 
             if(edgeX[index] > 1.0)
             {
@@ -907,12 +923,12 @@ void VrpTW_DecompLabelingNS::CapacityCut::convertArcSolution(const Eigen::Vector
                     std::cout<<"Edge: ("<<i<<", "<<j<<") have a value greter then 1\n";
                 else
                     std::cout<<"Edge: ("<<j<<", "<<i<<") have a value greter then 1\n";
-            }
+            }    
         }
     }
 
-    for(int i=0; i < edgeSize; ++i)
-        edgeX[i] = std::min(edgeX[i], 1.0);
+//    for(int i=0; i < edgeSize; ++i)
+//        edgeX[i] = std::min(edgeX[i], 1.0);
 
 
     std::printf("edgeX: ");

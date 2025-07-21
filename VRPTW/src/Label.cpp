@@ -222,3 +222,32 @@ std::string LabelingAlgorithmNS::Bucket::print(int numResorces)
 
     return str;
 }
+
+Vector<std::pair<int,int>> LabelingAlgorithmNS::LabelingData::
+                                   getListOfIndexForMerge(const Label& label, const ArrayResources& vetMaxResouces,
+                                                          int numResources)
+{
+
+    Eigen::Array<double, 1, NumMaxResources> arrayResorces;
+    arrayResorces.setZero();
+
+    Vector<std::pair<int, int>> vetPoints;
+    vetPoints.reserve(10);
+
+
+
+    if(label.typeLabel == Forward)
+    {
+        for(int i=1; i < numResources; ++i)
+            arrayResorces[i] = vetMaxResouces[i] - label.vetResources[i];
+
+
+
+
+    }
+    else
+    {
+
+    }
+
+}

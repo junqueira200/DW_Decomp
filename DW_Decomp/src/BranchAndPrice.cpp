@@ -196,17 +196,18 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
         return vetX_best;
     }
 
-
-    (*robustCutGenerator)(*rootNode);
-    status = rootNode->columnGeneration(auxVectors);
-    if(status != StatusSubProb_Otimo)
+    if(robustCutGenerator)
     {
-        std::cout<<"Root node can't be soved after cuting\n";
-        delete rootNode;
-        vetX_best.setZero();
-        return vetX_best;
+        (*robustCutGenerator)(*rootNode);
+        status = rootNode->columnGeneration(auxVectors);
+        if(status != StatusSubProb_Otimo)
+        {
+            std::cout<<"Root node can't be soved after cuting\n";
+            delete rootNode;
+            vetX_best.setZero();
+            return vetX_best;
+        }
     }
-
 
 
     int numVars = rootNode->uRmlp->get(GRB_IntAttr_NumVars);

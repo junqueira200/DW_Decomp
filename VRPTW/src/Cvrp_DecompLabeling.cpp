@@ -291,28 +291,29 @@ int Cvrp_DecompLabelingNS::CvrpLabelingSubProb::
 
     //vetMatResCost.setVal(0.0);
     //constPiValue += -vetRowPi[0];
+    vetRowPi[1] = 0.0;
 
     for(int i=0; i < instVrpTw->numClientes; ++i)
     {
-        for(int j=i+1; j < instVrpTw->numClientes; ++j)
+        for(int j=0; j < instVrpTw->numClientes; ++j)
         {
             if(i == j)
                 continue;
 
-            FloatType value0 = -(FloatType)((vetRowPi[j+1] + vetRowPi[i+1])/2.0);
+            FloatType value = -(FloatType)((vetRowPi[j+1]));// + vetRowPi[i+1])/2.0);
 
             if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusColGen)
-                value0 += (FloatType)instVrpTw->matDist(i, j);
+                value += (FloatType)instVrpTw->matDist(i, j);
 
 
-             vetMatResCostForward.get(i, j, 0)  = value0;
-             vetMatResCostBackward.get(i, j, 0) = value0;
+             vetMatResCostForward.get(i, j, 0)  = value;
+             vetMatResCostBackward.get(i, j, 0) = value;
         }
 
         if(i != 0)
         {
 
-            FloatType value = -(FloatType)((vetRowPi[1] + vetRowPi[i+1])/2.0);
+            FloatType value = 0.0;//-(FloatType)((vetRowPi[1] + vetRowPi[i+1])/2.0);
 
 
             //vetMatResCost[0](i, 0) = instVrpTw->matDist(i, 0);
@@ -806,7 +807,17 @@ void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::createMaster(GRBModel& model)
         model.addConstr(linExpr >= 2);
     }
 
+    GRBLinExpr obj;
+    for(int i=0; i < instVrpTw->numClientes; ++i)
+    {
+        for(int j=i+1; j < instVrpTw->numClientes; ++j)
+        {
+            int index = mapEdgeToLinearIndex.at({i,j});
+            obj += instVrpTw->matDist(i, j)*vetVar[index];
+        }
+    }
 
+    model.update();
 }
 
 

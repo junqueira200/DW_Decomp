@@ -825,14 +825,13 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
             }
 
-
+            //std::printf("numTotal(%d); numReached(%d)\n\n", numTotal, numReached);
             if(numTotal > 0 && numTotal == numReached)
             {
                 std::cout<<"numTotal("<<numTotal<<"), numReached("<<numReached<<")\n";
                 phaseStatus = PhaseStatus::PhaseStatusTwoPhase;
                 std::cout << "Start PhaseStatusTwoPhase\n";
             }
-
         }
 
         else if(phaseStatus == PhaseStatus::PhaseStatusTwoPhase)
@@ -893,7 +892,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
             }
 
-            std::cout<<"\n";
+            //std::cout<<"\n";
             uRmlp->setObjective(linExpr, GRB_MINIMIZE);
         }
 

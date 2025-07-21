@@ -94,6 +94,9 @@ namespace LabelingAlgorithmNS
 
     void changeTypeAlg(LabelingTypeAlg& labelingTypeAlg);
 
+    Label* mergeForwardAndBackward(const Label& forward, const Label& backward, const ArrayResources& vetMaxResources,
+                                   const MatBoundRes& vetVetBound, int numResorces);
+
     /*
     {
         if(label->typeLabel == Forward)
