@@ -14,7 +14,8 @@ using namespace LabelingAlgorithmNS;
 using namespace TestNS;
 using namespace BranchAndPriceNS;
 
-VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw_, double startDist)
+VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw_, double startDist,
+                                                               LabelingAlgorithmNS::ArrayResources& vetMaxResouces)
 {
     if(instVrpTw_.numClientes > NumMaxCust)
     {
@@ -29,17 +30,37 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     vetStepSize[0].start    = (FloatType)-1.0*startDist;  // 1.0
     vetStepSize[0].end      = (FloatType) 1.0*startDist; // 1.0
 
-    vetStepSize[1].stepSize = 100;  //50
+
+
+    vetStepSize[1].stepSize = 50;  //100
     vetStepSize[1].start    = 0;
     vetStepSize[1].end      = (FloatType)instVrpTw->capVeic;
 
 
-    labelingData  = LabelingAlgorithmNS::LabelingData(vetStepSize, 2, instVrpTw->numClientes+1);
+    labelingData  = LabelingAlgorithmNS::LabelingData(vetStepSize, 2, instVrpTw->numClientes+1, vetMaxResouces);
     vetMatResCostForward  = Vet3D_ResCost(instVrpTw->numClientes+1, instVrpTw->numClientes+1, 2);
     vetMatResCostForward.setVal(0.0);
 
     vetMatResCostBackward = Vet3D_ResCost(instVrpTw->numClientes+1, instVrpTw->numClientes+1, 2);
     vetMatResCostBackward.setVal(0.0);
+
+    double val = vetStepSize[0].start;
+    for(int i=0; i < labelingData.vetNumSteps(0); ++i)
+    {
+        std::cout<<"["<<val<<";"<<val+vetStepSize[0].stepSize<<") ";
+        val += vetStepSize[0].stepSize;
+    }
+
+    std::cout<<"\n\n";
+
+    val = vetStepSize[1].start;
+    for(int i=0; i < labelingData.vetNumSteps(1); ++i)
+    {
+        std::cout<<"["<<val<<";"<<val+vetStepSize[1].stepSize<<") ";
+        val += vetStepSize[1].stepSize;
+    }
+
+    std::cout<<"\n";
 
     for(int i=0; i < instVrpTw->numClientes+1; ++i)
     {
@@ -64,7 +85,6 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     //vetVetResBound[0].resize(instVrpTw->numClientes+1);
     //vetVetResBound[1].resize(instVrpTw->numClientes+1);
 
-    double distTotal = instVrpTw->sumDist();
 
     Bound bound0;
     bound0.lowerBound = -std::numeric_limits<FloatType>::infinity();

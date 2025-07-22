@@ -12,6 +12,17 @@
 
 namespace LabelingAlgorithmNS
 {
+    /// Stores the start indexes for the reduced cost and demand
+    typedef Eigen::Array<int, 1, 2> IndexStart;
+    /// Stores the end indexes for the reduced cost and demand
+    typedef Eigen::Array<int, 1, 2> IndexEnd;
+
+    struct Index
+    {
+        IndexStart start;
+        IndexEnd   end;
+    };
+
     enum TypeLabel
     {
         Forward,
@@ -146,6 +157,14 @@ namespace LabelingAlgorithmNS
         /// Access first the resorce
         Vector<Matrix<Bound, false>>    vetMatBound;
 
+        /// Each cell has 2 index for start and end. The index are valid for every
+        ///  label(forward) make a merge in vetMatBucketBackward
+        Eigen::MatrixX<Index>           matForwardRange;
+
+         /// Each cell has 2 index for start and end. The index are valid for every
+        ///  label(backward) make a merge in vetMatBucketForward
+        Eigen::MatrixX<Index>           matBackwardRange;
+
         Eigen::Vector<Step, 2>          vetStepSize;
 
         Eigen::Vector<int, 2>           vetNumSteps;
@@ -159,7 +178,10 @@ namespace LabelingAlgorithmNS
 
         GraphNS::Graph<int> graphBucket;
 
-        LabelingData(const Eigen::Vector<Step, 2> &vetStepSize_, int numMainResources_, int numCust_);
+        ArrayResources vetMaxResources;
+
+        LabelingData(const Eigen::Vector<Step, 2> &vetStepSize_, int numMainResources_, int numCust_,
+                     const ArrayResources& vetMaxResources_);
         LabelingData()=default;
 
         void flushLabel();
@@ -198,13 +220,14 @@ namespace LabelingAlgorithmNS
 
         void checkVetMatBucketBackward();
         void checkVetMatBucketForward();
-        Vector<std::pair<int,int>> getListOfIndexForMerge(const Label& label, const ArrayResources& vetMaxResouces,
-                                                          int numResources);
+        Index getListOfIndexForMerge(const Label& label);
 
+        int doMerge(Label* label, const ArrayResources& vetMaxResources, const MatBoundRes& vetVetBound, int numResorces);
 
     };
 
     bool searchLabel(Label* label, Bucket& bucket);
+    std::string printIndex(const Index& index);
 
 }
 

@@ -35,8 +35,10 @@ Cvrp_DecompLabelingNS::CvrpLabelingSubProb::CvrpLabelingSubProb(InstanciaNS::Ins
     vetStepSize[1].start    = 0;
     vetStepSize[1].end      = (FloatType)instVrpTw->capVeic;
 
+    ArrayResources arrayMaxResorces;
+    arrayMaxResorces[1] = instVrpTw->capVeic;
 
-    labelingData  = LabelingAlgorithmNS::LabelingData(vetStepSize, 2, instVrpTw->numClientes+1);
+    labelingData  = LabelingAlgorithmNS::LabelingData(vetStepSize, 2, instVrpTw->numClientes+1, arrayMaxResorces);
     vetMatResCostForward  = Vet3D_ResCost(instVrpTw->numClientes+1, instVrpTw->numClientes+1, 2);
     vetMatResCostForward.setVal(0.0);
 

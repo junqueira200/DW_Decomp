@@ -58,9 +58,30 @@ int main(int argv, char **argc)
         //return 0;
 
         //getSubInstancia(15, instVrpTw);
+        ArrayResources vetMaxResources;
+        vetMaxResources[1] = instVrpTw.capVeic;
 
-        VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
+        VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist(), vetMaxResources);
         //Cvrp_DecompLabelingNS::CvrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist());
+
+
+        /*
+        ArrayResources vetMaxResouces;
+        vetMaxResouces[1] = instVrpTw.capVeic;
+        Label label;
+        label.typeLabel = Backward;
+        label.active = true;
+        label.cust   = 5;
+        label.vetResources[0] = 0.0;
+        label.vetResources[1] = 149.0;
+
+        Index index = vrpLabelingSubProb.labelingData.getListOfIndexForMerge(label, vetMaxResouces);
+
+        std::printf("Start: %d; %d\n", index.start(0), index.start(1));
+        std::printf("End: %d; %d\n", index.end(0), index.end(1));
+
+        return 0;
+        */
 
         if(argv == 3)
         {

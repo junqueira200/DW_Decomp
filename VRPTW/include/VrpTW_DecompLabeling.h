@@ -64,7 +64,8 @@ namespace VrpTW_DecompLabelingNS
 
         int getNumConvConstr() override {return 1;}
         VrpLabelingSubProb();
-        explicit VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw, double startDis);
+        explicit VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw, double startDis,
+                                    LabelingAlgorithmNS::ArrayResources& vetMaxResouces);
         //int64_t getNumberOfConvConstr() override{return 0;};// {return numSubProb;}
         ~VrpLabelingSubProb() override =default;
         void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;

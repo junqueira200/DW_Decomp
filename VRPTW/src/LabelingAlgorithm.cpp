@@ -887,7 +887,7 @@ void LabelingAlgorithmNS::
  *  *********************************************************************************************
  */
 LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2>& vetStepSize_, int numMainResources_,
-                                                int numCust_)
+                                                int numCust_, const ArrayResources& vetMaxResources_)
 {
     vetStepSize      = vetStepSize_;
     numMainResources = std::min(numMainResources_, 2);
@@ -986,6 +986,40 @@ LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2>& ve
 
         std::cout<<"\n\n";
     }*/
+
+
+    vetMaxResources = vetMaxResources_;
+
+    // Create the index for matForwardRange and matBackwardRang
+
+    Label label;
+    label.cust = 1;
+    label.active = true;
+
+    matBackwardRange.resize(vetNumSteps[0], vetNumSteps[1]);
+    matBackwardRange.setConstant({{-1,-1}, {-1, -1}});
+
+    matForwardRange.resize(vetNumSteps[0], vetNumSteps[1]);
+    matForwardRange.setConstant({{-1,-1}, {-1, -1}});
+
+    for(int i=0; i < vetNumSteps(0); ++i)
+    {
+        for(int j=0; j < vetNumSteps(1); ++j)
+        {
+            label.vetResources[0] = vetMatBound[0](i, j).upperBound;
+            label.vetResources[1] = vetMatBound[1](i, j).upperBound;
+
+            label.typeLabel = Forward;
+            matForwardRange(i, j) = getListOfIndexForMerge(label);
+            std::cout<<printIndex(matForwardRange(i, j))<<"\n\n";
+
+            label.typeLabel = Backward;
+            matBackwardRange(i, j) = getListOfIndexForMerge(label);
+
+
+        }
+    }
+
 
 }
 
@@ -2450,9 +2484,14 @@ void LabelingAlgorithmNS::writeNgSet(Label* label, const NgSet& ngSet)
 
 
 Label* LabelingAlgorithmNS::
-       mergeForwardAndBackward(const Label& forward, const Label& backward, const ArrayResources& vetMaxResources,
+       mergeForwardAndBackward(Label* forwardPtr, Label* backwardPtr, const ArrayResources& vetMaxResources,
                                const MatBoundRes& vetVetBound, int numResorces)
 {
+    if(forwardPtr->typeLabel == Backward)
+        std::swap(forwardPtr, backwardPtr);
+
+    Label& forward  = *forwardPtr;
+    Label& backward = *backwardPtr;
 
     if(forward.typeLabel != Forward)
     {
@@ -2495,6 +2534,8 @@ Label* LabelingAlgorithmNS::
         labelPoolG.delT(result);
         return nullptr;
     }
+
+    // Copy route
 
     return result;
 }

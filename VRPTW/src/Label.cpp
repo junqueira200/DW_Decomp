@@ -1,4 +1,5 @@
 #include "Label.h"
+#include "DW_Decomp.h"
 
 using namespace LabelingAlgorithmNS;
 
@@ -223,31 +224,106 @@ std::string LabelingAlgorithmNS::Bucket::print(int numResorces)
     return str;
 }
 
-Vector<std::pair<int,int>> LabelingAlgorithmNS::LabelingData::
-                                   getListOfIndexForMerge(const Label& label, const ArrayResources& vetMaxResouces,
-                                                          int numResources)
+Index LabelingAlgorithmNS::LabelingData::getListOfIndexForMerge(const Label& label)
 {
 
-    Eigen::Array<double, 1, NumMaxResources> arrayResorces;
+    Eigen::Array<double, 1, 2> arrayResorces;
+    Eigen::Array<int, 1, 2> indexStart, indexEnd;
     arrayResorces.setZero();
+    indexStart.setZero();
+
+    indexEnd(0) = vetNumSteps(0) - 1;
+    indexEnd(1) = vetNumSteps(1) - 1;
 
     Vector<std::pair<int, int>> vetPoints;
     vetPoints.reserve(10);
 
 
+    for(int i=(vetNumSteps(0)-1); i >= 0; --i)
+    {
+        double lb = vetMatBound[0](i, 0).lowerBound;
+        //std::printf("lb(%.2f), res(%.2f)\n", lb, label.vetResources[0]);
+        if( lb == -std::numeric_limits<double>::infinity() || (lb+label.vetResources[0]) < -DW_DecompNS::TolObjSubProb)
+        {
+            indexEnd(0) = i;
+            break;
+        }
+    }
+
 
     if(label.typeLabel == Forward)
     {
-        for(int i=1; i < numResources; ++i)
-            arrayResorces[i] = vetMaxResouces[i] - label.vetResources[i];
+        for(int i=0; i < vetNumSteps(1); ++i)
+        {
+            double ub = vetMatBound[1](0, i).upperBound;
 
-
-
+            if(label.vetResources[1] < ub)
+            {
+                indexStart(1) = i;
+                break;
+            }
+        }
 
     }
     else
     {
+        double forwardDemand = vetMaxResources[1] - label.vetResources[1];
+        for(int i=(vetNumSteps(1)-1); i >= 0; --i)
+        {
+            double lb = vetMatBound[1](0, i).lowerBound;
 
+            if((forwardDemand+lb) <= vetMaxResources[1])
+            {
+                indexEnd(1) = i;
+                break;
+            }
+        }
     }
 
+    return {indexStart, indexEnd};
+}
+
+
+std::string LabelingAlgorithmNS::printIndex(const Index& index)
+{
+    std::string str;
+
+    str += "["+ std::to_string(index.start(0)) + "; " + std::to_string(index.end(0)) + "]\n";
+    str += "["+ std::to_string(index.start(1)) + "; " + std::to_string(index.end(1)) + "]\n";
+
+    return str;
+}
+
+int LabelingAlgorithmNS::LabelingData::doMerge(Label* label, const ArrayResources& vetMaxResources,
+                                               const MatBoundRes& vetVetBound, int numResorces)
+{
+
+    Index* index 		 = nullptr;
+    MatBucket* matBucket = nullptr;
+
+    if(label->typeLabel == Forward)
+    {
+        index = &matForwardRange(label->i, label->j);
+        matBucket = &vetMatBucketBackward[label->cust];
+    }
+    else
+    {
+        index = &matBackwardRange(label->i, label->j);
+        matBucket = &vetMatBucketForward[label->cust];
+    }
+
+
+    for(int i=index->start(0); i <= index->end(0); ++i)
+    {
+        for(int j=index->start(1); j <= index->end(1); ++j)
+        {
+            Bucket& bucket = matBucket->mat(i, j);
+
+            for(int t=0; t < bucket.sizeVetPtrLabel; ++t)
+            {
+                Label* labelAux = bucket.vetPtrLabel[t];
+
+            }
+        }
+    }
 }
