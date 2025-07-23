@@ -138,7 +138,6 @@ void LabelingAlgorithmNS::rmLabel(Label* label)
     labelPoolG.delT(label);
 }
 
-
 void LabelingAlgorithmNS::checkHeap(LabelHeap& heap, LabelingData& lData)
 {
     for(int k=0; k < heap.heapSize; ++k)
@@ -214,39 +213,6 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
 {
     //vetRoteG = {19, 18, 5, 10, 1, 12, 9, 17, 9, 17, 9, 17};
 
-    static bool createMap = true;
-    static std::map<std::pair<int,int>, int> mapArcToIndex;
-
-    if(createMap)
-    {
-        createMap = false;
-        if(arc)
-        {
-            int k=0;
-            for(int i=0; i < numCust-1; ++i)
-            {
-                for(int j=0; j < numCust-1; ++j)
-                {
-                    mapArcToIndex[{i,j}] = k;
-                    k += 1;
-                }
-            }
-        }
-        else
-        {
-            int k = 0;
-            for(int i=0; i < numCust-1; ++i)
-            {
-                for(int j=i+1; j < numCust-1; ++j)
-                {
-                    mapArcToIndex[{i,j}] = k;
-                    mapArcToIndex[{j,i}] = k;
-
-                    k += 1;
-                }
-            }
-        }
-    }
 
     //static Eigen::VectorX<FloatType> vetLowerBoundDist(numCust);
     //const bool vetLowerBoundDistValid =  getDistLowerBound(vetMatResCost, vetLowerBoundDist);
@@ -512,8 +478,8 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                         continue;
                     }
 
-                    removeCycles2(*labelPtrAux, numCust);
-                    updateLabelCost(*labelPtrAux, vetMatResCostForward, labelStart);
+                    //removeCycles2(*labelPtrAux, numCust);
+                    //updateLabelCost(*labelPtrAux, vetMatResCostForward, labelStart);
 
 
                     if(labelPtrAux->vetResources[0] >= -DW_DecompNS::TolObjSubProb)
@@ -536,14 +502,14 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                         continue;
                     }
 
-                    removeCycles2(*labelPtrAux, numCust);
+                    //removeCycles2(*labelPtrAux, numCust);
 
                     // Reverse the array
                     std::reverse(labelPtrAux->vetRoute.begin(),
                                  labelPtrAux->vetRoute.begin()+labelPtrAux->tamRoute);
 
 
-                    updateLabelCost(*labelPtrAux, vetMatResCostForward, labelStart);
+                    //updateLabelCost(*labelPtrAux, vetMatResCostForward, labelStart);
 
 
                     if(labelPtrAux->vetResources[0] >= -DW_DecompNS::TolObjSubProb)
@@ -662,15 +628,12 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             label->vetRoute[label->tamRoute-1] = label->vetRoute[0];
             auto &vetRoute = label->vetRoute;
 
-            //std::cout<<"Index: ";
+
             for(int i = 0; i < (label->tamRoute - 1); ++i)
             {
-                //int index = mapArcToIndex.at({vetRoute[i], vetRoute[i+1]});
                 int index = getIndex(vetRoute[i], vetRoute[i+1], numCust-1);
-                //std::cout<<index<<" ";
                 matColX(index, l) = 1.0;
             }
-            //std::cout<<"\n\n";
 
             vetRedCost[l] = label->vetResources[0];
         }
@@ -887,8 +850,8 @@ void LabelingAlgorithmNS::
  *  *********************************************************************************************
  *  *********************************************************************************************
  */
-LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2>& vetStepSize_, int numMainResources_,
-                                                int numCust_, const ArrayResources& vetMaxResources_)
+LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2> &vetStepSize_, int numMainResources_, int numCust_,
+                     const ArrayResources& vetMaxResources_)
 {
     vetStepSize      = vetStepSize_;
     numMainResources = std::min(numMainResources_, 2);
@@ -988,7 +951,6 @@ LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2>& ve
         std::cout<<"\n\n";
     }*/
 
-
     vetMaxResources = vetMaxResources_;
 
     // Create the index for matForwardRange and matBackwardRang
@@ -1020,7 +982,6 @@ LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2>& ve
 
         }
     }
-
 
 }
 
@@ -1245,7 +1206,7 @@ void LabelingAlgorithmNS::removeCycles2(Label &label, const int numCust)
 
 void LabelingAlgorithmNS::updateLabelCost(Label &label, const Vet3D_ResCost &vetMatResCost, FloatType labelStart)
 {
-    label.vetResources.setZero();
+
     label.vetResources[0] = labelStart;
     for(int i=0; i < (label.tamRoute-1); ++i)
     {
@@ -1253,6 +1214,7 @@ void LabelingAlgorithmNS::updateLabelCost(Label &label, const Vet3D_ResCost &vet
     }
 
 }
+
 
 LabelingAlgorithmNS::Label* LabelingAlgorithmNS::LabelingData::getBestLabel(int cust)
 {
@@ -2481,7 +2443,6 @@ void LabelingAlgorithmNS::writeNgSet(Label* label, const NgSet& ngSet)
             label->bitSetNg[cliJ] = true;
     }
 }
-
 
 Label* LabelingAlgorithmNS::
        mergeForwardAndBackward(Label* forwardPtr, Label* backwardPtr, const ArrayResources& vetMaxResources,

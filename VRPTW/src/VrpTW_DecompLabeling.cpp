@@ -564,6 +564,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     }*/
 
     // Check if solution have a negative reduced cost
+    /*
     FloatType redCostTemp = 0.0;
     for(int j=0; j < numSol; ++j)
     {
@@ -594,6 +595,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         }
 
     }
+
+    */
 
     for(int i=0; i < numSol; ++i)
         vetRedCost[i] = (double)vetRedCostFT[i];
