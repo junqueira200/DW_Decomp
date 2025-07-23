@@ -17,7 +17,7 @@ namespace LabelingAlgorithmNS
     inline bool PrintG         = false;
 
     constexpr int   NumMaxResources   = 2;
-    constexpr int   NumMaxRoute       = 30;
+    constexpr int   NumMaxRoute       = 32;
     constexpr int   NumMaxCust        = 25; //100
     constexpr int   NgSetSize         = 5;
     constexpr int   NumBuckets        = 10;

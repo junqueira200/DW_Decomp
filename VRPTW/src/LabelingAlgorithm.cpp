@@ -665,7 +665,8 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             //std::cout<<"Index: ";
             for(int i = 0; i < (label->tamRoute - 1); ++i)
             {
-                int index = mapArcToIndex.at({vetRoute[i], vetRoute[i+1]});
+                //int index = mapArcToIndex.at({vetRoute[i], vetRoute[i+1]});
+                int index = getIndex(vetRoute[i], vetRoute[i+1], numCust-1);
                 //std::cout<<index<<" ";
                 matColX(index, l) = 1.0;
             }
@@ -1244,7 +1245,7 @@ void LabelingAlgorithmNS::removeCycles2(Label &label, const int numCust)
 
 void LabelingAlgorithmNS::updateLabelCost(Label &label, const Vet3D_ResCost &vetMatResCost, FloatType labelStart)
 {
-
+    label.vetResources.setZero();
     label.vetResources[0] = labelStart;
     for(int i=0; i < (label.tamRoute-1); ++i)
     {
@@ -1252,7 +1253,6 @@ void LabelingAlgorithmNS::updateLabelCost(Label &label, const Vet3D_ResCost &vet
     }
 
 }
-
 
 LabelingAlgorithmNS::Label* LabelingAlgorithmNS::LabelingData::getBestLabel(int cust)
 {
@@ -2521,21 +2521,45 @@ Label* LabelingAlgorithmNS::
         return nullptr;
     }
 
-    bool resourceOk = true;
+    bool resourcesOk = true;
     for(int i=1; i < numResorces; ++i)
     {
         result->vetResources[i] = forward.vetResources[i] + (vetMaxResources[i]-backward.vetResources[i]);
-        resourceOk = resourceOk && result->vetResources[i] <= vetVetBound(backward.cust, i).upperBound;
-        resourceOk = resourceOk && result->vetResources[i] >= vetVetBound(backward.cust, i).lowerBound;
+        resourcesOk = resourcesOk && result->vetResources[i] <= vetVetBound(backward.cust, i).upperBound;
+        resourcesOk = resourcesOk && result->vetResources[i] >= vetVetBound(backward.cust, i).lowerBound;
     }
 
-    if(!resourceOk)
+    if(!resourcesOk)
     {
         labelPoolG.delT(result);
         return nullptr;
     }
 
     // Copy route
+    for(int i=0; i < forward.tamRoute; ++i)
+        result->vetRoute[i] = forward.vetRoute[i];
+
+    int tam = forward.tamRoute;
+    for(int i=(backward.tamRoute-2); i >= 0; --i)
+    {
+        result->vetRoute[tam] = backward.vetRoute[i];
+        tam += 1;
+    }
+
+    result->tamRoute = tam;
+    result->active   = true;
+    result->bitSetNg = forward.bitSetNg | backward.bitSetNg;
+    result->i = 0;
+    result->j = 0;
+
+    //removeCycles2(*result, numCust);
+    //updateLabelCost(*result, vetMatResCostForward, startLabel);
+
+    if(result->vetResources[0] >= DW_DecompNS::TolObjSubProb)
+    {
+        labelPoolG.delT(result);
+        result = nullptr;
+    }
 
     return result;
 }

@@ -472,9 +472,10 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
             PRINT_EXIT();
         }
     }
+    /*
     else
     {
-        /*
+
         if(checkEnumeratedRoutesMid(vetRowPi, matColX, numSol))
         {
             numSol = 0;
@@ -486,8 +487,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
             //std::println("**************************************\n");
             //PRINT_EXIT();
         }
-        */
     }
+    */
 
     /*
     if(!custoRedNeg)
