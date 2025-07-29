@@ -91,8 +91,13 @@ int main(int argv, char **argc)
                 vrpLabelingSubProb.setTypeLabelToBackward();
                 std::cout<<"Seting typeLabel to backward\n";
             }
-            else
+            else if(option == 0)
                 std::cout<<"Seting typeLabel to forward\n";
+            else
+            {
+                vrpLabelingSubProb.setTypeLabelToBidirectional();
+                std::cout<<"Seting typeLabel to bidirectional\n";
+            }
         }
 
         GRBEnv grbEnv;
@@ -128,7 +133,7 @@ int main(int argv, char **argc)
 
         Eigen::VectorXd vetSol;
 
-        CapacityCut capacityCut(instVrpTw, 5, 10, 0.00005);
+        CapacityCut capacityCut(instVrpTw, 5000, 5000, 0.00001);
 
         std::cout<<"sizeof(Label): "<<sizeof(Label)<<"\n";
         std::cout<<"vetNumSteps r0: "<<vrpLabelingSubProb.labelingData.vetNumSteps[0]<<"\n";

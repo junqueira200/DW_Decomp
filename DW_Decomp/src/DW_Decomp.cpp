@@ -1098,19 +1098,21 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 lagrangeDualBound = objRmlp + rhsConv*minRedCost;
                 gap = (std::abs(rhsConv*minRedCost)/objRmlp)*100.0;
 
+                /*
                 if(exactPricing && gap <= GapTolStop)
                 {
                     subProbCustR_neg = false;
                     std::cout<<"Stoping CG by gap tolerance\n";
                 }
+                */
 
                 if(exactPricing)
                     std::cout<<"*";
 
                 if(gap <= GapExactPricing && phaseStatus == PhaseStatus::PhaseStatusColGen)
                 {
-                    exactPricing = true;
-                    std::cout<<"exactPricing\n";
+                    //exactPricing = true;
+                    //std::cout<<"exactPricing\n";
                 }
                 else
                     exactPricing = false;

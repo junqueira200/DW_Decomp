@@ -27,7 +27,21 @@ namespace LabelingAlgorithmNS
     constexpr int   numMaxLabelG      = 2000; // 2000
     constexpr bool  DominaIterBuckets = true;
     constexpr FloatType FloatEp       = 1E-15;
-    constexpr bool  TrackingRoutes    = true;
+    constexpr bool  TrackingRoutes    = false;
+
+    constexpr double MaxFloatType = std::numeric_limits<FloatType>::max();
+    constexpr double MinFloatType = std::numeric_limits<FloatType>::min();
+    constexpr double InfFloatType = std::numeric_limits<FloatType>::infinity();
+
+    constexpr int    MaxInt       = std::numeric_limits<int>::max();
+    constexpr int    MinInt       = std::numeric_limits<int>::min();
+    constexpr int    InfInt       = std::numeric_limits<int>::infinity();
+
+    constexpr int64_t    MaxInt64     = std::numeric_limits<int64_t>::max();
+    constexpr int64_t    MinInt64     = std::numeric_limits<int64_t>::min();
+    constexpr int64_t    InfInt64     = std::numeric_limits<int64_t>::infinity();
+
+
 
     struct Bound
     {

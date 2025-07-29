@@ -1,5 +1,6 @@
 #include "Label.h"
 #include "DW_Decomp.h"
+#include "LabelingAlgorithm.h"
 
 using namespace LabelingAlgorithmNS;
 
@@ -298,6 +299,8 @@ int LabelingAlgorithmNS::LabelingData::doMerge(Label* label, const ArrayResource
                                                const MatBoundRes& vetVetBound, int numResorces)
 {
 
+    //checkLabels();
+
     Index* index 		 = nullptr;
     MatBucket* matBucket = nullptr;
 
@@ -313,17 +316,131 @@ int LabelingAlgorithmNS::LabelingData::doMerge(Label* label, const ArrayResource
     }
 
 
+    // Go through the first index, aka reduced cost
     for(int i=index->start(0); i <= index->end(0); ++i)
     {
+        // Go through the second index, aka demand
         for(int j=index->start(1); j <= index->end(1); ++j)
         {
             Bucket& bucket = matBucket->mat(i, j);
 
+            // Go through labels
             for(int t=0; t < bucket.sizeVetPtrLabel; ++t)
             {
                 Label* labelAux = bucket.vetPtrLabel[t];
 
+                if(label->typeLabel == Forward)
+                {
+                    if(labelAux->typeLabel == Forward)
+                    {
+                        std::printf("Error!, label have type equal to forward, and also labelAux!\n");
+                        PRINT_EXIT();
+                    }
+                }
+                else // Backward
+                {
+                    if(labelAux->typeLabel == Backward)
+                    {
+                        std::printf("Error!, label have type equal to backward, and also labelAux!\n");
+                        PRINT_EXIT();
+                    }
+                }
+
+                Label* result   = mergeForwardAndBackward(label, labelAux, vetMaxResources, vetVetBound, numResorces);
+
+                if(!result)
+                {
+                    continue;
+                }
+
+                int correctPos = -1;
+                Bucket* bucket = dominanceIntraBucket(result->cust, result, *this, nullptr, numResorces, result->cust, correctPos);
+
+                // TODO menory leek! :(
+                if(!bucket)
+                    continue;
+
+                if((bucket->sizeVetPtrLabel+1) > bucket->vetPtrLabel.size())
+                    bucket->vetPtrLabel.conservativeResize(2*bucket->sizeVetPtrLabel);
+
+                for(int p=bucket->sizeVetPtrLabel-1; p >= correctPos; --p)
+                {
+                    int index = (p+1);
+                    bucket->vetPtrLabel[index] = bucket->vetPtrLabel[p];
+                    bucket->vetPtrLabel[index]->posBucket = index;
+                }
+
+                bucket->vetPtrLabel[correctPos] = result;
+                result->posBucket = correctPos;
+                bucket->sizeVetPtrLabel += 1;
+
+                std::cout<<"MERGE:\n"<<*label<<"\n"<<*labelAux<<"\n"<<*result<<"\n\n";
+                //PRINT_EXIT();
+            }
+        }
+    }
+
+    return getNumberOfSolutions();
+
+}
+
+void LabelingAlgorithmNS::LabelingData::checkLabels()
+{
+
+    for(int t=0; t < 2; ++t)
+    {
+        Eigen::VectorX<MatBucket>* vetMatBucket = nullptr;
+        TypeLabel type;
+
+        if(t == 0)
+        {
+            vetMatBucket = &vetMatBucketForward;
+            type = Forward;
+        }
+        else
+        {
+            vetMatBucket = &vetMatBucketBackward;
+            type = Backward;
+        }
+
+        for(int k=0; k < numCust; ++k)
+        {
+            MatBucket& matBucket = (*vetMatBucket)(k);
+            for(int i=0; i < vetNumSteps[0]; ++i)
+            {
+                for(int j=0; j < vetNumSteps[1]; ++j)
+                {
+                    Bucket& bucket = matBucket.mat(i, j);
+
+                    for(int l=0; l < bucket.sizeVetPtrLabel; ++l)
+                    {
+                        Label* label = bucket.vetPtrLabel[l];
+                        if(label->typeLabel != type)
+                        {
+                            std::cout<<"Error in label of ("<<k<<"), pos: ("<<i<<", "<<j<<")\n";
+                            std::cout<<"Label Type("<<label->typeLabel<<") shuld be: "<<type<<"\n\n";
+                            std::cout<<*label<<"\n\n";
+                            PRINT_EXIT();
+
+                        }
+
+                        if(label->cust != k)
+                        {
+                            std::cout<<"Error in label of ("<<k<<"), pos: ("<<i<<", "<<j<<")\n";
+                            std::cout<<"Cust("<<label->cust<<") shuld be "<<k<<"\n";
+                            std::cout<<*label<<"\n\n";
+                            PRINT_EXIT();
+                        }
+                    }
+                }
             }
         }
     }
 }
+
+
+
+
+
+
+

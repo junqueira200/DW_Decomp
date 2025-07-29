@@ -246,7 +246,7 @@ bool  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
             writeNgSet(label, ngSet);
             int pos = -1;
-            Bucket* bucket = dominanceIntraBucket(instVrpTw->numClientes, label, labelingData, labelHeap, 2,
+            Bucket* bucket = dominanceIntraBucket(instVrpTw->numClientes, label, labelingData, &labelHeap, 2,
                                                   instVrpTw->numClientes, pos);
 
             if(bucket != nullptr)
@@ -429,7 +429,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 // TODO remove comments!
     if(!exact)
     {
-        for(int i = 2; i <= 2; i += 1)
+        for(int i = 2; i <= 4; i += 2)
         {
             //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
             matColX.setZero();
@@ -514,6 +514,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     //redCost = (double)redCostFT;
     vetCooefRestConv[0] = 1;
 
+
+    std::cout<<"*************\n\n";
 
 /*    if(numSol == 0)
     {
@@ -769,6 +771,11 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::setTypeLabelToBackward()
     typeLabel = LabelingAlgorithmNS::AlgBackward;
 }
 
+void VrpTW_DecompLabelingNS::VrpLabelingSubProb::setTypeLabelToBidirectional()
+{
+    typeLabel = LabelingAlgorithmNS::AlgBidirectional;
+}
+
 void VrpTW_DecompLabelingNS::VrpLabelingSubProb::
      convertRouteIntoLabel(const TestNS::Route& route, LabelingAlgorithmNS::Label* label)
 {
@@ -845,8 +852,8 @@ VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVr
                 (*mapArcToIndex)[{i,j}] = next;
             }
 
-            edgeHead[next] = j;
-            edgeTail[next] = i;
+            edgeHead[next] = i;
+            edgeTail[next] = j;
             //std::printf("Add: (%d;%d)\n", i, j);
 
             next += 1;

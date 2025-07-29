@@ -173,6 +173,8 @@ namespace LabelingAlgorithmNS
         EigenMatrixRowI                 matBucketIndex;
 
         int numMainResources;
+
+        /// Have a copy of the deposit
         int numCust;
         int numMaxSteps;
 
@@ -223,6 +225,14 @@ namespace LabelingAlgorithmNS
         Index getListOfIndexForMerge(const Label& label);
 
         int doMerge(Label* label, const ArrayResources& vetMaxResources, const MatBoundRes& vetVetBound, int numResorces);
+
+        inline __attribute__((always_inline))
+        int getSecondDeposit(){return numCust-1;}
+
+        inline __attribute__((always_inline))
+        int getNumberOfSolutions(){ return vetMatBucketForward[getSecondDeposit()].mat(0,0).sizeVetPtrLabel;}
+
+        void checkLabels();
 
     };
 

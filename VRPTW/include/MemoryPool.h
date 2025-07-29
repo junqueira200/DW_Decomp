@@ -140,6 +140,8 @@ namespace MemoryPool_NS
                 p_tTemp = p_tDelT[lastPosDel];
                 p_tDelT[lastPosDel] = nullptr;
                 nextPosVetSolDel = lastPosDel;
+
+                //memset(p_tTemp, 0, sizeof(T));
                 return p_tTemp;
                 //return p_tTemp;
             }
@@ -171,6 +173,7 @@ namespace MemoryPool_NS
                     ++proxT.iterator;
                 }
 
+                //memset(p_tTemp, 0, sizeof(T));
                 return p_tTemp;
 
             }

@@ -1,1 +1,9 @@
 - Critério para dominancia inter buckets
+
+Como medir a dificuldade de uma instância?
+
+Ideia:
+
+    Gerar rotas/bins aleatórios e testar a viabilidade (de forma exaustiva)
+
+    v = Val/total

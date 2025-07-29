@@ -23,12 +23,12 @@ int main()
     char IntegerAndFeasible;
 
     int n_customers = 4;
-    int noOfEdeges = 6;
+    int noOfEdeges = 10;
     int demand[] = {0, 8, 18, 1, 13};
     int capacity = 20;
 
-    int edge_tail[] = {0, 0, 0, 0, 1, 1, 1, 2, 2, 3};
-    int edge_head[] = {1, 2, 3, 4, 2, 3, 4, 3, 4, 4};
+    int edge_head[] = {0, 0, 0, 0, 1, 1, 1, 2, 2, 3};
+    int edge_tail[] = {1, 2, 3, 4, 2, 3, 4, 3, 4, 4};
 
     double edge_x[] = {0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.0, 0.5, 0.5, 0.5};
 

@@ -89,13 +89,14 @@ namespace LabelingAlgorithmNS
                                         int dest, int& correctPos);
 
     //inline __attribute__((always_inline))
-    Bucket* dominanceIntraBucket(int cust, Label* label, LabelingData& lData, LabelHeap& labelHeap, int numRes,
+    Bucket* dominanceIntraBucket(int cust, Label* label, LabelingData& lData, LabelHeap* labelHeap, int numRes,
                                  int dest, int& correctPos);
 
     void changeTypeAlg(LabelingTypeAlg& labelingTypeAlg);
 
     Label* mergeForwardAndBackward(Label* forwardPtr, Label* backwardPtr, const ArrayResources& vetMaxResources,
                                    const MatBoundRes& vetVetBound, int numResorces);
+
 
     /*
     {

@@ -61,6 +61,7 @@ namespace VrpTW_DecompLabelingNS
 
         void setTypeLabelToForward();
         void setTypeLabelToBackward();
+        void setTypeLabelToBidirectional();
 
         int getNumConvConstr() override {return 1;}
         VrpLabelingSubProb();
