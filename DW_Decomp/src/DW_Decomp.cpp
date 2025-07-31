@@ -1291,7 +1291,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
         //std::cout<<"GAP("<<gap<<"%)\n";
 
-        //if((itCG%5) == 0)
+        if((itCG%5) == 0)
         {
             //std::cout<<"\t"<<itCG<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"%\"\n";
             std::cout<<std::format("\t{0}\t{1:.1f}\t{2:.1f}\t{3:.1f}%\n", itCG, objRmlp, lagrangeDualBound, gap);

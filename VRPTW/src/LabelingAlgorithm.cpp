@@ -59,34 +59,16 @@ void LabelingAlgorithmNS::cleanVetRouteG()
 
 LabelingAlgorithmNS::NgSet::NgSet()
 {
-    matNgSet = EigenMatrixRowI(NumMaxCust, NgSetSize);//Eigen::MatrixXi(NumMaxCust, NgSetSize);
-    matNgSet.setConstant(-1);
+    //vetNgSet  = Eigen::VectorX<std::bitset<NumMaxCust>>(NumMaxCust);
+    vetNgSet = VetBitSet(NumMaxCust);
 }
 
-// Checks if j is in the ng-set of i; TODO: busca binaria
-bool LabelingAlgorithmNS::NgSet::contain(int i, int j) const
-{
-    if(!active)
-        return true;
-
-    for(int jj=0; jj < NgSetSize; ++jj)
-    {
-        if(matNgSet(i, jj) == j)
-            return true;
-
-        if((jj+1) == ngSetSize)
-            break;
-    }
-
-    return false;
-}
 
 LabelingAlgorithmNS::NgSet::NgSet(int numCust_, int ngSetSize_)
 {
     numCust   = numCust_;
     ngSetSize = ngSetSize_;
-
-    matNgSet = Eigen::MatrixXi(numCust, ngSetSize);
+    vetNgSet  = VetBitSet(numCust);
 }
 
 void LabelingAlgorithmNS::NgSet::setNgSets(const EigenMatrixRowD &matDist)
@@ -115,11 +97,10 @@ void LabelingAlgorithmNS::NgSet::setNgSets(const EigenMatrixRowD &matDist)
         next = 0;
 
         //std::cout<<"\tsort:\n";
-
+        vetNgSet[i] = 0;
         for(int j=0; j < ngSetSize; ++j)
         {
-            matNgSet(i, j) = vet[j].i;
-            //std::cout<<"("<<vet[j].i<<","<<vet[j].dist<<"); ";
+            vetNgSet[i][vet[j].i] = true;
         }
 
         if((i+1) == numCust)
@@ -217,7 +198,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
     //static Eigen::VectorX<FloatType> vetLowerBoundDist(numCust);
     //const bool vetLowerBoundDistValid =  getDistLowerBound(vetMatResCost, vetLowerBoundDist);
     VetBackwardMask vetBackwardMask;
-    matColX.setZero();
+    //matColX.setZero();
     //checkDistance(vetMatResCost[0]);
 
     //dominaceCheck = false;
@@ -250,8 +231,8 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
     labelPoolG.resetPool(false);
     lData.flushLabel();
 
-    static LabelHeap labelHeap(10000);
-    labelHeap.vet.setAll(nullptr);
+    static LabelHeap labelHeap(100000);
+    //labelHeap.vet.setAll(nullptr);
     labelHeap.heapSize = 0;
 
     Label* labelPtr  = labelPoolG.getT();
@@ -282,7 +263,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
         labelPtr->posBucket = 0;
         labelPtr->typeLabel = Forward;
 
-        lData.vetMatBucketForward[0].mat(i, j).vetPtrLabel.resize(10);
+        lData.vetMatBucketForward[0].mat(i, j).vetPtrLabel.resize(1);
         lData.vetMatBucketForward[0].mat(i, j).vetPtrLabel[0]  = labelPtr;
         lData.vetMatBucketForward[0].mat(i, j).sizeVetPtrLabel = 1;
 
@@ -313,22 +294,28 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
     Label* ptrLabelTarget = nullptr;
 
 
-    ArrayResources vetMaxResources;
-    vetMaxResources.setConstant(-std::numeric_limits<FloatType>::max());
-    vetMaxResources[0] = (FloatType)0.0;
+    static ArrayResources vetMaxResources;
+    static bool vetMaxResourcesSet = false;
 
-    for(int r=1; r < numRes; ++r)
+    if(!vetMaxResourcesSet)
     {
-        for(int i=0; i < numCust; ++i)
+        vetMaxResources.setConstant(-MaxFloatType);
+        vetMaxResources[0] = (FloatType)0.0;
+
+        for(int r=1; r < numRes; ++r)
         {
-            if(matBoundRes(i, r).upperBound > vetMaxResources[r])
-                vetMaxResources[r] = matBoundRes(i, r).upperBound;
+            for(int i=0; i < numCust; ++i)
+            {
+                if(matBoundRes(i, r).upperBound > vetMaxResources[r])
+                    vetMaxResources[r] = matBoundRes(i, r).upperBound;
+            }
         }
+
+        vetMaxResourcesSet = true;
+        lData.vetMatBucketForward[dest].mat(0, 0).vetPtrLabel.resize(DW_DecompNS::NumMaxSolSubProb+5);
     }
 
     //std::cout<<"Max Resources: "<<vetMaxResources<<"\n";
-
-    lData.vetMatBucketForward[dest].mat(0, 0).vetPtrLabel.resize(DW_DecompNS::NumMaxSolSubProb+5);
 
     while(!labelHeap.empty() &&
           ((lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel < DW_DecompNS::NumMaxSolSubProb) || exact))
@@ -385,7 +372,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             throw "ERRO";
         }
 
-        if(labelPtr->cust != 0 || labelPtr->cust != dest)
+        if((labelPtr->cust != 0 || labelPtr->cust != dest) && labelingTypeAlg == AlgBidirectional)
         {
             int numLabels = lData.doMerge(labelPtr, vetMaxResources, matBoundRes, numRes);
             if(numLabels >= DW_DecompNS::NumMaxSolSubProb && !exact)
@@ -404,6 +391,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
         //std::cout<<"Extract label("<<labelPtr->vetRoute<<")\n";
         int lastCust = labelPtr->cust;
 
+        /*
         if(!labelPtr->active)
         {
             std::cout<<"labelPtr is not active!\n"<<*labelPtr<<"\n";
@@ -413,6 +401,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             labelPoolG.delT(labelPtr);
             continue;
         }
+        */
 
         if(lastCust == dest && labelPtr->typeLabel == Forward)
         {
@@ -441,12 +430,8 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                 continue;
 
 
-            if(labelPtr->bitSetNg[t] == 1)
+            if(labelPtr->bitSetNg[t] == 1 || t == labelPtr->cust)
                 continue;
-
-            if(t == labelPtr->cust)
-                continue;
-
 
             if(Print && PrintG)
                 std::cout<<"\tt("<<t<<")\n";
@@ -472,13 +457,17 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                            labelPtr->cust, t, ngSet, numRes, vetBackwardMask))
             {
 
-                bool haveRoute = labelHaveRoute(vetRoutesG, labelPtrAux);
+                bool haveRoute = false;
+                if(TrackingRoutes)
+                {
+                    haveRoute = labelHaveRoute(vetRoutesG, labelPtrAux);
+                    if(haveRoute)
+                        std::cout<<"\tFind route("<<printRoute(labelPtrAux)<<") in vector of routes; Parcial route created!\n";
+
+                }
 
                 if(Print && PrintG)
                     std::cout<<"\t"<<*labelPtrAux<<"\n";
-
-                if(haveRoute)
-                    std::cout<<"\tFind route("<<printRoute(labelPtrAux)<<") in vector of routes; Parcial route created!\n";
 
                 int correctPos = 0;
 
@@ -596,7 +585,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                 else if(labelPtrAux->typeLabel == Backward)
                     labelHeap.insertKey(labelPtrAux);
 
-                if(labelPtrAux->cust != 0 || labelPtrAux->cust != dest)
+                if((labelPtrAux->cust != 0 || labelPtrAux->cust != dest) && labelingTypeAlg == AlgBidirectional)
                 {
                     int numLabels = lData.doMerge(labelPtrAux, vetMaxResources, matBoundRes, numRes);
                     if(numLabels >= DW_DecompNS::NumMaxSolSubProb && !exact)
@@ -658,7 +647,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
 
             vetRedCost[l] = label->vetResources[0];
         }
-        std::cout<<numSol<<"\n";
+        //std::cout<<numSol<<"\n";
 
         // TODO remover
         //exit(-1);
@@ -667,7 +656,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
     }
     else
     {
-        std::cout<<"0\n";
+        //std::cout<<"0\n";
         return false;
     }
 }
@@ -716,7 +705,7 @@ bool LabelingAlgorithmNS::
     // Goes through resources
     bool boundOk = true;
 
-    newLabel.typeLabel = label.typeLabel;
+    //newLabel.typeLabel = label.typeLabel;
 
     for(int i=0; i < numResources; ++i)//NumMaxResources; ++i)
     {
@@ -737,14 +726,14 @@ bool LabelingAlgorithmNS::
     newLabel.bitSetNg   = label.bitSetNg;
 
     // Checks if custJ(t) its in custI ngSet
-    if(ngSet.contain(t, custI))
-    {
-        newLabel.bitSetNg[t] = true;
-    }
+    newLabel.bitSetNg[t] = ngSet.contain(t, custI);
 
 
-    for(int i=0; i < label.tamRoute; ++i)
-        newLabel.vetRoute[i] = label.vetRoute[i];
+
+//    for(int i=0; i < label.tamRoute; ++i)
+//        newLabel.vetRoute[i] = label.vetRoute[i];
+
+    memcpy(&newLabel.vetRoute[0], &label.vetRoute[0], label.tamRoute*sizeof(int));
 
     newLabel.vetRoute[label.tamRoute] = t;
     newLabel.tamRoute = label.tamRoute+1;
@@ -765,7 +754,7 @@ bool LabelingAlgorithmNS::
 
     // Goes through resources
     bool boundOk = true;
-    newLabel.typeLabel = label.typeLabel;
+    //newLabel.typeLabel = label.typeLabel;
     newLabel.vetResources[0] = label.vetResources[0] + vetMatResCostBackward(t, custI, 0);
 
     if(Print && PrintG)
@@ -791,18 +780,19 @@ bool LabelingAlgorithmNS::
     newLabel.bitSetNg   = label.bitSetNg;
 
     // Checks if custJ(t) its in custI ngSet
-    if(ngSet.contain(custI, t))
-    {
-        newLabel.bitSetNg[custI] = true;
-    }
+    newLabel.bitSetNg[custI] = ngSet.contain(custI, t);
 
 
-    for(int i=0; i < label.tamRoute; ++i)
-        newLabel.vetRoute[i] = label.vetRoute[i];
+
+
+    //for(int i=0; i < label.tamRoute; ++i)
+    //    newLabel.vetRoute[i] = label.vetRoute[i];
+
+    memcpy(&newLabel.vetRoute[0], &label.vetRoute[0], label.tamRoute*sizeof(int));
 
     newLabel.vetRoute[label.tamRoute] = t;
-    newLabel.tamRoute = label.tamRoute+1;
-    newLabel.active = true;
+    newLabel.tamRoute  = label.tamRoute+1;
+    newLabel.active    = true;
     newLabel.typeLabel = Backward;
 
     return true;
@@ -845,7 +835,7 @@ void LabelingAlgorithmNS::
     labelPtr->j = lData.getIndex(1, labelPtr->vetResources[1]);
     int j = labelPtr->j;
 
-    lData.vetMatBucketBackward[dest].mat(i, j).vetPtrLabel.resize(10);
+    lData.vetMatBucketBackward[dest].mat(i, j).vetPtrLabel.resize(1);
     lData.vetMatBucketBackward[dest].mat(i, j).vetPtrLabel[0]  = labelPtr;
     lData.vetMatBucketBackward[dest].mat(i, j).sizeVetPtrLabel = 1;
 

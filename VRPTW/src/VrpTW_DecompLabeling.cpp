@@ -24,15 +24,17 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
     }
 
     instVrpTw = &instVrpTw_;
+    double mult = 0.5;
+    double numSteps = 2.0;
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 1700.0; // 1700
-    vetStepSize[0].start    = (FloatType)-1.0*startDist;  // 1.0
-    vetStepSize[0].end      = (FloatType) 1.0*startDist; // 1.0
+    vetStepSize[0].stepSize = 5.0;//((2.0*mult)*startDist)/numSteps; // 1700
+    vetStepSize[0].start    = -50;//(FloatType)-mult*startDist;  // 1.0
+    vetStepSize[0].end      = 50;//(FloatType) mult*startDist; // 1.0
 
 
 
-    vetStepSize[1].stepSize = 50;  //100
+    vetStepSize[1].stepSize = instVrpTw->capVeic/numSteps;  //50
     vetStepSize[1].start    = 0;
     vetStepSize[1].end      = (FloatType)instVrpTw->capVeic;
 
@@ -515,7 +517,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     vetCooefRestConv[0] = 1;
 
 
-    std::cout<<"*************\n\n";
+    //std::cout<<"*************\n\n";
 
 /*    if(numSol == 0)
     {

@@ -3,6 +3,10 @@
 
 #include "Aux.h"
 #include "LabelingConstants.h"
+#include <bitset>
+
+
+typedef std::vector<std::bitset<LabelingAlgorithmNS::NumMaxCust>> VetBitSet;
 
 namespace LabelingAlgorithmNS
 {
@@ -11,14 +15,23 @@ namespace LabelingAlgorithmNS
     {
     public:
 
-        EigenMatrixRowI matNgSet;
+        //Eigen::VectorX<std::bitset<NumMaxCust>>
+        VetBitSet vetNgSet;
         int numCust   = NumMaxCust;
         int ngSetSize = NgSetSize;
         bool active   = true;
 
         NgSet();
         NgSet(int numCust, int ngSetSize);
-        [[nodiscard]] bool contain(int i, int j) const;
+
+        inline __attribute__((always_inline))
+        bool contain(int i, int j) const
+        {
+            //if(!active)
+            //    return true;
+            return (bool)vetNgSet[i][j];
+        };
+
         void setNgSets(const EigenMatrixRowD &matDist);
     };
 

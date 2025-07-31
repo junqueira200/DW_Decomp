@@ -374,7 +374,7 @@ int LabelingAlgorithmNS::LabelingData::doMerge(Label* label, const ArrayResource
                 result->posBucket = correctPos;
                 bucket->sizeVetPtrLabel += 1;
 
-                std::cout<<"MERGE:\n"<<*label<<"\n"<<*labelAux<<"\n"<<*result<<"\n\n";
+                //std::cout<<"MERGE:\n"<<*label<<"\n"<<*labelAux<<"\n"<<*result<<"\n\n";
                 //PRINT_EXIT();
             }
         }
