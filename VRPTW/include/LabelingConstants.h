@@ -24,7 +24,7 @@ namespace LabelingAlgorithmNS
     constexpr int   vetPtrLabelSize   = 10;
     constexpr bool  NullFlush         = true;
     constexpr bool  Print             = true;
-    constexpr int   numMaxLabelG      = 2000; // 2000
+    constexpr int   numMaxLabelG      = 2; // 2000
     constexpr bool  DominaIterBuckets = true;
     constexpr FloatType FloatEp       = 1E-15;
     constexpr bool  TrackingRoutes    = false;

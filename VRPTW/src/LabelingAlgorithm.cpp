@@ -343,7 +343,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             if(labelHeap.heapSize > localNumMaxLabel)
             {
                 int max = std::max(labelHeap.heapSize, localNumMaxLabel);
-                localNumMaxLabel =  (int)(max * 1.05);
+                localNumMaxLabel =  (int)(max * 1.02);
             }
 
 
