@@ -13,7 +13,7 @@
 #define CVRP_DECOMPLABELING_H
 
 #include "DW_Decomp.h"
-#include "Instancia.h"
+#include "InstanceVRPTW.h"
 #include "LabelingAlgorithm.h"
 #include "Test.h"
 #include "BranchAndPrice.h"
@@ -42,7 +42,7 @@ namespace Cvrp_DecompLabelingNS
 
         int numSubProb = 1;
         bool convConstIni = false;
-        InstanciaNS::InstVRP_TW* instVrpTw = nullptr;                  // DON'T DELETE!
+        InstanceVRPTW_NS::InstanceVRPTW* instVrpTw = nullptr;                  // DON'T DELETE!
         // Forward
         Eigen::Vector<LabelingAlgorithmNS::Step, 2> vetStepSize;
         LabelingAlgorithmNS::LabelingData           labelingData;
@@ -59,7 +59,7 @@ namespace Cvrp_DecompLabelingNS
 
         int getNumConvConstr() override {return 1;}
         CvrpLabelingSubProb();
-        explicit CvrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw, double startDis);
+        explicit CvrpLabelingSubProb(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, double startDis);
         //int64_t getNumberOfConvConstr() override{return 0;};// {return numSubProb;}
         ~CvrpLabelingSubProb() override =default;
         void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
@@ -100,7 +100,7 @@ namespace Cvrp_DecompLabelingNS
         Eigen::VectorXi list;
 
 
-        CapacityCut(InstanciaNS::InstVRP_TW &instVrpTw, int dim_, int maxNoOfCuts_, double eps);
+        CapacityCut(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, int dim_, int maxNoOfCuts_, double eps);
         ~CapacityCut();
         int operator()(DW_DecompNS::DW_DecompNode& decompNode) override;
         void createInducedSubGraphArcs(int listSize, BranchAndPriceNS::RobustCut& cut);

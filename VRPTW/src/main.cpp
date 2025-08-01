@@ -1,5 +1,5 @@
 #include <iostream>
-#include "Instancia.h"
+#include "InstanceVRPTW.h"
 #include "VrpTW_Decomp.h"
 #include <filesystem>
 #include "VrpTW_DecompLabeling.h"
@@ -10,12 +10,12 @@
 #include "Alarm.h"
 #include "Test.h"
 #include <bits/stdc++.h>
-
+#include "Instancia.h"
 
 //import teste;
 // http://vrp.galgos.inf.puc-rio.br
 
-using namespace InstanciaNS;
+using namespace InstanceVRPTW_NS;
 using namespace VrpTW_DecompNS;
 using namespace LabelingAlgorithmNS;
 using namespace VrpTW_DecompLabelingNS;
@@ -25,8 +25,9 @@ using namespace PrimalHeuristicNS;
 using namespace BranchNS;
 using namespace StatisticsNS;
 using namespace TestNS;
+using namespace InstanciaNS;
 
-
+void convertInstance(const InstanceVRPTW& instanceVrptw, Instancia& instancia);
 
 int main(int argv, char **argc)
 {
@@ -39,7 +40,7 @@ int main(int argv, char **argc)
 
         std::cout<<"sizeof(Label): "<<sizeof(Label)<<"\n";
 
-        InstVRP_TW instVrpTw;
+        InstanceVRPTW instVrpTw;
         std::string strFile(argc[1]);
 
         std::filesystem::path p(strFile);
@@ -52,6 +53,8 @@ int main(int argv, char **argc)
 
         ptr_instVrpG = &instVrpTw;
 
+        Instancia instancia(instVrpTw.numClientes, instVrpTw.numClientes-1, instVrpTw.numVeic);
+        convertInstance(instVrpTw, instancia);
 
         //RouteHash routeHash;
         //enumerateRoutes(instVrpTw, 5, routeHash);
@@ -257,4 +260,16 @@ int main(int argv, char **argc)
      */
 
     return 0;
+}
+
+void convertInstance(const InstanceVRPTW& instanceVrptw, Instancia& instancia)
+{
+
+    for(int i=0; i < instanceVrptw.numClientes; ++i)
+    {
+        for(int j=0; j < instanceVrptw.numClientes; ++j)
+            instancia.matDist.get(i, j) = instanceVrptw.matDist(i, j);
+
+        instancia.vetDemandaCliente[i] = instanceVrptw.vetClieDem[i];
+    }
 }

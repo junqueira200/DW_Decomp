@@ -12,7 +12,7 @@
 #define DW_VRPTW_DECOMPLABELING_H
 
 #include "DW_Decomp.h"
-#include "Instancia.h"
+#include "InstanceVRPTW.h"
 #include "LabelingAlgorithm.h"
 #include "Test.h"
 #include "BranchAndPrice.h"
@@ -47,7 +47,7 @@ namespace VrpTW_DecompLabelingNS
 
         int numSubProb = 1;
         bool convConstIni = false;
-        InstanciaNS::InstVRP_TW* instVrpTw = nullptr;                  // DON'T DELETE!
+        InstanceVRPTW_NS::InstanceVRPTW* instVrpTw = nullptr;                  // DON'T DELETE!
         // Forward
         Eigen::Vector<LabelingAlgorithmNS::Step, 2> vetStepSize;
         LabelingAlgorithmNS::LabelingData           labelingData;
@@ -65,7 +65,7 @@ namespace VrpTW_DecompLabelingNS
 
         int getNumConvConstr() override {return 1;}
         VrpLabelingSubProb();
-        explicit VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw, double startDis,
+        explicit VrpLabelingSubProb(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, double startDis,
                                     LabelingAlgorithmNS::ArrayResources& vetMaxResouces);
         //int64_t getNumberOfConvConstr() override{return 0;};// {return numSubProb;}
         ~VrpLabelingSubProb() override =default;
@@ -106,7 +106,7 @@ namespace VrpTW_DecompLabelingNS
         Eigen::VectorXi list;
 
 
-        CapacityCut(InstanciaNS::InstVRP_TW &instVrpTw, int dim_, int maxNoOfCuts_, double eps);
+        CapacityCut(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, int dim_, int maxNoOfCuts_, double eps);
         ~CapacityCut();
         int operator()(DW_DecompNS::DW_DecompNode& decompNode) override;
         void convertArcSolution(const Eigen::VectorXd& vetX);
@@ -118,7 +118,7 @@ namespace VrpTW_DecompLabelingNS
     bool exactPricing(const LabelingAlgorithmNS::Vet3D_ResCost&          vetMatResCost,
                       const FloatType                                    startVal,
                       Eigen::Matrix<double, -1, 1, Eigen::ColMajor>&     vetColSolX,
-                      InstanciaNS::InstVRP_TW&                           instVrpTw,
+                      InstanceVRPTW_NS::InstanceVRPTW&                   instVrpTw,
                       double&                                            cost);
 
 }

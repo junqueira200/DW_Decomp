@@ -16,7 +16,7 @@ using namespace LabelingAlgorithmNS;
 using namespace TestNS;
 using namespace BranchAndPriceNS;
 
-Cvrp_DecompLabelingNS::CvrpLabelingSubProb::CvrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw_, double startDist)
+Cvrp_DecompLabelingNS::CvrpLabelingSubProb::CvrpLabelingSubProb(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw_, double startDist)
 {
     if(instVrpTw_.numClientes > NumMaxCust)
     {
@@ -629,7 +629,7 @@ void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::
 }
 
 
-Cvrp_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVrpTw, int dim_, int maxNoOfCuts_, double eps)
+Cvrp_DecompLabelingNS::CapacityCut::CapacityCut(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, int dim_, int maxNoOfCuts_, double eps)
 {
     std::printf("*****************************CREATE_CAPACITY_CUT*****************************\n");
     std::printf("*****************************************************************************\n\n");

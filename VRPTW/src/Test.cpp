@@ -13,7 +13,7 @@
 
 using namespace std;
 using namespace TestNS;
-using namespace InstanciaNS;
+using namespace InstanceVRPTW_NS;
 
 // Helper function to find all combinations
 // of size r in an array of size n
@@ -65,7 +65,7 @@ Vector<VectorI> TestNS::findCombination(VectorI &arr, int r)
     return result;
 }
 
-void TestNS::enumerateRoutes(InstanciaNS::InstVRP_TW& instVrp, int numMax, RouteHash& routeHash)
+void TestNS::enumerateRoutes(InstanceVRPTW_NS::InstanceVRPTW& instVrp, int numMax, RouteHash& routeHash)
 {
     VectorI vet;
     Vector<VectorI> vetResult;

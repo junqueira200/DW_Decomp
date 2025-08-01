@@ -14,7 +14,7 @@ using namespace LabelingAlgorithmNS;
 using namespace TestNS;
 using namespace BranchAndPriceNS;
 
-VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::InstVRP_TW &instVrpTw_, double startDist,
+VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw_, double startDist,
                                                                LabelingAlgorithmNS::ArrayResources& vetMaxResouces)
 {
     if(instVrpTw_.numClientes > NumMaxCust)
@@ -29,8 +29,8 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanciaNS::Inst
 
     //vetStepSize[0].stepSize = 400;
     vetStepSize[0].stepSize = 10.0;//  10 // 5 //((2.0*mult)*startDist)/numSteps; // 1700
-    vetStepSize[0].start    = -50;//(FloatType)-mult*startDist;  // 1.0
-    vetStepSize[0].end      = 50;//(FloatType) mult*startDist; // 1.0
+    vetStepSize[0].start    = -50;// -50 // (FloatType)-mult*startDist;  // 1.0
+    vetStepSize[0].end      = 50;//   50 // (FloatType) mult*startDist; // 1.0
 
 
 
@@ -614,7 +614,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 bool VrpTW_DecompLabelingNS::exactPricing(const LabelingAlgorithmNS::Vet3D_ResCost&          vetMatResCost,
                                           const FloatType                                    startVal,
                                           Eigen::Matrix<double, -1, 1, Eigen::ColMajor>&     vetColSolX,
-                                          InstanciaNS::InstVRP_TW&                           instVrpTw,
+                                          InstanceVRPTW_NS::InstanceVRPTW&                           instVrpTw,
                                           double&                                            cost)
 {
 
@@ -806,7 +806,7 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 }
 
 
-VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanciaNS::InstVRP_TW &instVrpTw, int dim_, int maxNoOfCuts_, double eps)
+VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, int dim_, int maxNoOfCuts_, double eps)
 {
     capacity 	= instVrpTw.capVeic;
     dim      	= dim_;

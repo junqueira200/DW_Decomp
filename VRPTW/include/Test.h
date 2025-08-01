@@ -13,7 +13,7 @@
 #define TEST_H
 
 #include "safe_vector.h"
-#include "Instancia.h"
+#include "InstanceVRPTW.h"
 #include <bits/stdc++.h>
 #include "LabelingConstants.h"
 
@@ -44,7 +44,7 @@ namespace TestNS
 
     void combinationUtil(int ind, int r, VectorI &data, Vector<VectorI> &result, VectorI &arr);
     Vector<VectorI> findCombination(VectorI &arr, int r);
-    void enumerateRoutes(InstanciaNS::InstVRP_TW& instVrp, int numMax, RouteHash& routeHash);
+    void enumerateRoutes(InstanceVRPTW_NS::InstanceVRPTW& instVrp, int numMax, RouteHash& routeHash);
     void computeDistance(Route& route);
     void computeHash(Route& route);
     int computeDemand(VectorI& route);

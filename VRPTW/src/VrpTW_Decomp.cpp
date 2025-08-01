@@ -3,7 +3,7 @@
 //
 #include "VrpTW_Decomp.h"
 
-void VrpTW_DecompNS::criaMestre(const InstanciaNS::InstVRP_TW &instVrpTw, GRBModel &model)
+void VrpTW_DecompNS::criaMestre(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model)
 {
     const int NumClie = instVrpTw.numClientes;
 
