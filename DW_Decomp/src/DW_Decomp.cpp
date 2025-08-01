@@ -708,6 +708,11 @@ std::cout<<"ini DW_DecompNode\n";
     vetRmlpConstr = nullptr;
     vetVarArtifRmlp = nullptr;
 
+
+    uRmlp->update();
+    vetRmlpConstr = uRmlp->getConstrs();
+
+
 }
 
 DW_DecompNS::StatusProb DW_DecompNS::DW_DecompNode::columnGeneration(AuxData &auxVect)
@@ -734,6 +739,11 @@ std::cout<<"*******************Column Generation*******************\n\n";
     bool exactPricing = false;
 
     uRmlp->update();
+
+    if(vetRmlpConstr != nullptr)
+        delete []vetRmlpConstr;
+
+
     vetRmlpConstr = uRmlp->getConstrs();
 
     //PhaseStatus phaseStatus = PhaseStatus::PhaseStatusBigM;
@@ -1301,6 +1311,8 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
         //std::cout<<"PI: "<<auxVect.vetRowRmlpPi<<"\n\n";
 
+        //if(itCG == 40)
+        //    return DW_DecompNS::StatusProb::StatusSubProb_Inviavel;
         //delete []vetRmlpConstr;
 
 
@@ -1398,15 +1410,42 @@ std::cout<<"vetColSubProbCooef: "<<auxVect.vetColSubProbCooef.segment(0, numVarS
 
 }
 
+
 void DW_DecompNS::DW_DecompNode::addColumn(const double cost, int k, AuxData &auxVect)
 {
 
     auxVect.updateAuxVetCooef();
     GRBColumn grbColumn;
+    if(vetRmlpConstr == nullptr)
+    {
+        std::cout<<"vetRmlpConstr is null";
+        PRINT_EXIT();
+    }
     grbColumn.addTerms(auxVect.auxVetCooef, vetRmlpConstr, info.numConstrsMaster+info.numConstrsConv);
 
     uRmlp->addVar(0.0, GRB_INFINITY, cost, GRB_CONTINUOUS, grbColumn,
                 "l_"+std::to_string(itCG)+"_"+std::to_string(k));
+}
+
+void  DW_DecompNS::DW_DecompNode::addColumnX(const double cost, int k, AuxData& auxVect, Eigen::VectorXd& vetX)
+{
+    vetVarLambdaCol.push_back(std::make_unique<Eigen::VectorXd>(vetX));
+    Eigen::VectorXd& vetSol = *vetVarLambdaCol[vetVarLambdaCol.size()-1];
+
+    if(setVarLamdaCol.count(SolXHash(vetSol)) == 1)
+    {
+        vetVarLambdaCol.pop_back();
+        return;
+    }
+
+    //std::cout<<"Add: "<<vetSol.transpose()<<"\n";
+
+    setVarLamdaCol.emplace(vetSol);
+    auxVect.vetColCooef.segment(0, info.numConstrsConv) = auxVect.vetColConvCooef;
+
+    auxVect.vetColCooef.segment(info.numConstrsConv, info.numConstrsMaster) = matA*vetSol;
+
+    addColumn(cost, k, auxVect);
 }
 
 double DW_DecompNS::DW_DecompNode::getLagrangeDualBound(double objRmlp, double redCost)

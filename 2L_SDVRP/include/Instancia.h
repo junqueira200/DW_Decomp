@@ -63,6 +63,7 @@ namespace InstanciaNS
         //double veicLargura = 0.0;
 
         bool split      = false;
+        bool packing    = true;
 
         Matrix<double> matDist;
         Matrix<double> matTempo;

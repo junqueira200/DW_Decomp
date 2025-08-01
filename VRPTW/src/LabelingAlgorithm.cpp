@@ -321,7 +321,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
           ((lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel < DW_DecompNS::NumMaxSolSubProb) || exact))
     {
 //std::cout<<"While\n";
-
+        // 																 10                         25
         if((lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel >= 10 && labelHeap.heapSize >= 25 * numCust &&
             !exact))
         {
@@ -336,6 +336,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             std::cout<<"ptrLabelTarget("<<ptrLabelTarget->active<<"): "<<*ptrLabelTarget<<"\n\n";
         }
 
+        /*
         if(labelHeap.heapSize > localNumMaxLabel && DominaIterBuckets)
         {
             lData.dominanceInterBuckets(labelHeap, numRes, localNumMaxLabel, lData.vetMatBucketForward, Backward);
@@ -354,6 +355,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             }
 
         }
+        */
 
         //lData.checkLabels();
 
@@ -547,6 +549,9 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                     labelPoolG.delT(labelPtrAux);
                     continue;
                 }
+
+                if((vetValueOfReducedCostsG.size() + 1) < vetValueOfReducedCostsG.capacity())
+                    vetValueOfReducedCostsG.push_back(labelPtrAux->vetResources[0]);
 
                 if((bucket->sizeVetPtrLabel+1) > NumMaxLabePerBucket && tAux != dest)
                 {
@@ -987,7 +992,7 @@ LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2> &ve
 
             label.typeLabel = Forward;
             matForwardRange(i, j) = getListOfIndexForMerge(label);
-            std::cout<<printIndex(matForwardRange(i, j))<<"\n\n";
+            //std::cout<<printIndex(matForwardRange(i, j))<<"\n\n";
 
             label.typeLabel = Backward;
             matBackwardRange(i, j) = getListOfIndexForMerge(label);

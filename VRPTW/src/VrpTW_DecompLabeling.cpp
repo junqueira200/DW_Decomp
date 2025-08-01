@@ -25,12 +25,12 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
 
     instVrpTw = &instVrpTw_;
     double mult = 0.5;
-    double numSteps = 2.0; // 2
+    double numSteps = 1.0; // 2
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 10.0;//  10 // 5 //((2.0*mult)*startDist)/numSteps; // 1700
-    vetStepSize[0].start    = -50;// -50 // (FloatType)-mult*startDist;  // 1.0
-    vetStepSize[0].end      = 50;//   50 // (FloatType) mult*startDist; // 1.0
+    vetStepSize[0].stepSize = 200.0;//  10 // 5 //((2.0*mult)*startDist)/numSteps; // 1700
+    vetStepSize[0].start    = -70;// -200 -50 // (FloatType)-mult*startDist;  // 1.0
+    vetStepSize[0].end      = 400;//  200 50 // (FloatType) mult*startDist; // 1.0
 
 
 
@@ -46,23 +46,24 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
     vetMatResCostBackward = Vet3D_ResCost(instVrpTw->numClientes+1, instVrpTw->numClientes+1, 2);
     vetMatResCostBackward.setVal(0.0);
 
-    double val = vetStepSize[0].start;
+
+    /*double val = vetStepSize[0].start;
     for(int i=0; i < labelingData.vetNumSteps(0); ++i)
     {
-        std::cout<<"["<<val<<";"<<val+vetStepSize[0].stepSize<<") ";
+        //std::cout<<"["<<val<<";"<<val+vetStepSize[0].stepSize<<") ";
         val += vetStepSize[0].stepSize;
     }
 
-    std::cout<<"\n\n";
+    //std::cout<<"\n\n";
 
     val = vetStepSize[1].start;
     for(int i=0; i < labelingData.vetNumSteps(1); ++i)
     {
-        std::cout<<"["<<val<<";"<<val+vetStepSize[1].stepSize<<") ";
+        //std::cout<<"["<<val<<";"<<val+vetStepSize[1].stepSize<<") ";
         val += vetStepSize[1].stepSize;
     }
-
-    std::cout<<"\n";
+    */
+    //std::cout<<"\n";
 
     for(int i=0; i < instVrpTw->numClientes+1; ++i)
     {

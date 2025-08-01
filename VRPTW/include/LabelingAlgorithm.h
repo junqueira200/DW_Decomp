@@ -26,6 +26,9 @@
 
 namespace LabelingAlgorithmNS
 {
+
+    inline Vector<FloatType> vetValueOfReducedCostsG;
+
     enum LabelingTypeAlg
     {
         AlgForward,

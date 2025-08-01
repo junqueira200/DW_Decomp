@@ -35,14 +35,16 @@ namespace ParseInputNS
         std::string strInst;
         bool        splitInstancia           = false;
         bool        splitVrp                 = false;
-        double      aphaBin                  = 0.0;
-        double      aphaBinEscolhaEp         = 0.0;
-        double      alphaVrp                 = 0.0;
+        double      aphaBin                  = 0.3;
+        double      aphaBinEscolhaEp         = 0.3;
+        double      alphaVrp                 = 0.3;
         int         numItIG                  = 2000;
         double      gapIgReset               = 0.20;
         bool        comprimentoAlturaIguais1 = false;
         bool        cpSat                    = false;
         double      cpSatTime                = -1.0;
+        // 0 Forward, 1 Backard, 2 Bidirectional
+        int         labelingType             = 0;
 
         File file;
         std::string commit = "54f84fa9027eeb1a17566368b19204f726b1e4d0";

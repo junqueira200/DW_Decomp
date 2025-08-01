@@ -28,7 +28,7 @@ namespace DW_DecompNS
     constexpr double TolObjSubProb       = 1E-3;
     // TODO Retornar para 25!
     constexpr int    NumMaxSolSubProb    = 25;//25;
-    constexpr double StabilizationAlpha  = 0.9; // .9 // .45  // 0.60
+    constexpr double StabilizationAlpha  = 0.6; // .9 // .45  // 0.60
     inline bool      Stabilization       = true;
     constexpr double gapLimit            = 1E-3;
     constexpr int    NumCandidatesBranch = 3;
@@ -271,6 +271,7 @@ namespace DW_DecompNS
         StatusProb columnGeneration(AuxData &auxVect);
         void getSubProbCooef(int k, AuxData &auxVect);
         void addColumn(const double cost, int k, AuxData &auxVect);
+        void addColumnX(const double cost, int k, AuxData& auxVect, Eigen::VectorXd& vetX);
         void updateRmlpPi(Eigen::RowVectorXd &vetRowRmlpPi);
         double getLagrangeDualBound(double objRmlp, double redCost);
         void getSolX();
