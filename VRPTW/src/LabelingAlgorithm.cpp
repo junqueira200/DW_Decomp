@@ -336,7 +336,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             std::cout<<"ptrLabelTarget("<<ptrLabelTarget->active<<"): "<<*ptrLabelTarget<<"\n\n";
         }
 
-        /*
+
         if(labelHeap.heapSize > localNumMaxLabel && DominaIterBuckets)
         {
             lData.dominanceInterBuckets(labelHeap, numRes, localNumMaxLabel, lData.vetMatBucketForward, Backward);
@@ -344,7 +344,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             if(labelHeap.heapSize > localNumMaxLabel)
             {
                 int max = std::max(labelHeap.heapSize, localNumMaxLabel);
-                localNumMaxLabel =  (int)(max * 1.02);
+                localNumMaxLabel =  (int)(max * 1.05);
             }
 
 
@@ -355,7 +355,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             }
 
         }
-        */
+
 
         //lData.checkLabels();
 
@@ -551,7 +551,11 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                 }
 
                 if((vetValueOfReducedCostsG.size() + 1) < vetValueOfReducedCostsG.capacity())
+                {
                     vetValueOfReducedCostsG.push_back(labelPtrAux->vetResources[0]);
+                    if(vetValueOfReducedCostsG.size() == 10000000)
+                        computeMeanMaxMin();
+                }
 
                 if((bucket->sizeVetPtrLabel+1) > NumMaxLabePerBucket && tAux != dest)
                 {
@@ -2242,24 +2246,32 @@ bool LabelingAlgorithmNS::checkCompleteDominance(const Label& l0, const Label& l
         //#pragma GCC unroll NumMaxResources
         for(int i=0; i < numResources; ++i)
         {
-            //if(l0.vetResources[i] > l1.vetResources[i])
-            if(doubleGreater(l0.vetResources[i], l1.vetResources[i], FloatEp))
-                return false;
+            if(!doubleEqual(l0.vetResources[i], l1.vetResources[i], FloatEp))
+            {
+                if(doubleGreater(l0.vetResources[i], l1.vetResources[i], FloatEp))
+                    return false;
+            }
         }
     }
     else
     {
         //if(l0.vetResources[0] > l1.vetResources[0])
-        if(doubleGreater(l0.vetResources[0], l1.vetResources[0], FloatEp))
-            return false;
+        if(!doubleEqual(l0.vetResources[0], l1.vetResources[0], FloatEp))
+        {
+            if(doubleGreater(l0.vetResources[0], l1.vetResources[0], FloatEp))
+                return false;
+        }
 
         // Check the resources
         //#pragma GCC unroll NumMaxResources
         for(int i=1; i < numResources; ++i)
         {
             //if(l0.vetResources[i] < l1.vetResources[i])
-            if(doubleLess(l0.vetResources[i], l1.vetResources[i], FloatEp))
-                return false;
+            if(!doubleEqual(l0.vetResources[i], l1.vetResources[i], FloatEp))
+            {
+                if(doubleLess(l0.vetResources[i], l1.vetResources[i], FloatEp))
+                    return false;
+            }
         }
     }
 
@@ -2564,3 +2576,46 @@ Label* LabelingAlgorithmNS::
 
     return result;
 }
+
+
+void  LabelingAlgorithmNS::computeMeanMaxMin()
+{
+    double min, max, mean, median;
+
+    min = MaxFloatType;
+    max = MinFloatType;
+    mean = 0.0;
+
+    for(double val:vetValueOfReducedCostsG)
+    {
+        min = std::min(min, val);
+        max = std::max(max, val);
+        mean += val;
+    }
+
+    std::sort(vetValueOfReducedCostsG.begin(), vetValueOfReducedCostsG.end());
+
+    mean = mean/(FloatType)vetValueOfReducedCostsG.size();
+
+    size_t size = vetValueOfReducedCostsG.size();
+    if(size % 2 == 0)
+    {
+        median = (vetValueOfReducedCostsG[size/2] + vetValueOfReducedCostsG[(size/2)+1])/2.0;
+    }
+    else
+        median = vetValueOfReducedCostsG[size/2];
+
+    std::printf("Min: %.2f\nMax: %.2f\nMean: %.2f\nMedian: %.2f\n\n", min, max, mean, median);
+}
+
+
+
+
+
+
+
+
+
+
+
+

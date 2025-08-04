@@ -17,8 +17,8 @@ namespace LabelingAlgorithmNS
     inline bool PrintG         = false;
 
     constexpr int   NumMaxResources   = 2;
-    constexpr int   NumMaxRoute       = 32;
-    constexpr int   NumMaxCust        = 25; //100
+    constexpr int   NumMaxRoute       = 90;
+    constexpr int   NumMaxCust        = 150; //100
     constexpr int   NgSetSize         = 5;
     constexpr int   NumBuckets        = 10;
     constexpr int   vetPtrLabelSize   = 10;
@@ -26,8 +26,9 @@ namespace LabelingAlgorithmNS
     constexpr bool  Print             = true;
     constexpr int   numMaxLabelG      = 2; // 2000
     constexpr bool  DominaIterBuckets = true;
-    constexpr FloatType FloatEp       = 1E-15;
+    constexpr FloatType FloatEp       = 1E-5;     // 1E-15
     constexpr bool  TrackingRoutes    = false;
+    constexpr int   SizeVetVetRouteIni = 10;
 
     constexpr double MaxFloatType = std::numeric_limits<FloatType>::max();
     constexpr double MinFloatType = std::numeric_limits<FloatType>::min();

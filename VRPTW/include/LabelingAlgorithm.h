@@ -28,6 +28,7 @@ namespace LabelingAlgorithmNS
 {
 
     inline Vector<FloatType> vetValueOfReducedCostsG;
+    void computeMeanMaxMin();
 
     enum LabelingTypeAlg
     {

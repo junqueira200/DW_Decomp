@@ -919,7 +919,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         if(PrintDebug)
             std::cout<<"~UpdatePi\n";
 
-        if(Stabilization && !exactPi)// && phaseStatus == PhaseStatus::PhaseStatusColGen)
+        if(Stabilization && !exactPi && itCG > 0)// && phaseStatus == PhaseStatus::PhaseStatusColGen)
         {
             auxVect.vetRowRmlpSmoothPi = (1.0-StabilizationAlpha)*auxVect.vetRowRmlpSmoothPi +
                                           StabilizationAlpha * (auxVect.vetRowRmlpPi);

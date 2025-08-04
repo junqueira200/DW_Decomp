@@ -28,10 +28,9 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
     double numSteps = 1.0; // 2
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 200.0;//  10 // 5 //((2.0*mult)*startDist)/numSteps; // 1700
-    vetStepSize[0].start    = -70;// -200 -50 // (FloatType)-mult*startDist;  // 1.0
-    vetStepSize[0].end      = 400;//  200 50 // (FloatType) mult*startDist; // 1.0
-
+    vetStepSize[0].stepSize = 100000.0;  //  200.0
+    vetStepSize[0].start    = -50;    //  -70.0
+    vetStepSize[0].end      = 200;    //  400.0
 
 
     vetStepSize[1].stepSize = instVrpTw->capVeic/numSteps;  //50
@@ -113,7 +112,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
     ngSet.setNgSets(instVrpTw->matDist);
     ngSet.active = true;
 
-    enumerateRoutes(*instVrpTw, instVrpTw->numClientes-1, routeHash);
+    //enumerateRoutes(*instVrpTw, instVrpTw->numClientes-1, routeHash);
 
 
 }
@@ -298,6 +297,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     //vetMatResCost.setVal(0.0);
     //constPiValue += -vetRowPi[0];
 
+    bool valNeg = false;
+
     for(int i=0; i < instVrpTw->numClientes; ++i)
     {
         for(int j=0; j < instVrpTw->numClientes; ++j)
@@ -320,6 +321,9 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                 value1 = (FloatType)instVrpTw->matDist(j, i) - (FloatType)vetRowPi[i+1];
             }
 
+            if(!valNeg && value0 < -DW_DecompNS::TolObjSubProb)
+                valNeg = true;
+
              vetMatResCostForward.get(i, j, 0)  = value0;
              vetMatResCostBackward.get(i, j, 0) = value0;
         }
@@ -339,6 +343,13 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
               vetMatResCostForward.get(i, instVrpTw->numClientes, 0)  = value;
               vetMatResCostBackward.get(i, instVrpTw->numClientes, 0) = value;
         }
+    }
+
+    if(!valNeg)
+    {
+        std::cout<<"Neg\n";
+        numSol = 0;
+        return 0;
     }
 
     for(int i=0; i < instVrpTw->numClientes; ++i)
@@ -463,6 +474,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     if(!custoRedNeg)
     {
+        /*
         if(checkEnumeratedRoutesFinal(vetRowPi))
         {
             numSol = 0;
@@ -474,6 +486,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
             PRINT_EXIT();
         }
+        */
     }
     /*
     else
@@ -1002,11 +1015,6 @@ void  VrpTW_DecompLabelingNS::CapacityCut::createInducedSubGraphArcs(int listSiz
         }
     }
 }
-
-
-
-
-
 
 
 

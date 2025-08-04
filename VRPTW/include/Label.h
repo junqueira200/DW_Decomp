@@ -9,6 +9,7 @@
 #include "Grafo.h"
 #include "safe_matrix.h"
 #include "Aux.h"
+#include "MemoryPool.h"
 
 namespace LabelingAlgorithmNS
 {
@@ -29,8 +30,11 @@ namespace LabelingAlgorithmNS
         Backward
     };
 
+    typedef Vector<int, true> VectorRoute;
+
+    // alignas(64)
     /// Label must be a FLAT data structure
-    struct alignas(64) Label
+    struct Label
     {
     public:
 
@@ -46,15 +50,35 @@ namespace LabelingAlgorithmNS
         int         tamRoute  = 0;
         // Position of the label from vetPtrLabel in Bucket class
         int         posBucket = -1;
+        VectorRoute*                                vetRoute = nullptr;
 
-        Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
+
         std::bitset<NumMaxCust>                     bitSetNg;
-        boost::array<int, NumMaxRoute>              vetRoute;
+        Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
+        //boost::array<int, NumMaxRoute>              vetRoute;
 
 
         Label() = default;
 
     };
+
+    class DelVetRoute:MemoryPool_NS::DeleteT<Label>
+    {
+    public:
+
+        Vector<Vector<VectorRoute*>> vetPtrVetRoute;
+        Vector<size_t>               vetPtrVetRuteNext;       // Next possition into vector in  vetPtrVetRoute
+
+        Vector<Vector<VectorRoute*>> vetPtrVetRouteDel;
+        Vector<size_t>               vetPtrVetRouteDelSize;
+
+        DelVetRoute(int n);
+        ~DelVetRoute();
+        void operator()(Label* p_t);
+        VectorRoute* getVetRoute(int n);
+
+    };
+
 
     class LabelCmp
     {

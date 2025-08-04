@@ -438,9 +438,43 @@ void LabelingAlgorithmNS::LabelingData::checkLabels()
     }
 }
 
+DelVetRoute::DelVetRoute(int n)
+{
+
+   vetPtrVetRoute.resize(n);
+   vetPtrVetRouteDel.resize(n);
+
+   for(int i=1; i < n; ++i)
+   {
+        vetPtrVetRoute[i].resize(SizeVetVetRouteIni);
+        vetPtrVetRouteDel.resize(SizeVetVetRouteIni);
+
+        for(int j=0; j < SizeVetVetRouteIni; ++j)
+            vetPtrVetRoute[i][j] = new VectorRoute(i);
+   }
+
+   vetPtrVetRuteNext.setAll(0);
+   vetPtrVetRouteDelSize.setAll(0);
+
+}
+
+void DelVetRoute::operator()(Label* p_t)
+{
+    int n = p_t->vetRoute->size();
+    size_t next = vetPtrVetRouteDelSize[n];
+
+    if((vetPtrVetRouteDelSize[n] + 1) >= vetPtrVetRouteDel[n].size())
+        vetPtrVetRouteDel[n].resize(2*vetPtrVetRouteDelSize[n]);
+
+    vetPtrVetRouteDel[n][next] = p_t->vetRoute;
+    vetPtrVetRouteDelSize[n] += 1;
+
+}
+
+VectorRoute* DelVetRoute::getVetRoute(int n)
+{
 
 
-
-
+}
 
 
