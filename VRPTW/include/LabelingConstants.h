@@ -28,7 +28,7 @@ namespace LabelingAlgorithmNS
     constexpr bool  DominaIterBuckets = true;
     constexpr FloatType FloatEp       = 1E-5;     // 1E-15
     constexpr bool  TrackingRoutes    = false;
-    constexpr int   SizeVetVetRouteIni = 10;
+    constexpr int   SizeVetVetRouteIni = 5;
 
     constexpr double MaxFloatType = std::numeric_limits<FloatType>::max();
     constexpr double MinFloatType = std::numeric_limits<FloatType>::min();

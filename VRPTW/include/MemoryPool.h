@@ -35,6 +35,7 @@ namespace MemoryPool_NS
     public:
         virtual ~DeleteT()=default;
         virtual void operator()(T* ptrT)=0;
+        virtual void reset(bool del)=0;
     };
 
 
@@ -205,6 +206,9 @@ namespace MemoryPool_NS
             proxT.iterator = listT.begin();
             proxT.proxPos  = 0;
             nextPosVetSolDel = 0;
+
+            if(ptrDeleteT)
+                ptrDeleteT->reset(delPool);
         }
 
         void delT(T* p_t)
@@ -219,6 +223,15 @@ namespace MemoryPool_NS
             {
                 p_tDelT[nextPosVetSolDel] = p_t;
                 nextPosVetSolDel += 1;
+            }
+            else
+            {
+                static bool print = false;
+                if(!print)
+                {
+                    std::cout<<"p_tDelT is full!\n";
+                    print = true;
+                }
             }
 
             //p_tDelT[nextPosVetSolDel] = p_t;

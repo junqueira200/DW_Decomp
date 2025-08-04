@@ -609,7 +609,7 @@ void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::
     for(int i=0; i < (int)route.vetRoute.size(); ++i)
     {
         int cliI = route.vetRoute[i];
-        label->vetRoute[i] = cliI;
+        (*label->vetRoute)[i] = cliI;
 
         if((i+1) < (int)route.vetRoute.size())
         {

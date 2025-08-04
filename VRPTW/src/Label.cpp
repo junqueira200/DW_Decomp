@@ -217,7 +217,7 @@ std::string LabelingAlgorithmNS::Bucket::print(int numResorces)
                 str += std::format("{:.5f}", label->vetResources[t]) + ", ";
             str += "]; ";
             for(int t=0; t < label->tamRoute; ++t)
-                str += std::to_string(label->vetRoute[t]) + " ";
+                str += std::to_string((*label->vetRoute)[t]) + " ";
             str += ");  ";
         }
     }
@@ -440,41 +440,90 @@ void LabelingAlgorithmNS::LabelingData::checkLabels()
 
 DelVetRoute::DelVetRoute(int n)
 {
+    n += 1;
 
-   vetPtrVetRoute.resize(n);
-   vetPtrVetRouteDel.resize(n);
+    vetPtrVetRoute.resize(n);
+    vetPtrVetRouteDel.resize(n);
+    vetPtrVetRuteNext.resize(n);
+    vetPtrVetRouteDelSize.resize(n);
 
-   for(int i=1; i < n; ++i)
-   {
+    for(int i=1; i < n; ++i)
+    {
         vetPtrVetRoute[i].resize(SizeVetVetRouteIni);
-        vetPtrVetRouteDel.resize(SizeVetVetRouteIni);
+        vetPtrVetRouteDel[i].resize(SizeVetVetRouteIni);
 
         for(int j=0; j < SizeVetVetRouteIni; ++j)
-            vetPtrVetRoute[i][j] = new VectorRoute(i);
-   }
+        {
+            vetPtrVetRoute[i][j] = new VectorRoute;
+            vetPtrVetRoute[i][j]->resize(i);
+        }
+    }
 
-   vetPtrVetRuteNext.setAll(0);
-   vetPtrVetRouteDelSize.setAll(0);
+    vetPtrVetRuteNext.setAll(0);
+    vetPtrVetRouteDelSize.setAll(0);
 
 }
 
 void DelVetRoute::operator()(Label* p_t)
 {
+    //std::cout<<p_t->tamRoute<<"\n";
+    //std::cout<<"vetRute.size: "<<p_t->vetRoute->size()<<"\n\n";
     int n = p_t->vetRoute->size();
     size_t next = vetPtrVetRouteDelSize[n];
 
     if((vetPtrVetRouteDelSize[n] + 1) >= vetPtrVetRouteDel[n].size())
-        vetPtrVetRouteDel[n].resize(2*vetPtrVetRouteDelSize[n]);
+        vetPtrVetRouteDel[n].resize((size_t)(Mult*vetPtrVetRouteDelSize[n]));
 
     vetPtrVetRouteDel[n][next] = p_t->vetRoute;
     vetPtrVetRouteDelSize[n] += 1;
+    p_t->vetRoute = nullptr;
 
 }
 
 VectorRoute* DelVetRoute::getVetRoute(int n)
 {
 
+    if(vetPtrVetRouteDelSize[n] == 0)
+    {
+        if(vetPtrVetRuteNext[n] == vetPtrVetRoute[n].size())
+        {
+            vetPtrVetRoute[n].resize((size_t)(Mult*vetPtrVetRuteNext[n]));
+            for(size_t i=vetPtrVetRuteNext[n]; i < vetPtrVetRoute[n].size(); ++i)
+                vetPtrVetRoute[n][i] = new VectorRoute(n);
+        }
+
+        VectorRoute* ptrVetRoute = vetPtrVetRoute[n][vetPtrVetRuteNext[n]];
+        vetPtrVetRuteNext[n] += 1;
+        return ptrVetRoute;
+    }
+    else
+    {
+         VectorRoute* ptrVetRoute = vetPtrVetRouteDel[n][vetPtrVetRouteDelSize[n]-1];
+         vetPtrVetRouteDel[n][vetPtrVetRouteDelSize[n]-1] = nullptr;
+         vetPtrVetRouteDelSize[n] += -1;
+         return ptrVetRoute;
+    }
 
 }
+
+DelVetRoute::~DelVetRoute()
+{
+    for(int i=1; i < (int)vetPtrVetRoute.size(); ++i)
+    {
+        for(size_t j=0; j < vetPtrVetRuteNext[i]; ++j)
+            delete vetPtrVetRoute[i][j];
+    }
+}
+
+void DelVetRoute::reset(bool del)
+{
+    vetPtrVetRuteNext.setAll(0);
+    vetPtrVetRouteDelSize.setAll(0);
+}
+
+
+
+
+
 
 

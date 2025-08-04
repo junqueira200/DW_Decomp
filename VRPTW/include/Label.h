@@ -13,6 +13,9 @@
 
 namespace LabelingAlgorithmNS
 {
+
+    constexpr int Mult = 2;
+
     /// Stores the start indexes for the reduced cost and demand
     typedef Eigen::Array<int, 1, 2> IndexStart;
     /// Stores the end indexes for the reduced cost and demand
@@ -34,7 +37,7 @@ namespace LabelingAlgorithmNS
 
     // alignas(64)
     /// Label must be a FLAT data structure
-    struct Label
+    struct alignas(64) Label
     {
     public:
 
@@ -51,10 +54,11 @@ namespace LabelingAlgorithmNS
         // Position of the label from vetPtrLabel in Bucket class
         int         posBucket = -1;
         VectorRoute*                                vetRoute = nullptr;
+        //Label*      ptrPreviousLabel = nullptr;
 
 
-        std::bitset<NumMaxCust>                     bitSetNg;
         Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
+        std::bitset<NumMaxCust>                     bitSetNg;
         //boost::array<int, NumMaxRoute>              vetRoute;
 
 
@@ -76,6 +80,7 @@ namespace LabelingAlgorithmNS
         ~DelVetRoute();
         void operator()(Label* p_t);
         VectorRoute* getVetRoute(int n);
+        void reset(bool del);
 
     };
 

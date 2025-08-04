@@ -5,7 +5,6 @@
 #include "VrpTW_DecompLabeling.h"
 #include "Cvrp_DecompLabeling.h"
 #include "LabelingAlgorithm.h"
-#include "MemoryPool.h"
 #include "BranchAndPrice.h"
 #include "Alarm.h"
 #include "Test.h"
@@ -36,7 +35,29 @@ void convertInstance(const InstanceVRPTW& instanceVrptw, Instancia& instancia);
 
 int main(int argc, const char **argv)
 {
+    /*
+    DelVetRoute delVetRoute(100);
+    int num = 0;
+    Label label;
 
+    for(int i=0; i < 200; ++i)
+    {
+        VectorRoute* ptrVetRoute = delVetRoute.getVetRoute(5);
+        if(ptrVetRoute->size() != 5)
+            std::cout<<"Diferente de 5\n\n";
+        (*ptrVetRoute)[0] = 0;
+        num += (*ptrVetRoute)[0];
+        label.vetRoute = ptrVetRoute;
+
+        delVetRoute(&label);
+
+        label.vetRoute = nullptr;
+    }
+
+    std::cout<<"Num: "<<num<<"\n";
+
+    return 0;
+    */
 
     try
     {

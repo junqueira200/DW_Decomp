@@ -112,6 +112,7 @@ namespace LabelingAlgorithmNS
     */
 
     Label* getLabel();
+    VectorRoute* getVecRoute(int n);
     void rmLabel(Label* label);
     void writeNgSet(Label* label, const NgSet& ngset);
     void startGlobalMemory(const Vector<VectorI>& vetRoutes);

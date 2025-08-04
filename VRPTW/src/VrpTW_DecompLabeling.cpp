@@ -25,7 +25,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
 
     instVrpTw = &instVrpTw_;
     double mult = 0.5;
-    double numSteps = 1.0; // 2
+    double numSteps = 2.0; // 2
 
     //vetStepSize[0].stepSize = 400;
     vetStepSize[0].stepSize = 100000.0;  //  200.0
@@ -176,9 +176,10 @@ bool  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     for(int l=0; l < numSol; ++l)
     {
         Label* label = getLabel();
+        label->vetRoute = getVecRoute(instVrpTw->numClientes+1);
 
         // Seting label data
-        label->vetRoute[0] = 0;
+        (*label->vetRoute)[0] = 0;
         label->tamRoute    = 1;
         label->typeLabel = LabelingAlgorithmNS::Forward;
         label->vetResources.setZero();
@@ -208,13 +209,13 @@ bool  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
             label->vetResources[0] += instVrpTw->matDist(lastCust, cliJ) - vetRowPi[cliJ+1];
             label->vetResources[1] += instVrpTw->vetClieDem[cliJ];
-            label->vetRoute[label->tamRoute] = cliJ;
+            (*label->vetRoute)[label->tamRoute] = cliJ;
             label->tamRoute += 1;
             lastCust = cliJ;
         }
         while(lastCust != 0);
 
-        label->vetRoute[label->tamRoute-1] = instVrpTw->numClientes;
+        (*label->vetRoute)[label->tamRoute-1] = instVrpTw->numClientes;
         label->cust = instVrpTw->numClientes;
         label->active = true;
 
@@ -800,7 +801,7 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     for(int i=0; i < (int)route.vetRoute.size(); ++i)
     {
         int cliI = route.vetRoute[i];
-        label->vetRoute[i] = cliI;
+        (*label->vetRoute)[i] = cliI;
 
         if((i+1) < (int)route.vetRoute.size())
         {
