@@ -42,7 +42,7 @@ namespace LabelingAlgorithmNS
     public:
 
 
-        bool        active    = false;
+        //bool        active    = false;
         TypeLabel   typeLabel = Forward;
         // First dimension for MatBucket
         int         i         = -1;
@@ -50,11 +50,11 @@ namespace LabelingAlgorithmNS
         int         j         = -1;
         int         cust      = -1;
         int         posHeap   = -1;
-        int         tamRoute  = 0;
+        //int         tamRoute  = 0;
         // Position of the label from vetPtrLabel in Bucket class
         int         posBucket = -1;
-        VectorRoute*                                vetRoute = nullptr;
-        //Label*      ptrPreviousLabel = nullptr;
+        //VectorRoute*                                vetRoute = nullptr;
+        Label*      ptrPrevLabel = nullptr;
 
 
         Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
@@ -124,7 +124,7 @@ namespace LabelingAlgorithmNS
     };
 
 
-    std::ostream& operator<< (std::ostream& out, const Label &label);
+    std::ostream& operator<< (std::ostream& out, Label &label);
 
 
     struct alignas(64)  Bucket
@@ -240,7 +240,7 @@ namespace LabelingAlgorithmNS
                                    Eigen::VectorX<MatBucket>& vetMatBucket, TypeLabel typeLabel);
 
         void setupGraphBucket();
-        bool compareVetMatBucket(const ArrayResources& vetMaxResouces);
+        //bool compareVetMatBucket(const ArrayResources& vetMaxResouces);
 
         inline __attribute__((always_inline))
         void whiteLabelIndex(Label* label)
@@ -265,7 +265,7 @@ namespace LabelingAlgorithmNS
 
     };
 
-    bool searchLabel(Label* label, Bucket& bucket);
+    //bool searchLabel(Label* label, Bucket& bucket);
     std::string printIndex(const Index& index);
 
 }

@@ -57,15 +57,15 @@ namespace LabelingAlgorithmNS
 
     typedef Eigen::Array<FloatType, 1, NumMaxResources> VetBackwardMask;
 
-    bool extendLabelForward(const Label& label, Label& newLabel, const Vet3D_ResCost& vetMatResCost,
+    bool extendLabelForward(Label& label, Label& newLabel, const Vet3D_ResCost& vetMatResCost,
                             const MatBoundRes& vetVetBound, int custI, int t, const NgSet& ngSet, int numResources);
 
-    bool extendLabelBackward(const Label& label, Label& newLabel, const Vet3D_ResCost& vetMatResCost,
+    bool extendLabelBackward(Label& label, Label& newLabel, const Vet3D_ResCost& vetMatResCost,
                              const MatBoundRes& vetVetBound, int custI, int t, const NgSet& ngSet,
                              int numResources, const VetBackwardMask& vetBackwardMask);
 
     inline __attribute__((always_inline))
-    bool extendLabel(const Label& label, Label& newLabel, const Vet3D_ResCost& vetMatResCostForward,
+    bool extendLabel(Label& label, Label& newLabel, const Vet3D_ResCost& vetMatResCostForward,
                      const Vet3D_ResCost& vetMatResCostBackward, const MatBoundRes& vetVetBound, int custI, int t,
                      const NgSet& ngSet, int numResources, const VetBackwardMask& vetBackwardMask)
     {
@@ -98,9 +98,11 @@ namespace LabelingAlgorithmNS
 
     void changeTypeAlg(LabelingTypeAlg& labelingTypeAlg);
 
+    // TODO: Fiz
+    /*
     Label* mergeForwardAndBackward(Label* forwardPtr, Label* backwardPtr, const ArrayResources& vetMaxResources,
                                    const MatBoundRes& vetVetBound, int numResorces);
-
+    */
 
     /*
     {
@@ -114,7 +116,7 @@ namespace LabelingAlgorithmNS
     Label* getLabel();
     VectorRoute* getVecRoute(int n);
     void rmLabel(Label* label);
-    void writeNgSet(Label* label, const NgSet& ngset);
+    //void writeNgSet(Label* label, const NgSet& ngset);
     void startGlobalMemory(const Vector<VectorI>& vetRoutes);
     void addToVetRoutesG(const VectorI& route);
     void cleanVetRouteG();
