@@ -10,7 +10,7 @@ namespace LabelingAlgorithmNS
 
     void checkHeap(LabelHeap& heap, LabelingData& lData);
     void convertLabelBackwardToForward(Label* label, const ArrayResources &vetMaxResources, int numResources);
-    void copyLabel(const Label& labelSrc, Label& labelDest, int numResorces);
+    //void copyLabel(const Label& labelSrc, Label& labelDest, int numResorces);
     void whiteLabelIndex(Label* label);
 
 

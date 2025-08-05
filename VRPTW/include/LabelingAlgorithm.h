@@ -30,13 +30,14 @@ namespace LabelingAlgorithmNS
     inline Vector<FloatType> vetValueOfReducedCostsG;
     void computeMeanMaxMin();
 
+    /*
     enum LabelingTypeAlg
     {
         AlgForward,
         AlgBackward,
         AlgBidirectional
     };
-
+    */
 
     bool bidirectionalAlgorithm(int numRes, int numCust, const Vet3D_ResCost& vetMatResCostForward,
                                 const Vet3D_ResCost& vetMatResCostBackward, const MatBoundRes& vetVetBound, int dest,
@@ -46,13 +47,72 @@ namespace LabelingAlgorithmNS
                                 bool arc);
 
 
-    //inline __attribute__((always_inline))
-    bool checkCompleteDominance(const Label& l0, const Label& l1, int numResources);
-
     inline __attribute__((always_inline))
     bool checkDominanceSubSet(const Label &l0, const Label& l1)
     {
         return (l0.bitSetNg & l1.bitSetNg) == l0.bitSetNg;
+    }
+
+
+    inline __attribute__((always_inline))
+    bool checkCompleteDominance(const Label& l0, const Label& l1, int numResources)
+    {
+    if(l0.cust != l1.cust)
+    {
+        std::cout<<"ERROR, lo.cust("<<l0.cust<<") != l1.cust("<<l1.cust<<")\n\n";
+        PRINT_DEBUG("", "");
+        throw "ERROR";
+    }
+
+    if(l0.typeLabel == Forward)
+    {
+        bool ret = false;
+
+        // Check the resources
+        #pragma GCC unroll NumMaxResources
+        for(int i=0; i < NumMaxResources; ++i)
+        {
+            //if(!doubleEqual(l0.vetResources[i], l1.vetResources[i], FloatEp))
+            {
+                if(doubleGreater(l0.vetResources[i], l1.vetResources[i], FloatEp))
+                   //return false;
+                    ret = true;
+            }
+        }
+
+        if(ret)
+            return false;
+    }
+    else
+    {
+        //if(l0.vetResources[0] > l1.vetResources[0])
+        //if(!doubleEqual(l0.vetResources[0], l1.vetResources[0], FloatEp))
+        {
+            if(doubleGreater(l0.vetResources[0], l1.vetResources[0], FloatEp))
+                return false;
+        }
+        bool ret = false;
+        // Check the resources
+        #pragma GCC unroll NumMaxResources
+        for(int i=1; i < NumMaxResources; ++i)
+        {
+            //if(l0.vetResources[i] < l1.vetResources[i])
+            //if(!doubleEqual(l0.vetResources[i], l1.vetResources[i], FloatEp))
+            {
+                if(doubleLess(l0.vetResources[i], l1.vetResources[i], FloatEp))
+                    //return false;
+                    ret = true;
+            }
+        }
+
+        if(ret)
+            return false;
+    }
+
+    // Check if l0 is a subset of l1
+    //return (l0.bitSetNg & l1.bitSetNg) == l0.bitSetNg;
+    return checkDominanceSubSet(l0, l1);
+
     }
 
     typedef Eigen::Array<FloatType, 1, NumMaxResources> VetBackwardMask;

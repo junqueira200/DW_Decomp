@@ -216,8 +216,20 @@ std::string LabelingAlgorithmNS::Bucket::print(int numResorces)
             for(int t=0; t < numResorces; ++t)
                 str += std::format("{:.5f}", label->vetResources[t]) + ", ";
             str += "]; ";
-            for(int t=0; t < label->tamRoute; ++t)
-                str += std::to_string((*label->vetRoute)[t]) + " ";
+
+            Label* ptr = label;
+            VectorI vet;
+
+            while (ptr)
+            {
+                vet.push_back(ptr->cust);
+                ptr = ptr->ptrPrevLabel;
+            }
+
+            std::reverse(vet.begin(), vet.end());
+
+            for(int cust:vet)
+                str += std::to_string(cust) + " ";
             str += ");  ";
         }
     }
@@ -295,6 +307,7 @@ std::string LabelingAlgorithmNS::printIndex(const Index& index)
     return str;
 }
 
+/*
 int LabelingAlgorithmNS::LabelingData::doMerge(Label* label, const ArrayResources& vetMaxResources,
                                                const MatBoundRes& vetVetBound, int numResorces)
 {
@@ -383,6 +396,7 @@ int LabelingAlgorithmNS::LabelingData::doMerge(Label* label, const ArrayResource
     return getNumberOfSolutions();
 
 }
+*/
 
 void LabelingAlgorithmNS::LabelingData::checkLabels()
 {
@@ -438,6 +452,7 @@ void LabelingAlgorithmNS::LabelingData::checkLabels()
     }
 }
 
+/*
 DelVetRoute::DelVetRoute(int n)
 {
     n += 1;
@@ -520,7 +535,7 @@ void DelVetRoute::reset(bool del)
     vetPtrVetRuteNext.setAll(0);
     vetPtrVetRouteDelSize.setAll(0);
 }
-
+*/
 
 
 

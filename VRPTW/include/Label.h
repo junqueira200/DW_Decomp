@@ -33,11 +33,19 @@ namespace LabelingAlgorithmNS
         Backward
     };
 
+    enum LabelingTypeAlg
+    {
+        AlgForward,
+        AlgBackward,
+        AlgBidirectional
+    };
+
+
     typedef Vector<int, true> VectorRoute;
 
     // alignas(64)
     /// Label must be a FLAT data structure
-    struct alignas(64) Label
+    struct Label
     {
     public:
 
@@ -66,6 +74,7 @@ namespace LabelingAlgorithmNS
 
     };
 
+    /*
     class DelVetRoute:MemoryPool_NS::DeleteT<Label>
     {
     public:
@@ -83,6 +92,7 @@ namespace LabelingAlgorithmNS
         void reset(bool del);
 
     };
+    */
 
 
     class LabelCmp
@@ -92,12 +102,12 @@ namespace LabelingAlgorithmNS
         bool operator()(Label *l0, Label *l1) const
         {
             //return doubleLess(l0->vetResources[0], l1->vetResources[0], std::numeric_limits<FloatType>::epsilon());
-            return l0->vetResources[0] < l1->vetResources[0];// && l0->vetResources[1] < l1->vetResources[1];
+            return l0->vetResources[0] < l1->vetResources[0] && l0->vetResources[1] < l1->vetResources[1];
         }
 
         bool isGreater(Label *l0, Label *l1)const
         {
-            return l0->vetResources[0] > l1->vetResources[0];
+            return l0->vetResources[0] > l1->vetResources[0] && l0->vetResources[1] > l1->vetResources[1];
         }
 
     };
@@ -127,7 +137,7 @@ namespace LabelingAlgorithmNS
     std::ostream& operator<< (std::ostream& out, Label &label);
 
 
-    struct alignas(64)  Bucket
+    struct Bucket
     {
     public:
         Eigen::VectorX<Label*> vetPtrLabel;
@@ -215,7 +225,7 @@ namespace LabelingAlgorithmNS
                      const ArrayResources& vetMaxResources_);
         LabelingData()=default;
 
-        void flushLabel();
+        void flushLabel(LabelingTypeAlg type);
         int getIndex(int resource, FloatType val);
         void removeLabel(Label *label);
         Label* getBestLabel(int cust);

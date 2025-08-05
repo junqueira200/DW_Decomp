@@ -2,6 +2,7 @@
 
 using namespace LabelingAlgorithmNS;
 
+/*
 void LabelingAlgorithmNS::copyLabel(const Label& labelSrc, Label& labelDest, int numResorces)
 {
     for(int r=0; r < numResorces; ++r)
@@ -22,3 +23,4 @@ void LabelingAlgorithmNS::copyLabel(const Label& labelSrc, Label& labelDest, int
 
 
 }
+*/

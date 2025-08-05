@@ -25,7 +25,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
 
     instVrpTw = &instVrpTw_;
     double mult = 0.5;
-    double numSteps = 2.0; // 2
+    double numSteps = 1.0; // 2
 
     //vetStepSize[0].stepSize = 400;
     vetStepSize[0].stepSize = 100000.0;  //  200.0
@@ -165,6 +165,7 @@ bool VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesFinal(Eige
 
 }
 
+/*
 bool  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
       checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol)
 {
@@ -270,6 +271,7 @@ bool  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     return addRoute;
 }
+*/
 
 int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     resolveSubProb(const Eigen::VectorXd &vetC, Eigen::RowVectorXd &vetRowPi, GRBModel &mestre, int itCG,
@@ -444,7 +446,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 // TODO remove comments!
     if(!exact)
     {
-        for(int i = 2; i <= 4; i += 2)
+        for(int i = 1; i <= 4; i += 1)
         {
             //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
             matColX.setZero();
@@ -532,7 +534,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     vetCooefRestConv[0] = 1;
 
 
-    //std::cout<<"*************\n\n";
+    std::cout<<"*************\n\n";
 
 /*    if(numSol == 0)
     {
@@ -793,6 +795,7 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::setTypeLabelToBidirectional()
     typeLabel = LabelingAlgorithmNS::AlgBidirectional;
 }
 
+/*
 void VrpTW_DecompLabelingNS::VrpLabelingSubProb::
      convertRouteIntoLabel(const TestNS::Route& route, LabelingAlgorithmNS::Label* label)
 {
@@ -819,7 +822,7 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     label->tamRoute = (int)route.vetRoute.size();
 }
-
+*/
 
 VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, int dim_, int maxNoOfCuts_, double eps)
 {
