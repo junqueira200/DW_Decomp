@@ -28,9 +28,10 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
     double numSteps = 1.0; // 2
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 100000.0;  //  200.0
-    vetStepSize[0].start    = -50;    //  -70.0
-    vetStepSize[0].end      = 200;    //  400.0
+    vetStepSize[0].stepSize = 200.0;//  10 // 5 //((2.0*mult)*startDist)/numSteps; // 1700
+    vetStepSize[0].start    = -70;// -200 -50 // (FloatType)-mult*startDist;  // 1.0
+    vetStepSize[0].end      = 400;//  200 50 // (FloatType) mult*startDist; // 1.0
+
 
 
     vetStepSize[1].stepSize = instVrpTw->capVeic/numSteps;  //50
@@ -112,7 +113,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
     ngSet.setNgSets(instVrpTw->matDist);
     ngSet.active = true;
 
-    //enumerateRoutes(*instVrpTw, instVrpTw->numClientes-1, routeHash);
+    enumerateRoutes(*instVrpTw, instVrpTw->numClientes-1, routeHash);
 
 
 }
@@ -165,7 +166,6 @@ bool VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesFinal(Eige
 
 }
 
-/*
 bool  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
       checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol)
 {
@@ -177,10 +177,9 @@ bool  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     for(int l=0; l < numSol; ++l)
     {
         Label* label = getLabel();
-        label->vetRoute = getVecRoute(instVrpTw->numClientes+1);
 
         // Seting label data
-        (*label->vetRoute)[0] = 0;
+        label->vetRoute[0] = 0;
         label->tamRoute    = 1;
         label->typeLabel = LabelingAlgorithmNS::Forward;
         label->vetResources.setZero();
@@ -210,13 +209,13 @@ bool  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
             label->vetResources[0] += instVrpTw->matDist(lastCust, cliJ) - vetRowPi[cliJ+1];
             label->vetResources[1] += instVrpTw->vetClieDem[cliJ];
-            (*label->vetRoute)[label->tamRoute] = cliJ;
+            label->vetRoute[label->tamRoute] = cliJ;
             label->tamRoute += 1;
             lastCust = cliJ;
         }
         while(lastCust != 0);
 
-        (*label->vetRoute)[label->tamRoute-1] = instVrpTw->numClientes;
+        label->vetRoute[label->tamRoute-1] = instVrpTw->numClientes;
         label->cust = instVrpTw->numClientes;
         label->active = true;
 
@@ -271,7 +270,6 @@ bool  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     return addRoute;
 }
-*/
 
 int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     resolveSubProb(const Eigen::VectorXd &vetC, Eigen::RowVectorXd &vetRowPi, GRBModel &mestre, int itCG,
@@ -300,8 +298,6 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     //vetMatResCost.setVal(0.0);
     //constPiValue += -vetRowPi[0];
 
-    bool valNeg = false;
-
     for(int i=0; i < instVrpTw->numClientes; ++i)
     {
         for(int j=0; j < instVrpTw->numClientes; ++j)
@@ -324,9 +320,6 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                 value1 = (FloatType)instVrpTw->matDist(j, i) - (FloatType)vetRowPi[i+1];
             }
 
-            if(!valNeg && value0 < -DW_DecompNS::TolObjSubProb)
-                valNeg = true;
-
              vetMatResCostForward.get(i, j, 0)  = value0;
              vetMatResCostBackward.get(i, j, 0) = value0;
         }
@@ -346,13 +339,6 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
               vetMatResCostForward.get(i, instVrpTw->numClientes, 0)  = value;
               vetMatResCostBackward.get(i, instVrpTw->numClientes, 0) = value;
         }
-    }
-
-    if(!valNeg)
-    {
-        std::cout<<"Neg\n";
-        numSol = 0;
-        return 0;
     }
 
     for(int i=0; i < instVrpTw->numClientes; ++i)
@@ -446,7 +432,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 // TODO remove comments!
     if(!exact)
     {
-        for(int i = 1; i <= 4; i += 1)
+        for(int i = 2; i <= 4; i += 2)
         {
             //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
             matColX.setZero();
@@ -477,7 +463,6 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     if(!custoRedNeg)
     {
-        /*
         if(checkEnumeratedRoutesFinal(vetRowPi))
         {
             numSol = 0;
@@ -489,7 +474,6 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
             PRINT_EXIT();
         }
-        */
     }
     /*
     else
@@ -534,7 +518,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     vetCooefRestConv[0] = 1;
 
 
-    std::cout<<"*************\n\n";
+    //std::cout<<"*************\n\n";
 
 /*    if(numSol == 0)
     {
@@ -795,7 +779,6 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::setTypeLabelToBidirectional()
     typeLabel = LabelingAlgorithmNS::AlgBidirectional;
 }
 
-/*
 void VrpTW_DecompLabelingNS::VrpLabelingSubProb::
      convertRouteIntoLabel(const TestNS::Route& route, LabelingAlgorithmNS::Label* label)
 {
@@ -804,7 +787,7 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     for(int i=0; i < (int)route.vetRoute.size(); ++i)
     {
         int cliI = route.vetRoute[i];
-        (*label->vetRoute)[i] = cliI;
+        label->vetRoute[i] = cliI;
 
         if((i+1) < (int)route.vetRoute.size())
         {
@@ -822,7 +805,7 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     label->tamRoute = (int)route.vetRoute.size();
 }
-*/
+
 
 VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, int dim_, int maxNoOfCuts_, double eps)
 {
@@ -1019,6 +1002,11 @@ void  VrpTW_DecompLabelingNS::CapacityCut::createInducedSubGraphArcs(int listSiz
         }
     }
 }
+
+
+
+
+
 
 
 

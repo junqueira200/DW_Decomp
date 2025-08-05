@@ -8,7 +8,6 @@
 
 //#define assertm(exp, msg) assert(((void)msg, exp))
 #define assertTrue(msg) assert(((void)msg, false))
-#define assertm(exp, msg) if(exp){std::cout<<msg<<"\n\nLINE: "<<__LINE__<<"\nFILE: "<<__PRETTYFILE__<<"\nFUNC: "<<__PRETTY_FUNCTION__<<"\n\n"; throw "ERROR";}
 
 
 namespace MemoryPool_NS
@@ -29,14 +28,6 @@ namespace MemoryPool_NS
         long proxPos = -1;
     };
 
-    template <typename T>
-    class DeleteT
-    {
-    public:
-        virtual ~DeleteT()=default;
-        virtual void operator()(T* ptrT)=0;
-        virtual void reset(bool del)=0;
-    };
 
 
     template <typename T>
@@ -46,22 +37,19 @@ namespace MemoryPool_NS
         std::list<T*> listT;
         ProxT_notUsed<T> proxT;                            // Aponta para um vetor e a pos da prox sol nao utilizada
 
-        T **p_tDelT            = nullptr;                   // Solucoes que nao sao mais utilizadas.
-        long numVetSolDel      = 0;
-        long nextPosVetSolDel  = 0;
-        long pageSize          = 0;
-        long bucketSize        = 0;
-        long numElemBucket     = 0;
-        bool poolStart         = false;
-        DeleteT<T>* ptrDeleteT = nullptr;
+        T **p_tDelT           = nullptr;                   // Solucoes que nao sao mais utilizadas.
+        long numVetSolDel     = 0;
+        long nextPosVetSolDel = 0;
+        long pageSize         = 0;
+        long bucketSize       = 0;
+        long numElemBucket    = 0;
+        bool poolStart        = false;
 
         void rmPool()
         {
 
             for(auto t:listT)
-            {
                 free(t);
-            }
 
             free(p_tDelT);
 
@@ -206,17 +194,11 @@ namespace MemoryPool_NS
             proxT.iterator = listT.begin();
             proxT.proxPos  = 0;
             nextPosVetSolDel = 0;
-
-            if(ptrDeleteT)
-                ptrDeleteT->reset(delPool);
         }
 
         void delT(T* p_t)
         {
             assertm(!poolStart, "Pool didn't start!");
-
-            if(ptrDeleteT)
-                (*ptrDeleteT)(p_t);
 
             //std::cout<<"Del: "<<*p_t<<"\n";
             if(nextPosVetSolDel < numVetSolDel)
@@ -224,24 +206,10 @@ namespace MemoryPool_NS
                 p_tDelT[nextPosVetSolDel] = p_t;
                 nextPosVetSolDel += 1;
             }
-            else
-            {
-                static bool print = false;
-                if(!print)
-                {
-                    std::cout<<"p_tDelT is full!\n";
-                    print = true;
-                }
-            }
 
             //p_tDelT[nextPosVetSolDel] = p_t;
             //nextPosVetSolDel += (nextPosVetSolDel < numVetSolDel);
 
-        }
-
-        void setPtrDeleteT(DeleteT<T>* ptrDeleteT_)
-        {
-            ptrDeleteT = ptrDeleteT_;
         }
     };
 

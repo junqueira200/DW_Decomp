@@ -9,13 +9,9 @@
 #include "Grafo.h"
 #include "safe_matrix.h"
 #include "Aux.h"
-#include "MemoryPool.h"
 
 namespace LabelingAlgorithmNS
 {
-
-    constexpr int Mult = 2;
-
     /// Stores the start indexes for the reduced cost and demand
     typedef Eigen::Array<int, 1, 2> IndexStart;
     /// Stores the end indexes for the reduced cost and demand
@@ -33,24 +29,13 @@ namespace LabelingAlgorithmNS
         Backward
     };
 
-    enum LabelingTypeAlg
-    {
-        AlgForward,
-        AlgBackward,
-        AlgBidirectional
-    };
-
-
-    typedef Vector<int, true> VectorRoute;
-
-    // alignas(64)
     /// Label must be a FLAT data structure
-    struct Label
+    struct alignas(64) Label
     {
     public:
 
 
-        //bool        active    = false;
+        bool        active    = false;
         TypeLabel   typeLabel = Forward;
         // First dimension for MatBucket
         int         i         = -1;
@@ -58,42 +43,18 @@ namespace LabelingAlgorithmNS
         int         j         = -1;
         int         cust      = -1;
         int         posHeap   = -1;
-        //int         tamRoute  = 0;
+        int         tamRoute  = 0;
         // Position of the label from vetPtrLabel in Bucket class
         int         posBucket = -1;
-        //VectorRoute*                                vetRoute = nullptr;
-        Label*      ptrPrevLabel = nullptr;
-
 
         Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
         std::bitset<NumMaxCust>                     bitSetNg;
-        //boost::array<int, NumMaxRoute>              vetRoute;
+        boost::array<int, NumMaxRoute>              vetRoute;
 
 
         Label() = default;
 
     };
-
-    /*
-    class DelVetRoute:MemoryPool_NS::DeleteT<Label>
-    {
-    public:
-
-        Vector<Vector<VectorRoute*>> vetPtrVetRoute;
-        Vector<size_t>               vetPtrVetRuteNext;       // Next possition into vector in  vetPtrVetRoute
-
-        Vector<Vector<VectorRoute*>> vetPtrVetRouteDel;
-        Vector<size_t>               vetPtrVetRouteDelSize;
-
-        DelVetRoute(int n);
-        ~DelVetRoute();
-        void operator()(Label* p_t);
-        VectorRoute* getVetRoute(int n);
-        void reset(bool del);
-
-    };
-    */
-
 
     class LabelCmp
     {
@@ -102,12 +63,12 @@ namespace LabelingAlgorithmNS
         bool operator()(Label *l0, Label *l1) const
         {
             //return doubleLess(l0->vetResources[0], l1->vetResources[0], std::numeric_limits<FloatType>::epsilon());
-            return l0->vetResources[0] < l1->vetResources[0] && l0->vetResources[1] < l1->vetResources[1];
+            return l0->vetResources[0] < l1->vetResources[0];// && l0->vetResources[1] < l1->vetResources[1];
         }
 
         bool isGreater(Label *l0, Label *l1)const
         {
-            return l0->vetResources[0] > l1->vetResources[0] && l0->vetResources[1] > l1->vetResources[1];
+            return l0->vetResources[0] > l1->vetResources[0];
         }
 
     };
@@ -134,10 +95,10 @@ namespace LabelingAlgorithmNS
     };
 
 
-    std::ostream& operator<< (std::ostream& out, Label &label);
+    std::ostream& operator<< (std::ostream& out, const Label &label);
 
 
-    struct Bucket
+    struct alignas(64)  Bucket
     {
     public:
         Eigen::VectorX<Label*> vetPtrLabel;
@@ -225,7 +186,7 @@ namespace LabelingAlgorithmNS
                      const ArrayResources& vetMaxResources_);
         LabelingData()=default;
 
-        void flushLabel(LabelingTypeAlg type);
+        void flushLabel();
         int getIndex(int resource, FloatType val);
         void removeLabel(Label *label);
         Label* getBestLabel(int cust);
@@ -250,7 +211,7 @@ namespace LabelingAlgorithmNS
                                    Eigen::VectorX<MatBucket>& vetMatBucket, TypeLabel typeLabel);
 
         void setupGraphBucket();
-        //bool compareVetMatBucket(const ArrayResources& vetMaxResouces);
+        bool compareVetMatBucket(const ArrayResources& vetMaxResouces);
 
         inline __attribute__((always_inline))
         void whiteLabelIndex(Label* label)
@@ -275,7 +236,7 @@ namespace LabelingAlgorithmNS
 
     };
 
-    //bool searchLabel(Label* label, Bucket& bucket);
+    bool searchLabel(Label* label, Bucket& bucket);
     std::string printIndex(const Index& index);
 
 }

@@ -3,8 +3,9 @@
 #include "VrpTW_Decomp.h"
 #include <filesystem>
 #include "VrpTW_DecompLabeling.h"
-//#include "Cvrp_DecompLabeling.h"
+#include "Cvrp_DecompLabeling.h"
 #include "LabelingAlgorithm.h"
+#include "MemoryPool.h"
 #include "BranchAndPrice.h"
 #include "Alarm.h"
 #include "Test.h"
@@ -31,33 +32,11 @@ using namespace ParseInputNS;
 using namespace IgNs;
 
 void convertInstance(const InstanceVRPTW& instanceVrptw, Instancia& instancia);
-//void computeMeanMaxMin();
+void computeMeanMaxMin();
 
 int main(int argc, const char **argv)
 {
-    /*
-    DelVetRoute delVetRoute(100);
-    int num = 0;
-    Label label;
 
-    for(int i=0; i < 200; ++i)
-    {
-        VectorRoute* ptrVetRoute = delVetRoute.getVetRoute(5);
-        if(ptrVetRoute->size() != 5)
-            std::cout<<"Diferente de 5\n\n";
-        (*ptrVetRoute)[0] = 0;
-        num += (*ptrVetRoute)[0];
-        label.vetRoute = ptrVetRoute;
-
-        delVetRoute(&label);
-
-        label.vetRoute = nullptr;
-    }
-
-    std::cout<<"Num: "<<num<<"\n";
-
-    return 0;
-    */
 
     try
     {
@@ -168,10 +147,7 @@ int main(int argc, const char **argv)
         for(int i=0; i < 50; ++i)
         {
             SolucaoNS::Solucao best(instanciaG);
-            bool viavel = false;
-
-            while(!viavel)
-                viavel = metaheuristicaIg(best);
+            metaheuristicaIg(best);
 
             //std::cout<<"IG: "<<best.distTotal<<"\n";
 
@@ -375,6 +351,37 @@ void convertInstance(const InstanceVRPTW& instanceVrptw, Instancia& instancia)
     instancia.veicCap = instanceVrptw.capVeic;
 
 }
+
+void computeMeanMaxMin()
+{
+    double min, max, mean, median;
+
+    min = MaxFloatType;
+    max = MinFloatType;
+    mean = 0.0;
+
+    for(double val:vetValueOfReducedCostsG)
+    {
+        min = std::min(min, val);
+        max = std::max(max, val);
+        mean += val;
+    }
+
+    std::sort(vetValueOfReducedCostsG.begin(), vetValueOfReducedCostsG.end());
+
+    mean = mean/(FloatType)vetValueOfReducedCostsG.size();
+
+    size_t size = vetValueOfReducedCostsG.size();
+    if(size % 2 == 0)
+    {
+        median = (vetValueOfReducedCostsG[size/2] + vetValueOfReducedCostsG[(size/2)+1])/2.0;
+    }
+    else
+        median = vetValueOfReducedCostsG[size/2];
+
+    std::printf("Min: %.2f\nMax: %.2f\nMean: %.2f\nMedian: %.2f\n\n", min, max, mean, median);
+}
+
 
 
 

@@ -29,7 +29,6 @@ constexpr int NumNodesMaxEnumerate = 15;
 
 namespace VrpTW_DecompLabelingNS
 {
-
     // Linear index for a nxn matrix
     inline __attribute__((always_inline))
     int getIndex(int i, int j, int numClie){return i*numClie+j;}

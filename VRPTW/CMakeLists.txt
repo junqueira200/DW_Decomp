@@ -41,8 +41,8 @@ add_executable(${PROJECT_NAME}
     src/LabelingUtils.cpp
     include/Test.h
     src/Test.cpp
-    include/Cvrp_DecompLabeling.h)
-#    src/Cvrp_DecompLabeling.cpp)
+    include/Cvrp_DecompLabeling.h
+    src/Cvrp_DecompLabeling.cpp)
 
 
 #target_sources(${PROJECT_NAME}
@@ -57,7 +57,7 @@ add_executable(${PROJECT_NAME}
 
 target_sources(${PROJECT_NAME}
     PRIVATE
-#        src/Cvrp_DecompLabeling.cpp
+        src/Cvrp_DecompLabeling.cpp
         src/LabelingAlgorithm.cpp
         src/VrpTW_DecompLabeling.cpp
         src/VrpTW_Decomp.cpp
