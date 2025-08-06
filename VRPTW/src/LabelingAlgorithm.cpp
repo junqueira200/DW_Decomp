@@ -321,12 +321,15 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
           ((lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel < DW_DecompNS::NumMaxSolSubProb) || exact))
     {
 //std::cout<<"While\n";
-        // 																 10                         25
+        // 			10                         25
+
+        /*
         if((lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel >= 10 && labelHeap.heapSize >= 25 * numCust &&
             !exact))
         {
             break;
         }
+        */
 
         //checkHeap(labelHeap, lData);
         //lData.checkVetMatBucketBackward();
@@ -555,16 +558,52 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
 
                 if((bucket->sizeVetPtrLabel+1) > NumMaxLabePerBucket && tAux != dest)
                 {
-                    labelPoolG.delT(labelPtrAux);
-                    continue;
+
+                    // Find in bucket the label it has the largest reduced cost
+
+                    int posGreater = 0;
+                    FloatType redCost = bucket->vetPtrLabel[0]->vetResources[0];
+
+                    for(int i=1; i < bucket->sizeVetPtrLabel; ++i)
+                    {
+                        if(bucket->vetPtrLabel[i]->vetResources[0] > redCost)
+                        {
+                            redCost = bucket->vetPtrLabel[i]->vetResources[0];
+                            posGreater = i;
+                        }
+                    }
+
+                    if(labelPtrAux->vetResources[0] > redCost)
+                    {
+                        labelPoolG.delT(labelPtrAux);
+                        continue;
+                    }
+                    else
+                    {
+                         // Rm label in position posGreater
+
+                        Label* delPtr = bucket->vetPtrLabel[posGreater];
+                        for(int i=posGreater; i < (bucket->sizeVetPtrLabel-1); ++i)
+                        {
+                            bucket->vetPtrLabel[i] = bucket->vetPtrLabel[i+1];
+                            bucket->vetPtrLabel[i]->posBucket = i;
+                        }
+
+                        if(tAux != dest)
+                            labelHeap.deleteKey(delPtr->posHeap);
+
+
+                        labelPoolG.delT(delPtr);
+                        bucket->sizeVetPtrLabel += -1;
+
+                    }
                 }
 
 
                 int size = bucket->sizeVetPtrLabel+1;
                 if(size > bucket->vetPtrLabel.size())
-                {
                     bucket->vetPtrLabel.conservativeResize(2*size);
-                }
+
 
                 if(bucket->sizeVetPtrLabel != 0)
                 {
@@ -652,7 +691,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
 
             vetRedCost[l] = label->vetResources[0];
         }
-        //std::cout<<numSol<<"\n";
+        std::cout<<numSol<<"\n";
 
         // TODO remover
         //exit(-1);
@@ -661,7 +700,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
     }
     else
     {
-        //std::cout<<"0\n";
+        std::cout<<"0\n";
         return false;
     }
 }
@@ -2419,7 +2458,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int cust, Label* label, Labeli
             return nullptr;
         }
     }
-
+    // TODO FIX 05/09
     int i=0;
     while(i < bucketPtr->sizeVetPtrLabel)
     {
@@ -2437,14 +2476,32 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int cust, Label* label, Labeli
 
             if(rmFromHeap)
                 labelHeap->deleteKey(bucketPtr->vetPtrLabel[i]->posHeap);
+            int lastPos = bucketPtr->sizeVetPtrLabel-1;
 
+            labelPoolG.delT(bucketPtr->vetPtrLabel[i]);
+            bucketPtr->vetPtrLabel[i] = nullptr;
+            bucketPtr->sizeVetPtrLabel -= 1;
+
+            if(i != lastPos)
+            {
+                bucketPtr->vetPtrLabel[i] = bucketPtr->vetPtrLabel[lastPos];
+                bucketPtr->vetPtrLabel[lastPos] = nullptr;
+
+                if(bucketPtr->vetPtrLabel[i])
+                    bucketPtr->vetPtrLabel[i]->posBucket = i;
+            }
+            else
+                break;
+
+            /*
             for(int t=i; t < (bucketPtr->sizeVetPtrLabel-1); ++t)
             {
                 bucketPtr->vetPtrLabel[t] = bucketPtr->vetPtrLabel[t+1];
                 bucketPtr->vetPtrLabel[t]->posBucket = t;
             }
+            */
 
-            bucketPtr->sizeVetPtrLabel -= 1;
+            //bucketPtr->sizeVetPtrLabel -= 1;
 
             //std::cout<<"rm; size("<<bucketPtr->sizeVetPtrLabel<<"); i("<<i<<")\n";
         }
@@ -2452,8 +2509,8 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int cust, Label* label, Labeli
             i += 1;
     }
 
+    correctPos = bucketPtr->sizeVetPtrLabel;
 
-    correctPos = 0;
     return bucketPtr;
 
 }

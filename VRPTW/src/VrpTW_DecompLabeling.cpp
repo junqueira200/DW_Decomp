@@ -25,12 +25,12 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
 
     instVrpTw = &instVrpTw_;
     double mult = 0.5;
-    double numSteps = 1.0; // 2
+    double numSteps = 2.0; // 2
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 999999.0;//  10 // 5 //((2.0*mult)*startDist)/numSteps; // 1700
+    vetStepSize[0].stepSize = 100.0;//  10 // 5 //((2.0*mult)*startDist)/numSteps; // 1700
     vetStepSize[0].start    = -70;// -200 -50 // (FloatType)-mult*startDist;  // 1.0
-    vetStepSize[0].end      = 400;//  200 50 // (FloatType) mult*startDist; // 1.0
+    vetStepSize[0].end      = 500;//  200 50 // (FloatType) mult*startDist; // 1.0
 
 
 
@@ -432,10 +432,11 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 // TODO remove comments!
     if(!exact)
     {
-        for(int i = 2; i <= 4; i += 2)
+        for(int i = 1; i <= 10; i += 1)
         {
             //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
-            matColX.setZero();
+            //matColX.setZero();
+            std::cout<<i<<": ";
             custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward,
                                                  vetMatResCostBackward, vetVetResBound, instVrpTw->numClientes, ngSet,
                                                  labelingData, matColX, numSol, (FloatType) constPiValue, i, true,
@@ -518,7 +519,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     vetCooefRestConv[0] = 1;
 
 
-    //std::cout<<"*************\n\n";
+    std::cout<<"*************\n\n";
 
 /*    if(numSol == 0)
     {
