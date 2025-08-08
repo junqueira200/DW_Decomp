@@ -182,6 +182,8 @@ namespace LabelingAlgorithmNS
 
         ArrayResources vetMaxResources;
 
+        EigenMatrixRowD matDist;
+
         LabelingData(const Eigen::Vector<Step, 2> &vetStepSize_, int numMainResources_, int numCust_,
                      const ArrayResources& vetMaxResources_);
         LabelingData()=default;

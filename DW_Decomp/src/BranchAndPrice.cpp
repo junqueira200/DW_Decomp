@@ -193,6 +193,10 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
         std::cout<<"Root node can't be soved\n";
         delete rootNode;
         vetX_best.setZero();
+
+        clock_t end = clock();
+        statisticD.rootTime = double(end-start)/CLOCKS_PER_SEC;
+
         return vetX_best;
     }
 

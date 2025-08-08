@@ -18,7 +18,7 @@ message("set vector_sanity_check=1")
 
 
 #set(CMAKE_CXX_FLAGS "-pedantic")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -fPIC")# -pedantic -Wall -Wextra -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g")# -pedantic -Wall -Wextra -fPIC")
 
 find_package(Boost CONFIG)
 
@@ -41,8 +41,8 @@ add_executable(${PROJECT_NAME}
     src/LabelingUtils.cpp
     include/Test.h
     src/Test.cpp
-    include/Cvrp_DecompLabeling.h
-    src/Cvrp_DecompLabeling.cpp)
+    include/Cvrp_DecompLabeling.h)
+    #src/Cvrp_DecompLabeling.cpp)
 
 
 #target_sources(${PROJECT_NAME}
@@ -57,7 +57,7 @@ add_executable(${PROJECT_NAME}
 
 target_sources(${PROJECT_NAME}
     PRIVATE
-        src/Cvrp_DecompLabeling.cpp
+        #src/Cvrp_DecompLabeling.cpp
         src/LabelingAlgorithm.cpp
         src/VrpTW_DecompLabeling.cpp
         src/VrpTW_Decomp.cpp

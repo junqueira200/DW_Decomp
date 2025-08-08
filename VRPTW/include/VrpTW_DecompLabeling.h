@@ -59,6 +59,9 @@ namespace VrpTW_DecompLabelingNS
         LabelingAlgorithmNS::LabelingTypeAlg        typeLabel = LabelingAlgorithmNS::AlgForward;
         TestNS::RouteHash 							routeHash;
 
+        Vector<std::unique_ptr<LabelingAlgorithmNS::SortRoute>>        vetSortRoute;    // kepes all generated routes
+        boost::unordered_multiset<LabelingAlgorithmNS::HashSortRoute>  setSortRoute;    // Kepes the hash of all route
+
         void setTypeLabelToForward();
         void setTypeLabelToBackward();
         void setTypeLabelToBidirectional();

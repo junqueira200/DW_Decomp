@@ -190,7 +190,9 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                           const Vet3D_ResCost& vetMatResCostBackward, const MatBoundRes& matBoundRes, const int dest,
                           const NgSet& ngSet, LabelingData& lData, Eigen::MatrixXd& matColX, int& numSol,
                           const FloatType labelStart, int NumMaxLabePerBucket, bool dominaceCheck, FloatType& maxDist,
-                          Eigen::VectorX<FloatType>& vetRedCost, bool exact, LabelingTypeAlg labelingTypeAlg, bool arc)
+                          Eigen::VectorX<FloatType>& vetRedCost, bool exact, LabelingTypeAlg labelingTypeAlg, bool arc,
+                          Eigen::VectorX<FloatType>* vetLowerBoundRedCost, VetSortRoute& vetSortRoute,
+                          MultsetSortRoute& multsetSourRoute)
 {
     //vetRoteG = {19, 18, 5, 10, 1, 12, 9, 17, 9, 17, 9, 17};
 
@@ -321,15 +323,15 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
           ((lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel < DW_DecompNS::NumMaxSolSubProb) || exact))
     {
 //std::cout<<"While\n";
-        // 			10                         25
+        // 																 10                         25
 
-        /*
-        if((lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel >= 10 && labelHeap.heapSize >= 25 * numCust &&
+
+        if((lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel >= 5 && labelHeap.heapSize >= 50 * numCust &&
             !exact))
         {
             break;
         }
-        */
+
 
         //checkHeap(labelHeap, lData);
         //lData.checkVetMatBucketBackward();
@@ -339,7 +341,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             std::cout<<"ptrLabelTarget("<<ptrLabelTarget->active<<"): "<<*ptrLabelTarget<<"\n\n";
         }
 
-        /*
+
         if(labelHeap.heapSize > localNumMaxLabel && DominaIterBuckets)
         {
             lData.dominanceInterBuckets(labelHeap, numRes, localNumMaxLabel, lData.vetMatBucketForward, Backward);
@@ -347,7 +349,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             if(labelHeap.heapSize > localNumMaxLabel)
             {
                 int max = std::max(labelHeap.heapSize, localNumMaxLabel);
-                localNumMaxLabel =  (int)(max * 1.02);
+                localNumMaxLabel =  (int)(max * 1.1);
             }
 
 
@@ -358,7 +360,6 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             }
 
         }
-        */
 
         //lData.checkLabels();
 
@@ -462,6 +463,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                            labelPtr->cust, t, ngSet, numRes, vetBackwardMask))
             {
 
+
                 bool haveRoute = false;
                 if(TrackingRoutes)
                 {
@@ -475,6 +477,22 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                     std::cout<<"\t"<<*labelPtrAux<<"\n";
 
                 int correctPos = 0;
+
+                if(vetLowerBoundRedCost)
+                {
+                    if((labelPtrAux->vetResources[0] + (*vetLowerBoundRedCost)[t]) >= -DW_DecompNS::TolObjSubProb)
+                    {
+                        static bool print = false;
+                        if(!print)
+                        {
+                            std::cout<<"Funcionou\n";
+                            print = true;
+                        }
+
+                        labelPoolG.delT(labelPtrAux);
+                        continue;
+                    }
+                }
 
                 if(t == dest && labelPtrAux->typeLabel == Forward)
                 {
@@ -544,6 +562,19 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
 
                 }
 
+                /*
+                if(tAux == dest)
+                {
+                    if(checkIfRouteIsInSet(labelPtrAux, vetSortRoute, multsetSourRoute, lData.matDist))
+                    {
+                        labelPoolG.delT(labelPtrAux);
+                        continue;
+                    }
+                }
+                */
+
+
+
                 Bucket* bucket = dominanceIntraBucket(tAux, labelPtrAux, lData, &labelHeap, numRes, dest, correctPos);
 
                 if(!bucket)
@@ -558,52 +589,16 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
 
                 if((bucket->sizeVetPtrLabel+1) > NumMaxLabePerBucket && tAux != dest)
                 {
-
-                    // Find in bucket the label it has the largest reduced cost
-
-                    int posGreater = 0;
-                    FloatType redCost = bucket->vetPtrLabel[0]->vetResources[0];
-
-                    for(int i=1; i < bucket->sizeVetPtrLabel; ++i)
-                    {
-                        if(bucket->vetPtrLabel[i]->vetResources[0] > redCost)
-                        {
-                            redCost = bucket->vetPtrLabel[i]->vetResources[0];
-                            posGreater = i;
-                        }
-                    }
-
-                    if(labelPtrAux->vetResources[0] > redCost)
-                    {
-                        labelPoolG.delT(labelPtrAux);
-                        continue;
-                    }
-                    else
-                    {
-                         // Rm label in position posGreater
-
-                        Label* delPtr = bucket->vetPtrLabel[posGreater];
-                        for(int i=posGreater; i < (bucket->sizeVetPtrLabel-1); ++i)
-                        {
-                            bucket->vetPtrLabel[i] = bucket->vetPtrLabel[i+1];
-                            bucket->vetPtrLabel[i]->posBucket = i;
-                        }
-
-                        if(tAux != dest)
-                            labelHeap.deleteKey(delPtr->posHeap);
-
-
-                        labelPoolG.delT(delPtr);
-                        bucket->sizeVetPtrLabel += -1;
-
-                    }
+                    labelPoolG.delT(labelPtrAux);
+                    continue;
                 }
 
 
                 int size = bucket->sizeVetPtrLabel+1;
                 if(size > bucket->vetPtrLabel.size())
+                {
                     bucket->vetPtrLabel.conservativeResize(2*size);
-
+                }
 
                 if(bucket->sizeVetPtrLabel != 0)
                 {
@@ -702,6 +697,16 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
     {
         std::cout<<"0\n";
         return false;
+    }
+}
+
+void LabelingAlgorithmNS::startPool()
+{
+
+    if(!startLabelPoolG)
+    {
+        startLabelPoolG = true;
+        labelPoolG.startPool(5, 100);
     }
 }
 
@@ -2281,23 +2286,23 @@ bool LabelingAlgorithmNS::checkCompleteDominance(const Label& l0, const Label& l
         //#pragma GCC unroll NumMaxResources
         for(int i=0; i < numResources; ++i)
         {
-            //if(l0.vetResources[i] > l1.vetResources[i])
-            if(doubleGreater(l0.vetResources[i], l1.vetResources[i], FloatEp))
+            if(l0.vetResources[i] > l1.vetResources[i])
+            //if(doubleGreater(l0.vetResources[i], l1.vetResources[i], FloatEp))
                 return false;
         }
     }
     else
     {
-        //if(l0.vetResources[0] > l1.vetResources[0])
-        if(doubleGreater(l0.vetResources[0], l1.vetResources[0], FloatEp))
+        if(l0.vetResources[0] > l1.vetResources[0])
+        //if(doubleGreater(l0.vetResources[0], l1.vetResources[0], FloatEp))
             return false;
 
         // Check the resources
         //#pragma GCC unroll NumMaxResources
         for(int i=1; i < numResources; ++i)
         {
-            //if(l0.vetResources[i] < l1.vetResources[i])
-            if(doubleLess(l0.vetResources[i], l1.vetResources[i], FloatEp))
+            if(l0.vetResources[i] < l1.vetResources[i])
+            //if(doubleLess(l0.vetResources[i], l1.vetResources[i], FloatEp))
                 return false;
         }
     }
@@ -2458,7 +2463,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int cust, Label* label, Labeli
             return nullptr;
         }
     }
-    // TODO FIX 05/09
+
     int i=0;
     while(i < bucketPtr->sizeVetPtrLabel)
     {
@@ -2476,32 +2481,16 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int cust, Label* label, Labeli
 
             if(rmFromHeap)
                 labelHeap->deleteKey(bucketPtr->vetPtrLabel[i]->posHeap);
-            int lastPos = bucketPtr->sizeVetPtrLabel-1;
 
             labelPoolG.delT(bucketPtr->vetPtrLabel[i]);
-            bucketPtr->vetPtrLabel[i] = nullptr;
-            bucketPtr->sizeVetPtrLabel -= 1;
 
-            if(i != lastPos)
-            {
-                bucketPtr->vetPtrLabel[i] = bucketPtr->vetPtrLabel[lastPos];
-                bucketPtr->vetPtrLabel[lastPos] = nullptr;
-
-                if(bucketPtr->vetPtrLabel[i])
-                    bucketPtr->vetPtrLabel[i]->posBucket = i;
-            }
-            else
-                break;
-
-            /*
             for(int t=i; t < (bucketPtr->sizeVetPtrLabel-1); ++t)
             {
                 bucketPtr->vetPtrLabel[t] = bucketPtr->vetPtrLabel[t+1];
                 bucketPtr->vetPtrLabel[t]->posBucket = t;
             }
-            */
 
-            //bucketPtr->sizeVetPtrLabel -= 1;
+            bucketPtr->sizeVetPtrLabel -= 1;
 
             //std::cout<<"rm; size("<<bucketPtr->sizeVetPtrLabel<<"); i("<<i<<")\n";
         }
@@ -2509,8 +2498,8 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int cust, Label* label, Labeli
             i += 1;
     }
 
-    correctPos = bucketPtr->sizeVetPtrLabel;
 
+    correctPos = 0;
     return bucketPtr;
 
 }
@@ -2621,3 +2610,89 @@ Label* LabelingAlgorithmNS::
 
     return result;
 }
+
+
+
+void LabelingAlgorithmNS::resetLabelPool()
+{
+    labelPoolG.resetPool(false);
+}
+
+HashSortRoute::HashSortRoute(SortRoute& sortRoute_):sortRoute(sortRoute_)
+{
+    // https://cseweb.ucsd.edu/~kube/cls/100/Lectures/lec16/lec16-16.html
+    // ELF Hash algorithm
+    hash = 0;
+    for(int i=0; i < sortRoute.vetSortRoute.size(); ++i)
+    {   //         valHash * 16
+        hash = (hash<<4) + sortRoute.vetRoute[i];
+        uint64_t g = hash & 0xF0000000L;
+
+        if(g != 0)
+            hash ^= g >> 24;
+        hash &= ~g;
+    }
+
+
+}
+
+bool LabelingAlgorithmNS::checkIfRouteIsInSet(Label* label, VetSortRoute& vetSortRoute,
+                                              MultsetSortRoute& multsetSourRoute, const EigenMatrixRowD& matDist)
+{
+    vetSortRoute.push_back(std::make_unique<SortRoute>());
+
+    LabelingAlgorithmNS::SortRoute& sortRoute = *vetSortRoute[vetSortRoute.size()-1];
+    sortRoute.vetSortRoute.resize(label->tamRoute);
+    sortRoute.vetRoute.resize(label->tamRoute);
+
+    for(int i=0; i < label->tamRoute; ++i)
+    {
+        int cust = label->vetRoute[i];
+        if(i == (label->tamRoute) || i == 0)
+            cust = 0;
+
+        sortRoute.vetRoute[i]     = cust;
+        sortRoute.vetSortRoute[i] = cust;
+
+    }
+
+    sortRoute.computeDistance(matDist);
+
+    std::sort(sortRoute.vetSortRoute.begin(), sortRoute.vetSortRoute.end());
+    HashSortRoute hashSortRoute(sortRoute);
+
+    if(multsetSourRoute.count(hashSortRoute) >= 1)
+    {
+        auto it = multsetSourRoute.find(hashSortRoute);
+
+        bool equalDist = false;
+
+        while(it != multsetSourRoute.end())
+        {
+
+            if(doubleLessEqual((*it).sortRoute.dist, sortRoute.dist), 1E-5)
+            {
+                vetSortRoute.pop_back();
+                return true;
+            }
+
+            ++it;
+        }
+
+        std::cout<<"Route Repeted\n";
+    }
+
+    multsetSourRoute.insert(hashSortRoute);
+    return false;
+}
+
+void  LabelingAlgorithmNS::SortRoute::computeDistance(const EigenMatrixRowD& matDist)
+{
+    dist = 0.0;
+    for(int i=0; i < (vetRoute.size()-1); ++i)
+    {
+        dist += matDist(vetRoute[i], vetRoute[i+1]);
+    }
+}
+
+

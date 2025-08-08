@@ -17,16 +17,16 @@ namespace LabelingAlgorithmNS
     inline bool PrintG         = false;
 
     constexpr int   NumMaxResources   = 2;
-    constexpr int   NumMaxRoute       = 32;
+    constexpr int   NumMaxRoute       = 100;
     constexpr int   NumMaxCust        = 100; //100
-    constexpr int   NgSetSize         = 7;
+    constexpr int   NgSetSize         = 12;
     constexpr int   NumBuckets        = 10;
     constexpr int   vetPtrLabelSize   = 10;
     constexpr bool  NullFlush         = true;
     constexpr bool  Print             = true;
     constexpr int   numMaxLabelG      = 2; // 2000
     constexpr bool  DominaIterBuckets = true;
-    constexpr FloatType FloatEp       = 1E-5;
+    constexpr FloatType FloatEp       = 1E-15;
     constexpr bool  TrackingRoutes    = false;
 
     constexpr double MaxFloatType = std::numeric_limits<FloatType>::max();

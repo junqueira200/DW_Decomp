@@ -9,6 +9,7 @@
  *  *****************************************************************/
 
 #include "VrpTW_DecompLabeling.h"
+#include "LowerBound.h"
 
 using namespace LabelingAlgorithmNS;
 using namespace TestNS;
@@ -25,12 +26,12 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
 
     instVrpTw = &instVrpTw_;
     double mult = 0.5;
-    double numSteps = 2.0; // 2
+    double numSteps = 1.0; // 2
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 100.0;//  10 // 5 //((2.0*mult)*startDist)/numSteps; // 1700
+    vetStepSize[0].stepSize = 999999.0;//  10 // 5 //((2.0*mult)*startDist)/numSteps; // 1700
     vetStepSize[0].start    = -70;// -200 -50 // (FloatType)-mult*startDist;  // 1.0
-    vetStepSize[0].end      = 500;//  200 50 // (FloatType) mult*startDist; // 1.0
+    vetStepSize[0].end      = 400;//  200 50 // (FloatType) mult*startDist; // 1.0
 
 
 
@@ -40,6 +41,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
 
 
     labelingData  = LabelingAlgorithmNS::LabelingData(vetStepSize, 2, instVrpTw->numClientes+1, vetMaxResouces);
+    labelingData.matDist = instVrpTw->matDist;
     vetMatResCostForward  = Vet3D_ResCost(instVrpTw->numClientes+1, instVrpTw->numClientes+1, 2);
     vetMatResCostForward.setVal(0.0);
 
@@ -113,7 +115,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
     ngSet.setNgSets(instVrpTw->matDist);
     ngSet.active = true;
 
-    enumerateRoutes(*instVrpTw, instVrpTw->numClientes-1, routeHash);
+    //enumerateRoutes(*instVrpTw, instVrpTw->numClientes-1, routeHash);
 
 
 }
@@ -127,7 +129,7 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, v
     GRBVar a = rmlp.addVar(0, GRB_INFINITY, 1.0, GRB_CONTINUOUS);
     //linExpr += -a;
 
-    rmlp.addConstr(linExpr, '<', instVrpTw->numVeic, "convConstr");
+    rmlp.addConstr(linExpr, '=', instVrpTw->numVeic, "convConstr");
 
 
 }
@@ -141,6 +143,8 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb()
 
 bool VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi)
 {
+    return false;
+
     cleanVetRouteG();
     std::cout<<"Start checkEnumeratedRoutes\n\n";
     int t = 0;
@@ -279,7 +283,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                    const VectorI &vetVar0, const VectorI &vetVar1, DW_DecompNS::PhaseStatus phaseStatus, bool exact)
 {
     //std::cout<<"star value: "<<constPiValue<<"\n\n";
-
+    //static Eigen::VectorXd vetDist(instVrpTw->numClientes+1);
+    //LowerBoundNS::getDistLowerBound(vetMatResCostForward, vetDist, instVrpTw->numClientes, &labelingData);
 
     static DW_DecompNS::PhaseStatus phase = phaseStatus;
 
@@ -432,15 +437,16 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 // TODO remove comments!
     if(!exact)
     {
-        for(int i = 1; i <= 10; i += 1)
+        for(int i = 2; i <= 8; i += 2)
         {
-            //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
-            //matColX.setZero();
             std::cout<<i<<": ";
+            //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
+            matColX.setZero();
             custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward,
                                                  vetMatResCostBackward, vetVetResBound, instVrpTw->numClientes, ngSet,
                                                  labelingData, matColX, numSol, (FloatType) constPiValue, i, true,
-                                                 maxDist, vetRedCostFT, exact, typeLabel, true);
+                                                 maxDist, vetRedCostFT, exact, typeLabel, true, nullptr, vetSortRoute,
+                                                 setSortRoute);
 
             it += 1;
             if(custoRedNeg)
@@ -452,27 +458,18 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     if(!custoRedNeg)
     {
-        matColX.setZero();
 
-        //std::cout<<"EXACT LABELING\n";
-        //exactLabelingG = true;
         custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
                                              vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
                                              numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
-                                             typeLabel, true);
+                                             typeLabel, true, nullptr,  vetSortRoute, setSortRoute);
     }
+
 
     if(!custoRedNeg)
     {
         if(checkEnumeratedRoutesFinal(vetRowPi))
         {
-            numSol = 0;
-            PrintG = true;
-            custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
-                                                 vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
-                                                 numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
-                                                 typeLabel, true);
-
             PRINT_EXIT();
         }
     }
@@ -1003,12 +1000,6 @@ void  VrpTW_DecompLabelingNS::CapacityCut::createInducedSubGraphArcs(int listSiz
         }
     }
 }
-
-
-
-
-
-
 
 
 

@@ -10,110 +10,8 @@
 
 #include "LowerBound.h"
 
-void LowerBoundNS::FloatTypeHeap::heapify(int i)
-{
 
-}
-
-FloatType LowerBoundNS::FloatTypeHeap::extractMin()
-{
-
-}
-
-void LowerBoundNS::FloatTypeHeap::decreaseKey(int i, FloatType val)
-{
-
-}
-
-void LowerBoundNS::FloatTypeHeap::deleteKey(int i)
-{
-
-}
-
-void LowerBoundNS::FloatTypeHeap::insertKey(FloatType val)
-{
-
-    if(heapSize == (int)vet.size())
-    {
-        vet.resize(2*heapSize);
-        for(int i=heapSize; i < (int)vet.size(); ++i)
-            vet[i] = 0;
-    }
-
-    heapSize += 1;
-    int i = heapSize - 1;
-    int iParent = parent(i);
-    vet[i] = val;
-
-    while(i!=0 && vet[iParent] > vet[i])//vet[iParent]->vetResources[0] > vet[i]->vetResources[0])
-    {
-        std::swap(vet[i], vet[iParent]);
-        i = iParent;
-        iParent = parent(i);
-    }
-
-}
-
-bool LowerBoundNS::bellmanFord(const LabelingAlgorithmNS::Vet3D_ResCost& vetMatResCost,
-                               Eigen::VectorX<FloatType>&                vetDist,
-                               int                                       src)
-{
-
-    constexpr FloatType InfFloatType = std::numeric_limits<FloatType>::infinity();
-    vetDist.setConstant(InfFloatType);
-    vetDist[src] = 0.0;
-    const int size = vetDist.size();
-
-    for(int t=0; t < size; ++t)
-    {
-        // Relax the edges
-        for(int i=0; i < size; ++i)
-        {
-            for(int j=0; j < size; ++j)
-            {
-                if(i == j || vetMatResCost(i, j, 0) == InfFloatType || vetDist[i] == InfFloatType)
-                    continue;
-
-                FloatType newDist = vetDist[i] + vetMatResCost(i, j, 0);
-                if(newDist < vetDist[j])
-                    vetDist[j] = newDist;
-            }
-        }
-    }
-
-    // Check if there is a negative cycle by relaxing the edges for the last time
-    bool negCycle = false;
-
-    for(int i=0; i < size; ++i)
-    {
-        for(int j=0; j < size; ++j)
-        {
-            if(i == j || vetMatResCost(i, j, 0) == InfFloatType || vetDist[i] == InfFloatType)
-                continue;
-
-            FloatType newDist = vetDist[i] + vetMatResCost(i, j, 0);
-            if(newDist < vetDist[j])
-            {
-                negCycle = true;
-                break;
-            }
-        }
-
-        if(negCycle)
-            break;
-    }
-
-    if(negCycle)
-    {
-        //std::cout<<"negCycle\n";
-        return false;
-    }
-
-    //std::cout<<"getLB\n";
-
-    return true;
-
-}
+using namespace LabelingAlgorithmNS;
 
 /** ******************************************************************************************
  *  ******************************************************************************************
@@ -125,21 +23,126 @@ bool LowerBoundNS::bellmanFord(const LabelingAlgorithmNS::Vet3D_ResCost& vetMatR
  *  ******************************************************************************************
  */
 bool LowerBoundNS::getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost& vetMatResCost,
-                                     Eigen::VectorX<FloatType>&                vetDist)
+                                     Eigen::VectorX<FloatType>&                vetDist,
+                                     int                                       dest,
+                                     LabelingAlgorithmNS::LabelingData*        lDataPtr)
+
 {
+    static LabelHeap labelHeap(1000000);
+    startPool();
 
-    static Eigen::VectorX<FloatType> vetDistAux(vetDist);
-    vetDist.setConstant(std::numeric_limits<FloatType>::infinity());
-    vetDist[vetDist.size()-1] = 0.0;
+    int indexI = lDataPtr->getIndex(0, 0.0);
+    vetDist.setConstant(MaxFloatType);
 
-    for(int i=0; i < (vetDist.size()-1); ++i)
+    //lDataPtr->vetMatBucketForward[0].mat(0, 1).flush();
+
+    for(int cust=0; cust < dest; ++cust)
     {
-        if(!bellmanFord(vetMatResCost, vetDistAux, i))
-            return false;
+        labelHeap.heapSize = 0;
+        lDataPtr->flushLabel();
+        resetLabelPool();
 
-        vetDist[i] = vetDistAux[vetDist.size()-1];
+        Label* labelPtr = getLabel();
+
+        labelPtr->typeLabel      = Forward;
+        labelPtr->cust           = cust;
+        labelPtr->tamRoute       = 1;
+        labelPtr->vetRoute[0]    = cust;
+        labelPtr->bitSetNg       = 0;
+        labelPtr->bitSetNg[cust] = true;
+
+        labelPtr->vetResources.setZero();
+        labelPtr->i               = 0;
+        labelPtr->j               = 0;
+        labelPtr->posHeap         = 0;
+        labelPtr->posBucket       = 0;
+
+        Bucket* bucket = lDataPtr->getBucket(labelPtr);
+
+        bucket->vetPtrLabel.resize(1);
+        bucket->sizeVetPtrLabel = 1;
+        bucket->vetPtrLabel[0]  = labelPtr;
+
+        labelHeap.insertKey(labelPtr);
+
+        vetDist[cust] = MaxFloatType;
+
+        std::bitset<NumMaxCust> bitSet = 0;
+        bitSet[cust] = true;
+
+        while(!labelHeap.empty())
+        {
+            labelPtr = labelHeap.extractMin();
+            //std::cout<<"cust: "<<labelPtr->cust<<"\n\n";
+            lDataPtr->removeLabel(labelPtr);
+
+            bitSet[labelPtr->cust] = true;
+
+            for(int next=1; next <= dest; ++next)
+            {
+                if(labelPtr->bitSetNg[next] || next == labelPtr->cust || (labelPtr->cust == 0 && next == dest) ||
+                        bitSet[next])
+                    continue;
+
+                Label* labelAux = getLabel();
+                extendLabel(labelPtr, labelAux, vetMatResCost, lDataPtr, next);
+                int correctPos = -1;
+                Bucket* bucket = dominanceIntraBucket(next, labelAux, *lDataPtr, &labelHeap, 1, dest, correctPos);
+
+                if(!bucket)
+                {
+                    rmLabel(labelAux);
+                    continue;
+                }
+
+                if((bucket->sizeVetPtrLabel+1) > bucket->vetPtrLabel.size())
+                    bucket->vetPtrLabel.conservativeResize(2*bucket->sizeVetPtrLabel);
+
+
+                if(bucket->sizeVetPtrLabel != 0)
+                {
+                    for(int i = bucket->sizeVetPtrLabel-1; i >= correctPos; --i)
+                    {
+                        int index = i+1;
+                        bucket->vetPtrLabel[index]            = bucket->vetPtrLabel[i];
+                        bucket->vetPtrLabel[index]->posBucket = index;
+                    }
+                }
+
+                bucket->vetPtrLabel[correctPos] = labelAux;
+                bucket->vetPtrLabel[correctPos]->posBucket = correctPos;
+                bucket->sizeVetPtrLabel += 1;
+
+                if(next != dest)
+                    labelHeap.insertKey(labelAux);            }
+        }
+
+        labelPtr = getLabel();
+        labelPtr->cust = MaxInt;
+        labelPtr->vetResources[0] = MaxFloatType;
+
+        //for(int i=0; i <= lDataPtr->vetNumSteps(0); ++i)
+        {
+            Label* aux = getLabel();
+            aux->cust = dest;
+            aux->i = 0;
+            aux->j = 0;
+            aux->typeLabel = Forward;
+
+            Bucket* bucket = lDataPtr->getBucket(aux);
+            for(int j=0; j < bucket->sizeVetPtrLabel; ++j)
+            {
+                if(bucket->vetPtrLabel[j]->vetResources[0] < labelPtr->vetResources[0])
+                    labelPtr = bucket->vetPtrLabel[j];
+            }
+        }
+
+        vetDist[cust] = labelPtr->vetResources[0];
+        //std::cout<<vetDist[cust]<<"\n";
+
+
     }
 
-
+    std::cout<<"vetDist: "<<vetDist.transpose()<<"\n\n";
     return true;
 }

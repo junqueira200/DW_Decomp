@@ -1311,7 +1311,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
         //std::cout<<"PI: "<<auxVect.vetRowRmlpPi<<"\n\n";
 
-        //if(itCG == 40)
+        //if(itCG == 35)
         //    return DW_DecompNS::StatusProb::StatusSubProb_Inviavel;
         //delete []vetRmlpConstr;
 

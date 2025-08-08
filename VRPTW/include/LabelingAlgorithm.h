@@ -36,14 +36,65 @@ namespace LabelingAlgorithmNS
         AlgBidirectional
     };
 
+    class SortRoute
+    {
+    public:
+
+        Eigen::VectorXi vetRoute;
+        Eigen::VectorXi vetSortRoute;
+        FloatType dist;
+
+        void computeDistance(const EigenMatrixRowD& matDist);
+
+    };
+
+    class HashSortRoute
+    {
+    public:
+
+        SortRoute& sortRoute;
+        uint64_t hash;
+
+        HashSortRoute(SortRoute& sortRoute_);
+    };
+
+
+    inline
+    bool operator == (const HashSortRoute &sol0, const HashSortRoute &sol1)
+    {
+        if(sol0.hash != sol1.hash)
+            return false;
+
+        if(sol0.sortRoute.vetSortRoute.size() != sol1.sortRoute.vetSortRoute.size())
+            return false;
+
+        for(int i=0; i < sol0.sortRoute.vetSortRoute.size(); ++i)
+        {
+            if(sol0.sortRoute.vetSortRoute[i] != sol1.sortRoute.vetSortRoute[i])
+                return false;
+        }
+
+        return true;
+    }
+
+    inline
+    std::size_t  hash_value(const HashSortRoute& solXHash){return solXHash.hash;}
+
+
+    typedef Vector<std::unique_ptr<LabelingAlgorithmNS::SortRoute>>        VetSortRoute;
+    typedef boost::unordered_multiset<LabelingAlgorithmNS::HashSortRoute>  MultsetSortRoute;
+
+    bool checkIfRouteIsInSet(Label* label, VetSortRoute& vetSortRoute, MultsetSortRoute& multsetSourRoute,
+                             const EigenMatrixRowD& matDist);
+
 
     bool bidirectionalAlgorithm(int numRes, int numCust, const Vet3D_ResCost& vetMatResCostForward,
                                 const Vet3D_ResCost& vetMatResCostBackward, const MatBoundRes& vetVetBound, int dest,
                                 const NgSet& ngSet, LabelingData& lData, Eigen::MatrixXd& matColX, int& numSol,
                                 FloatType labelStart, int NumMaxLabePerBucket, bool dominaceCheck, FloatType& maxDist,
                                 Eigen::VectorX<FloatType>& vetRedCost, bool exact, LabelingTypeAlg labelingTypeAlg,
-                                bool arc);
-
+                                bool arc, Eigen::VectorX<FloatType>* vetLowerBoundRedCost, VetSortRoute& vetSortRoute,
+                                MultsetSortRoute& multsetSourRoute);
 
     //inline __attribute__((always_inline))
     bool checkCompleteDominance(const Label& l0, const Label& l1, int numResources);
@@ -112,6 +163,9 @@ namespace LabelingAlgorithmNS
 
     Label* getLabel();
     void rmLabel(Label* label);
+    void resetLabelPool();
+    void startPool();
+
     void writeNgSet(Label* label, const NgSet& ngset);
     void startGlobalMemory(const Vector<VectorI>& vetRoutes);
     void addToVetRoutesG(const VectorI& route);
