@@ -29,7 +29,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
     double numSteps = 1.0; // 2
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 999999.0;//  10 // 5 //((2.0*mult)*startDist)/numSteps; // 1700
+    vetStepSize[0].stepSize = 5000000.0;//  10 // 5 //((2.0*mult)*startDist)/numSteps; // 1700
     vetStepSize[0].start    = -70;// -200 -50 // (FloatType)-mult*startDist;  // 1.0
     vetStepSize[0].end      = 400;//  200 50 // (FloatType) mult*startDist; // 1.0
 
@@ -129,7 +129,7 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::iniConvConstr(GRBModel &rmlp, v
     GRBVar a = rmlp.addVar(0, GRB_INFINITY, 1.0, GRB_CONTINUOUS);
     //linExpr += -a;
 
-    rmlp.addConstr(linExpr, '=', instVrpTw->numVeic, "convConstr");
+    rmlp.addConstr(linExpr, '<', instVrpTw->numVeic, "convConstr");
 
 
 }
@@ -435,7 +435,53 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     exactLabelingG = false;
 
 // TODO remove comments!
+    /*
     if(!exact)
+    {
+        for(int i = 2; i <= 4; i += 2)
+        {
+            std::cout<<i<<": ";
+            //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
+            matColX.setZero();
+            custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward,
+                                                 vetMatResCostBackward, vetVetResBound, instVrpTw->numClientes, ngSet,
+                                                 labelingData, matColX, numSol, (FloatType) constPiValue, i, true,
+                                                 maxDist, vetRedCostFT, exact, typeLabel, true, nullptr, vetSortRoute,
+                                                 setSortRoute, 10);
+
+            it += 1;
+            if(custoRedNeg)
+                break;
+
+        }
+    }
+    */
+
+
+    if(!custoRedNeg && !exact)
+    {
+        for(int i = 2; i <= 4; i += 2)
+        {
+            std::cout<<i<<": ";
+            //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
+            matColX.setZero();
+            numSol = 0;
+            custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward,
+                                                 vetMatResCostBackward, vetVetResBound, instVrpTw->numClientes, ngSet,
+                                                 labelingData, matColX, numSol, (FloatType) constPiValue, i, true,
+                                                 maxDist, vetRedCostFT, exact, typeLabel, true, nullptr, vetSortRoute,
+                                                 setSortRoute, MaxInt, MaxRedCost);
+
+            it += 1;
+            if(custoRedNeg && numSol >= DW_DecompNS::NumMaxSolSubProb/2)
+                break;
+
+        }
+    }
+
+
+    /*
+    if(!custoRedNeg && !exact)
     {
         for(int i = 2; i <= 8; i += 2)
         {
@@ -446,7 +492,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                                                  vetMatResCostBackward, vetVetResBound, instVrpTw->numClientes, ngSet,
                                                  labelingData, matColX, numSol, (FloatType) constPiValue, i, true,
                                                  maxDist, vetRedCostFT, exact, typeLabel, true, nullptr, vetSortRoute,
-                                                 setSortRoute);
+                                                 setSortRoute, MaxInt, MaxFloatType);
 
             it += 1;
             if(custoRedNeg)
@@ -454,16 +500,18 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
         }
     }
+    */
 
-
-    if(!custoRedNeg)
+    if(!custoRedNeg || numSol < DW_DecompNS::NumMaxSolSubProb/2)
     {
-
+        matColX.setZero();
+        numSol = 0;
         custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
                                              vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
                                              numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
-                                             typeLabel, true, nullptr,  vetSortRoute, setSortRoute);
+                                             typeLabel, true, nullptr,  vetSortRoute, setSortRoute, MaxInt, MaxFloatType);
     }
+
 
 
     if(!custoRedNeg)
@@ -475,7 +523,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     }
     /*
     else
-    {
+
 
         if(checkEnumeratedRoutesMid(vetRowPi, matColX, numSol))
         {

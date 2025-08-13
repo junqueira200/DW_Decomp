@@ -27,9 +27,9 @@ namespace DW_DecompNS
 
     constexpr double TolObjSubProb       = 1E-3;
     // TODO Retornar para 25!
-    constexpr int    NumMaxSolSubProb    = 500;//25;
+    constexpr int    NumMaxSolSubProb    = 30;//25;
     constexpr double StabilizationAlpha  = 0.6; // .9 // .45  // 0.60
-    inline bool      Stabilization       = true;
+    inline bool      StabilizationG       = true;
     constexpr double gapLimit            = 1E-3;
     constexpr int    NumCandidatesBranch = 3;
     constexpr bool   PrintDebug          = false;

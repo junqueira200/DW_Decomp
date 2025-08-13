@@ -94,7 +94,7 @@ Label* LabelHeap::extractMin()
 
 }
 
-void LabelHeap::decreaseKey(int i, FloatType val)
+void LabelHeap::decreaseKey(int i, KEY_TYPE val)
 {
     if(vet[i] == nullptr)
     {
@@ -104,10 +104,11 @@ void LabelHeap::decreaseKey(int i, FloatType val)
         throw "ERROR";
     }
 
-    vet[i]->vetResources[0] = val;
+    //vet[i]->index = val;
+    vet[i]->HEAP_KEY = val;
     int iParent = parent(i);
 
-    while(i!=0 && vet[iParent]->vetResources[0] > vet[i]->vetResources[0])
+    while(i!=0 && labelCmp.isGreater(vet[iParent], vet[i]))
     {
         std::swap(vet[i], vet[iParent]);
         std::swap(vet[i]->posHeap, vet[iParent]->posHeap);
@@ -126,7 +127,7 @@ void LabelHeap::deleteKey(int i)
         throw "ERROR";
     }
 
-    decreaseKey(i, -std::numeric_limits<FloatType>::max());
+    decreaseKey(i, KEY_MIN);
     Label* label = extractMin();
 
     memset((void*)label, 0, sizeof(Label));

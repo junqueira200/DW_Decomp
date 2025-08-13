@@ -94,7 +94,7 @@ namespace LabelingAlgorithmNS
                                 FloatType labelStart, int NumMaxLabePerBucket, bool dominaceCheck, FloatType& maxDist,
                                 Eigen::VectorX<FloatType>& vetRedCost, bool exact, LabelingTypeAlg labelingTypeAlg,
                                 bool arc, Eigen::VectorX<FloatType>* vetLowerBoundRedCost, VetSortRoute& vetSortRoute,
-                                MultsetSortRoute& multsetSourRoute);
+                                MultsetSortRoute& multsetSourRoute, int maxRouteSize, FloatType maxRedCost);
 
     //inline __attribute__((always_inline))
     bool checkCompleteDominance(const Label& l0, const Label& l1, int numResources);
@@ -172,5 +172,8 @@ namespace LabelingAlgorithmNS
     void cleanVetRouteG();
     std::string printRoute(Label* label);
     void invertRoutes(Vector<VectorI>& vetRoutes);
+
+    void computeMeanMaxMin();
+
 }
 #endif //DW_LABELINGALGORITHM_H
