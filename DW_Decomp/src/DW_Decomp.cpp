@@ -693,10 +693,10 @@ std::cout<<"ini DW_DecompNode\n";
     uRmlp->write("rmlp_"+std::to_string(-1)+".lp");
     vetRmlpConstr = uRmlp->getConstrs();
 
-    uRmlp->set(GRB_IntParam_Method, GRB_METHOD_DUAL);
+    uRmlp->set(GRB_IntParam_Method, GRB_METHOD_PRIMAL);
     //uRmlp->set(GRB_IntParam_Presolve, GRB_PRESOLVE_OFF);
     uRmlp->set(GRB_IntParam_OutputFlag, 0);
-    //uRmlp->set(GRB_IntParam_Quad, 1);
+    uRmlp->set(GRB_IntParam_Quad, 1);
 
 
     delete []vetRmlpConstrsSense;
@@ -737,7 +737,6 @@ std::cout<<"*******************Column Generation*******************\n\n";
     bool missPricing = false;
     bool exactPi = false;
     bool exactPricing = false;
-    bool stabilization = StabilizationG;
 
     uRmlp->update();
 
@@ -920,7 +919,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         if(PrintDebug)
             std::cout<<"~UpdatePi\n";
 
-        if(stabilization && !exactPi && itCG > 0)// && phaseStatus == PhaseStatus::PhaseStatusColGen)
+        if(Stabilization && !exactPi && itCG > 0)// && phaseStatus == PhaseStatus::PhaseStatusColGen)
         {
             auxVect.vetRowRmlpSmoothPi = (1.0-StabilizationAlpha)*auxVect.vetRowRmlpSmoothPi +
                                           StabilizationAlpha * (auxVect.vetRowRmlpPi);
@@ -1021,7 +1020,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
                     numSolRep += 1;
                     vetVarLambdaCol.pop_back();
 
-                    if(!stabilization)
+                    if(!Stabilization)
                     {
                         uRmlp->write("missPricing.lp");
                         PRINT_DEBUG("", "");
@@ -1096,17 +1095,15 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
             if(numSolRep == numSol)
             {
-                std::cout<<"MISS PRICING\n";
+                //std::cout<<"MISS PRICING\n";
                 missPricing = true;
                 numLimit += 1;
                 lagrangeDualBound = std::numeric_limits<double>::infinity();
                 gap =  std::numeric_limits<double>::infinity();
-                //stabilization = false;
             }
             else
             {
                 missPricing = false;
-                stabilization = true;
 
                 lagrangeDualBound = objRmlp + rhsConv*minRedCost;
                 gap = (std::abs(rhsConv*minRedCost)/objRmlp)*100.0;
@@ -1251,15 +1248,15 @@ std::cout<<"*******************Column Generation*******************\n\n";
         */
         {
 
-            if(!exactPi && stabilization && !missPricing && !subProbCustR_neg)
+            if(!exactPi && Stabilization && !missPricing && !subProbCustR_neg)
             {
                 //exactPi = true;
                 //subProbCustR_neg = true;
                 std::cout<<"Seting exactPi\n";
             }
-            else if(exactPi && stabilization && !missPricing && subProbCustR_neg)
+            else if(exactPi && Stabilization && !missPricing && subProbCustR_neg)
                 exactPi = false;
-            else if(!exactPi && stabilization && missPricing && subProbCustR_neg)
+            else if(!exactPi && Stabilization && missPricing && subProbCustR_neg)
             {
                 //exactPi = true;
                 //std::cout<<"Set exactPi\n";
@@ -1284,7 +1281,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         */
 
 
-        if(missPricing && !stabilization)
+        if(missPricing && !Stabilization)
         {
             uRmlp->write("missPricing.lp");
             std::cout<<"miss pricing\n";
@@ -1299,11 +1296,6 @@ std::cout<<"*******************Column Generation*******************\n\n";
             throw "MISS_PRICING";
         }
 
-        // TODO Add
-        /*
-        if(missPricing)
-            stabilization = false;
-        */
 
         //lagrangeDualBound = getLagrangeDualBound(objRmlp, redCost);
 

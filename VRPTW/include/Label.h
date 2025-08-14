@@ -43,10 +43,9 @@ namespace LabelingAlgorithmNS
         int         j         = -1;
         int         cust      = -1;
         int         posHeap   = -1;
-        int         tamRoute  =  0;
+        int         tamRoute  = 0;
         // Position of the label from vetPtrLabel in Bucket class
         int         posBucket = -1;
-        int64_t     index     = -1;
 
         Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
         std::bitset<NumMaxCust>                     bitSetNg;
@@ -61,26 +60,15 @@ namespace LabelingAlgorithmNS
     {
     public:
 
-        inline __attribute__((always_inline))
         bool operator()(Label *l0, Label *l1) const
         {
-            //return l0->vetResources[0] < l1->vetResources[0];  // minHeap reducedCost
-            //return l0->index < l1->index;    // maxHeap demand
-            if(MinHeap)
-                return l0->HEAP_KEY < l1->HEAP_KEY;
-            else
-                return l0->HEAP_KEY > l1->HEAP_KEY;
+            //return doubleLess(l0->vetResources[0], l1->vetResources[0], std::numeric_limits<FloatType>::epsilon());
+            return l0->vetResources[0] < l1->vetResources[0];// && l0->vetResources[1] < l1->vetResources[1];
         }
 
-        inline __attribute__((always_inline))
         bool isGreater(Label *l0, Label *l1)const
         {
-            //return l0->vetResources[0] > l1->vetResources[0];
-            //return l0->index > l1->index;
-            if(MinHeap)
-                return l0->HEAP_KEY > l1->HEAP_KEY;
-            else
-                return l0->HEAP_KEY < l1->HEAP_KEY;
+            return l0->vetResources[0] > l1->vetResources[0];
         }
 
     };
@@ -93,21 +81,14 @@ namespace LabelingAlgorithmNS
         int heapSize = 0;
 
         explicit LabelHeap(int tam){vet = Vector<Label*>(tam, nullptr);}
-        inline __attribute__((always_inline))
         int parent(int i) { return (i-1)/2;}
-
-        inline __attribute__((always_inline))
         int left(int i) { return (2*i + 1);}
-
-        inline __attribute__((always_inline))
         int right(int i) { return (2*i + 2);}
-
-        inline __attribute__((always_inline))
         bool empty(){return heapSize==0;}
 
         void heapify(int i);
         [[nodiscard]]Label* extractMin();
-        void decreaseKey(int i, KEY_TYPE val);
+        void decreaseKey(int i, FloatType val);
         [[nodiscard]]Label* getMin(){return vet[0];}
         void deleteKey(int i);
         void insertKey(Label* label);

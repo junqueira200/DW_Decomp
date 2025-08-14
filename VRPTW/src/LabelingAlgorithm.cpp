@@ -191,8 +191,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                           const NgSet& ngSet, LabelingData& lData, Eigen::MatrixXd& matColX, int& numSol,
                           const FloatType labelStart, int NumMaxLabePerBucket, bool dominaceCheck, FloatType& maxDist,
                           Eigen::VectorX<FloatType>& vetRedCost, bool exact, LabelingTypeAlg labelingTypeAlg, bool arc,
-                          Eigen::VectorX<FloatType>* vetLowerBoundRedCost, VetSortRoute& vetSortRoute,
-                          MultsetSortRoute& multsetSourRoute, int maxRouteSize, FloatType maxRedCost)
+                          Eigen::VectorX<FloatType>* vetLowerBoundRedCost)
 {
     //vetRoteG = {19, 18, 5, 10, 1, 12, 9, 17, 9, 17, 9, 17};
 
@@ -246,7 +245,6 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
     int i = lData.getIndex(0, labelStart);
     int j = lData.getIndex(1, 0.0);
 
-    int64_t numLabels = 0;
 
     if(labelingTypeAlg == AlgForward || labelingTypeAlg == AlgBidirectional)
     {
@@ -265,8 +263,6 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
         labelPtr->active    = true;
         labelPtr->posBucket = 0;
         labelPtr->typeLabel = Forward;
-        labelPtr->index     = 0;
-        numLabels += 1;
 
         lData.vetMatBucketForward[0].mat(i, j).vetPtrLabel.resize(1);
         lData.vetMatBucketForward[0].mat(i, j).vetPtrLabel[0]  = labelPtr;
@@ -286,9 +282,6 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
         {
             route[0] = dest;
         }
-
-        labelBackwardPtr->index = numLabels;
-        numLabels += 1;
     }
 
 
@@ -332,13 +325,11 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
         // 																 10                         25
 
 
-        /*
         if((lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel >= 5 && labelHeap.heapSize >= 50 * numCust &&
             !exact))
         {
             break;
         }
-        */
 
 
         //checkHeap(labelHeap, lData);
@@ -351,7 +342,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
 
 
         /*
-        if(labelHeap.heapSize > localNumMaxLabel && DominaIterBuckets && ((numIt%100)==0))
+        if(labelHeap.heapSize > localNumMaxLabel && DominaIterBuckets)
         {
             lData.dominanceInterBuckets(labelHeap, numRes, localNumMaxLabel, lData.vetMatBucketForward, Backward);
 
@@ -380,17 +371,6 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             std::cout << "numIt: " << numIt << "\n";
 
         labelPtr = labelHeap.extractMin();
-        // Remove labelPtr from vetMatBucket
-        lData.removeLabel(labelPtr);
-
-        if(!labelPtr->active)
-        {
-            labelPoolG.delT(labelPtr);
-            continue;
-        }
-
-        lData.removeLabel(labelPtr);
-
         if(labelPtr == nullptr)
         {
 
@@ -399,18 +379,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             throw "ERRO";
         }
 
-        if((labelPtr->cust != 0 || labelPtr->cust != dest) && labelingTypeAlg == AlgBidirectional)
-        {
-            int numLabels = lData.doMerge(labelPtr, vetMaxResources, matBoundRes, numRes);
-            if(numLabels >= DW_DecompNS::NumMaxSolSubProb && !exact)
-                break;
-        }
 
-        if((labelPtr->tamRoute+1) >= maxRouteSize)
-        {
-            labelPoolG.delT(labelPtr);
-            continue;
-        }
 
         //bool haveRoute = labelHaveRoute(vetRoutesG, labelPtr);
 
@@ -445,18 +414,20 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
         if(lastCust == 0 && labelPtr->typeLabel == Backward)
             continue;
 
+        // Remove labelPtr from vetMatBucket
+        lData.removeLabel(labelPtr);
+
         // Extend label
         for(int t=0; t < numCust; ++t)
         {
-            FloatType redCost = 0.0;
-            if(labelPtr->typeLabel == Forward)
-                redCost = vetMatResCostForward(labelPtr->cust, t, 0);
-            else
-                redCost = vetMatResCostBackward(t, labelPtr->cust, 0);
-
             int tAux = t;
             //std::cout<<"t: "<<t<<"\n";
-            if(redCost == InfFloatType || redCost > maxRedCost)
+            if(labelPtr->typeLabel  == Forward &&
+               vetMatResCostForward(labelPtr->cust, t, 0) == InfFloatType)
+                continue;
+
+            else if(labelPtr->typeLabel  == Backward &&
+               vetMatResCostBackward(t, labelPtr->cust, 0) == InfFloatType)
                 continue;
 
 
@@ -487,8 +458,6 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                            labelPtr->cust, t, ngSet, numRes, vetBackwardMask))
             {
 
-                labelPtrAux->index = numLabels;
-                numLabels += 1;
 
                 bool haveRoute = false;
                 if(TrackingRoutes)
@@ -601,7 +570,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
 
 
 
-                Bucket* bucket = dominanceIntraBucket(tAux, labelPtrAux, lData, nullptr, numRes, dest, correctPos);
+                Bucket* bucket = dominanceIntraBucket(tAux, labelPtrAux, lData, &labelHeap, numRes, dest, correctPos);
 
                 if(!bucket)
                 {
@@ -611,12 +580,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                 }
 
                 if((vetValueOfReducedCostsG.size() + 1) < vetValueOfReducedCostsG.capacity())
-                {
                     vetValueOfReducedCostsG.push_back(labelPtrAux->vetResources[0]);
-
-                    if(vetValueOfReducedCostsG.size() == 1000000)
-                        computeMeanMaxMin();
-                }
 
                 if((bucket->sizeVetPtrLabel+1) > NumMaxLabePerBucket && tAux != dest)
                 {
@@ -2513,16 +2477,23 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int cust, Label* label, Labeli
             if(rmFromHeap)
                 labelHeap->deleteKey(bucketPtr->vetPtrLabel[i]->posHeap);
 
-            //labelPoolG.delT(bucketPtr->vetPtrLabel[i]);
-            bucketPtr->vetPtrLabel[i]->active = false;
+            labelPoolG.delT(bucketPtr->vetPtrLabel[i]);
 
+            std::swap(bucketPtr->vetPtrLabel[i], bucketPtr->vetPtrLabel[bucketPtr->sizeVetPtrLabel-1]);
+
+            /*
             for(int t=i; t < (bucketPtr->sizeVetPtrLabel-1); ++t)
             {
                 bucketPtr->vetPtrLabel[t] = bucketPtr->vetPtrLabel[t+1];
                 bucketPtr->vetPtrLabel[t]->posBucket = t;
             }
+            */
 
             bucketPtr->sizeVetPtrLabel -= 1;
+
+            if(i <= (bucketPtr->sizeVetPtrLabel-1) && i >= 0 && bucketPtr->sizeVetPtrLabel >= 0)
+                bucketPtr->vetPtrLabel[i]->posBucket = i;
+
 
             //std::cout<<"rm; size("<<bucketPtr->sizeVetPtrLabel<<"); i("<<i<<")\n";
         }
@@ -2531,7 +2502,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucket(int cust, Label* label, Labeli
     }
 
 
-    correctPos = 0;
+    correctPos = bucketPtr->sizeVetPtrLabel;
     return bucketPtr;
 
 }
@@ -2727,32 +2698,4 @@ void  LabelingAlgorithmNS::SortRoute::computeDistance(const EigenMatrixRowD& mat
     }
 }
 
-void LabelingAlgorithmNS::computeMeanMaxMin()
-{
-    double min, max, mean, median;
 
-    min = MaxFloatType;
-    max = MinFloatType;
-    mean = 0.0;
-
-    for(double val:vetValueOfReducedCostsG)
-    {
-        min = std::min(min, val);
-        max = std::max(max, val);
-        mean += val;
-    }
-
-    std::sort(vetValueOfReducedCostsG.begin(), vetValueOfReducedCostsG.end());
-
-    mean = mean/(FloatType)vetValueOfReducedCostsG.size();
-
-    size_t size = vetValueOfReducedCostsG.size();
-    if(size % 2 == 0)
-    {
-        median = (vetValueOfReducedCostsG[size/2] + vetValueOfReducedCostsG[(size/2)+1])/2.0;
-    }
-    else
-        median = vetValueOfReducedCostsG[size/2];
-
-    std::printf("Min: %.2f\nMax: %.2f\nMean: %.2f\nMedian: %.2f\n\n", min, max, mean, median);
-}

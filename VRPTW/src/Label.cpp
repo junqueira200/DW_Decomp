@@ -94,7 +94,7 @@ Label* LabelHeap::extractMin()
 
 }
 
-void LabelHeap::decreaseKey(int i, KEY_TYPE val)
+void LabelHeap::decreaseKey(int i, FloatType val)
 {
     if(vet[i] == nullptr)
     {
@@ -104,11 +104,10 @@ void LabelHeap::decreaseKey(int i, KEY_TYPE val)
         throw "ERROR";
     }
 
-    //vet[i]->index = val;
-    vet[i]->HEAP_KEY = val;
+    vet[i]->vetResources[0] = val;
     int iParent = parent(i);
 
-    while(i!=0 && labelCmp.isGreater(vet[iParent], vet[i]))
+    while(i!=0 && vet[iParent]->vetResources[0] > vet[i]->vetResources[0])
     {
         std::swap(vet[i], vet[iParent]);
         std::swap(vet[i]->posHeap, vet[iParent]->posHeap);
@@ -127,26 +126,15 @@ void LabelHeap::deleteKey(int i)
         throw "ERROR";
     }
 
-    decreaseKey(i, KEY_MIN);
+    Label* labelI = vet[i];
+    decreaseKey(i, -std::numeric_limits<FloatType>::max());
     Label* label = extractMin();
 
-    memset((void*)label, 0, sizeof(Label));
-
-    label->i = -1;
-    label->j = -1;
-    label->posBucket = -1;
-    label->posHeap   = -1;
-    label->cust      = -1;
-
-/*
- *  TODO deleteKey
-    if(labelHaveRoute(vetRoteG, label))
+    if(labelI != label)
     {
-        std::cout<<"AQUI!";
-        PRINT_DEBUG("", "");
-        throw "ERROR";
+        std::cout<<"labelI("<<labelI<<") diffrent from top label ("<<label<<")\n\n";
+        PRINT_EXIT();
     }
-*/
 
 }
 

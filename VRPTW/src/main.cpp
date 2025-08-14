@@ -32,6 +32,7 @@ using namespace ParseInputNS;
 using namespace IgNs;
 
 void convertInstance(const InstanceVRPTW& instanceVrptw, Instancia& instancia);
+void computeMeanMaxMin();
 
 int main(int argc, const char **argv)
 {
@@ -136,6 +137,7 @@ int main(int argc, const char **argv)
         std::cout << "Cria decompNode\n";
         DW_DecompNS::DW_DecompNode decompNode(grbEnv, model, distVarA, (DW_DecompNS::SubProb*)&vrpLabelingSubProb, 1,
                                               auxVectors);
+
         std::cout<<"Num Vars Model: "<<decompNode.uRmlp->get(GRB_IntAttr_NumVars);
         std::cout<<"\nNum Vars vetVarLambdaCol:"<<decompNode.vetVarLambdaCol.size()<<"\n";
 
@@ -175,10 +177,10 @@ int main(int argc, const char **argv)
 
         decompNode.uRmlp->update();
 
-
         std::cout<<"Num Vars Model: "<<decompNode.uRmlp->get(GRB_IntAttr_NumVars);
         std::cout<<"\nNum Vars vetVarLambdaCol:"<<decompNode.vetVarLambdaCol.size()<<"\n";
         std::cout<<"NumRotas: "<<numRotas<<"\n\n";
+
 
 
         decompNode.rhsConv = instVrpTw.numVeic;
@@ -349,6 +351,38 @@ void convertInstance(const InstanceVRPTW& instanceVrptw, Instancia& instancia)
     instancia.veicCap = instanceVrptw.capVeic;
 
 }
+
+void computeMeanMaxMin()
+{
+    double min, max, mean, median;
+
+    min = MaxFloatType;
+    max = MinFloatType;
+    mean = 0.0;
+
+    for(double val:vetValueOfReducedCostsG)
+    {
+        min = std::min(min, val);
+        max = std::max(max, val);
+        mean += val;
+    }
+
+    std::sort(vetValueOfReducedCostsG.begin(), vetValueOfReducedCostsG.end());
+
+    mean = mean/(FloatType)vetValueOfReducedCostsG.size();
+
+    size_t size = vetValueOfReducedCostsG.size();
+    if(size % 2 == 0)
+    {
+        median = (vetValueOfReducedCostsG[size/2] + vetValueOfReducedCostsG[(size/2)+1])/2.0;
+    }
+    else
+        median = vetValueOfReducedCostsG[size/2];
+
+    std::printf("Min: %.2f\nMax: %.2f\nMean: %.2f\nMedian: %.2f\n\n", min, max, mean, median);
+}
+
+
 
 
 
