@@ -136,7 +136,7 @@ namespace LabelingAlgorithmNS
     void startBackwardLabel(Label* labelPtr, VetBackwardMask& vetBackwardMask, const MatBoundRes& vetVetBound,
                             int numResources, int dest, double labelStart, int i, LabelingData& lData);
 
-    Bucket* dominanceIntraBucketForward(int cust, Label* label, LabelingData& lData, LabelHeap* labelHeap, int numRes,
+    Bucket* dominanceIntraBucketForward(int cust, Label* label, LabelingData& lData, LabelHeap& labelHeap, int numRes,
                                         int dest, int& correctPos);
 
     Bucket* dominanceIntraBucketBackward(int cust, Label* label, LabelingData& lData, LabelHeap& labelHeap, int numRes,
