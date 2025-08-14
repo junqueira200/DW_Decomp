@@ -1587,9 +1587,9 @@ bool LabelingAlgorithmNS::labelHaveRoute(Vector<VectorI>& vetRoute, Label *label
  *  ********************************************************************************************************************
  */
 Bucket* LabelingAlgorithmNS::dominanceIntraBucketForward(int cust, Label* labelPtrAux, LabelingData& lData,
-                                                         LabelHeap& labelHeap, int numRes, int dest, int& correctPos)
+                                                         LabelHeap* labelHeap, int numRes, int dest, int& correctPos)
 {
-    const bool rmFromHeap = (cust != dest);
+    const bool rmFromHeap = (cust != dest) && labelHeap;
     Bucket* bucketPtr = nullptr;
 
     if(cust != dest)
@@ -1618,151 +1618,69 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketForward(int cust, Label* labelP
         bucketPtr = &lData.vetMatBucketForward[cust].mat(0, 0);
     }
 
-    // Get the correct possition
-    correctPos = 0;
-    while(correctPos < bucketPtr->sizeVetPtrLabel)
+    int pos = 0;
+
+    while(labelLessForward(bucketPtr->vetPtrLabel[pos], labelPtrAux, numRes))
     {
-        if(doubleGreaterEqual(bucketPtr->vetPtrLabel[correctPos]->vetResources[0], labelPtrAux->vetResources[0],
-                              FloatEp))
+        if(checkDominanceSubSet(*bucketPtr->vetPtrLabel[pos], *labelPtrAux))
+            return nullptr;
+
+        if(pos == (bucketPtr->sizeVetPtrLabel-1))
+        {
+            pos += 1;
             break;
-        correctPos += 1;
+        }
+
+        pos += 1;
     }
 
-    int before = correctPos;
+    correctPos = pos;
 
-    // Search for labels with have equal resources
-    while(correctPos < bucketPtr->sizeVetPtrLabel)
+    if(pos >= (bucketPtr->sizeVetPtrLabel-1))
+        return bucketPtr;
+
+
+    while(labelEqual(bucketPtr->vetPtrLabel[pos], labelPtrAux, numRes))
     {
-        if(doubleEqual(bucketPtr->vetPtrLabel[correctPos]->vetResources[0], labelPtrAux->vetResources[0], FloatEp))
+        auto resultAnd = (bucketPtr->vetPtrLabel[pos]->bitSetNg & labelPtrAux->bitSetNg);
+
+        // Checks if label in bucketPtr dominate labelPtrAux
+        if(resultAnd == bucketPtr->vetPtrLabel[pos]->bitSetNg)
         {
-            bool equal = true;
-            for(int r=1; r < numRes; ++r)
-            {
-                if(!doubleEqual(bucketPtr->vetPtrLabel[correctPos]->vetResources[r], labelPtrAux->vetResources[r],
-                               FloatEp))
-                {
-                    equal = false;
-                    break;
-                }
-            }
-
-            if(equal)
-            {
-                if(checkDominanceSubSet(*bucketPtr->vetPtrLabel[correctPos], *labelPtrAux))
-                {
-                    labelPtrAux = nullptr;
-                    return nullptr;
-                }
-                else if(checkDominanceSubSet(*labelPtrAux, *bucketPtr->vetPtrLabel[correctPos]))
-                {
-                    if(rmFromHeap)
-                        labelHeap.deleteKey(bucketPtr->vetPtrLabel[correctPos]->posHeap);
-
-                    labelPoolG.delT(bucketPtr->vetPtrLabel[correctPos]);
-
-                    for(int ii=correctPos; ii < (bucketPtr->sizeVetPtrLabel-1); ++ii)
-                    {
-                        bucketPtr->vetPtrLabel[ii] = bucketPtr->vetPtrLabel[ii+1];
-                        bucketPtr->vetPtrLabel[ii]->posBucket = ii;
-                    }
-
-                    bucketPtr->sizeVetPtrLabel -= 1;
-
-                }
-                else
-                    correctPos += 1;
-            }
-            else
-                correctPos += 1;
+            correctPos = -1;
+            return nullptr;
+        }
+        // Checks if labelPtrAux dominate label in bucketPtr
+        else if(resultAnd == labelPtrAux->bitSetNg)
+        {
 
         }
         else
+            pos += 1;
+
+        if(pos >= (bucketPtr->sizeVetPtrLabel-1))
             break;
+
     }
 
-    //std::cout<<"end while\n\n";
+    if(pos >= (bucketPtr->sizeVetPtrLabel-1))
+        return bucketPtr;
 
-    // Labels before correctPos can dominate labelPtrAux;
-    for(int ii=0; ii < before; ++ii)
+    while(pos < bucketPtr->sizeVetPtrLabel)
     {
-        //if(posEqual > 0 && ii == posEqual)
-        //    break;
-
-        bool canDomindate = true;
-        for(int r=1; r < numRes; ++r)
+        if(checkDominanceSubSet(*bucketPtr->vetPtrLabel[pos], *labelPtrAux))
         {
-            if(doubleGreater(bucketPtr->vetPtrLabel[ii]->vetResources[r], labelPtrAux->vetResources[r], FloatEp))
-            {
-                canDomindate = false;
-                break;
-            }
-        }
+            bucketPtr->vetPtrLabel[pos]->active = false;
+            for(int i=pos; i < (bucketPtr->sizeVetPtrLabel-1); ++i)
+                bucketPtr->vetPtrLabel[i] = bucketPtr->vetPtrLabel[i+1];
 
-
-        if(canDomindate)
-        {
-            if(checkDominanceSubSet(*bucketPtr->vetPtrLabel[ii], *labelPtrAux))
-            {
-                //labelPoolG.delT(labelPtrAux);
-                labelPtrAux = nullptr;
-                return nullptr;
-            }
+            bucketPtr->sizeVetPtrLabel += -1;
         }
+        else
+            pos += 1;
     }
 
-    // Search for labels with have equal resources
 
-    // Labels after correctPos (inclusive) can be dominated by labelPtrAux
-    int bucketSizeVetPtrLabel = bucketPtr->sizeVetPtrLabel;
-    int ii = correctPos;
-
-    while(ii < bucketSizeVetPtrLabel)
-    {
-        bool canDominate = true;
-        for(int r=1; r < numRes; ++r)
-        {
-            if(doubleGreater(labelPtrAux->vetResources[r], bucketPtr->vetPtrLabel[ii]->vetResources[r], FloatEp))
-            {
-                canDominate = false;
-                break;
-            }
-        }
-
-        if(canDominate)
-        {
-            if(checkDominanceSubSet(*labelPtrAux, *bucketPtr->vetPtrLabel[ii]))
-            {
-                // Remove bucket.vetPtrLabel[ii]
-                if(rmFromHeap)
-                    labelHeap.deleteKey(bucketPtr->vetPtrLabel[ii]->posHeap);
-
-                labelPoolG.delT(bucketPtr->vetPtrLabel[ii]);
-
-                for(int t=ii; t < (bucketPtr->sizeVetPtrLabel-1); ++t)
-                {
-                    bucketPtr->vetPtrLabel[t] = bucketPtr->vetPtrLabel[t+1];
-                    bucketPtr->vetPtrLabel[t]->posBucket = t;
-                }
-
-
-                bucketPtr->sizeVetPtrLabel -= 1;
-                bucketSizeVetPtrLabel  -= 1;
-                continue; // while ii
-            }
-        }
-
-        ii += 1;
-    }
-
-    if(labelPtrAux == nullptr)
-        return nullptr;
-
-    maxDistG = std::max(maxDistG, labelPtrAux->vetResources[0]);
-    minDistG = std::min(minDistG, labelPtrAux->vetResources[0]);
-
-    labelPtrAux->active = true;
-
-    return bucketPtr;
 
 }
 

@@ -260,6 +260,31 @@ namespace LabelingAlgorithmNS
     bool searchLabel(Label* label, Bucket& bucket);
     std::string printIndex(const Index& index);
 
+    inline __attribute__((always_inline))
+    bool labelLessForward(Label* label0, Label* label1, int numResorces)
+    {
+        for(int i=0; i < numResorces; ++i)
+        {
+            if(label0->vetResources[i] > label1->vetResources[i])
+                return false;
+        }
+
+        return true;
+    }
+
+    inline __attribute__((always_inline))
+    bool labelEqual(Label* label0, Label* label1, int numResorces)
+    {
+        for(int i=0; i < numResorces; ++i)
+        {
+            if(!doubleEqual(label0->vetResources[i], label1->vetResources[i], 1E-5))
+                return false;
+        }
+
+        return true;
+    }
+
+
 }
 
 #endif // LABEL_H

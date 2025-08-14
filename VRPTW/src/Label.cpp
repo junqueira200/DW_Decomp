@@ -126,28 +126,15 @@ void LabelHeap::deleteKey(int i)
         PRINT_DEBUG("", "");
         throw "ERROR";
     }
-
+    Label* labelI = vet[i];
     decreaseKey(i, KEY_MIN);
     Label* label = extractMin();
 
-    memset((void*)label, 0, sizeof(Label));
-
-    label->i = -1;
-    label->j = -1;
-    label->posBucket = -1;
-    label->posHeap   = -1;
-    label->cust      = -1;
-
-/*
- *  TODO deleteKey
-    if(labelHaveRoute(vetRoteG, label))
+    if(labelI != label)
     {
-        std::cout<<"AQUI!";
-        PRINT_DEBUG("", "");
-        throw "ERROR";
+        std::cout<<"ERROR, i key ("<<labelI<<") and min ("<<label<<")\n";
+        PRINT_EXIT();
     }
-*/
-
 }
 
 void LabelHeap::heapify(int i)
