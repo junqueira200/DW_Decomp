@@ -144,7 +144,7 @@ int main(int argc, const char **argv)
         input.comprimentoAlturaIguais1 = true;
         input.numItIG = 2;
         int numRotas = 0;
-        for(int i=0; i < 200; ++i)
+        for(int i=0; i < 10; ++i)
         {
             SolucaoNS::Solucao best(instanciaG);
             metaheuristicaIg(best);

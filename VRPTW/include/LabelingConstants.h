@@ -9,6 +9,15 @@
 
 typedef double FloatType;
 
+#define HEAP_KEY index
+#define KEY_TYPE int64_t
+#define KEY_MIN  -std::numeric_limits<KEY_TYPE>::max()
+
+constexpr bool MinHeap = true;
+
+#define INLINE inline __attribute__((always_inline))
+
+
 namespace LabelingAlgorithmNS
 {
     inline FloatType minDistG = std::numeric_limits<FloatType>::max();

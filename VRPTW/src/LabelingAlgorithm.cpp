@@ -245,6 +245,8 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
     int i = lData.getIndex(0, labelStart);
     int j = lData.getIndex(1, 0.0);
 
+    int nextIndex = 0;
+
 
     if(labelingTypeAlg == AlgForward || labelingTypeAlg == AlgBidirectional)
     {
@@ -263,6 +265,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
         labelPtr->active    = true;
         labelPtr->posBucket = 0;
         labelPtr->typeLabel = Forward;
+        labelPtr->index = nextIndex++;
 
         lData.vetMatBucketForward[0].mat(i, j).vetPtrLabel.resize(1);
         lData.vetMatBucketForward[0].mat(i, j).vetPtrLabel[0]  = labelPtr;
@@ -277,6 +280,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
         startBackwardLabel(labelBackwardPtr, vetBackwardMask, matBoundRes, numRes, dest, labelStart, i, lData);
         labelHeap.insertKey(labelBackwardPtr);
         invertRoutes(vetRoutesG);
+        labelBackwardPtr->index = nextIndex++;
 
         for(VectorI& route:vetRoutesG)
         {
@@ -458,7 +462,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                            labelPtr->cust, t, ngSet, numRes, vetBackwardMask))
             {
 
-
+                labelPtrAux->index = nextIndex++;
                 bool haveRoute = false;
                 if(TrackingRoutes)
                 {

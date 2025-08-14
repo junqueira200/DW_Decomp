@@ -46,6 +46,8 @@ namespace LabelingAlgorithmNS
         int         tamRoute  = 0;
         // Position of the label from vetPtrLabel in Bucket class
         int         posBucket = -1;
+        // Order of label's creation
+        int         index     = -1;
 
         Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
         std::bitset<NumMaxCust>                     bitSetNg;
@@ -60,15 +62,23 @@ namespace LabelingAlgorithmNS
     {
     public:
 
+        INLINE
         bool operator()(Label *l0, Label *l1) const
         {
             //return doubleLess(l0->vetResources[0], l1->vetResources[0], std::numeric_limits<FloatType>::epsilon());
-            return l0->vetResources[0] < l1->vetResources[0];// && l0->vetResources[1] < l1->vetResources[1];
+            if(MinHeap)
+                return l0->HEAP_KEY < l1->HEAP_KEY;// && l0->vetResources[1] < l1->vetResources[1];
+            else
+                return l0->HEAP_KEY > l1->HEAP_KEY;
         }
 
+        INLINE
         bool isGreater(Label *l0, Label *l1)const
         {
-            return l0->vetResources[0] > l1->vetResources[0];
+            if(MinHeap)
+                return l0->HEAP_KEY > l1->HEAP_KEY;
+            else
+                return l0->HEAP_KEY < l1->HEAP_KEY;
         }
 
     };
@@ -81,14 +91,14 @@ namespace LabelingAlgorithmNS
         int heapSize = 0;
 
         explicit LabelHeap(int tam){vet = Vector<Label*>(tam, nullptr);}
-        int parent(int i) { return (i-1)/2;}
-        int left(int i) { return (2*i + 1);}
-        int right(int i) { return (2*i + 2);}
-        bool empty(){return heapSize==0;}
+        INLINE int parent(int i) { return (i-1)/2;}
+        INLINE int left(int i) { return (2*i + 1);}
+        INLINE int right(int i) { return (2*i + 2);}
+        INLINE bool empty(){return heapSize==0;}
 
         void heapify(int i);
         [[nodiscard]]Label* extractMin();
-        void decreaseKey(int i, FloatType val);
+        void decreaseKey(int i, KEY_TYPE val);
         [[nodiscard]]Label* getMin(){return vet[0];}
         void deleteKey(int i);
         void insertKey(Label* label);
