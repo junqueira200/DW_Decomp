@@ -132,6 +132,7 @@ namespace LabelingAlgorithmNS
         void addLabel(Label *labelPtr);
         std::string print(int numResorces);
         void removeElement(int i);
+        void addElement(int pos, Label* labelPtr);
 //        bool delLabel(Label *labelPtr);
 
     };
@@ -203,12 +204,13 @@ namespace LabelingAlgorithmNS
         void removeLabel(Label *label);
         Label* getBestLabel(int cust);
 
-        inline __attribute__((always_inline))
+        INLINE
         int getIndexGraphBucket(int i, int j)
         {
             return i*vetNumSteps[1] + j;
         }
 
+        INLINE
         Bucket* getBucket(Label* label)
         {
 
@@ -225,7 +227,7 @@ namespace LabelingAlgorithmNS
         void setupGraphBucket();
         bool compareVetMatBucket(const ArrayResources& vetMaxResouces);
 
-        inline __attribute__((always_inline))
+        INLINE
         void whiteLabelIndex(Label* label)
         {
             label->i = getIndex(0, label->vetResources[0]);
@@ -238,10 +240,10 @@ namespace LabelingAlgorithmNS
 
         int doMerge(Label* label, const ArrayResources& vetMaxResources, const MatBoundRes& vetVetBound, int numResorces);
 
-        inline __attribute__((always_inline))
+        INLINE
         int getSecondDeposit(){return numCust-1;}
 
-        inline __attribute__((always_inline))
+        INLINE
         int getNumberOfSolutions(){ return vetMatBucketForward[getSecondDeposit()].mat(0,0).sizeVetPtrLabel;}
 
         void checkLabels();
@@ -250,6 +252,36 @@ namespace LabelingAlgorithmNS
 
     bool searchLabel(Label* label, Bucket& bucket);
     std::string printIndex(const Index& index);
+
+    INLINE
+    bool labelLessForward(Label* label0, Label* label1, int numResorces)
+    {
+        int numEqual = 0;
+        for(int i=0; i < numResorces; ++i)
+        {
+            if(label0->vetResources[i] > label1->vetResources[i])
+                return false;
+            if(doubleEqual(label0->vetResources[i], label1->vetResources[i], 1E-5))
+                numEqual += 1;
+        }
+
+        if(numEqual == numResorces)
+            return false;
+
+        return true;
+    }
+
+    INLINE
+    bool labelEqual(Label* label0, Label* label1, int numResorces)
+    {
+        for(int i=0; i < numResorces; ++i)
+        {
+            if(!doubleEqual(label0->vetResources[i], label1->vetResources[i], 1E-5))
+                return false;
+        }
+
+        return true;
+    }
 
 }
 

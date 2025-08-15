@@ -142,8 +142,15 @@ namespace LabelingAlgorithmNS
                                         int dest, int& correctPos);
 
     //inline __attribute__((always_inline))
-    Bucket* dominanceIntraBucket(int cust, Label* label, LabelingData& lData, LabelHeap* labelHeap, int numRes,
-                                 int dest, int& correctPos);
+    Bucket* dominanceIntraBucketSlow(int cust, Label* label, LabelingData& lData, LabelHeap* labelHeap, int numRes,
+                                     int dest, int& correctPos);
+
+    Bucket* dominanceIntraBucketFast0(int cust, Label* label, LabelingData& lData, LabelHeap* labelHeap, int numRes,
+                                     int dest, int& correctPos);
+
+    Bucket* dominanceIntraBucketFast1(int cust, Label* label, LabelingData& lData, LabelHeap* labelHeap, int numRes,
+                                     int dest, int& correctPos);
+
 
     void changeTypeAlg(LabelingTypeAlg& labelingTypeAlg);
 
@@ -171,5 +178,7 @@ namespace LabelingAlgorithmNS
     void cleanVetRouteG();
     std::string printRoute(Label* label);
     void invertRoutes(Vector<VectorI>& vetRoutes);
+
+    bool checkIfAllLabelsInHeapHaveA_Bucket(LabelHeap& labelHeap, LabelingData& lData);
 }
 #endif //DW_LABELINGALGORITHM_H

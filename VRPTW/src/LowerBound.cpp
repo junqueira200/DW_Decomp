@@ -87,7 +87,7 @@ bool LowerBoundNS::getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost& v
                 Label* labelAux = getLabel();
                 extendLabel(labelPtr, labelAux, vetMatResCost, lDataPtr, next);
                 int correctPos = -1;
-                Bucket* bucket = dominanceIntraBucket(next, labelAux, *lDataPtr, &labelHeap, 1, dest, correctPos);
+                Bucket* bucket = dominanceIntraBucketSlow(next, labelAux, *lDataPtr, &labelHeap, 1, dest, correctPos);
 
                 if(!bucket)
                 {

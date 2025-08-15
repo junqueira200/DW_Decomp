@@ -214,6 +214,41 @@ std::string LabelingAlgorithmNS::Bucket::print(int numResorces)
     return str;
 }
 
+void LabelingAlgorithmNS::Bucket::removeElement(int i)
+{
+    for(int t=i; t < (sizeVetPtrLabel-1); ++t)
+    {
+        vetPtrLabel[t] = vetPtrLabel[t+1];
+        vetPtrLabel[t]->posBucket = t;
+    }
+
+    sizeVetPtrLabel += -1;
+}
+
+void LabelingAlgorithmNS::Bucket::addElement(int pos, Label* labelPtr)
+{
+
+    if(sizeVetPtrLabel > 0)
+    {
+
+        int size = sizeVetPtrLabel+1;
+        if(size > vetPtrLabel.size())
+            vetPtrLabel.conservativeResize(2*size);
+
+        for(int i=sizeVetPtrLabel-1; i >= pos; --i)
+        {
+            int index = i+1;
+            vetPtrLabel[index] = vetPtrLabel[i];
+            vetPtrLabel[index]->posBucket = index;
+        }
+    }
+
+    vetPtrLabel[pos] = labelPtr;
+    labelPtr->posBucket = pos;
+
+    sizeVetPtrLabel += 1;
+}
+
 Index LabelingAlgorithmNS::LabelingData::getListOfIndexForMerge(const Label& label)
 {
 
@@ -343,7 +378,7 @@ int LabelingAlgorithmNS::LabelingData::doMerge(Label* label, const ArrayResource
                 }
 
                 int correctPos = -1;
-                Bucket* bucket = dominanceIntraBucket(result->cust, result, *this, nullptr, numResorces, result->cust, correctPos);
+                Bucket* bucket = dominanceIntraBucketSlow(result->cust, result, *this, nullptr, numResorces, result->cust, correctPos);
 
                 // TODO menory leek! :(
                 if(!bucket)

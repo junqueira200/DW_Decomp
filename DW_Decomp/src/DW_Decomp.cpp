@@ -858,8 +858,8 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 }
                 else
                 {
-                    vetVar[i].set(GRB_DoubleAttr_LB, 0.0);
-                    vetVar[i].set(GRB_DoubleAttr_UB, 0.0);
+                    //vetVar[i].set(GRB_DoubleAttr_LB, 0.0);
+                    //vetVar[i].set(GRB_DoubleAttr_UB, 0.0);
                     numZero += 1;
                 }
             }

@@ -7,3 +7,8 @@ Ideia:
     Gerar rotas/bins aleatórios e testar a viabilidade (de forma exaustiva)
 
     v = Val/total
+
+*******************************************************************************
+
+Label esta na heap
+Label nao eh encontrado em bucket

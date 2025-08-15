@@ -253,7 +253,7 @@ bool  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
             writeNgSet(label, ngSet);
             int pos = -1;
-            Bucket* bucket = dominanceIntraBucket(instVrpTw->numClientes, label, labelingData, &labelHeap, 2,
+            Bucket* bucket = dominanceIntraBucketSlow(instVrpTw->numClientes, label, labelingData, &labelHeap, 2,
                                                   instVrpTw->numClientes, pos);
 
             if(bucket != nullptr)
@@ -455,7 +455,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     }
 
 
-    if(!custoRedNeg || numSol < DW_DecompNS::NumMaxSolSubProb)
+    if(!custoRedNeg || numSol < DW_DecompNS::NumMaxSolSubProb/2)
     {
         matColX.setZero();
         custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
