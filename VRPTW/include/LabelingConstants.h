@@ -9,8 +9,8 @@
 
 typedef double FloatType;
 
-#define HEAP_KEY vetResources[1]
-#define KEY_TYPE FloatType
+#define HEAP_KEY index
+#define KEY_TYPE int64_t
 #define KEY_MIN  -std::numeric_limits<KEY_TYPE>::max()
 
 constexpr bool MinHeap = true;
@@ -37,6 +37,7 @@ namespace LabelingAlgorithmNS
     constexpr bool  DominaIterBuckets = true;
     constexpr FloatType FloatEp       = 1E-15;
     constexpr bool  TrackingRoutes    = false;
+    constexpr bool  SortLabels        = false;
 
     constexpr double MaxFloatType = std::numeric_limits<FloatType>::max();
     constexpr double MinFloatType = std::numeric_limits<FloatType>::min();

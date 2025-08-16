@@ -578,7 +578,11 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
 
 
 
-                Bucket* bucket = dominanceIntraBucketFast1(tAux, labelPtrAux, lData, &labelHeap, numRes, dest, correctPos);
+                Bucket* bucket = nullptr;
+                if(SortLabels)
+                    bucket = dominanceIntraBucketFast1(tAux, labelPtrAux, lData, &labelHeap, numRes, dest, correctPos);
+                else
+                    bucket = dominanceIntraBucketSlow(tAux, labelPtrAux, lData, &labelHeap, numRes, dest, correctPos);
 
                 if(!bucket)
                 {
@@ -592,8 +596,62 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
 
                 if((bucket->sizeVetPtrLabel+1) > NumMaxLabePerBucket && tAux != dest)
                 {
-                    labelPoolG.delT(labelPtrAux);
-                    continue;
+                    if(SortLabels)
+                    {
+                        if(correctPos == (bucket->sizeVetPtrLabel))
+                        {
+
+                            labelPoolG.delT(labelPtrAux);
+                            continue;
+                        }
+
+                        Label* del = bucket->vetPtrLabel[bucket->sizeVetPtrLabel-1];
+                        bucket->removeElement(bucket->sizeVetPtrLabel-1);
+                        labelHeap.deleteKey(del->posHeap);
+                        labelPoolG.delT(del);
+
+                    }
+                    else
+                    {
+                        labelPoolG.delT(labelPtrAux);
+                        continue;
+
+                        int indexGreater = 0;
+                        FloatType val    = bucket->vetPtrLabel[0]->vetResources[0];
+
+                        for(int i=1; i < bucket->sizeVetPtrLabel; ++i)
+                        {
+                            if(bucket->vetPtrLabel[i]->vetResources[0] > val)
+                            {
+                                val = bucket->vetPtrLabel[i]->vetResources[0];
+                                indexGreater = i;
+                            }
+                        }
+
+                        if(labelPtrAux->vetResources[0] > val)
+                        {
+                            labelPoolG.delT(labelPtrAux);
+                            continue;
+                        }
+                        else
+                        {
+
+                            Label* del = bucket->vetPtrLabel[indexGreater];
+                            bucket->removeElement(indexGreater);
+
+                            if(del != labelHeap.vet[del->posHeap])
+                            {
+                                std::cout<<"ERROR. labelHeap is Wrong";
+                                PRINT_EXIT();
+                            }
+
+                            labelHeap.deleteKey(del->posHeap);
+                            memset((void*)del, 0, sizeof(Label));
+                            labelPoolG.delT(del);
+                            std::cout<<"Delete label greater the labelAuxPtr\n";
+                        }
+
+                    }
                 }
 
                 bucket->addElement(correctPos, labelPtrAux);
