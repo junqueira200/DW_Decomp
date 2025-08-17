@@ -72,7 +72,7 @@ bool LowerBoundNS::getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost& v
 
         while(!labelHeap.empty())
         {
-            labelPtr = labelHeap.extractMin();
+            labelPtr = labelHeap.extractTop();
             //std::cout<<"cust: "<<labelPtr->cust<<"\n\n";
             lDataPtr->removeLabel(labelPtr);
 

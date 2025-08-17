@@ -9,9 +9,9 @@
 
 typedef double FloatType;
 
-#define HEAP_KEY index
-#define KEY_TYPE int64_t
-#define KEY_MIN  -std::numeric_limits<KEY_TYPE>::max()
+#define HEAP_KEY     index
+#define KEY_TYPE     int64_t
+#define KEY_EXTREME  -std::numeric_limits<KEY_TYPE>::max()
 
 constexpr bool MinHeap = true;
 

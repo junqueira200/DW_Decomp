@@ -374,7 +374,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
         if(Print && PrintG)
             std::cout << "numIt: " << numIt << "\n";
 
-        labelPtr = labelHeap.extractMin();
+        labelPtr = labelHeap.extractTop();
         if(labelPtr == nullptr)
         {
 
@@ -613,8 +613,8 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                     }
                     else
                     {
-                        labelPoolG.delT(labelPtrAux);
-                        continue;
+                        //labelPoolG.delT(labelPtrAux);
+                        //continue;
 
                         int indexGreater = 0;
                         FloatType val    = bucket->vetPtrLabel[0]->vetResources[0];
@@ -648,7 +648,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                             labelHeap.deleteKey(del->posHeap);
                             memset((void*)del, 0, sizeof(Label));
                             labelPoolG.delT(del);
-                            std::cout<<"Delete label greater the labelAuxPtr\n";
+                            //std::cout<<"Delete label greater the labelAuxPtr\n";
                         }
 
                     }

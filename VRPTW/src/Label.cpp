@@ -73,7 +73,7 @@ void LabelingAlgorithmNS::LabelingData::checkVetMatBucketForward()
 
 static LabelCmp labelCmp;
 
-Label* LabelHeap::extractMin()
+Label* LabelHeap::extractTop()
 {
     if(heapSize == 0)
         return nullptr;
@@ -127,12 +127,15 @@ void LabelHeap::deleteKey(int i)
     }
 
     Label* labelI = vet[i];
-    decreaseKey(i, KEY_MIN);
-    Label* label = extractMin();
+    decreaseKey(i, KEY_EXTREME);
+
+
+    Label* label = extractTop();
 
     if(labelI != label)
     {
         std::cout<<"labelI("<<labelI<<") diffrent from top label ("<<label<<")\n\n";
+        std::cout<<"Size: "<<heapSize<<"\n\n";
         PRINT_EXIT();
     }
 
@@ -152,7 +155,7 @@ void LabelHeap::heapify(int i)
         if(l < heapSize && labelCmp(vet[l], vet[i]))//vet[l]->vetResources[0] < vet[i]->vetResources[i])
             smallert = l;
 
-        else if(r < heapSize && labelCmp(vet[r], vet[smallert]))//vet[r]->vetResources[0] < vet[smallert]->vetResources[0])
+        if(r < heapSize && labelCmp(vet[r], vet[smallert]))//vet[r]->vetResources[0] < vet[smallert]->vetResources[0])
             smallert = r;
 
         cond = (smallert != i);

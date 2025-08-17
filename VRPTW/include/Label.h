@@ -47,7 +47,7 @@ namespace LabelingAlgorithmNS
         // Position of the label from vetPtrLabel in Bucket class
         int         posBucket = -1;
         // Order of label's creation
-        int         index     = -1;
+        int64_t     index     = -1;
 
         Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
         std::bitset<NumMaxCust>                     bitSetNg;
@@ -97,9 +97,9 @@ namespace LabelingAlgorithmNS
         INLINE bool empty(){return heapSize==0;}
 
         void heapify(int i);
-        [[nodiscard]]Label* extractMin();
+        [[nodiscard]]Label* extractTop();
         void decreaseKey(int i, KEY_TYPE val);
-        [[nodiscard]]Label* getMin(){return vet[0];}
+        [[nodiscard]]Label* getTop(){return vet[0];}
         void deleteKey(int i);
         void insertKey(Label* label);
     };
