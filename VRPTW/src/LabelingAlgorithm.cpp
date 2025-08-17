@@ -651,6 +651,9 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                             //std::cout<<"Delete label greater the labelAuxPtr\n";
                         }
 
+                        if(correctPos > bucket->sizeVetPtrLabel)
+                            correctPos = bucket->sizeVetPtrLabel;
+
                     }
                 }
 
