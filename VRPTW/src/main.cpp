@@ -45,6 +45,7 @@ void computeMeanMaxMin();
 int main(int argc, const char **argv)
 {
 
+    /*
     int dim = 10;
     int maxNoOfCuts = 10;
     CnstrMgrPointer cutsCMP;
@@ -59,7 +60,7 @@ int main(int argc, const char **argv)
 
     int n_customers = 5;
     int noOfEdeges = 9;
-    int demand[] = {0, 8, 18, 1, 13};
+    int demand[] = {8, 18, 1, 13};
     int capacity = 20;
 
     int edge_head[] = {0, 0, 0, 0, 1, 1, 2, 2, 3};
@@ -100,7 +101,7 @@ int main(int argc, const char **argv)
 
     return 0;
 
-
+*/
 
 // ********************************************************************************************************************
 

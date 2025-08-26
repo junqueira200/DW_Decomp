@@ -155,7 +155,7 @@ namespace LabelingAlgorithmNS
     void changeTypeAlg(LabelingTypeAlg& labelingTypeAlg);
 
     Label* mergeForwardAndBackward(Label* forwardPtr, Label* backwardPtr, const ArrayResources& vetMaxResources,
-                                   const MatBoundRes& vetVetBound, int numResorces);
+                                   const MatBoundRes& vetVetBound, int numResorces, const NgSet& ngSet);
 
 
     /*

@@ -9,6 +9,7 @@
 #include "Grafo.h"
 #include "safe_matrix.h"
 #include "Aux.h"
+#include "NgSet.h"
 
 namespace LabelingAlgorithmNS
 {
@@ -238,7 +239,8 @@ namespace LabelingAlgorithmNS
         void checkVetMatBucketForward();
         Index getListOfIndexForMerge(const Label& label);
 
-        int doMerge(Label* label, const ArrayResources& vetMaxResources, const MatBoundRes& vetVetBound, int numResorces);
+        int doMerge(Label* label, const ArrayResources& vetMaxResources, const MatBoundRes& vetVetBound, int numResorces,
+                    const NgSet& ngSet);
 
         INLINE
         int getSecondDeposit(){return numCust-1;}

@@ -323,7 +323,7 @@ std::string LabelingAlgorithmNS::printIndex(const Index& index)
 }
 
 int LabelingAlgorithmNS::LabelingData::doMerge(Label* label, const ArrayResources& vetMaxResources,
-                                               const MatBoundRes& vetVetBound, int numResorces)
+                                               const MatBoundRes& vetVetBound, int numResorces, const NgSet& ngSet)
 {
 
     //checkLabels();
@@ -342,13 +342,39 @@ int LabelingAlgorithmNS::LabelingData::doMerge(Label* label, const ArrayResource
         matBucket = &vetMatBucketForward[label->cust];
     }
 
-
     // Go through the first index, aka reduced cost
-    for(int i=index->start(0); i <= index->end(0); ++i)
+    //for(int i=index->start(0); i <= index->end(0); ++i)
+
+    int startI = 0;
+    int endI = vetNumSteps(0);
+
+    if(label->typeLabel == Forward && label->cust == getSecondDeposit())
+    {
+        startI = 0;
+        endI   = 1;
+    }
+
+    for(int i=startI; i < endI; ++i)
     {
         // Go through the second index, aka demand
-        for(int j=index->start(1); j <= index->end(1); ++j)
+
+        int startJ = 0;
+        int endJ   = vetNumSteps(1);
+
+        if(label->typeLabel == Forward && label->cust == getSecondDeposit())
+            endJ = 0;
+
+        /*
+        if(i == index->start(0))
+            startJ = index->start(1);
+
+        if(i == index->end(0))
+            endJ = index->end(1);
+        */
+
+        for(int j=startJ; j < endJ; ++j)
         {
+            //std::cout<<i<<" "<<j<<"; cust: "<<label->cust<<"\n";
             Bucket& bucket = matBucket->mat(i, j);
 
             // Go through labels
@@ -373,7 +399,8 @@ int LabelingAlgorithmNS::LabelingData::doMerge(Label* label, const ArrayResource
                     }
                 }
 
-                Label* result   = mergeForwardAndBackward(label, labelAux, vetMaxResources, vetVetBound, numResorces);
+                Label* result   = mergeForwardAndBackward(label, labelAux, vetMaxResources, vetVetBound, numResorces,
+                                                          ngSet);
 
                 if(!result)
                 {
