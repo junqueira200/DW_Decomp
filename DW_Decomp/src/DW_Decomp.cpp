@@ -830,8 +830,8 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 }
                 else
                 {
-                    vetVar[i].set(GRB_DoubleAttr_LB, 0.0);
-                    vetVar[i].set(GRB_DoubleAttr_UB, 0.0);
+                    //vetVar[i].set(GRB_DoubleAttr_LB, 0.0);
+                    //vetVar[i].set(GRB_DoubleAttr_UB, 0.0);
                 }
 
             }
@@ -983,7 +983,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
             //getSubProbCooef(k, auxVect);
             numSol = 0;
             Eigen::VectorXd vetX;
-
+            //std::cout<<"Call resolveSubProb\n";
             ptrSubProb->resolveSubProb(auxVect.vetRowC, auxVect.vetRowRmlpSmoothPi, *uRmlp, itCG, subProbK_CustoR_neg,
                                        nullptr, iniConv, k, auxVect.vetColConvCooef, auxVect.vetPairSubProb[k],
                                        auxVect.matColX_solSubProb, numSol, vetRedCost, constVal, vetVar0, vetVar1,
@@ -1031,7 +1031,10 @@ std::cout<<"*******************Column Generation*******************\n\n";
                     continue;
                 }
                 else
+                {
+                    //std::cout<<"add column!\n";
                     setVarLamdaCol.emplace(vetSol);
+                }
 
                 minRedCost = std::min(minRedCost, vetRedCost[l]);
 
@@ -1096,15 +1099,19 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
             if(numSolRep == numSol && numSol > 0)
             {
-                //std::cout<<"MISS PRICING\n";
+                std::cout<<"MISS PRICING\n";
                 missPricing = true;
+                stabilization = false;
+                break;
                 numLimit += 1;
                 lagrangeDualBound = std::numeric_limits<double>::infinity();
-                gap =  std::numeric_limits<double>::infinity();
+                gap =  std::numeric_limits<double>::infinity();                
             }
             else
             {
                 missPricing = false;
+                stabilization = Stabilization;
+                //std::cout<<"seting missPricing to 0\n";
 
                 lagrangeDualBound = objRmlp + rhsConv*minRedCost;
                 gap = (std::abs(rhsConv*minRedCost)/objRmlp)*100.0;
@@ -1131,6 +1138,9 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
             break;
         }
+
+        if(!stabilization && missPricing)
+            continue;
 
         if(!missPricing && !subProbCustR_neg)
             std::cout<<"END!\n";
@@ -1287,6 +1297,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
             uRmlp->write("missPricing.lp");
             std::cout<<"miss pricing\n";
             std::cout<<auxVect.vetRowRmlpPi<<"\n";
+            std::cout<<"numSol: "<<numSol<<"\n";
             PRINT_DEBUG("", "");
 
             std::cout<<"vet0: "<<vetVar0<<"\n";
