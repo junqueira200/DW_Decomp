@@ -41,7 +41,7 @@ namespace ParseInputNS
         int         numItIG                  = 2000;
         double      gapIgReset               = 0.20;
         bool        comprimentoAlturaIguais1 = false;
-        bool        cpSat                    = false;
+        bool        cpSat                    = true;
         double      cpSatTime                = -1.0;
         // 0 Forward, 1 Backard, 2 Bidirectional
         int         labelingType             = 0;

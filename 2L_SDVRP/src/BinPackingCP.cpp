@@ -34,6 +34,7 @@ bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetIte
     SatParameters params;
     params.set_num_workers(1);
     params.set_stop_after_first_solution(true);
+    //params.set_max_time_in_seconds(5);
 
     if(input.cpSatTime > 0.0)
         params.set_max_time_in_seconds(input.cpSatTime);
@@ -45,6 +46,20 @@ bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetIte
     static Vector<IntVar> vetDy(instanciaG.numItens);
 
     static Vector<IntVar> vetR(instanciaG.numItens);
+
+    /*
+    Domain domainX(0, ((int)instanciaG.vetDimVeiculo[0]));
+    Domain domainY(0, ((int)instanciaG.vetDimVeiculo[1]));
+    Domain domainZ(0, ((int) instanciaG.vetDimVeiculo[0]*instanciaG.vetDimVeiculo[1]));
+
+    IntVar X = model.NewIntVar(domainX).WithName("X");
+    IntVar Y = model.NewIntVar(domainX).WithName("Y");
+    IntVar Z = model.NewIntVar(domainZ).WithName("Z");
+
+    model.Minimize(Z);
+
+    model.AddMultiplicationEquality(Z, {X,Y});
+    */
 
 
     for(int i=0; i < tamVet; ++i)
@@ -87,7 +102,7 @@ bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetIte
 
     }
 
-    for(int i=0; i < tamVet-1; ++i)
+    for(int i=0; i < tamVet; ++i)
     {
         for(int j=i+1; j < tamVet; ++j)
         {
@@ -141,18 +156,173 @@ bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetIte
             std::cout<<"CP-SAT Encontrou Solucao Viavel!\n";
             std::cout << "ERROR, Bin NAO eh Viavel!\n";
             PRINT_DEBUG("", "");
-            throw "ERROR";
+            exit(-1);
         }
 
         criaEPs(binResult);
+        //std::cout<<"CORRETO!\n";
         return true;
     }
-
+    //std::cout<<"INCORRETO!\n";
     return false;
 
 }
 
-void BinPackingCP_NS::testaCpSatBinPacking(int numItens)
+bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult, VectorI &vetItens, int tamVet)
+{
+    if(!input.cpSat)
+    {   std::cout<<"cp-sat igual a false\n";
+        return false;
+    }
+
+    binResult.reset();
+
+    CpModelBuilder model;
+    SatParameters params;
+    params.set_num_workers(4);
+    params.set_stop_after_first_solution(true);
+    //params.set_max_time_in_seconds(5);
+
+    if(input.cpSatTime > 0.0)
+        params.set_max_time_in_seconds(input.cpSatTime);
+
+    static VectorI         vetItens2(instanciaG.numItens*2);
+    static Vector<IntVar>  vetX(instanciaG.numItens*2);
+    static Vector<IntVar>  vetY(instanciaG.numItens*2);
+    static Vector<BoolVar> vetUsado(instanciaG.numItens*2);
+    static Vector<int>     vetDx(instanciaG.numItens*2);
+    static Vector<int>     vetDy(instanciaG.numItens*2);
+
+    for(int i=0; i < tamVet; ++i)
+    {
+        vetItens2[i]        = vetItens[i];
+        vetItens2[i+tamVet] = vetItens[i];
+
+        Item& item = instanciaG.vetItens[vetItens[i]];
+
+        vetDx[i] = item.vetDim[0];
+        vetDy[i] = item.vetDim[1];
+
+        vetDx[i+tamVet] = item.vetDim[1];
+        vetDy[i+tamVet] = item.vetDim[0];
+    }
+
+    int tamVet2 = 2*tamVet;
+
+    //static Vector<IntVar> vetR(instanciaG.numItens);
+
+    /*
+    Domain domainX(0, ((int)instanciaG.vetDimVeiculo[0]));
+    Domain domainY(0, ((int)instanciaG.vetDimVeiculo[1]));
+    Domain domainZ(0, ((int) instanciaG.vetDimVeiculo[0]*instanciaG.vetDimVeiculo[1]));
+
+    IntVar X = model.NewIntVar(domainX).WithName("X");
+    IntVar Y = model.NewIntVar(domainX).WithName("Y");
+    IntVar Z = model.NewIntVar(domainZ).WithName("Z");
+
+    model.Minimize(Z);
+
+    model.AddMultiplicationEquality(Z, {X,Y});
+    */
+
+
+    for(int i=0; i < tamVet2; ++i)
+    {
+        Domain domainX(0, ((int)instanciaG.vetDimVeiculo[0]));
+        Domain domainY(0, ((int)instanciaG.vetDimVeiculo[1]));
+
+        IntVar x = model.NewIntVar(domainX).WithName("x0_" + std::to_string(i));
+        IntVar y = model.NewIntVar(domainY).WithName("y0_" + std::to_string(i));
+
+        vetX[i] = x;
+        vetY[i] = y;
+
+
+        Domain domainRot(0, 1);
+        BoolVar r = model.NewBoolVar().WithName("r_"+std::to_string(i));
+        vetUsado[i] = r;
+
+
+        model.AddLessOrEqual(vetX[i]+vetDx[i], (int)instanciaG.vetDimVeiculo[0]).OnlyEnforceIf(vetUsado[i]);
+        model.AddLessOrEqual(vetY[i]+vetDy[i], (int)instanciaG.vetDimVeiculo[1]).OnlyEnforceIf(vetUsado[i]);
+
+        if(i > tamVet)
+            model.AddEquality(vetUsado[i] + vetUsado[i-tamVet], 1);
+    }
+
+    for(int i=0; i < tamVet2; ++i)
+    {
+        for(int j=i+1; j < tamVet2; ++j)
+        {
+            if(j == (i+tamVet) || i == (j+tamVet))
+                continue;
+
+            BoolVar no_overlap_x1 = model.NewBoolVar();
+            BoolVar no_overlap_x2 = model.NewBoolVar();
+            BoolVar no_overlap_y1 = model.NewBoolVar();
+            BoolVar no_overlap_y2 = model.NewBoolVar();
+            BoolVar and_ = model.NewBoolVar();
+
+            model.AddMultiplicationEquality(and_, vetUsado[i], vetUsado[j]);
+
+
+            model.AddLessOrEqual(vetX[i] + vetDx[i], vetX[j]).OnlyEnforceIf(no_overlap_x1);
+            model.AddLessOrEqual(vetX[j] + vetDx[j], vetX[i]).OnlyEnforceIf(no_overlap_x2);
+            model.AddLessOrEqual(vetY[i] + vetDy[i], vetY[j]).OnlyEnforceIf(no_overlap_y1);
+            model.AddLessOrEqual(vetY[j] + vetDy[j], vetY[i]).OnlyEnforceIf(no_overlap_y2);
+            model.AddBoolOr({no_overlap_x1, no_overlap_x2, no_overlap_y1, no_overlap_y2}).OnlyEnforceIf(and_);
+        }
+    }
+
+    const CpSolverResponse response = SolveWithParameters(model.Build(), params);
+
+    if(response.status() == FEASIBLE || response.status() == OPTIMAL)
+    {
+        int numItens = 0;
+        for(int i = 0; i < tamVet2; ++i)
+        {
+
+            Item item = instanciaG.vetItens[vetItens2[i]];
+
+            int x       = SolutionIntegerValue(response, vetX[i]);
+            int y       = SolutionIntegerValue(response, vetY[i]);
+            bool usado  = SolutionBooleanValue(response, vetUsado[i]);
+
+            if(!usado)
+                continue;
+
+            //bin.addItem(vetItens[i], )
+            binResult.vetItemId[numItens] = vetItens2[i];
+            binResult.vetItens[vetItens2[i]] = 1;
+            binResult.vetPosItem[numItens] = Ponto(x, y, 0);
+            binResult.vetRotacao[numItens] = Rotacao(int(i > tamVet));
+            binResult.volumeOcupado += instanciaG.vetItens[vetItens2[i]].volume;
+            binResult.demandaTotal  += instanciaG.vetItens[vetItens2[i]].peso;
+            binResult.numItens += 1;
+            numItens += 1;
+            //std::cout<<x<<" "<<y<<"; "<<dx<<" "<<dy<<"\n";
+            //std::cout<<instanciaG.vetItens[vetItens[i]].vetDim<<"\n\n";
+        }
+
+        if(!binResult.verificaViabilidade())
+        {
+
+            std::cout<<"CP-SAT Encontrou Solucao Viavel!\n";
+            std::cout << "ERROR, Bin NAO eh Viavel!\n";
+            PRINT_DEBUG("", "");
+            exit(-1);
+        }
+
+        criaEPs(binResult);
+        //std::cout<<"CORRETO!\n";
+        return true;
+    }
+    //std::cout<<"INCORRETO!\n";
+    return false;
+
+}
+
+Resultado BinPackingCP_NS::testaCpSatBinPacking(int numItens)
 {
     VectorI vetItens(numItens);
     vetItens.setAll(0);
@@ -198,11 +368,7 @@ void BinPackingCP_NS::testaCpSatBinPacking(int numItens)
 
     }
 
-    std::cout<<"\nNum itens: "<<numItens<<"\n\n";
-
-    Bin binCpSat;
-    if(cpSatBinPacking(binCpSat, vetItens, numItens))
-        std::cout<<"CP-SAT Encontrou Solucao Viavel!\n";
+    //std::cout<<"\nNum itens: "<<numItens<<"\n\n";
 
     Bin binHeu;
     binHeu.reset();
@@ -210,18 +376,40 @@ void BinPackingCP_NS::testaCpSatBinPacking(int numItens)
     //binHeu.numEps = 1;
 
     std::sort(vetItens.begin(), vetItens.begin()+numItens);
-    std::cout<<vetItens<<"\n\n";
+    //std::cout<<vetItens<<"\n\n";
 
-    if(construtivoBinPacking(binHeu, vetItens, numItens, input.aphaBin, 2))
+    //if(verificaInviabilidadePares(vetItens, numItens))
     {
-        std::cout << "Construtivo Encontrou Solucao Viavel!\n";
-        if(binHeu.verificaViabilidade())
-            std::cout<<"Bin Viavel!\n";
+
+        if(construtivoBinPacking(binHeu, vetItens, numItens, input.aphaBin, 10))
+        {
+            //std::cout << "Construtivo Encontrou Solucao Viavel!\n";
+            if(!binHeu.verificaViabilidade())
+            {
+                //std::cout<<"Bin NAO eh Viavel\n";
+                PRINT_DEBUG("", "");
+                exit(-1);
+            }
+
+            return HEURISTICA;
+        }
         else
-            std::cout<<"Bin NAO eh Viavel\n";
+        {//std::cout<<"Construtivo NAO Encontrou Solucao Viavel!\n";
+
+
+            Bin binCpSat;
+            if(cpSatBinPacking2(binCpSat, vetItens, numItens) == true)
+            {
+                //std::cout<<"ret exato!\n";
+                return EXATO;
+            }
+            else
+                return INVIAVEL;
+
+
+        }
     }
-    else
-        std::cout<<"Construtivo NAO Encontrou Solucao Viavel!\n";
+
 
 }
 
@@ -258,5 +446,55 @@ void BinPackingCP_NS::criaEPs(SolucaoNS::Bin &bin)
         }
 
     }
+
+}
+
+bool BinPackingCP_NS::verificaInviabilidadePares(VectorI& vetItens, int tamVet)
+{
+
+    for(int i=0; i < tamVet; ++i)
+    {
+        Item& itemI = instanciaG.vetItens[i];
+
+        for(int j=(i+1); j < tamVet; ++j)
+        {
+            Item& itemJ = instanciaG.vetItens[i];
+            bool empacotavel = false;
+
+            for(int r0=0; r0 <= 1; ++r0)
+            {
+                double dim0ItemI = itemI.getDimRotacionada(0, (Rotacao)r0);
+                double dim1ItemI = itemI.getDimRotacionada(1, (Rotacao)r0);
+
+                for(int r1=0; r1 <= 1; ++r1)
+                {
+                    double dim0ItemJ = itemI.getDimRotacionada(0, (Rotacao)r0);
+                    double dim1ItemJ = itemI.getDimRotacionada(1, (Rotacao)r0);
+
+                    if((dim0ItemI+dim0ItemJ) <= instanciaG.vetDimVeiculo[0])
+                    {
+                        empacotavel = true;
+                        break;
+                    }
+
+                    if((dim1ItemI+dim1ItemJ) <= instanciaG.vetDimVeiculo[1])
+                    {
+                        empacotavel = true;
+                        break;
+                    }
+
+                }
+
+                if(empacotavel)
+                    break;
+            }
+
+            if(!empacotavel)
+                return false;
+        }
+
+    }
+
+    return true;
 
 }

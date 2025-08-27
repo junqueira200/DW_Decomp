@@ -750,6 +750,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
     VectorD vetMult(info.numConstrsOrignalProblem+info.numConstrsConv, 1.0);
     VectorI vetLastIt(info.numConstrsOrignalProblem+info.numConstrsConv, -1);    // The last iteration the artificial variable is different from 0
 
+    bool stabilization = Stabilization;
 
     if(uRmlp->get(GRB_IntAttr_NumVars) != (int)vetVarLambdaCol.size())
     {
@@ -919,7 +920,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         if(PrintDebug)
             std::cout<<"~UpdatePi\n";
 
-        if(Stabilization && !exactPi && itCG > 0)// && phaseStatus == PhaseStatus::PhaseStatusColGen)
+        if(stabilization && !exactPi && itCG > 0)// && phaseStatus == PhaseStatus::PhaseStatusColGen)
         {
             auxVect.vetRowRmlpSmoothPi = (1.0-StabilizationAlpha)*auxVect.vetRowRmlpSmoothPi +
                                           StabilizationAlpha * (auxVect.vetRowRmlpPi);
@@ -1020,7 +1021,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
                     numSolRep += 1;
                     vetVarLambdaCol.pop_back();
 
-                    if(!Stabilization)
+                    if(!stabilization)
                     {
                         uRmlp->write("missPricing.lp");
                         PRINT_DEBUG("", "");
@@ -1093,7 +1094,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
                 addColumn(cgCooefObj, l, auxVect);
             }
 
-            if(numSolRep == numSol)
+            if(numSolRep == numSol && numSol > 0)
             {
                 //std::cout<<"MISS PRICING\n";
                 missPricing = true;
@@ -1248,15 +1249,15 @@ std::cout<<"*******************Column Generation*******************\n\n";
         */
         {
 
-            if(!exactPi && Stabilization && !missPricing && !subProbCustR_neg)
+            if(!exactPi && stabilization && !missPricing && !subProbCustR_neg)
             {
                 //exactPi = true;
                 //subProbCustR_neg = true;
                 std::cout<<"Seting exactPi\n";
             }
-            else if(exactPi && Stabilization && !missPricing && subProbCustR_neg)
+            else if(exactPi && stabilization && !missPricing && subProbCustR_neg)
                 exactPi = false;
-            else if(!exactPi && Stabilization && missPricing && subProbCustR_neg)
+            else if(!exactPi && stabilization && missPricing && subProbCustR_neg)
             {
                 //exactPi = true;
                 //std::cout<<"Set exactPi\n";
@@ -1281,7 +1282,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
         */
 
 
-        if(missPricing && !Stabilization)
+        if(missPricing && !stabilization)
         {
             uRmlp->write("missPricing.lp");
             std::cout<<"miss pricing\n";
@@ -1295,6 +1296,12 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
             throw "MISS_PRICING";
         }
+        else if(missPricing && stabilization)
+        {
+            stabilization = false;
+        }
+        else
+            stabilization = true;
 
 
         //lagrangeDualBound = getLagrangeDualBound(objRmlp, redCost);

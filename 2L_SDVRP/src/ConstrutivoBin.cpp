@@ -390,6 +390,7 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
         }
     }
 
+    /*
     if(input.cpSat)
     {
         copiaVet(vetItens, vetItensAux, vetItensTam);
@@ -406,7 +407,7 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
 
         return false;
     }
-
+    */
 
     return false;
 }

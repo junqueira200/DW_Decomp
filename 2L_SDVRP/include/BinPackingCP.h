@@ -20,12 +20,21 @@
 using namespace operations_research;
 using namespace operations_research::sat;
 
+enum Resultado
+{
+    HEURISTICA,
+    EXATO,
+    INVIAVEL
+};
+
 namespace BinPackingCP_NS
 {
 
     bool cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetItens, int tamVet);
-    void testaCpSatBinPacking(int numItens);
+    bool cpSatBinPacking2(SolucaoNS::Bin &binResult, VectorI &vetItens, int tamVet);
+    Resultado testaCpSatBinPacking(int numItens);
     void criaEPs(SolucaoNS::Bin &bin);
+    bool verificaInviabilidadePares(VectorI& vetItens, int tamVet);
 
 }
 
