@@ -28,9 +28,9 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
     double numSteps = 1.0; // 2
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 999999.0;//  10 // 5 //((2.0*mult)*startDist)/numSteps; // 1700
-    vetStepSize[0].start    = -70;// -200 -50 // (FloatType)-mult*startDist;  // 1.0
-    vetStepSize[0].end      = 400;//  200 50 // (FloatType) mult*startDist; // 1.0
+    vetStepSize[0].stepSize = 99999.0;//  10 // 5
+    vetStepSize[0].start    = -70;// -200 -50
+    vetStepSize[0].end      = 400;//  200 50
 
 
 
@@ -185,7 +185,8 @@ bool  VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         label->vetRoute[0] = 0;
         label->tamRoute    = 1;
         label->typeLabel = LabelingAlgorithmNS::Forward;
-        label->vetResources.setZero();
+        //label->vetResources.setZero();
+        setVetResources0(*label);
         label->vetResources[0] = -vetRowPi[0];
         label->typeLabel = Forward;
         int lastCust = 0;
@@ -310,18 +311,16 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                 continue;
 
             FloatType value0 = 0.0;
-            FloatType value1 = 0.0;
 
+            FloatType dual = 0.0;
+            if(j != 0)
+                dual = (FloatType)vetRowPi[j];
 
-            if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusTwoPhase)
+            value0 = -dual;
+
+            if(phaseStatus != DW_DecompNS::PhaseStatus::PhaseStatusTwoPhase)
             {
-                value0 =  - (FloatType)vetRowPi[j+1];
-                value1 =  - (FloatType)vetRowPi[i+1];
-            }
-            else
-            {
-                value0 = (FloatType)instVrpTw->matDist(i, j) - (FloatType)vetRowPi[j+1];
-                value1 = (FloatType)instVrpTw->matDist(j, i) - (FloatType)vetRowPi[i+1];
+                value0 += (FloatType)instVrpTw->matDist(i, j); // - (FloatType)vetRowPi[j];
             }
 
              vetMatResCostForward.get(i, j, 0)  = value0;
@@ -336,9 +335,9 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
             //vetMatResCost[0](i, 0) = instVrpTw->matDist(i, 0);
             if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusTwoPhase)
-                value = - (FloatType)vetRowPi[1];
+                value = 0.0;
             else
-                value = (FloatType)instVrpTw->matDist(i, 0) - (FloatType)vetRowPi[1];
+                value = (FloatType)instVrpTw->matDist(i, 0);
 
               vetMatResCostForward.get(i, instVrpTw->numClientes, 0)  = value;
               vetMatResCostBackward.get(i, instVrpTw->numClientes, 0) = value;
@@ -565,6 +564,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     }*/
 
     // Check if solution have a negative reduced cost
+
     /*
     FloatType redCostTemp = 0.0;
     for(int j=0; j < numSol; ++j)
@@ -596,8 +596,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         }
 
     }
-
     */
+
 
     for(int i=0; i < numSol; ++i)
         vetRedCost[i] = (double)vetRedCostFT[i];

@@ -51,7 +51,8 @@ bool LowerBoundNS::getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost& v
         labelPtr->bitSetNg       = 0;
         labelPtr->bitSetNg[cust] = true;
 
-        labelPtr->vetResources.setZero();
+        //labelPtr->vetResources.setZero();
+        setVetResources0(*labelPtr);
         labelPtr->i               = 0;
         labelPtr->j               = 0;
         labelPtr->posHeap         = 0;

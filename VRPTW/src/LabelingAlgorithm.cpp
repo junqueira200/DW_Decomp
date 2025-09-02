@@ -239,8 +239,8 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
     Label* labelPtr  = labelPoolG.getT();
     Label* labelBackwardPtr = labelPoolG.getT();
 
-    labelPtr->vetResources.setZero();
-    labelBackwardPtr->vetResources.setZero();
+    //labelPtr->vetResources.setZero();
+    //labelBackwardPtr->vetResources.setZero();
 
     int i = lData.getIndex(0, labelStart);
     int j = lData.getIndex(1, 0.0);
@@ -254,7 +254,8 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
         // TODO create a start label
         labelPtr->tamRoute = 1;
         labelPtr->vetRoute[0] = 0;
-        labelPtr->vetResources.setZero();
+        //labelPtr->vetResources.setZero();
+        setVetResources0(*labelPtr);
         labelPtr->vetResources[0] = labelStart;
         labelPtr->bitSetNg = 0;
         labelPtr->bitSetNg[0] = true;
@@ -353,7 +354,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
         }
 
 
-        /*
+
         if(labelHeap.heapSize > localNumMaxLabel && DominaIterBuckets)
         {
             lData.dominanceInterBuckets(labelHeap, numRes, localNumMaxLabel, lData.vetMatBucketForward, Backward);
@@ -372,7 +373,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             }
 
         }
-        */
+
 
         //lData.checkLabels();
 
@@ -796,7 +797,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
             for(int i = 0; i < (label->tamRoute - 1); ++i)
             {
                 int index = getIndex(vetRoute[i], vetRoute[i+1], numCust-1);
-                matColX(index, l) = 1.0;
+                matColX(index, l) += 1.0;
             }
 
             vetRedCost[l] = label->vetResources[0];
@@ -971,7 +972,8 @@ void LabelingAlgorithmNS::
     labelPtr->tamRoute        = 1;
     labelPtr->vetRoute[0]     = dest;
     labelPtr->typeLabel       = Backward;
-    labelPtr->vetResources.setZero();
+    //labelPtr->vetResources.setZero();
+    setVetResources0(*labelPtr);
     labelPtr->vetResources[0] = labelStart;
     labelPtr->bitSetNg        = 0;
     labelPtr->bitSetNg[dest]  = true;
@@ -2687,7 +2689,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketFast1(int cust, Label* labelPtr
     correctPos = 0;
     while(correctPos < bucketPtr->sizeVetPtrLabel)
     {
-        if(doubleLess(bucketPtr->vetPtrLabel[correctPos]->vetResources[0], labelPtrAux->vetResources[0], 1E-5))
+        if(doubleLess(bucketPtr->vetPtrLabel[correctPos]->vetResources[0], labelPtrAux->vetResources[0], (FloatType)1E-5))
             correctPos += 1;
         else
             break;
@@ -2717,7 +2719,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketFast1(int cust, Label* labelPtr
 
         for(int r=1; r < numRes; ++r)
         {
-            if(!doubleLess(bucketPtr->vetPtrLabel[ii]->vetResources[r], labelPtrAux->vetResources[r], 1E-5))
+            if(!doubleLess(bucketPtr->vetPtrLabel[ii]->vetResources[r], labelPtrAux->vetResources[r], (FloatType)1E-5))
             {
                 canDomindate = false;
                 break;
@@ -2788,7 +2790,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketFast1(int cust, Label* labelPtr
         bool canDominate = true;
         for(int r=1; r < numRes; ++r)
         {
-            if(doubleLess(labelPtrAux->vetResources[r], bucketPtr->vetPtrLabel[ii]->vetResources[r], 1E-5))
+            if(doubleLess(labelPtrAux->vetResources[r], bucketPtr->vetPtrLabel[ii]->vetResources[r], (FloatType)1E-5))
             {
                 canDominate = false;
                 break;

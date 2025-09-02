@@ -29,7 +29,7 @@ namespace DW_DecompNS
     // TODO Retornar para 25!
     constexpr int    NumMaxSolSubProb    = 25;//25;
     constexpr double StabilizationAlpha  = 0.6; // .9 // .45  // 0.60
-    inline bool      Stabilization       = true;
+    inline bool      Stabilization       = false;
     constexpr double gapLimit            = 1E-3;
     constexpr int    NumCandidatesBranch = 3;
     constexpr bool   PrintDebug          = false;
@@ -61,7 +61,7 @@ namespace DW_DecompNS
     enum class PhaseStatus
     {
         PhaseStatusColGen   = 0,
-        PhaseStatusBigM     = 1,
+        //PhaseStatusBigM     = 1,
         PhaseStatusTwoPhase = 2
     };
 
@@ -259,7 +259,7 @@ namespace DW_DecompNS
 
         VectorD vetObjCof;
 
-        PhaseStatus phaseStatus = PhaseStatus::PhaseStatusBigM;
+        PhaseStatus phaseStatus = PhaseStatus::PhaseStatusColGen;
 
         DW_DecompNode(GRBEnv &env_,
                       GRBModel &master_,
@@ -285,6 +285,9 @@ namespace DW_DecompNS
             delete []vetRmlpConstr;
             delete []vetVarArtifRmlp;
         }
+
+        void changeToColGeneration(AuxData &auxVect, GRBVar* vetVar);
+        void changeToTwoPhase(GRBVar* vetVar);
 
     };
 

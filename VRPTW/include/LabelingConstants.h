@@ -7,7 +7,7 @@
 #include "safe_3D_matrix.h"
 #include <cfenv>
 
-typedef double FloatType;
+typedef float FloatType;
 
 #define HEAP_KEY     index
 #define KEY_TYPE     int64_t
@@ -28,12 +28,12 @@ namespace LabelingAlgorithmNS
     constexpr int   NumMaxResources   = 2;
     constexpr int   NumMaxRoute       = 100;
     constexpr int   NumMaxCust        = 100; //100
-    constexpr int   NgSetSize         = 12;
+    constexpr int   NgSetSize         = 8; // 12 8 2
     constexpr int   NumBuckets        = 10;
     constexpr int   vetPtrLabelSize   = 10;
     constexpr bool  NullFlush         = true;
     constexpr bool  Print             = false;
-    constexpr int   numMaxLabelG      = 2; // 2000
+    constexpr int   numMaxLabelG      = 200; // 2000
     constexpr bool  DominaIterBuckets = true;
     constexpr FloatType FloatEp       = 1E-15;
     constexpr bool  TrackingRoutes    = false;

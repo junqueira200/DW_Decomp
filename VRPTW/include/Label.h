@@ -50,7 +50,8 @@ namespace LabelingAlgorithmNS
         // Order of label's creation
         int64_t     index     = -1;
 
-        Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
+        //Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
+        std::array<FloatType, NumMaxResources>      vetResources;
         std::bitset<NumMaxCust>                     bitSetNg;
         boost::array<int, NumMaxRoute>              vetRoute;
 
@@ -58,6 +59,12 @@ namespace LabelingAlgorithmNS
         Label() = default;
 
     };
+
+    INLINE
+    void setVetResources0(Label& label)
+    {
+        memset(&label.vetResources[0], 0, sizeof(FloatType)*NumMaxResources);
+    }
 
     class LabelCmp
     {

@@ -364,13 +364,13 @@ int LabelingAlgorithmNS::LabelingData::doMerge(Label* label, const ArrayResource
         if(label->typeLabel == Forward && label->cust == getSecondDeposit())
             endJ = 0;
 
-        /*
+
         if(i == index->start(0))
             startJ = index->start(1);
 
         if(i == index->end(0))
             endJ = index->end(1);
-        */
+
 
         for(int j=startJ; j < endJ; ++j)
         {
