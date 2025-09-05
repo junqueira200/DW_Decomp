@@ -28,9 +28,9 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
     double numSteps = 1.0; // 2
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 99999.0;//  10 // 5
+    vetStepSize[0].stepSize = 999999.0;//  10 // 5
     vetStepSize[0].start    = -70;// -200 -50
-    vetStepSize[0].end      = 400;//  200 50
+    vetStepSize[0].end      = 200;//  200 50
 
 
 
@@ -446,14 +446,14 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                                                  maxDist, vetRedCostFT, exact, typeLabel, true, nullptr);
 
             it += 1;
-            if(custoRedNeg && numSol >= DW_DecompNS::NumMaxSolSubProb/2)
+            if(custoRedNeg && numSol >= 5)//DW_DecompNS::NumMaxSolSubProb/2)
                 break;
 
         }
     }
 
 
-    if(!custoRedNeg || numSol < DW_DecompNS::NumMaxSolSubProb/2)
+    if(!custoRedNeg || numSol < 5)
     {
         matColX.setZero();
         custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
