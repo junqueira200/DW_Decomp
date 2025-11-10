@@ -122,7 +122,7 @@ namespace BuscaLocalNS
                         if(!solucao.verificaSol(error))
                         {
                             std::cout<<"ERROR: "<<error<<"\n\n";
-                            PRINT_DEBUG("", "");
+                            PRINT_DEBUGG("", "");
                             throw "ERROR";
                         }
 
@@ -168,7 +168,7 @@ namespace BuscaLocalNS
                             if(!solucao.verificaSol(error))
                             {
                                 std::cout<<"ERROR: "<<error<<"\n\n";
-                                PRINT_DEBUG("", "");
+                                PRINT_DEBUGG("", "");
                                 throw "ERROR";
                             }
                             //std::cout<<"**************************Improve*******************\n\n";

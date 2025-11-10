@@ -10,8 +10,25 @@
 
 #include "LowerBound.h"
 
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/dijkstra_shortest_paths.hpp>
+
 
 using namespace LabelingAlgorithmNS;
+using namespace boost;
+
+// Define edge property: weight (double)
+typedef property<edge_weight_t, double> EdgeWeightProperty;
+
+// Define a directed graph with edge weights
+typedef adjacency_list<vecS, vecS, directedS,
+                       no_property,      // vertex properties
+                       EdgeWeightProperty> graph_t;
+typedef graph_traits < graph_t >::vertex_descriptor Vertex;
+typedef graph_traits < graph_t >::edge_descriptor edge_descriptor;
+typedef std::pair<int, int> Edge;
+
 
 /** ******************************************************************************************
  *  ******************************************************************************************
@@ -23,127 +40,127 @@ using namespace LabelingAlgorithmNS;
  *  ******************************************************************************************
  */
 bool LowerBoundNS::getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost& vetMatResCost,
-                                     Eigen::VectorX<FloatType>&                vetDist,
+                                     Eigen::VectorXd&                          vetDist,
                                      int                                       dest,
                                      LabelingAlgorithmNS::LabelingData*        lDataPtr)
 
 {
-    static LabelHeap labelHeap(1000000);
-    startPool();
+    std::cout<<"ini\n";
 
-    int indexI = lDataPtr->getIndex(0, 0.0);
-    vetDist.setConstant(MaxFloatType);
+    Eigen::MatrixXd distMat(vetDist.size(), vetDist.size());
+    copyDistMat(vetMatResCost, distMat);
+    static int numNodes = vetDist.size();
+    static std::vector<Vertex> predecessor(numNodes+1);
 
-    //lDataPtr->vetMatBucketForward[0].mat(0, 1).flush();
+    //std::cout<<distMat<<"\n";
 
-    for(int cust=0; cust < dest; ++cust)
+    // Create the graph
+    graph_t g(numNodes+1);
+
+    for(int i=0; i < numNodes; ++i)
     {
-        labelHeap.heapSize = 0;
-        lDataPtr->flushLabel();
-        resetLabelPool();
-
-        Label* labelPtr = getLabel();
-
-        labelPtr->typeLabel      = Forward;
-        labelPtr->cust           = cust;
-        labelPtr->tamRoute       = 1;
-        labelPtr->vetRoute[0]    = cust;
-        labelPtr->bitSetNg       = 0;
-        labelPtr->bitSetNg[cust] = true;
-
-        //labelPtr->vetResources.setZero();
-        setVetResources0(*labelPtr);
-        labelPtr->i               = 0;
-        labelPtr->j               = 0;
-        labelPtr->posHeap         = 0;
-        labelPtr->posBucket       = 0;
-
-        Bucket* bucket = lDataPtr->getBucket(labelPtr);
-
-        bucket->vetPtrLabel.resize(1);
-        bucket->sizeVetPtrLabel = 1;
-        bucket->vetPtrLabel[0]  = labelPtr;
-
-        labelHeap.insertKey(labelPtr);
-
-        vetDist[cust] = MaxFloatType;
-
-        std::bitset<NumMaxCust> bitSet = 0;
-        bitSet[cust] = true;
-
-        while(!labelHeap.empty())
+        for(int j=0; j < numNodes; ++j)
         {
-            labelPtr = labelHeap.extractTop();
-            //std::cout<<"cust: "<<labelPtr->cust<<"\n\n";
-            lDataPtr->removeLabel(labelPtr);
-
-            bitSet[labelPtr->cust] = true;
-
-            for(int next=1; next <= dest; ++next)
+            if(i == j)
+                continue;
+            //std::cout<<i<<", "<<j<<"\n";
+            if(distMat(i, j) < -1E-5)
             {
-                if(labelPtr->bitSetNg[next] || next == labelPtr->cust || (labelPtr->cust == 0 && next == dest) ||
-                        bitSet[next])
-                    continue;
-
-                Label* labelAux = getLabel();
-                extendLabel(labelPtr, labelAux, vetMatResCost, lDataPtr, next);
-                int correctPos = -1;
-                Bucket* bucket = dominanceIntraBucketSlow(next, labelAux, *lDataPtr, &labelHeap, 1, dest, correctPos);
-
-                if(!bucket)
-                {
-                    rmLabel(labelAux);
-                    continue;
-                }
-
-                if((bucket->sizeVetPtrLabel+1) > bucket->vetPtrLabel.size())
-                    bucket->vetPtrLabel.conservativeResize(2*bucket->sizeVetPtrLabel);
-
-
-                if(bucket->sizeVetPtrLabel != 0)
-                {
-                    for(int i = bucket->sizeVetPtrLabel-1; i >= correctPos; --i)
-                    {
-                        int index = i+1;
-                        bucket->vetPtrLabel[index]            = bucket->vetPtrLabel[i];
-                        bucket->vetPtrLabel[index]->posBucket = index;
-                    }
-                }
-
-                bucket->vetPtrLabel[correctPos] = labelAux;
-                bucket->vetPtrLabel[correctPos]->posBucket = correctPos;
-                bucket->sizeVetPtrLabel += 1;
-
-                if(next != dest)
-                    labelHeap.insertKey(labelAux);            }
-        }
-
-        labelPtr = getLabel();
-        labelPtr->cust = MaxInt;
-        labelPtr->vetResources[0] = MaxFloatType;
-
-        //for(int i=0; i <= lDataPtr->vetNumSteps(0); ++i)
-        {
-            Label* aux = getLabel();
-            aux->cust = dest;
-            aux->i = 0;
-            aux->j = 0;
-            aux->typeLabel = Forward;
-
-            Bucket* bucket = lDataPtr->getBucket(aux);
-            for(int j=0; j < bucket->sizeVetPtrLabel; ++j)
-            {
-                if(bucket->vetPtrLabel[j]->vetResources[0] < labelPtr->vetResources[0])
-                    labelPtr = bucket->vetPtrLabel[j];
+                std::cout<<"dist("<<i<<", "<<j<<") : "<<distMat(i, j)<<"\n\n";
+                std::cout<<distMat<<"\n";
+                PRINT_EXIT();
             }
+            add_edge(i, j, EdgeWeightProperty(distMat(i,j)), g);
         }
-
-        vetDist[cust] = labelPtr->vetResources[0];
-        //std::cout<<vetDist[cust]<<"\n";
-
-
     }
 
-    std::cout<<"vetDist: "<<vetDist.transpose()<<"\n\n";
+    //std::cout<<"Create graph!\n";
+
+    for(int i=0; i < numNodes; ++i)
+    {
+        //std::cout<<"Cust("<<i<<"\n";
+        Vertex source = i;
+        dijkstra_shortest_paths(g, source, predecessor_map(boost::make_iterator_property_map(
+                                               predecessor.begin(), get(boost::vertex_index, g))));
+        //std::cout<<"dijkstra\n";
+        Vertex node = dest;
+        VectorI vetRoute;
+        vetRoute.reserve(5);
+        vetRoute.push_back(dest);
+        //std::cout<<"node: "<<dest<<"\n";
+        while(node != source)
+        {
+            node = predecessor[node];
+            //std::cout<<"node: "<<node<<"\n";
+            vetRoute.push_back(node);
+        }
+
+        //std::cout<<"\n";
+
+        std::reverse(vetRoute.begin(), vetRoute.end());
+        //std::cout<<vetRoute<<"\n\n";
+        double dist = 0.0;
+\
+        for(int i=0; i < (vetRoute.size()-1); ++i)
+        {
+            dist += vetMatResCost(vetRoute[i], vetRoute[i+1], 0);
+        }
+
+        vetDist[i] = dist;
+    }
+
+    for(double& val:vetDist)
+    {
+        if(val > 0.0)
+            val = 0.0;
+    }
+
+    std::cout<<"Dist: "<<vetDist.transpose()<<"\n";
+    //PRINT_EXIT();
+
     return true;
+}
+
+void LowerBoundNS::copyDistMat(const LabelingAlgorithmNS::Vet3D_ResCost& vetMatResCost,
+                               Eigen::MatrixXd& distMat)
+{
+
+    const int sizeDimI = vetMatResCost.getNumDimI();
+    const int sizeDimJ = vetMatResCost.getNumDimJ();
+
+    FloatType arcMin = InfFloatType;
+    FloatType temp;
+
+    for(int j=0; j < sizeDimJ; ++j)
+    {
+        for(int i=0; i < sizeDimI; ++i)
+        {
+            temp = vetMatResCost(i, j, 0);
+            distMat(i, j) = temp;
+
+            if(temp != InfFloatType && temp < arcMin)
+                arcMin = temp;
+        }
+    }
+
+    //std::cout<<distMat<<"\n";
+
+    //if(arcMin >= 0.0)
+    //    return;
+
+    arcMin = -arcMin;
+
+    for(int j=0; j < sizeDimJ; ++j)
+    {
+        for(int i=0; i < sizeDimI; ++i)
+        {
+            if(i == j)
+                continue;
+
+            distMat(i, j) += arcMin;
+        }
+    }
+
+    //std::cout<<"\n\n"<<distMat<<"\n";
+
 }

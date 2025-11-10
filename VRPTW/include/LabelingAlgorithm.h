@@ -18,7 +18,7 @@
 #include "DW_Decomp.h"
 #include <boost/array.hpp>
 #include <boost/container/set.hpp>
-#include <bits/stdc++.h>
+//#include <bits/stdc++.h>
 #include "Label.h"
 #include "NgSet.h"
 
@@ -93,7 +93,7 @@ namespace LabelingAlgorithmNS
                                 const NgSet& ngSet, LabelingData& lData, Eigen::MatrixXd& matColX, int& numSol,
                                 FloatType labelStart, int NumMaxLabePerBucket, bool dominaceCheck, FloatType& maxDist,
                                 Eigen::VectorX<FloatType>& vetRedCost, bool exact, LabelingTypeAlg labelingTypeAlg,
-                                bool arc, Eigen::VectorX<FloatType>* vetLowerBoundRedCost);
+                                bool arc, Eigen::VectorXd* vetLowerBoundRedCost);
 
     //inline __attribute__((always_inline))
     bool checkCompleteDominance(const Label& l0, const Label& l1, int numResources);

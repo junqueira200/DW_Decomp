@@ -9,10 +9,11 @@
 #include "BranchAndPrice.h"
 #include "Alarm.h"
 #include "Test.h"
-#include <bits/stdc++.h>
+//#include <bits/stdc++.h>
 #include "Instancia.h"
 #include "InputOutput.h"
 #include "Ig.h"
+#include <unordered_set>
 
 extern "C"
 {

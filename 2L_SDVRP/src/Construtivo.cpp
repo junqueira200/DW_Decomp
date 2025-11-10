@@ -248,7 +248,7 @@ bool ConstrutivoNS::insereCandidato(SolucaoNS::Solucao &solucao, const Estado &e
     if(newDem > instanciaG.veicCap)
     {
         std::cout<<"ERROR\n Veiculo com demanda("<<newDem<<") maior que o permitido("<<instanciaG.veicCap<<")\n";
-        PRINT_DEBUG("", "");
+        PRINT_DEBUGG("", "");
         throw "ERROR";
     }
 
@@ -260,7 +260,7 @@ bool ConstrutivoNS::insereCandidato(SolucaoNS::Solucao &solucao, const Estado &e
     if(!doubleEqual(inc, estado.incDist))
     {
         std::cout<<"ERROR\nIncremento de distancia no estado("<<estado.incDist<<") != calculado("<<inc<<")\n";
-        PRINT_DEBUG("", "");
+        PRINT_DEBUGG("", "");
         throw "ERROR";
     }
 

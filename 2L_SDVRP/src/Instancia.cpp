@@ -314,7 +314,7 @@ double InstanciaNS::Item::getDimRotacionada(int d, Rotacao r)
         return vetDim[(d+1)%2];
     else
     {
-        PRINT_DEBUG("", "ERRO, Rotacao("<<r<<") Nao eh implementado!");
+        PRINT_DEBUGG("", "ERRO, Rotacao("<<r<<") Nao eh implementado!");
         throw "ERRO";
     }
 }

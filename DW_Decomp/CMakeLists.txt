@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.9)
 
 project("DwDecomp"
     VERSION 0
@@ -20,14 +20,16 @@ message(CMAKE_MODULE_PATH="${CMAKE_SOURCE_DIR}")
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+
 find_package(Eigen3 3.3 REQUIRED)# NO_MODULE)
 include_directories(${EIGEN3_INCLUDE_DIR})
 find_package(GUROBI REQUIRED)
 include_directories(${GUROBI_INCLUDE_DIRS})
 link_directories($ENV{GUROBI_HOME}/lib)
 find_package(Boost)
+#find_package(OpenMP)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -pedantic -fPIC")# -Wall -Wextra -fPIC")# -fsanitize=address")# -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -fPIC")# -Wall -Wextra -fPIC")# -fsanitize=address")# -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D __FILENAME__='\"$$(subst  ${CMAKE_SOURCE_DIR}/,,$$(abspath $$<))\"'")
 
 add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
@@ -48,7 +50,7 @@ target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
 target_link_libraries(${PROJECT_NAME} gurobi_c++)
 target_link_libraries(${PROJECT_NAME} gurobi)
 target_link_libraries(${PROJECT_NAME} Boost::boost)
-
+#target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
 
                         
 target_include_directories(${PROJECT_NAME}

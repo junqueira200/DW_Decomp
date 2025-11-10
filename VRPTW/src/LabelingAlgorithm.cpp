@@ -191,7 +191,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
                           const NgSet& ngSet, LabelingData& lData, Eigen::MatrixXd& matColX, int& numSol,
                           const FloatType labelStart, int NumMaxLabePerBucket, bool dominaceCheck, FloatType& maxDist,
                           Eigen::VectorX<FloatType>& vetRedCost, bool exact, LabelingTypeAlg labelingTypeAlg, bool arc,
-                          Eigen::VectorX<FloatType>* vetLowerBoundRedCost)
+                          Eigen::VectorXd* vetLowerBoundRedCost)
 {
     //vetRoteG = {19, 18, 5, 10, 1, 12, 9, 17, 9, 17, 9, 17};
 
@@ -2701,42 +2701,44 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketFast1(int cust, Label* labelPtr
 
         int start = 0;
         int end   = bucketPtr->sizeVetPtrLabel-1;
-        correctPos = end/2;
 
         const FloatType find = labelPtrAux->vetResources[0];
 
-        while(!doubleEqual(find, bucketPtr->vetPtrLabel[correctPos]->vetResources[0], 1E-5))
+        correctPos = -1;
+        while (start <= end)
         {
-            FloatType rcCorrectPos = bucketPtr->vetPtrLabel[correctPos]->vetResources[0];
+            int mid = start + (end-start)/2;
+            FloatType rc = bucketPtr->vetPtrLabel[mid]->vetResources[0];
 
-            if(find < rcCorrectPos)
+            if(doubleEqual(find, rc, 1E-5))
             {
-                end = correctPos;
-                correctPos = start + ((end-start)/2);
-            }
-            else
-            {
-                start = correctPos;
-                correctPos = start + ((end-start)/2);
-            }
-
-            if(!(start < end))
-            {
+                correctPos = mid;
                 break;
             }
 
+            if (find < rc)
+                end = mid - 1;
+            else
+                start = mid + 1;
+
         }
 
-        bool isEqual = doubleEqual(find, bucketPtr->vetPtrLabel[correctPos]->vetResources[0], 1E-5);
+        if(correctPos == -1)
+            correctPos = start;
 
-        while(correctPos > 0 && doubleEqual(find, bucketPtr->vetPtrLabel[correctPos]->vetResources[0], 1E-5))
-            correctPos -= 1;
+        if(correctPos < bucketPtr->sizeVetPtrLabel)
+        {
+            while(correctPos > 0 && doubleEqual(find, bucketPtr->vetPtrLabel[correctPos]->vetResources[0], 1E-5))
+                correctPos -= 1;
+        }
 
-        if(isEqual)
-            correctPos += 1;
+
     }
     else
+    {
         correctPos = 0;
+        return bucketPtr;
+    }
 
 
     /*
@@ -2755,8 +2757,10 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketFast1(int cust, Label* labelPtr
     }
     */
 
+    int min = std::min(correctPos, bucketPtr->sizeVetPtrLabel);
+
     // Labels before correctPos can dominate labelPtrAux;
-    for(int ii=0; ii < correctPos; ++ii)
+    for(int ii=0; ii < min; ++ii)
     {
         bool canDomindate = true;
 
@@ -2799,9 +2803,9 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketFast1(int cust, Label* labelPtr
 
         for(int i=1; i < numRes; ++i)
         {
-            lessEqual = labelPtrAux->vetResources[i] <= bucketPtr->vetPtrLabel[pos]->vetResources[i];
-            equal     = doubleEqual(labelPtrAux->vetResources[i], bucketPtr->vetPtrLabel[pos]->vetResources[i],
-                                    (FloatType)1E-5);
+            lessEqual = lessEqual && labelPtrAux->vetResources[i] <= bucketPtr->vetPtrLabel[pos]->vetResources[i];
+            equal     = equal && doubleEqual(labelPtrAux->vetResources[i], bucketPtr->vetPtrLabel[pos]->vetResources[i],
+                                             (FloatType)1E-5);
         }
 
 
@@ -2847,7 +2851,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketFast1(int cust, Label* labelPtr
             lessEqual = true;
 
             for(int i=1; i < numRes; ++i)
-                lessEqual = bucketPtr->vetPtrLabel[pos]->vetResources[i] <= labelPtrAux->vetResources[i];
+                lessEqual = lessEqual && bucketPtr->vetPtrLabel[pos]->vetResources[i] <= labelPtrAux->vetResources[i];
 
 
             if(lessEqual)
@@ -2914,6 +2918,21 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketFast1(int cust, Label* labelPtr
         return nullptr;
 
     labelPtrAux->active = true;
+
+    int size           = bucketPtr->sizeVetPtrLabel;
+    int correctPos2;
+
+    Bucket* bucketPtr2 =  dominanceIntraBucketSlow(cust, labelPtrAux, lData, labelHeap, numRes, dest, correctPos2);
+    if(bucketPtr2 == nullptr)
+    {
+        PRINT_EXIT();
+    }
+
+    if(size != bucketPtr2->sizeVetPtrLabel)
+    {
+        PRINT_EXIT();
+    }
+
 
     return bucketPtr;
 

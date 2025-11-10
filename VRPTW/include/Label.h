@@ -34,30 +34,24 @@ namespace LabelingAlgorithmNS
     struct Label
     {
     public:
-
-
-        bool        active    = false;
-        TypeLabel   typeLabel = Forward;
-        // First dimension for MatBucket
-        int         i         = -1;
+        boost::array<int, NumMaxRoute>              vetRoute;
+        std::bitset<NumMaxCust>                     bitSetNg;
+        std::array<FloatType, NumMaxResources>      vetResources;
+        int64_t     index     = -1;
+        // Order of label's creation
+        int         posBucket = -1;
+        // Position of the label from vetPtrLabel in Bucket class
+        int         tamRoute  = 0;
+        int         posHeap   = -1;
+        int         cust      = -1;
         // Second dimension for MatBucket
         int         j         = -1;
-        int         cust      = -1;
-        int         posHeap   = -1;
-        int         tamRoute  = 0;
-        // Position of the label from vetPtrLabel in Bucket class
-        int         posBucket = -1;
-        // Order of label's creation
-        int64_t     index     = -1;
-
-        //Eigen::Array<FloatType, 1, NumMaxResources> vetResources;
-        std::array<FloatType, NumMaxResources>      vetResources;
-        std::bitset<NumMaxCust>                     bitSetNg;
-        boost::array<int, NumMaxRoute>              vetRoute;
-
+        // First dimension for MatBucket
+        int         i         = -1;
+        TypeLabel   typeLabel = Forward;
+        bool        active    = false;
 
         Label() = default;
-
     };
 
     INLINE

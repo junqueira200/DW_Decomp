@@ -155,7 +155,7 @@ bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetIte
 
             std::cout<<"CP-SAT Encontrou Solucao Viavel!\n";
             std::cout << "ERROR, Bin NAO eh Viavel!\n";
-            PRINT_DEBUG("", "");
+            PRINT_DEBUGG("", "");
             exit(-1);
         }
 
@@ -309,7 +309,7 @@ bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult, VectorI &vetIt
 
             std::cout<<"CP-SAT Encontrou Solucao Viavel!\n";
             std::cout << "ERROR, Bin NAO eh Viavel!\n";
-            PRINT_DEBUG("", "");
+            PRINT_DEBUGG("", "");
             exit(-1);
         }
 
@@ -387,7 +387,7 @@ Resultado BinPackingCP_NS::testaCpSatBinPacking(int numItens)
             if(!binHeu.verificaViabilidade())
             {
                 //std::cout<<"Bin NAO eh Viavel\n";
-                PRINT_DEBUG("", "");
+                PRINT_DEBUGG("", "");
                 exit(-1);
             }
 

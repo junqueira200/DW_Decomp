@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <iostream>
-#include <Eigen/Eigen>
+#include <Eigen/Core>
 #include "safe_3D_matrix.h"
 #include <cfenv>
 

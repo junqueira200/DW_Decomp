@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.9)
 
 project("2L_SDVRP"
     VERSION 0
@@ -14,7 +14,6 @@ endif()
 set(CMAKE_CXX_STANDARD 23)
 add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
 message("set vector_sanity_check=1")
-
 
 message(CMAKE_MODULE_PATH="${CMAKE_SOURCE_DIR}")
 

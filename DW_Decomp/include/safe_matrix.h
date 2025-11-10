@@ -14,7 +14,7 @@
 #include "iostream"
 #include <vector>
 #include <ostream>
-#include <omp.h>
+//#include <omp.h>
 #include <cmath>
 #include <cassert>
 
@@ -262,6 +262,7 @@ bool matrixsIguais(const Matrix<T, C> &mat0, const Matrix<T,C> &mat1)
 }
 
 
+/*
 template <typename T, bool C>
 void multMatrix(const Matrix<T,C> &mat0, const Matrix<T,C> &mat1, Matrix<T,C> &matResult)
 {
@@ -319,6 +320,6 @@ void multMatrix(const Matrix<T,C> &mat0, const Matrix<T,C> &mat1, Matrix<T,C> &m
 
     }
 }
-
+*/
 
 #endif //TTP_SAFE_VECTOR_H

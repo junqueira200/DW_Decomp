@@ -283,7 +283,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                    const VectorI &vetVar0, const VectorI &vetVar1, DW_DecompNS::PhaseStatus phaseStatus, bool exact)
 {
     //std::cout<<"star value: "<<constPiValue<<"\n\n";
-    //static Eigen::VectorXd vetDist(instVrpTw->numClientes+1);
+    static Eigen::VectorXd vetDist(instVrpTw->numClientes+1);
+    vetDist.setConstant(0.0);
     //LowerBoundNS::getDistLowerBound(vetMatResCostForward, vetDist, instVrpTw->numClientes, &labelingData);
 
     static DW_DecompNS::PhaseStatus phase = phaseStatus;
@@ -432,6 +433,10 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     exactLabelingG = false;
 
+    LowerBoundNS::getDistLowerBound(vetMatResCostForward, vetDist, instVrpTw->numClientes, &labelingData);
+
+
+
 // TODO remove comments!
     if(!exact)
     {
@@ -443,7 +448,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
             custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward,
                                                  vetMatResCostBackward, vetVetResBound, instVrpTw->numClientes, ngSet,
                                                  labelingData, matColX, numSol, (FloatType) constPiValue, i, true,
-                                                 maxDist, vetRedCostFT, exact, typeLabel, true, nullptr);
+                                                 maxDist, vetRedCostFT, exact, typeLabel, true, &vetDist);
 
             it += 1;
             if(custoRedNeg && numSol >= 5)//DW_DecompNS::NumMaxSolSubProb/2)
@@ -459,7 +464,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
                                              vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
                                              numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
-                                             typeLabel, true, nullptr);
+                                             typeLabel, true, &vetDist);
     }
 
 
