@@ -46,7 +46,7 @@ void computeMeanMaxMin();
 int main(int argc, const char **argv)
 {
 
-    /*
+
     int dim = 10;
     int maxNoOfCuts = 10;
     CnstrMgrPointer cutsCMP;
@@ -102,7 +102,7 @@ int main(int argc, const char **argv)
 
     return 0;
 
-*/
+
 
 // ********************************************************************************************************************
 
