@@ -131,7 +131,7 @@ std::cout << "***********************************************\n\n";
         if(PrintConst)
 std::cout<<"tamTemp: "<<tamTemp<<"; ((vetItensTam-k)): "<<vetItensTam-k<<"\n";
         int i = k;
-        if(tamTemp > 1)
+        if(tamTemp > 1 && !input.filo)
             i = getRandInt(k, (k+tamTemp-1));
 
         const int itemId = vetItens[i];

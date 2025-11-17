@@ -45,6 +45,7 @@ namespace ParseInputNS
         double      cpSatTime                = -1.0;
         // 0 Forward, 1 Backard, 2 Bidirectional
         int         labelingType             = 0;
+        bool        filo                     = true;
 
         File file;
         std::string commit = "54f84fa9027eeb1a17566368b19204f726b1e4d0";

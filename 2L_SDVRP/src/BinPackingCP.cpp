@@ -181,7 +181,7 @@ bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult, VectorI &vetIt
     SatParameters params;
     params.set_num_workers(4);
     params.set_stop_after_first_solution(true);
-    //params.set_max_time_in_seconds(5);
+    params.set_max_time_in_seconds(10);
 
     if(input.cpSatTime > 0.0)
         params.set_max_time_in_seconds(input.cpSatTime);
@@ -498,3 +498,41 @@ bool BinPackingCP_NS::verificaInviabilidadePares(VectorI& vetItens, int tamVet)
     return true;
 
 }
+
+bool  BinPackingCP_NS::binPacking(VectorI &vetItens, int tamVet)
+{
+
+    /*
+     * 1 2 3 4 5
+     * 1 2 3 4 5
+     *
+     * 5 4 3 2 1
+     *
+     * Item (k+1) vem antes de k
+     */
+    static Bin bin;
+    bin.reset();
+    if(input.filo)
+        std::reverse(vetItens.begin(), vetItens.begin()+tamVet);
+
+    if(construtivoBinPacking(bin, vetItens, tamVet, input.aphaBin, 10))
+    {
+            //std::cout << "Construtivo Encontrou Solucao Viavel!\n";
+        if(!bin.verificaViabilidade())
+        {
+                //std::cout<<"Bin NAO eh Viavel\n";
+            PRINT_DEBUGG("", "");
+            exit(-1);
+        }
+
+            return true;
+    }
+    else
+    {//std::cout<<"Construtivo NAO Encontrou Solucao Viavel!\n";
+        bin.reset();
+        return cpSatBinPacking2(bin, vetItens, tamVet);
+    }
+
+
+}
+

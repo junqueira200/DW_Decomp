@@ -433,7 +433,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     exactLabelingG = false;
 
-    LowerBoundNS::getDistLowerBound(vetMatResCostForward, vetDist, instVrpTw->numClientes, &labelingData);
+    //LowerBoundNS::getDistLowerBound(vetMatResCostForward, vetDist, instVrpTw->numClientes, &labelingData);
 
 
 

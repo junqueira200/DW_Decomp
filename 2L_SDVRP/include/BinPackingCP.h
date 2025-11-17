@@ -35,6 +35,7 @@ namespace BinPackingCP_NS
     Resultado testaCpSatBinPacking(int numItens);
     void criaEPs(SolucaoNS::Bin &bin);
     bool verificaInviabilidadePares(VectorI& vetItens, int tamVet);
+    bool binPacking(VectorI &vetItens, int tamVet);
 
 }
 

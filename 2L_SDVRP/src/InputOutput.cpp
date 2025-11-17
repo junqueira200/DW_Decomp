@@ -47,6 +47,7 @@ void ParseInputNS::parseInput(int argc, const char* argv[])
                         //("comprimentoAlturaIguais1", "Desabilita o bin packing, fazendo largura e altura de todos os itens iguais a 1", cxxopts::value<bool>(input.comprimentoAlturaIguais1))
                         //("cpSat", "Abilita o cp-sat no empacotamento", cxxopts::value<bool>(input.cpSat))
                         //("cpSatTime", "Tempo limite para o cp-sat", cxxopts::value<double>(input.cpSatTime))
+            ("filo", "", cxxopts::value<bool>(input.filo))
                         ("lTaype", "Labeling Type (0, 1, 2)", cxxopts::value<int>(input.labelingType));
 
         auto result = options.parse(argc, argv);
