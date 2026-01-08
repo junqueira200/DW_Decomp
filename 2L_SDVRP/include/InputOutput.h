@@ -13,6 +13,7 @@
 #include "rand.h"
 #include <iostream>
 #include "Solucao.h"
+#include "Commit.h"
 
 namespace ParseInputNS
 {
@@ -46,9 +47,11 @@ namespace ParseInputNS
         // 0 Forward, 1 Backard, 2 Bidirectional
         int         labelingType             = 0;
         bool        filo                     = true;
+        bool 		inst2d                   = false;
+        //bool		inst3d                   = true;
 
         File file;
-        std::string commit = "54f84fa9027eeb1a17566368b19204f726b1e4d0";
+        //std::string commit = "54f84fa9027eeb1a17566368b19204f726b1e4d0";
 
 
     };

@@ -13,7 +13,7 @@
 #include "Solucao.h"
 #include "Instancia.h"
 
-using namespace InstanciaNS;
+using namespace InstanceNS;
 
 namespace BuscaLocalNS
 {

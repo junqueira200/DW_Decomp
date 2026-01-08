@@ -47,22 +47,28 @@ void ParseInputNS::parseInput(int argc, const char* argv[])
                         //("comprimentoAlturaIguais1", "Desabilita o bin packing, fazendo largura e altura de todos os itens iguais a 1", cxxopts::value<bool>(input.comprimentoAlturaIguais1))
                         //("cpSat", "Abilita o cp-sat no empacotamento", cxxopts::value<bool>(input.cpSat))
                         //("cpSatTime", "Tempo limite para o cp-sat", cxxopts::value<double>(input.cpSatTime))
-            ("filo", "", cxxopts::value<bool>(input.filo))
-                        ("lTaype", "Labeling Type (0, 1, 2)", cxxopts::value<int>(input.labelingType));
+                        ("filo", "", cxxopts::value<bool>(input.filo))
+                        ("lTaype", "Labeling Type (0, 1, 2)", cxxopts::value<int>(input.labelingType))
+                        ("2d", "Indicates if the instance is 2d. Default is 3d!",
+                              cxxopts::value<bool>(input.inst2d));
 
         auto result = options.parse(argc, argv);
 
+        if(input.inst2d)
+            std::println("Instancia 2d");
+        else
+            std::println("Instancia 3d");
         if (result.count("help"))
         {
             std::cout << options.help({"", "Group"}) << std::endl;
-            std::cout<<"Commit: "<<input.commit<<"\n";
+            std::cout<<"Commit: "<<Commit<<"\n";
             exit(-1);
         }
 
         if(result.count("inst") == 0)
         {
             std::cout << options.help({"", "Group"}) << std::endl;
-            std::cout<<"Commit: "<<input.commit<<"\n";
+            std::cout<<"Commit: "<<Commit<<"\n";
             assertm(true, "Instancia (-f) nao foi detectada na entrada");
         }
 

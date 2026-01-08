@@ -12,7 +12,7 @@
 #include "sefe_array.h"
 #include "ConstrutivoBin.h"
 
-using namespace InstanciaNS;
+using namespace InstanceNS;
 using namespace ConstrutivoBinNS;
 
 
@@ -23,7 +23,7 @@ SolucaoNS::Bin::Bin()
     vetEp      = Vector<Ponto>(NumEpPorBin);
     vetItemId  = VectorI(NumItensPorBin);
     vetPosItem.setAll(Ponto());
-    vetRotacao = Vector<Rotacao>(NumItensPorBin);
+    vetRotacao = Vector<Rotation>(NumItensPorBin);
     vetRotacao.setAll(Rot0);
 
     vetItens   = Vector<int8_t>(instanciaG.numItens);
@@ -64,7 +64,7 @@ std::string SolucaoNS::Ponto::print() const
 }
 
 // Add item na posicao x,y e cria dois EPs TODO: verificar!
-void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanciaNS::Rotacao r)
+void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
 {
 
     if(vetPosItem.size() < (numItens+1))
@@ -84,7 +84,7 @@ void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanciaNS::Rotacao r)
 
     numItens      += 1;
     volumeOcupado += instanciaG.vetItens[idItem].volume;
-    demandaTotal  += instanciaG.vetItens[idItem].peso;
+    demandaTotal  += instanciaG.vetItens[idItem].weight;
 
 
     // Cria dois novos EPs
@@ -107,6 +107,15 @@ std::cout<<"\t\t\tCriando EP"<<ponto.print()<<"\n";
     if(PrintEP)
 std::cout<<"\t\t\tCriando EP"<<ponto.print()<<"\n";
     addEp(ponto);
+
+
+    if(instanciaG.numDim == 3)
+    {
+        ponto = vetPosItem[numItens-1];
+        ponto.vetDim[2] += instanciaG.vetItens[idItem].getDimRotacionada(2, r);
+        addEp(ponto);
+    }
+
     rmI_Ep(idEp);
 
     // Percorre os EPs antigos e verifica colisao com o novo item
@@ -178,7 +187,7 @@ bool SolucaoNS::Bin::rmI_Item(int i)
 
     int itemId = vetItemId[i];
     vetItens[itemId] = (int8_t)0;
-    demandaTotal -= instanciaG.vetItens[itemId].peso;
+    demandaTotal -= instanciaG.vetItens[itemId].weight;
 
     if(numItens == 1)
     {
@@ -251,7 +260,7 @@ bool SolucaoNS::Bin::rmI_Ep(int i)
     return true;
 }
 
-SolucaoNS::Solucao::Solucao(const InstanciaNS::Instancia &instancia)
+SolucaoNS::Solucao::Solucao(const InstanceNS::Instance &instancia)
 {
     vetBin      = Vector<Bin>(instancia.numVeiculos);
     for(int b=0; b < instancia.numVeiculos; ++b)
@@ -520,7 +529,7 @@ int SolucaoNS::getBinVazio(const Vector<Bin> &vetBin, int tam)
     return -1;
 }
 
-bool SolucaoNS::verificaColisaoDoisItens(const int item0, const int item1, const Ponto &p0, const Ponto &p1, const InstanciaNS::Rotacao r0, const InstanciaNS::Rotacao r1)
+bool SolucaoNS::verificaColisaoDoisItens(const int item0, const int item1, const Ponto &p0, const Ponto &p1, const InstanceNS::Rotation r0, const InstanceNS::Rotation r1)
 {
 
     // Representacao dois segmentos de reta em um unica dimensao

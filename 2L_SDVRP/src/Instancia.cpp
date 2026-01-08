@@ -11,10 +11,10 @@
 #include <fstream>
 #include "InputOutput.h"
 
-using namespace InstanciaNS;
+using namespace InstanceNS;
 using namespace ParseInputNS;
 
-InstanciaNS::Instancia::Instancia(int numClientes_, int numItens_, int numVeiculos_):
+InstanceNS::Instance::Instance(int numClientes_, int numItens_, int numVeiculos_):
                                                                    matDist(numClientes_, numClientes_),
                                                                    matTempo(numClientes, numClientes),
                                                                    //vetItens(numItens_),
@@ -43,7 +43,7 @@ InstanciaNS::Instancia::Instancia(int numClientes_, int numItens_, int numVeicul
 
 }
 
-InstanciaNS::Instancia::Instancia():
+InstanceNS::Instance::Instance():
                                     matDist(0, 0),
                                     matTempo(0,0),
                                     vetItens(0),
@@ -57,14 +57,11 @@ InstanciaNS::Instancia::Instancia():
 }
 
 
-void InstanciaNS::leInstancia(const std::string &strFile)
+void InstanceNS::read2dInstance(const std::string &strFile)
 {
-
-    instanciaG.matTempo.setVal(1.0);
 
     int numClientes, numVeiculos, numItens;
 
-    instanciaG.nome = strFile;
     std::ifstream file(strFile);
     assertm(!file.is_open(), "Nao foi possivel abrir o arquivo: "<<strFile);
 
@@ -112,7 +109,12 @@ void InstanciaNS::leInstancia(const std::string &strFile)
         }
     }
 
-    instanciaG = Instancia(numClientes, numItens, numVeiculos);
+    instanciaG = Instance(numClientes, numItens, numVeiculos);
+    instanciaG.matTempo.setVal(1.0);
+    instanciaG.numDim = 2;
+    instanciaG.nome = strFile;
+    instanciaG.numRotation = 2;
+
     file >> instanciaG.veicCap >> instanciaG.vetDimVeiculo[0] >> instanciaG.vetDimVeiculo[1];
 
 //std::cout << "veicCap: " << instanciaG.veicCap << "; veicComprimento: " << instanciaG.vetDimVeiculo[0] << "; veicLargura: " << instanciaG.vetDimVeiculo[1] << "\n\n";
@@ -238,7 +240,183 @@ void InstanciaNS::leInstancia(const std::string &strFile)
 
 }
 
-void InstanciaNS::Instancia::atualizaVetMinDimItens()
+void InstanceNS::read3dInstance(const std::string &strFile)
+{
+
+    int numClientes, numVeiculos, numItens;
+
+    std::ifstream file(strFile);
+    assertm(!file.is_open(), "Cant open the file: : "<<strFile);
+
+    //std::cout<<"File("<<strFile<<") aberto\n";
+
+    std::string lineLixo;
+    int num = 2;
+
+    for(int i=0; i < num; ++i)
+    {
+        getline(file, lineLixo);
+        //std::cout << "line: " << lineLixo << "\n";
+    }
+
+    file>>numClientes;
+    numClientes += 1;
+
+    for(int i=0; i < 1; ++i)
+    {
+        getline(file, lineLixo);
+        //std::cout << "line: " << lineLixo << "\n";
+    }
+
+    file>>numVeiculos;
+
+    for(int i=0; i < 1; ++i)
+    {
+        getline(file, lineLixo);
+        //std::cout << "line: " << lineLixo << "\n";
+    }
+
+    file>>numItens;
+    //numItens += 1;
+
+    std::cout<<"numClientes: "<<numClientes<<"; numItens: "<<numItens<<" numVeic: "<<numVeiculos<<"\n";
+
+
+    {
+        for(int i = 0; i < 2; ++i)
+        {
+            getline(file, lineLixo);
+            //std::cout << "line: " << lineLixo << "\n";
+        }
+    }
+
+    instanciaG = Instance(numClientes, numItens, numVeiculos);
+    instanciaG.matTempo.setVal(1.0);
+    instanciaG.numDim = 3;
+    instanciaG.nome = strFile;
+
+    file >> instanciaG.veicCap >> instanciaG.vetDimVeiculo[2] >> instanciaG.vetDimVeiculo[1]
+         >> instanciaG.vetDimVeiculo[0];
+
+    std::cout << "veicCap: " << instanciaG.veicCap << "; veicComprimento: " << instanciaG.vetDimVeiculo<<"\n\n";
+
+    num = 2;
+
+    for(int i=0; i < num; ++i)
+    {
+        getline(file, lineLixo);
+        //std::cout << "line: " << lineLixo << "\n";
+    }
+
+    Matrix<double> matPontos(numClientes, 2);
+    matPontos.setVal(-1.0);
+
+    for(int i=0; i < numClientes; ++i)
+    {
+        double x, y, cli;
+        file >> cli >> x >> y >> instanciaG.vetDemandaCliente[i];
+        matPontos.get(i, 0) = x;
+        matPontos.get(i, 1) = y;
+
+        //std::cout<<cli<<" "<<x<<" "<<y<<" "<<instanciaG.vetDemandaCliente[i]<<"\n";
+
+    }
+
+    for(int i=0; i < numClientes; ++i)
+    {
+        instanciaG.matDist.get(i, i) = 0.0;
+
+        for(int j=i+1; j < numClientes; ++j)
+        {
+            double dist = std::sqrt(std::pow(matPontos(i, 0) - matPontos(j, 0), 2) +
+                                    std::pow(matPontos(i, 1) - matPontos(j, 1), 2));
+
+            instanciaG.matDist.get(i, j) = dist;
+            instanciaG.matDist.get(j, i) = dist;
+        }
+    }
+
+    //std::cout << instanciaG.matDist << "\n";
+
+    num = 2;
+    for(int i=0; i < num; ++i)
+    {
+        getline(file, lineLixo);
+        //std::cout << "line: " << lineLixo << "\n";
+    }
+
+    //Vector<Vector<double>> vetVetItens(numClientes);
+    int maxNumItensPorCli = 0;
+    int nextItem = 0;
+
+
+    //instanciaG.vetItemAltura.reserve(instanciaG.numItens);
+    //instanciaG.vetItemLargura.reserve(instanciaG.numItens);
+    //instanciaG.vetItemArea.reserve(instanciaG.numItens);
+
+    instanciaG.vetPesoItens.reserve(instanciaG.numItens);
+    instanciaG.vetItens.reserve(instanciaG.numItens);
+
+    num = numClientes;
+    if(input.splitInstancia)
+        num -= 1;
+    for(int i=0; i < num; ++i)
+    {
+        int node, numItensPorClie;
+
+        file >> node >> numItensPorClie;
+        //std::cout<<node<<" "<<numItensPorClie<<"\n";
+
+        maxNumItensPorCli = std::max(maxNumItensPorCli, numItensPorClie);
+
+        if(node != 0)
+        {
+            instanciaG.matCliItensIniFim.get(node, 0) = nextItem;
+            //instancia.matCliItensIniFim.get(node, 1) = nextItem+(numItensPorClie-1);
+        }
+
+        double wight = instanciaG.vetDemandaCliente[node]/numItensPorClie;
+
+        for(int item = 0; item < numItensPorClie; ++item)
+        {
+            int fragility;
+            double altura, largura, comprimento;
+            file >> altura >> largura >>comprimento >> fragility;
+            //std::cout<<"\t"<<altura<<", "<<largura<<", "<<comprimento<<"\n";
+
+            if(input.comprimentoAlturaIguais1)
+            {
+                altura      = 1.0;
+                comprimento = 1.0;
+            }
+
+            /*
+            vetVetItens[i].push_back(altura);
+            vetVetItens[i].push_back(largura);
+            vetVetItens[i].push_back(comprimento);
+            */
+
+            instanciaG.vetItemCliente[nextItem] = node;
+
+            instanciaG.matCliItensIniFim.get(node, 1) = nextItem;
+            instanciaG.vetItens.push_back(Item(largura, comprimento, altura, wight));
+            instanciaG.vetItens[instanciaG.vetItens.size()-1].fragility = fragility;
+            nextItem += 1;
+
+
+        }
+
+        //std::cout << vetVetItens[i] << "\n";
+    }
+
+    instanciaG.maxNumItensPorClie = maxNumItensPorCli;
+    instanciaG.atualizaVetMinDimItens();
+
+    file.close();
+
+}
+
+void InstanceNS::Instance::atualizaVetMinDimItens()
 {
     for(int i=0; i < numItens; ++i)
     {
@@ -249,7 +427,7 @@ void InstanciaNS::Instancia::atualizaVetMinDimItens()
     //std::cout<<"vetMinDimItens: "<<vetMinDimItens<<"\n\n";
 }
 
-std::string InstanciaNS::Item::print(bool printVol)
+std::string InstanceNS::Item::print(bool printVol)
 {
     std::string str = "(";
     for(int i=0; i < instanciaG.numDim; ++i)
@@ -262,24 +440,24 @@ std::string InstanciaNS::Item::print(bool printVol)
     if(printVol)
         str += "; " + std::to_string(volume);
 
-    str += "; " + std::format("{:.1f}", peso);
+    str += "; " + std::format("{:.1f}", weight);
 
     str += ")";
     return str;
 }
 
 
-/*std::string InstanciaNS::printItem(int itemId)
+/*std::string InstanceNS::printItem(int itemId)
 {
     return std::to_string(instanciaG.vetItemLargura[itemId])+","+std::to_string(instanciaG.vetItemAltura[itemId]);
 }*/
 
-InstanciaNS::Item::Item(double x, double y, double z, double peso_)
+InstanceNS::Item::Item(double x, double y, double z, double peso_)
 {
     vetDim[0] = x;
     vetDim[1] = y;
     vetDim[2] = z;
-    peso = peso_;
+    weight = peso_;
     volume = 1.0;
 
     for(int d=0; d < 3; ++d)
@@ -290,7 +468,7 @@ InstanciaNS::Item::Item(double x, double y, double z, double peso_)
     }
 }
 
-void InstanciaNS::Item::set(double x, double y, double z)
+void InstanceNS::Item::set(double x, double y, double z)
 {
     vetDim[0] = x;
     vetDim[1] = y;
@@ -298,28 +476,29 @@ void InstanciaNS::Item::set(double x, double y, double z)
 
     volume = 1.0;
 
-    for(int d=0; d < 3; ++d)
+    for(int d=0; d < instanciaG.numDim; ++d)
     {
         volume *= vetDim[d];
-        if((d+1) == instanciaG.numDim)
-            break;
     }
 }
 
-double InstanciaNS::Item::getDimRotacionada(int d, Rotacao r)
+double InstanceNS::Item::getDimRotacionada(int d, Rotation r)
 {
-    if(r == Rot0)
-        return vetDim[d];
-    else if(r == Rot1)
-        return vetDim[(d+1)%2];
-    else
-    {
-        PRINT_DEBUGG("", "ERRO, Rotacao("<<r<<") Nao eh implementado!");
-        throw "ERRO";
-    }
+    assertm(static_cast<int>(r) >= instanciaG.numRotation, "Error r("<<r<<")");
+
+    static const int perm[6][3] = {
+        {0,1,2}, // LWH
+        {1,0,2}, // WLH
+        {0,2,1}, // LHW
+        {1,2,0}, // WHL
+        {2,0,1}, // HLW
+        {2,1,0}  // HWL
+    };
+
+    return vetDim[perm[static_cast<int>(r)][d]];
 }
 
-int InstanciaNS::copiaItensCliente(int cliente, VectorI &vetItens)
+int InstanceNS::copiaItensCliente(int cliente, VectorI &vetItens)
 {
     int numItens = 0;
 
@@ -333,7 +512,7 @@ int InstanciaNS::copiaItensCliente(int cliente, VectorI &vetItens)
 }
 
 
-int InstanciaNS::copiaItensClientes(VectorI& vetClientes, int tam, VectorI& vetItens)
+int InstanceNS::copiaItensClientes(VectorI& vetClientes, int tam, VectorI& vetItens)
 {
     int tamVetItens = 0;
     for(int i=0; i < tam; ++i)
@@ -352,8 +531,7 @@ int InstanciaNS::copiaItensClientes(VectorI& vetClientes, int tam, VectorI& vetI
     return tamVetItens;
 }
 
-
-double InstanciaNS::calculaDistancia(VectorI& vet, int tam)
+double InstanceNS::calculaDistancia(VectorI& vet, int tam)
 {
     double dist = 0.0;
     if(tam <= 1)

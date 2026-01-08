@@ -43,7 +43,7 @@ namespace SolucaoNS
         Vector<Ponto>                   vetPosItem;             // Indica as posicoes do canto inferior esquerdo onde o item eh posicionado no bin
         Vector<Ponto>                   vetEp;                  // Indica as posicoes dos pontos extremos
         VectorI                         vetItemId;              // Indica o id do iº item
-        Vector<InstanciaNS::Rotacao>    vetRotacao;
+        Vector<InstanceNS::Rotation>    vetRotacao;
         Vector<int8_t>                  vetItens;               // Indica se o bin empacota o i° item
         Array<double,3>                 binDim;
         double                          volumeTotal     = 0.0;
@@ -52,7 +52,7 @@ namespace SolucaoNS
         int                             numItens        = 0;
         int                             numEps          = 0;    // Numero de pontos extremos
 
-        void addItem(int idEp, int idItem, InstanciaNS::Rotacao r);
+        void addItem(int idEp, int idItem, InstanceNS::Rotation r);
         void addEp(const Ponto &ep);
 
         inline __attribute__((always_inline))
@@ -138,7 +138,7 @@ namespace SolucaoNS
         double          distTotal = 0.0;
 
         Solucao()=default;
-        explicit Solucao(const InstanciaNS::Instancia &instancia);
+        explicit Solucao(const InstanceNS::Instance &instancia);
 
         bool verificaSol(std::string &error);
         int getBinVazio();
@@ -161,8 +161,8 @@ namespace SolucaoNS
                                   int item1,
                                   const Ponto &p0,
                                   const Ponto &p1,
-                                  InstanciaNS::Rotacao r0,
-                                  InstanciaNS::Rotacao r1);
+                                  InstanceNS::Rotation r0,
+                                  InstanceNS::Rotation r1);
 
     std::string printPonto(const Ponto &ponto, int dim);
 

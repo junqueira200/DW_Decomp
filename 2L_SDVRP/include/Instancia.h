@@ -1,7 +1,7 @@
 /* ****************************************
  * ****************************************
  *  Data:    05/11/24
- *  Arquivo: Instancia.h
+ *  Arquivo: Instance.h
  * ****************************************
  * ****************************************/
 
@@ -16,27 +16,32 @@
 #include "Constantes.h"
 #include "string"
 
-namespace InstanciaNS
+namespace InstanceNS
 {
-    enum Rotacao
+    enum Rotation
     {
         Rot0 = 0,
-        Rot1
+        Rot1,
+        Rot2,
+        Rot3,
+        Rot4,
+        Rot5
     };
 
     class Item
     {
     public:
 
-        Array<double,3> vetDim;    // Comprimento, largura, altura
+        Array<double,3> vetDim;    // Length, width, height
         double volume = 0.0;
-        double peso   = 0.0;
+        double weight   = 0.0;
+        bool fragility  = false;
 
         Item()=default;
         Item(double x, double y, double z, double peso_);
         void set(double x, double y, double z);
         std::string print(bool printVol=false);
-        double getDimRotacionada(int d, Rotacao r);
+        double getDimRotacionada(int d, Rotation r);
 
     };
 
@@ -45,7 +50,7 @@ namespace InstanciaNS
         double ini=0.0, fim=INF_Double;
     };
 
-    class Instancia
+    class Instance
     {
     public:
 
@@ -55,8 +60,9 @@ namespace InstanciaNS
         Vector<int> vetNumItensPorCli;
         int numVeiculos = 0;
         int numDim = 2;
-
+        int numRotation = 6;
         double veicCap = 0;
+        double minSupport = 0.7;
 
         Array<double,3> vetDimVeiculo;
         //double veicAltura = 0.0;
@@ -85,20 +91,20 @@ namespace InstanciaNS
         Vector<int> vetItemCliente;      // Indica o cliente dado um item; mat[itemId] = cliente
         Matrix<int> matCliItensIniFim;   // Indica o id Inicial e id Final do primeiro e ultimo item de um cliente; mat[clienteId,0] = iten0; mat[clienteId,1] = itenFim
 
-        Instancia();
-        Instancia(int numClientes_, int numItens_, int numVeiculos_);
+        Instance();
+        Instance(int numClientes_, int numItens_, int numVeiculos_);
         void atualizaVetMinDimItens();
 
     };
 
-    void leInstancia(const std::string &strFile);
+    void read2dInstance(const std::string &strFile);
+    void read3dInstance(const std::string &strFile);
     int copiaItensCliente(int cliente, VectorI& vetItens);
     int copiaItensClientes(VectorI& vetClientes, int tam, VectorI& vetItens);
     double calculaDistancia(VectorI& vet, int tam);
-    inline Instancia instanciaG;
+    inline Instance instanciaG;
 
     //std::string printItem(int itemId);
 }
-// 35 s
-// 47 s
+
 #endif //INC_2L_SDVRP_INSTANCIA_H

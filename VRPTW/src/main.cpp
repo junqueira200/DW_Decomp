@@ -36,11 +36,11 @@ using namespace PrimalHeuristicNS;
 using namespace BranchNS;
 using namespace StatisticsNS;
 using namespace TestNS;
-using namespace InstanciaNS;
+using namespace InstanceNS;
 using namespace ParseInputNS;
 using namespace IgNs;
 
-void convertInstance(const InstanceVRPTW& instanceVrptw, Instancia& instancia);
+void convertInstance(const InstanceVRPTW& instanceVrptw, Instance& instancia);
 void computeMeanMaxMin();
 
 int main(int argc, const char **argv)
@@ -131,7 +131,7 @@ int main(int argc, const char **argv)
 
         ptr_instVrpG = &instVrpTw;
 
-        instanciaG = Instancia(instVrpTw.numClientes, instVrpTw.numClientes-1, instVrpTw.numVeic);
+        instanciaG = Instance(instVrpTw.numClientes, instVrpTw.numClientes-1, instVrpTw.numVeic);
         convertInstance(instVrpTw, instanciaG);
 
         //RouteHash routeHash;
@@ -388,7 +388,7 @@ int main(int argc, const char **argv)
     return 0;
 }
 
-void convertInstance(const InstanceVRPTW& instanceVrptw, Instancia& instancia)
+void convertInstance(const InstanceVRPTW& instanceVrptw, Instance& instancia)
 {
 
     instancia.vetItens = Vector<Item>(instancia.numItens);
@@ -405,7 +405,7 @@ void convertInstance(const InstanceVRPTW& instanceVrptw, Instancia& instancia)
             instancia.matCliItensIniFim.get(i, 1) = i-1;
 
             instancia.vetItens[i-1].set(1.0, 1.0, 1.0);
-            instancia.vetItens[i-1].peso = instanceVrptw.vetClieDem[i];
+            instancia.vetItens[i-1].weight = instanceVrptw.vetClieDem[i];
             instancia.vetPesoItens[i-1] = instanceVrptw.vetClieDem[i];
             instancia.vetItens[i-1].volume = 1.0;
         }

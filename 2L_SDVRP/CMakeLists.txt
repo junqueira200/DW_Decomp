@@ -34,7 +34,8 @@ add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
 add_definitions(-DVAR_SOLUTION_BORROW_CHECKER=1)
 message("set solution_borrow_checker=1")
 
-add_library(${PROJECT_NAME} SHARED)
+add_library(${PROJECT_NAME} SHARED
+    include/Commit.h)
 
 target_sources(${PROJECT_NAME}
     PRIVATE

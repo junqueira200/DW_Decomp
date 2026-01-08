@@ -14,41 +14,80 @@
 #include "InputOutput.h"
 #include "BinPackingCP.h"
 
-using namespace InstanciaNS;
+using namespace InstanceNS;
 using namespace SolucaoNS;
 using namespace RandNs;
 using namespace ParseInputNS;
 using namespace BinPackingCP_NS;
 
-bool ConstrutivoBinNS::canInsert(const Ponto &ep, const int itemId, const Bin &bin, Rotacao r)
+bool ConstrutivoBinNS::canInsert(const Ponto &ep, const int itemId, const Bin &bin, Rotation r)
 {
     // Verifica se o item cabe no bin
-    #pragma GCC unroll 3
-    for(int d=0; d < 3; ++d)
+    for(int d=0; d < instanciaG.numDim; ++d)
     {
         if(ep.vetDim[d] + instanciaG.vetItens[itemId].vetDim[d] > bin.binDim[d])
             return false;
-
-        if((d+1) == instanciaG.numDim)
-            break;
     }
 
     // Verifica colisao com cada item que esta no bin
     for(int i=0; i < bin.numItens; ++i)
     {
-        //if(pontosIguais(ep, bin.vetPosItem[i]))
-        //    return false;
-
-        //int numInterc = 0;
         int itemIdOutro = bin.vetItemId[i];
-
         // Verfica a intersecao em cada dimensao
         if(verificaColisaoDoisItens(itemIdOutro, itemId, bin.vetPosItem[i], ep, bin.vetRotacao[i], r))
             return false;
     }
 
-    return true;
+    if(input.inst2d || ep.vetDim[2] == 0.0)
+    {
+        std::cout<<"z = 0\n";
+        return true;
+    }
+
+    double areaSuport = 0.0;
+
+    for(int i=0; i < bin.numItens; ++i)
+    {
+
+        //int numInterc = 0;
+        int itemIdOutro = bin.vetItemId[i];
+        Rotation rOutro = bin.vetRotacao[i];
+        const Ponto& exPointOutro = bin.vetEp[i];
+        double outroZ_Ex = exPointOutro.vetDim[2] +
+                           instanciaG.vetItens[itemIdOutro].getDimRotacionada(2, rOutro);
+        double dif = std::abs(outroZ_Ex-ep.vetDim[2]);
+        if(dif <= 5.0)
+        {
+            areaSuport += computeXY_Overlap(instanciaG.vetItens[itemId], r, ep,
+                                            instanciaG.vetItens[itemIdOutro], bin.vetRotacao[i], bin.vetEp[i]);
+        }
+
+    }
+
+    double area = instanciaG.vetItens[itemId].getDimRotacionada(0, r)*instanciaG.vetItens[itemId].getDimRotacionada(1, r);
+    double support = areaSuport/area;
+    std::cout<<"support: "<<support<<"\n";
+
+
+    return support >= instanciaG.minSupport;
 }
+
+
+double ConstrutivoBinNS::computeXY_Overlap(InstanceNS::Item& item0, InstanceNS::Rotation r0,
+                                           const SolucaoNS::Ponto& p0, InstanceNS::Item& item1,
+                                           InstanceNS::Rotation r1, const SolucaoNS::Ponto& p1)
+{
+    double x0Coord = p0.vetDim[0] + item0.getDimRotacionada(0, r0);
+    double x1Coord = p1.vetDim[0] + item1.getDimRotacionada(0, r1);
+    double deltaX = std::max(0.0, std::min(x0Coord, x1Coord) - std::max(p0.vetDim[0], p1.vetDim[0]));
+
+    double y0Coord = p0.vetDim[1] + item0.getDimRotacionada(1, r0);
+    double y1Coord = p1.vetDim[1] + item1.getDimRotacionada(1, r1);
+    double deltaY  = std::max(0.0, std::min(y0Coord, y1Coord) - std::max(p0.vetDim[1], p1.vetDim[1]));
+
+    return deltaX*deltaY;
+}
+
 
 
 bool ConstrutivoBinNS::epColideItem(const SolucaoNS::Ponto &ep, const SolucaoNS::Ponto &ponto, const int itemId)
@@ -57,17 +96,13 @@ bool ConstrutivoBinNS::epColideItem(const SolucaoNS::Ponto &ep, const SolucaoNS:
     static Array<double,2> arrayTemp0;
 
     // Verifica colisao nos eixos
-    #pragma GCC unroll 3
-    for(int d=0; d < 3; ++d)
+    for(int d=0; d < instanciaG.numDim; ++d)
     {
         arrayTemp0[0] = ponto.vetDim[d];
         arrayTemp0[1] = arrayTemp0[0] + instanciaG.vetItens[itemId].vetDim[d];
 
         if(!(ep.vetDim[d] > arrayTemp0[0] && ep.vetDim[d] < arrayTemp0[1]))
             return false;
-
-        if((d+1) == instanciaG.numDim)
-            break;
     }
 
     return true;
@@ -161,7 +196,7 @@ std::cout << "Item: " << itemId << "; " << instanciaG.vetItens[itemId].print() <
                 continue;
             }
 
-            double novaDem = bin.demandaTotal + instanciaG.vetItens[itemId].peso;
+            double novaDem = bin.demandaTotal + instanciaG.vetItens[itemId].weight;
 
             if(novaDem > instanciaG.veicCap)
                 continue;
@@ -228,40 +263,27 @@ std::cout<<"\t\tNumEps: "<<bin.numEps<<"\n\n";
             for(int ep=0; ep < bin.numEps; ++ep)
             {
 
-            if(PrintEP && PrintConst)
+                if(PrintEP && PrintConst)
 std::cout<<"\t\tChecando EP"<<bin.vetEp[ep].print()<<"\n";
                 // Verifica a colisao do item colocado no EP
 
-                Rotacao rotacao = Rotacao(getRandInt(0,1));
-                if(canInsert(bin.vetEp[ep], itemId, bin, rotacao))
+                Rotation rotacao = Rotation(getRandInt(0,instanciaG.numRotation-1));
+                const Rotation rotIni = rotacao;
+                do
                 {
-                    if(PrintEP && PrintConst)
-std::cout<<"\t\t\t"<<"Can insert\n";
-
-                    vetIdEpRot[numEps].epId = ep;
-                    vetIdEpRot[numEps].r    = rotacao;
-                    vetIdEpRot[numEps].atributo = get<1>(getMinArray(bin.vetEp[ep].vetDim, instanciaG.numDim));
-
-                    numEps += 1;
-                }
-                else
-                {
-                    rotacao = Rotacao((int(rotacao)+1)%2);
                     if(canInsert(bin.vetEp[ep], itemId, bin, rotacao))
                     {
-
-                        if(PrintEP && PrintConst)
-std::cout<<"\t\t\t"<<"Can insert (Rotacionado)\n";
-
-                        vetIdEpRot[numEps].epId = ep;
-                        vetIdEpRot[numEps].r    = rotacao;
-                        vetIdEpRot[numEps].atributo = get<1>(getMinArray(bin.vetEp[ep].vetDim, instanciaG.numDim));
+                        vetIdEpRot[numEps].epId     = ep;
+                        vetIdEpRot[numEps].r        = rotacao;
+                        vetIdEpRot[numEps].atributo = get<1>(getMinArray(bin.vetEp[ep].vetDim,
+                                                                         instanciaG.numDim));
 
                         numEps += 1;
+                        break;
                     }
-                    if(PrintEP && PrintConst)
-std::cout << "\t\t\t" << "Can't insert\n";
-                }
+
+                    rotacao = static_cast<Rotation>((static_cast<int>(rotacao)+1)%instanciaG.numRotation);
+                }while(rotIni != rotacao);
             }
 
             if(numEps == 0)
@@ -296,8 +318,7 @@ std::cout<<"\t\tAdd item a EP"<<bin.vetEp[vetIdEpRot[idVetIdEp].epId].print()<<"
                 bool itemMaior = false;
 
                 // Verifica se o item cabe no bin
-                #pragma GCC unroll 3
-                for(int d=0; d < 3; ++d)
+                for(int d=0; d < instanciaG.numDim; ++d)
                 {
                     if(instanciaG.vetItens[itemId].vetDim[d] > bin.binDim[d])
                     {
@@ -305,8 +326,6 @@ std::cout<<"\t\tAdd item a EP"<<bin.vetEp[vetIdEpRot[idVetIdEp].epId].print()<<"
                         break;
                     }
 
-                    if((d+1) == instanciaG.numDim)
-                        break;
                 }
 
                 // TODO: Percorrer bins vazios
@@ -358,7 +377,7 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
     for(int i=0; i < vetItensTam; ++i)
     {
         volume  += instanciaG.vetItens[vetItens[i]].volume;
-        demanda += instanciaG.vetItens[vetItens[i]].peso;
+        demanda += instanciaG.vetItens[vetItens[i]].weight;
     }
 
     if(volume > bin.volumeTotal || demanda > instanciaG.veicCap)

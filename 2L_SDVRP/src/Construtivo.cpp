@@ -12,7 +12,7 @@
 #include "ConstrutivoBin.h"
 #include "rand.h"
 
-using namespace InstanciaNS;
+using namespace InstanceNS;
 using namespace SolucaoNS;
 using namespace ConstrutivoBinNS;
 using namespace RandNs;
@@ -211,9 +211,10 @@ bool ConstrutivoNS::todosClieAtendidos(const VectorD &vetClieCarga)
 bool ConstrutivoNS::verificaInsercaoItensNoBin(const SolucaoNS::Bin &bin, int clie, const double alphaBin)
 {
     static Vector<Bin> binAux(1);
-    copiaBin(bin, binAux[0]);
+    binAux[0].reset();
+    //copiaBin(bin, binAux[0]);
 
-    static VectorI vetItens(instanciaG.maxNumItensPorClie);
+    static VectorI vetItens(instanciaG.maxNumItensPorClie*instanciaG.numClientes);
     vetItens.setAll(-1);
 
     const int iniItem = instanciaG.matCliItensIniFim(clie, 0);

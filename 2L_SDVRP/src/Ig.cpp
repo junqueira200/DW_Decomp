@@ -16,7 +16,7 @@
 
 using namespace SolucaoNS;
 using namespace ConstrutivoNS;
-using namespace InstanciaNS;
+using namespace InstanceNS;
 using namespace ParseInputNS;
 using namespace RandNs;
 using namespace BuscaLocalNS;

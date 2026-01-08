@@ -19,7 +19,7 @@ namespace ConstrutivoBinNS
     struct EpRot
     {
         int epId = 0;
-        InstanciaNS::Rotacao r = InstanciaNS::Rot0;
+        InstanceNS::Rotation r = InstanceNS::Rot0;
         double atributo = 0.0;
 
         EpRot()=default;
@@ -30,7 +30,7 @@ namespace ConstrutivoBinNS
         }
     };
 
-    bool canInsert(const SolucaoNS::Ponto &ep, const int itemId, const SolucaoNS::Bin &bin, InstanciaNS::Rotacao r);
+    bool canInsert(const SolucaoNS::Ponto &ep, const int itemId, const SolucaoNS::Bin &bin, InstanceNS::Rotation r);
     bool epColideItem(const SolucaoNS::Ponto &ep, const SolucaoNS::Ponto &ponto, const int itemId);
 
     int construtivoBinPacking(Vector<SolucaoNS::Bin> &vetBin,
@@ -44,6 +44,9 @@ namespace ConstrutivoBinNS
                                const int vetItensTam,
                                const double alpha,
                                const int numRepeticoes);
+
+    double computeXY_Overlap(InstanceNS::Item& item0, InstanceNS::Rotation r0, const SolucaoNS::Ponto& p0,
+                             InstanceNS::Item& item1, InstanceNS::Rotation r1, const SolucaoNS::Ponto& p1);
 
 }
 
