@@ -40,7 +40,7 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep, const int itemId, const Bin &b
 
     if(input.inst2d || ep.vetDim[2] == 0.0)
     {
-        std::cout<<"z = 0\n";
+        //std::cout<<"z = 0\n";
         return true;
     }
 
@@ -59,8 +59,8 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep, const int itemId, const Bin &b
         if(doubleEqual(outroZ_Ex, ep.vetDim[2]))
         {
             double sup = computeXY_Overlap(instanciaG.vetItens[itemId], r, ep,
-                                           instanciaG.vetItens[itemIdOutro], bin.vetRotacao[i], bin.vetEp[i]);
-            std::cout<<"sup: "<<sup<<"\n";
+                                           instanciaG.vetItens[itemIdOutro], bin.vetRotacao[i], bin.vetPosItem[i]);
+            //std::cout<<"sup: "<<sup<<"\n";
             areaSuport += sup;
 
         }
@@ -69,51 +69,7 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep, const int itemId, const Bin &b
 
     double area = instanciaG.vetItens[itemId].getDimRotacionada(0, r)*instanciaG.vetItens[itemId].getDimRotacionada(1, r);
     double support = areaSuport/area;
-    std::cout<<"support: "<<support<<"\n";
-
-    if(support > 1.0)
-    {
-        PRINT_DEBUGG("", "");
-
-        std::cout<<"itemId("<<itemId<<")\n";
-        std::cout<<"Pos: "<<ep.print()<<"\n";
-        std::cout<<"Largura: "<<instanciaG.vetItens[itemId].getDimRotacionada(0, r)<<"\n";
-        std::cout<<"Comprimento: "<<instanciaG.vetItens[itemId].getDimRotacionada(1, r)<<"\n";
-        std::cout<<"Altura: "<<instanciaG.vetItens[itemId].getDimRotacionada(2, r)<<"\n";
-        std::cout<<"Pares com z iguais: ";
-
-        for(int i=0; i < bin.numItens; ++i)
-        {
-
-            //int numInterc = 0;
-            int itemIdOutro = bin.vetItemId[i];
-            Rotation rOutro = bin.vetRotacao[i];
-            const Ponto& exPointOutro = bin.vetPosItem[i];
-            double outroZ_Ex = exPointOutro.vetDim[2] +
-                               instanciaG.vetItens[itemIdOutro].getDimRotacionada(2, rOutro);
-            //double dif = std::abs(outroZ_Ex-ep.vetDim[2]);
-            if(doubleEqual(outroZ_Ex, ep.vetDim[2]))
-            {
-                std::cout<<"("<<outroZ_Ex<<", "<<ep.vetDim[2]<<") ";
-
-                std::cout<<"itemId("<<itemIdOutro<<")\n";
-                std::cout<<"Pos: "<<bin.vetPosItem[i].print()<<"\n";
-                std::cout<<"Largura: "<<instanciaG.vetItens[itemIdOutro].getDimRotacionada(0, r)<<"\n";
-                std::cout<<"Comprimento: "<<instanciaG.vetItens[itemIdOutro].getDimRotacionada(1, r)<<"\n";
-                std::cout<<"Altura: "<<instanciaG.vetItens[itemIdOutro].getDimRotacionada(2, r)<<"\n";
-
-                double area = computeXY_Overlap(instanciaG.vetItens[itemId], r, ep,
-                                                instanciaG.vetItens[itemIdOutro], bin.vetRotacao[i], bin.vetEp[i]);
-                std::printf("Area: %.2f\n", area);
-            }
-
-            std::cout<<"\n\n";
-        }
-
-        exit(-1);
-
-    }
-
+    //std::cout<<"support: "<<support<<"\n";
 
     return support >= instanciaG.minSupport;
 }
@@ -135,6 +91,17 @@ double ConstrutivoBinNS::computeXY_Overlap(InstanceNS::Item& item0, InstanceNS::
     return deltaX*deltaY;
     */
 
+    /*
+    std::printf("**************** XY OVERLAP BEGING ****************\n");
+    std::printf("***************************************************\n\n");
+
+    std::printf("\tItem0:\n\tPos: (%f, %f)\n", p0.vetDim[0], p0.vetDim[1]);
+    std::printf("\tDim: (%f, %f)\n\n", item0.getDimRotacionada(0, r0), item0.getDimRotacionada(1, r0));
+
+    std::printf("\tItem1:\n\tPos: (%f, %f)\n", p1.vetDim[0], p1.vetDim[1]);
+    std::printf("\tDim: (%f, %f)\n\n", item1.getDimRotacionada(0, r1), item1.getDimRotacionada(1, r1));
+    */
+
     const double minX = std::max(p0.vetDim[0], p1.vetDim[0]);
     const double minY = std::max(p0.vetDim[1], p1.vetDim[1]);
 
@@ -143,6 +110,17 @@ double ConstrutivoBinNS::computeXY_Overlap(InstanceNS::Item& item0, InstanceNS::
 
     const double overlapX = std::max(maxX - minX, 0.0);
     const double overlapY = std::max(maxY - minY, 0.0);
+
+    /*
+    std::printf("\tminX: %.1f; maxX: %.1f\n", minX, maxX);
+    std::printf("\tminY: %.1f; maxY: %.1f\n", minY, maxY);
+
+    std::printf("\toverlapX: %.2f; overlapY: %.2f\n", overlapX, overlapY);
+
+
+    std::printf("\n***************** XY OVERLAP END ******************\n");
+    std::printf("***************************************************\n\n");
+    */
 
     return overlapX * overlapY;
 }
@@ -462,7 +440,7 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
                                                 vetItensTam,
                                                 alpha);
 
-        std::cout<<"numItensAlo: "<<numItensAlo<<"\n\n";
+        //std::cout<<"numItensAlo: "<<numItensAlo<<"\n\n";
         if(numItensAlo == vetItensTam)
         {
             copiaBin(binVet[0], bin);

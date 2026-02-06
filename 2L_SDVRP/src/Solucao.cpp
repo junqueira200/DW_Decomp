@@ -125,7 +125,7 @@ std::cout<<"\t\t\tCriando EP"<<ponto.print()<<"\n";
     if(vetEpRm.size() < numEps)
         vetEpRm.resize(numEps);
 
-    /*
+
     for(int i=0; i < numEps; ++i)
     {
         if(epColideItem(vetEp[i], vetPosItem[numItens-1], idItem))
@@ -137,7 +137,7 @@ std::cout<<"\t\t\tCriando EP"<<ponto.print()<<"\n";
 
     for(int i=tamVetEpRm-1; i >= 0; --i)
         rmI_Ep(vetEpRm[i]);
-    */
+
 }
 
 int SolucaoNS::Bin::getEpComMenorCoord(const VectorI &vetIdEp, int tam)

@@ -394,10 +394,13 @@ Resultado BinPackingCP_NS::testaCpSatBinPacking(int numItens)
 
         if(construtivoBinPacking(binHeu, vetItens, numItens, input.aphaBin, 10))
         {
+            std::printf("Utilizacao: %f%%\n", binHeu.getPorcentagemUtilizacao());
+            /*
             PRINT_DEBUGG("", "");
             std::printf("Utilizacao: %f%%\n", binHeu.getPorcentagemUtilizacao());
             for(int i=0; i < binHeu.numItens; ++i)
                 std::cout<<binHeu.vetPosItem[i].print()<<"\n";
+            */
             //std::cout<<binHeu.vetEp.printN(binHeu.numItens)<<"\n";
             //std::cout << "Construtivo Encontrou Solucao Viavel!\n";
             if(!binHeu.verificaViabilidade())

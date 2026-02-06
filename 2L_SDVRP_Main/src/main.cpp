@@ -76,7 +76,7 @@ int main(int argc, const char* argv[])
             if((i%200) == 0)
                 std::cout<<"IT: "<<i<<"\n";
 
-            Resultado resul =  testaCpSatBinPacking(6);
+            Resultado resul =  testaCpSatBinPacking(50);
             total += 1;
             switch (resul)
             {
