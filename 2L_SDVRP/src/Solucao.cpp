@@ -89,7 +89,8 @@ void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
 
     // Cria dois novos EPs
     Ponto ponto;
-    ponto = vetPosItem[numItens-1];
+    const Ponto pontoRefe = vetPosItem[numItens-1];
+    ponto = pontoRefe;
     ponto.vetDim[0] += instanciaG.vetItens[idItem].getDimRotacionada(0, r);
 
     if(PrintEP)
@@ -101,17 +102,16 @@ std::cout<<"\t\t\tCriando EP"<<ponto.print()<<"\n";
     addEp(ponto);
 
 
-    ponto = vetPosItem[numItens-1];
+    ponto = pontoRefe;
     ponto.vetDim[1] += instanciaG.vetItens[idItem].getDimRotacionada(1, r);
 
     if(PrintEP)
 std::cout<<"\t\t\tCriando EP"<<ponto.print()<<"\n";
     addEp(ponto);
 
-
     if(instanciaG.numDim == 3)
     {
-        ponto = vetPosItem[numItens-1];
+        ponto = pontoRefe;
         ponto.vetDim[2] += instanciaG.vetItens[idItem].getDimRotacionada(2, r);
         addEp(ponto);
     }
@@ -125,7 +125,8 @@ std::cout<<"\t\t\tCriando EP"<<ponto.print()<<"\n";
     if(vetEpRm.size() < numEps)
         vetEpRm.resize(numEps);
 
-    for(int i=0; i < numEps-2; ++i)
+    /*
+    for(int i=0; i < numEps; ++i)
     {
         if(epColideItem(vetEp[i], vetPosItem[numItens-1], idItem))
         {
@@ -136,7 +137,7 @@ std::cout<<"\t\t\tCriando EP"<<ponto.print()<<"\n";
 
     for(int i=tamVetEpRm-1; i >= 0; --i)
         rmI_Ep(vetEpRm[i]);
-
+    */
 }
 
 int SolucaoNS::Bin::getEpComMenorCoord(const VectorI &vetIdEp, int tam)

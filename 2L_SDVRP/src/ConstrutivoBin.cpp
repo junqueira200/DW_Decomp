@@ -25,7 +25,7 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep, const int itemId, const Bin &b
     // Verifica se o item cabe no bin
     for(int d=0; d < instanciaG.numDim; ++d)
     {
-        if(ep.vetDim[d] + instanciaG.vetItens[itemId].vetDim[d] > bin.binDim[d])
+        if(ep.vetDim[d] + instanciaG.vetItens[itemId].getDimRotacionada(d, r) > bin.binDim[d])
             return false;
     }
 
@@ -52,14 +52,17 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep, const int itemId, const Bin &b
         //int numInterc = 0;
         int itemIdOutro = bin.vetItemId[i];
         Rotation rOutro = bin.vetRotacao[i];
-        const Ponto& exPointOutro = bin.vetEp[i];
+        const Ponto& exPointOutro = bin.vetPosItem[i];
         double outroZ_Ex = exPointOutro.vetDim[2] +
                            instanciaG.vetItens[itemIdOutro].getDimRotacionada(2, rOutro);
-        double dif = std::abs(outroZ_Ex-ep.vetDim[2]);
-        if(dif <= 5.0)
+        //double dif = std::abs(outroZ_Ex-ep.vetDim[2]);
+        if(doubleEqual(outroZ_Ex, ep.vetDim[2]))
         {
-            areaSuport += computeXY_Overlap(instanciaG.vetItens[itemId], r, ep,
-                                            instanciaG.vetItens[itemIdOutro], bin.vetRotacao[i], bin.vetEp[i]);
+            double sup = computeXY_Overlap(instanciaG.vetItens[itemId], r, ep,
+                                           instanciaG.vetItens[itemIdOutro], bin.vetRotacao[i], bin.vetEp[i]);
+            std::cout<<"sup: "<<sup<<"\n";
+            areaSuport += sup;
+
         }
 
     }
@@ -67,6 +70,49 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep, const int itemId, const Bin &b
     double area = instanciaG.vetItens[itemId].getDimRotacionada(0, r)*instanciaG.vetItens[itemId].getDimRotacionada(1, r);
     double support = areaSuport/area;
     std::cout<<"support: "<<support<<"\n";
+
+    if(support > 1.0)
+    {
+        PRINT_DEBUGG("", "");
+
+        std::cout<<"itemId("<<itemId<<")\n";
+        std::cout<<"Pos: "<<ep.print()<<"\n";
+        std::cout<<"Largura: "<<instanciaG.vetItens[itemId].getDimRotacionada(0, r)<<"\n";
+        std::cout<<"Comprimento: "<<instanciaG.vetItens[itemId].getDimRotacionada(1, r)<<"\n";
+        std::cout<<"Altura: "<<instanciaG.vetItens[itemId].getDimRotacionada(2, r)<<"\n";
+        std::cout<<"Pares com z iguais: ";
+
+        for(int i=0; i < bin.numItens; ++i)
+        {
+
+            //int numInterc = 0;
+            int itemIdOutro = bin.vetItemId[i];
+            Rotation rOutro = bin.vetRotacao[i];
+            const Ponto& exPointOutro = bin.vetPosItem[i];
+            double outroZ_Ex = exPointOutro.vetDim[2] +
+                               instanciaG.vetItens[itemIdOutro].getDimRotacionada(2, rOutro);
+            //double dif = std::abs(outroZ_Ex-ep.vetDim[2]);
+            if(doubleEqual(outroZ_Ex, ep.vetDim[2]))
+            {
+                std::cout<<"("<<outroZ_Ex<<", "<<ep.vetDim[2]<<") ";
+
+                std::cout<<"itemId("<<itemIdOutro<<")\n";
+                std::cout<<"Pos: "<<bin.vetPosItem[i].print()<<"\n";
+                std::cout<<"Largura: "<<instanciaG.vetItens[itemIdOutro].getDimRotacionada(0, r)<<"\n";
+                std::cout<<"Comprimento: "<<instanciaG.vetItens[itemIdOutro].getDimRotacionada(1, r)<<"\n";
+                std::cout<<"Altura: "<<instanciaG.vetItens[itemIdOutro].getDimRotacionada(2, r)<<"\n";
+
+                double area = computeXY_Overlap(instanciaG.vetItens[itemId], r, ep,
+                                                instanciaG.vetItens[itemIdOutro], bin.vetRotacao[i], bin.vetEp[i]);
+                std::printf("Area: %.2f\n", area);
+            }
+
+            std::cout<<"\n\n";
+        }
+
+        exit(-1);
+
+    }
 
 
     return support >= instanciaG.minSupport;
@@ -77,6 +123,7 @@ double ConstrutivoBinNS::computeXY_Overlap(InstanceNS::Item& item0, InstanceNS::
                                            const SolucaoNS::Ponto& p0, InstanceNS::Item& item1,
                                            InstanceNS::Rotation r1, const SolucaoNS::Ponto& p1)
 {
+    /*
     double x0Coord = p0.vetDim[0] + item0.getDimRotacionada(0, r0);
     double x1Coord = p1.vetDim[0] + item1.getDimRotacionada(0, r1);
     double deltaX = std::max(0.0, std::min(x0Coord, x1Coord) - std::max(p0.vetDim[0], p1.vetDim[0]));
@@ -86,6 +133,18 @@ double ConstrutivoBinNS::computeXY_Overlap(InstanceNS::Item& item0, InstanceNS::
     double deltaY  = std::max(0.0, std::min(y0Coord, y1Coord) - std::max(p0.vetDim[1], p1.vetDim[1]));
 
     return deltaX*deltaY;
+    */
+
+    const double minX = std::max(p0.vetDim[0], p1.vetDim[0]);
+    const double minY = std::max(p0.vetDim[1], p1.vetDim[1]);
+
+    const double maxX = std::min(p0.vetDim[0]+item0.getDimRotacionada(0, r0), p1.vetDim[0]+item1.getDimRotacionada(0, r1));
+    const double maxY = std::min(p0.vetDim[1]+item0.getDimRotacionada(1, r0), p1.vetDim[1]+item1.getDimRotacionada(1, r1));
+
+    const double overlapX = std::max(maxX - minX, 0.0);
+    const double overlapY = std::max(maxY - minY, 0.0);
+
+    return overlapX * overlapY;
 }
 
 
@@ -267,7 +326,7 @@ std::cout<<"\t\tNumEps: "<<bin.numEps<<"\n\n";
 std::cout<<"\t\tChecando EP"<<bin.vetEp[ep].print()<<"\n";
                 // Verifica a colisao do item colocado no EP
 
-                Rotation rotacao = Rotation(getRandInt(0,instanciaG.numRotation-1));
+                Rotation rotacao = Rot0;//Rotation(getRandInt(0,instanciaG.numRotation-1));
                 const Rotation rotIni = rotacao;
                 do
                 {
@@ -275,8 +334,8 @@ std::cout<<"\t\tChecando EP"<<bin.vetEp[ep].print()<<"\n";
                     {
                         vetIdEpRot[numEps].epId     = ep;
                         vetIdEpRot[numEps].r        = rotacao;
-                        vetIdEpRot[numEps].atributo = get<1>(getMinArray(bin.vetEp[ep].vetDim,
-                                                                         instanciaG.numDim));
+                        vetIdEpRot[numEps].atributo = bin.vetEp[ep].vetDim[2];
+                            //get<1>(getMinArray(bin.vetEp[ep].vetDim, instanciaG.numDim));
 
                         numEps += 1;
                         break;
@@ -381,8 +440,10 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
     }
 
     if(volume > bin.volumeTotal || demanda > instanciaG.veicCap)
+    {
+        std::cout<<"Vol ou demanda acima da capacidade!\n";
         return false;
-
+    }
     //std::cout<<"construtivoBinPacking\n";
 
     static Vector<SolucaoNS::Bin> binVet(1);
@@ -401,7 +462,7 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
                                                 vetItensTam,
                                                 alpha);
 
-        //std::cout<<"numItensAlo: "<<numItensAlo<<"\n\n";
+        std::cout<<"numItensAlo: "<<numItensAlo<<"\n\n";
         if(numItensAlo == vetItensTam)
         {
             copiaBin(binVet[0], bin);
@@ -427,6 +488,6 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
         return false;
     }
     */
-
+    std::printf("Utilizacao %.2f%%\n", binVet[0].getPorcentagemUtilizacao());
     return false;
 }

@@ -46,7 +46,7 @@ namespace ParseInputNS
         double      cpSatTime                = -1.0;
         // 0 Forward, 1 Backard, 2 Bidirectional
         int         labelingType             = 0;
-        bool        filo                     = true;
+        bool        filo                     = false;
         bool 		inst2d                   = false;
         //bool		inst3d                   = true;
 

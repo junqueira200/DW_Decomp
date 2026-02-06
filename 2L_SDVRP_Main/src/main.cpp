@@ -57,23 +57,26 @@ int main(int argc, const char* argv[])
 
     //return 0;
 
+    std::cout<<"\n";
+
     try
     {
         clock_t start = clock();
         //double ompStart = omp_get_wtime();
 
-        Solucao best(instanciaG);
-        metaheuristicaIg(best);
+        //Solucao best(instanciaG);
+        //metaheuristicaIg(best);
 
-        /*
+
         int heuristica, exato, inviavel, total;
         heuristica = exato = inviavel = total = 0;
 
-        for(int i=0; i < 50; ++i)
+        for(int i=0; i < 600; ++i)
         {
-            if((i%10) == 0)
-                std::cout<<i<<"\n";
-            Resultado resul =  testaCpSatBinPacking(9999);
+            if((i%200) == 0)
+                std::cout<<"IT: "<<i<<"\n";
+
+            Resultado resul =  testaCpSatBinPacking(6);
             total += 1;
             switch (resul)
             {
@@ -91,7 +94,7 @@ int main(int argc, const char* argv[])
 
             }
         }
-        */
+
 
         clock_t end = clock();
         //double ompEnd = omp_get_wtime();
@@ -106,9 +109,10 @@ int main(int argc, const char* argv[])
         //int tamVet = std::min(instanciaG.numItens, 15);
         //testaCpSatBinPacking(tamVet);
 
-        //std::cout<<"Total: \t\t"<<total<<"\nHeuristica: \t"<<heuristica<<"\nExato: \t\t"<<exato<<"\nInviavel: \t"<<inviavel<<"\n\n";
+        std::cout<<"\nTotal: \t\t"<<total<<"\nHEURISTIC: \t"<<heuristica<<"\nCP-SAT: \t"<<exato<<"\nUNFEASIBLE: \t"<<inviavel<<"\n\n";
 
-        std::cout<<"Tempo Total: "<<output.tempoCpu<<"\n\n";
+        //std::cout<<"TOTAL TIME : "<<output.tempoCpu<<" s\n\n";
+        std::printf("TOTAL TIME: \t%.2f s\n\n", output.tempoCpu);
 
     }
     catch (char const* exeption)
