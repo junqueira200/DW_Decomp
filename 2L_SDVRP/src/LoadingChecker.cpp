@@ -296,6 +296,8 @@ LoadingFlag LoadingChecker::BuildMask(PackingType type) const
             return LoadingFlag::NoSupport & Parameters.LoadingProblem.LoadingFlags;
         case PackingType::LifoNoSequence:
             return LoadingFlag::LifoNoSequence & Parameters.LoadingProblem.LoadingFlags;
+        case PackingType::LoadingOnly:
+            return LoadingFlag::LoadingOnly & Parameters.LoadingProblem.LoadingFlags;
         default:
             throw std::runtime_error("PackingType not implemented in mask builder.");
     }

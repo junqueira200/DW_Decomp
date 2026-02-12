@@ -1,5 +1,5 @@
-rm -rf cmake-build-debug
-mkdir cmake-build-debug
-cd cmake-build-debug
+rm -rf build
+mkdir build
+cd build
 cmake .. -G Ninja
 ninja

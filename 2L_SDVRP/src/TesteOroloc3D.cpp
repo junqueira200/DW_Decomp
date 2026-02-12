@@ -86,11 +86,12 @@ void TesteOroloc3D_NS::testeOroloc3D()
 
     truckId = 0;
 
-    auto vetPackingType = {PackingType::Complete, PackingType::NoSupport};
+    auto vetPackingType = {PackingType::Complete, PackingType::NoSupport, PackingType::LoadingOnly};
     std::map<PackingType, std::string> mapPackingTypeToString;
 
     mapPackingTypeToString[PackingType::Complete] = "Complete";
     mapPackingTypeToString[PackingType::NoSupport] = "NoSupport";
+    mapPackingTypeToString[PackingType::LoadingOnly] = "LoadingOnly";
 //    mapPackingTypeToString[PackingType::NoSupportNoFragility] = "NoSupport";
 
     std::map<StatusOroloc3D, std::string> mapStatusOroloc3D_ToString;
@@ -138,7 +139,8 @@ void TesteOroloc3D_NS::testeOroloc3D()
 
             double ompStart = omp_get_wtime();
             //PackingType::LoadingOnly
-            auto status = loadingChecker.ConstraintProgrammingSolver(type, container, stopIds, vetCuboids, 60*50.0);
+
+            auto status = loadingChecker.ConstraintProgrammingSolver(type, container, stopIds, vetCuboids, 5.0);
 
             double ompEnd = omp_get_wtime();
 
@@ -147,6 +149,8 @@ void TesteOroloc3D_NS::testeOroloc3D()
 
             lastType = type;
 
+            bool doBreak = false;
+
             if(status != LoadingStatus::FeasOpt)
             {
                 //std::printf("Error in ConstraintProgrammingSolver: ");
@@ -154,23 +158,43 @@ void TesteOroloc3D_NS::testeOroloc3D()
                 {
                     std::printf("INFEASIBLE\n");
                     statusOroc3D = INFEASIBLE;
-                    break;
+                    output += "INFEASIBLE; ";
+                    //break;
                 }
                 else
                 {
                     std::printf("Time Limit\n");
                     statusOroc3D = TIME_LIMIT;
+                    output += "TIME_LIMIT; ";
                 }
             }
             else
             {
                 std::printf("Loading was successful!\n");
                 statusOroc3D = FEASIBLE;
-                break;
+                output += "FEASIBLE; ";
+                doBreak = true;
             }
+
+            output += std::format("{:.1f}; ", tempoCpu);
+
+            if(doBreak)
+                break;
         }
 
-        output += std::format("{:.1f}; {}; {}", tempoCpu, mapPackingTypeToString[lastType], mapStatusOroloc3D_ToString[statusOroc3D]);
+        switch (lastType)
+        {
+        case PackingType::Complete:
+            output += "NO_RUN; Inf; NO_RUN; Inf";
+            break;
+
+        case PackingType::NoSupport:
+            output += "NO_RUN; Inf";
+        default:
+            break;
+        }
+
+        //output += std::format("{:.1f}; {}; {}", tempoCpu, mapPackingTypeToString[lastType], mapStatusOroloc3D_ToString[statusOroc3D]);
         std::cout<<output<<"\n";
         appendToFile("../oroloc3D.csv", output);
 

@@ -12,7 +12,12 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include_directories(include)
 #include_directories(../2L_SDVRP/include/)
 #link_directories($ENV{GUROBI_HOME}/lib)
-
+include_directories(${EIGEN3_INCLUDE_DIR})
+find_package(ortools CONFIG REQUIRED)
+#find_package(GUROBI REQUIRED)
+include_directories(${GUROBI_INCLUDE_DIRS})
+#link_directories($ENV{GUROBI_HOME}/lib)
+find_package(Boost)
 
 add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
 message("set vector_sanity_check=1")
@@ -50,6 +55,13 @@ target_sources(${PROJECT_NAME}
     PRIVATE
     src/main.cpp
 )
+
+target_link_libraries(${PROJECT_NAME} PRIVATE Eigen3::Eigen)
+target_link_libraries(${PROJECT_NAME} PRIVATE ortools::ortools)
+#target_link_libraries(${PROJECT_NAME} DwDecomp)
+#target_link_libraries(${PROJECT_NAME} PRIVATE gurobi_c++)
+#target_link_libraries(${PROJECT_NAME} PRIVATE gurobi)
+target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 2L_SDVRP)
 

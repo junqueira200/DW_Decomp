@@ -46,6 +46,7 @@ void computeMeanMaxMin();
 int main(int argc, const char **argv)
 {
 
+    /*
 
     int dim = 10;
     int maxNoOfCuts = 10;
@@ -101,7 +102,7 @@ int main(int argc, const char **argv)
     CMGR_FreeMemCMgr(&oldCutsCMP);
 
     return 0;
-
+    */
 
 
 // ********************************************************************************************************************
