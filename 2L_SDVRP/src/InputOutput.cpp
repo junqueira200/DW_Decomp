@@ -50,14 +50,16 @@ void ParseInputNS::parseInput(int argc, const char* argv[])
                         ("filo", "", cxxopts::value<bool>(input.filo))
                         ("lTaype", "Labeling Type (0, 1, 2)", cxxopts::value<int>(input.labelingType))
                         ("2d", "Indicates if the instance is 2d. Default is 3d!",
-                              cxxopts::value<bool>(input.inst2d));
+                              cxxopts::value<bool>(input.inst2d))
+                        ("oroloc3D", "Indicates if the instance is the Oroloc3D type", cxxopts::value<bool>(input.instOroloc3D));
 
         auto result = options.parse(argc, argv);
 
-        if(input.inst2d)
-            std::println("Instancia 2d");
-        else
-            std::println("Instancia 3d");
+        //if(input.inst2d)
+        //    std::println("Instancia 2d");
+        //else
+        //    std::println("Instancia 3d");
+
         if (result.count("help"))
         {
             std::cout << options.help({"", "Group"}) << std::endl;

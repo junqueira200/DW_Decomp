@@ -68,7 +68,7 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao, double alphaVrp,
 
             Rota &rota = solucao.vetRota[rotaId];
 
-            if(doubleEqual(rota.binPtr->demandaTotal, instanciaG.veicCap))
+            if(doubleEqual(rota.binPtr->demandaTotal, instanciaG.maxPayload))
                 continue;
 
 
@@ -82,7 +82,7 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao, double alphaVrp,
                     continue;
 
                 // Verifica se a dem resultante eh maior que a capacidade do veiculo
-                if((rota.binPtr->demandaTotal+instanciaG.vetDemandaCliente[i]) > instanciaG.veicCap)
+                if((rota.binPtr->demandaTotal+instanciaG.vetDemandaCliente[i]) > instanciaG.maxPayload)
                 {
                     continue;
                 }
@@ -246,9 +246,9 @@ bool ConstrutivoNS::insereCandidato(SolucaoNS::Solucao &solucao, const Estado &e
     // Verifica a demanda
     Rota &rota = solucao.vetRota[estado.rotaId];
     double newDem = rota.binPtr->demandaTotal+instanciaG.vetDemandaCliente[estado.cliente];
-    if(newDem > instanciaG.veicCap)
+    if(newDem > instanciaG.maxPayload)
     {
-        std::cout<<"ERROR\n Veiculo com demanda("<<newDem<<") maior que o permitido("<<instanciaG.veicCap<<")\n";
+        std::cout<<"ERROR\n Veiculo com demanda("<<newDem<<") maior que o permitido("<<instanciaG.maxPayload<<")\n";
         PRINT_DEBUGG("", "");
         throw "ERROR";
     }

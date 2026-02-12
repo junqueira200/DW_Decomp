@@ -19,13 +19,15 @@ message(CMAKE_MODULE_PATH="${CMAKE_SOURCE_DIR}")
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+cmake_policy(SET CMP0074 NEW)
 #find_package(Eigen3 3.3 REQUIRED)# NO_MODULE)
 include_directories(${EIGEN3_INCLUDE_DIR})
 find_package(ortools CONFIG REQUIRED)
 #find_package(GUROBI REQUIRED)
-#include_directories(${GUROBI_INCLUDE_DIRS})
+include_directories(${GUROBI_INCLUDE_DIRS})
 #link_directories($ENV{GUROBI_HOME}/lib)
-#find_package(Boost)
+find_package(Boost)
+find_package(OpenMP REQUIRED)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -pedantic -fPIC")# -Wall -Wextra -fPIC")# -fsanitize=address")# -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D __FILENAME__='\"$$(subst  ${CMAKE_SOURCE_DIR}/,,$$(abspath $$<))\"'")
@@ -48,6 +50,12 @@ target_sources(${PROJECT_NAME}
         src/ConstrutivoBin.cpp
         src/Ig.cpp
         src/BinPackingCP.cpp
+        src/Container.cpp
+        src/PlacementPoints.cpp
+        src/OPP_CP_3D.cpp
+        src/LoadingChecker.cpp
+        src/AxleWeights.cpp
+        src/TesteOroloc3D.cpp
 )
 
 target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
@@ -55,8 +63,8 @@ target_link_libraries(${PROJECT_NAME} ortools::ortools)
 #target_link_libraries(${PROJECT_NAME} DwDecomp)
 #target_link_libraries(${PROJECT_NAME} gurobi_c++)
 #target_link_libraries(${PROJECT_NAME} gurobi)
-#target_link_libraries(${PROJECT_NAME} Boost::boost)
-
+target_link_libraries(${PROJECT_NAME} Boost::boost)
+target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
 
                         
 target_include_directories(${PROJECT_NAME}
@@ -105,6 +113,16 @@ set(public_headers
     include/safe_vector.h
     include/sefe_array.h
     include/Solucao.h
+    include/CPServices.h
+    include/CPSolverParameters.h
+    include/LoadingStatus.h
+    include/PlacementPoints.h
+    include/ProblemParameters.h
+    include/LoadingChecker.h
+    include/ModelServices.h
+    include/ContainerLoadingInstance.h
+    include/AxleWeights.h
+    include/TesteOroloc3D.h
 )
 
 # where to find our CMake modules

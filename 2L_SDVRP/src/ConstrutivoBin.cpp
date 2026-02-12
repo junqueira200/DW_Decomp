@@ -235,7 +235,7 @@ std::cout << "Item: " << itemId << "; " << instanciaG.vetItens[itemId].print() <
 
             double novaDem = bin.demandaTotal + instanciaG.vetItens[itemId].weight;
 
-            if(novaDem > instanciaG.veicCap)
+            if(novaDem > instanciaG.maxPayload)
                 continue;
 
             double VolRestante = bin.volumeTotal - novoVolOcupado;
@@ -417,7 +417,7 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
         demanda += instanciaG.vetItens[vetItens[i]].weight;
     }
 
-    if(volume > bin.volumeTotal || demanda > instanciaG.veicCap)
+    if(volume > bin.volumeTotal || demanda > instanciaG.maxPayload)
     {
         std::cout<<"Vol ou demanda acima da capacidade!\n";
         return false;

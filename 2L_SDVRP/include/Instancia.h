@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <string>
+#include <map>
 #include "safe_vector.h"
 #include "safe_matrix.h"
 #include "sefe_array.h"
@@ -36,6 +37,7 @@ namespace InstanceNS
         double volume = 0.0;
         double weight   = 0.0;
         bool fragility  = false;
+        int customer    = -1;
 
         Item()=default;
         Item(double x, double y, double z, double peso_);
@@ -61,7 +63,7 @@ namespace InstanceNS
         int numVeiculos = 0;
         int numDim = 2;
         int numRotation = 6;
-        double veicCap = 0;
+        double maxPayload = 0;
         double minSupport = 0.7;
 
         Array<double,3> vetDimVeiculo;
@@ -90,7 +92,9 @@ namespace InstanceNS
 
         Vector<int> vetItemCliente;      // Indica o cliente dado um item; mat[itemId] = cliente
         Matrix<int> matCliItensIniFim;   // Indica o id Inicial e id Final do primeiro e ultimo item de um cliente; mat[clienteId,0] = iten0; mat[clienteId,1] = itenFim
-
+        Vector<int> vetOrderId;                     // Indicates for every item, its orderId
+        std::map<int, Vector<int>> mapOrderIdItem;  // Maps orderId to its items
+        std::map<int,int> mapOrderIdCust;
         Instance();
         Instance(int numClientes_, int numItens_, int numVeiculos_);
         void atualizaVetMinDimItens();
@@ -99,8 +103,9 @@ namespace InstanceNS
 
     void read2dInstance(const std::string &strFile);
     void read3dInstance(const std::string &strFile);
+    void readOroloc3D(const std::string &strFile);
     int copiaItensCliente(int cliente, VectorI& vetItens);
-    int copiaItensClientes(VectorI& vetClientes, int tam, VectorI& vetItens);
+    int copiaItensClientes(VectorI& vetClientes, int tam, VectorI& vetItens, bool push=false);
     double calculaDistancia(VectorI& vet, int tam);
     inline Instance instanciaG;
 

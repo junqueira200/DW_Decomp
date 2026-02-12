@@ -48,6 +48,7 @@ namespace ParseInputNS
         int         labelingType             = 0;
         bool        filo                     = false;
         bool 		inst2d                   = false;
+        bool 		instOroloc3D             = false;
         //bool		inst3d                   = true;
 
         File file;

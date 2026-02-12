@@ -352,7 +352,7 @@ Resultado BinPackingCP_NS::testaCpSatBinPacking(int numItens)
         const int itemIdIni = itemId;
         while(vetItensSelecionados[itemId] == (int8_t)1 ||
              (volumeOcupado+instanciaG.vetItens[itemId].volume) > volumeVeiculo/2.0 ||
-             demanda + instanciaG.vetItens[itemId].weight > instanciaG.veicCap)
+             demanda + instanciaG.vetItens[itemId].weight > instanciaG.maxPayload)
         {
             itemId = (itemId+1)%instanciaG.numItens;
 
