@@ -49,6 +49,7 @@ namespace ParseInputNS
         bool        filo                     = false;
         bool 		inst2d                   = false;
         bool 		instOroloc3D             = false;
+        double      minSupportArea          = 0.75;
         //bool		inst3d                   = true;
 
         File file;

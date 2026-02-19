@@ -1,5 +1,6 @@
 #include "LoadingChecker.h"
 #include "OPP_CP_3D.h"
+#include "InputOutput.h"
 
 namespace ContainerLoading
 {
@@ -51,14 +52,13 @@ LoadingStatus LoadingChecker::ConstraintProgrammingSolver(PackingType packingTyp
 
     auto loadingMask = BuildMask(packingType);
 
-
     auto numberStops = stopIds.size();
     auto containerLoadingCP = ContainerLoadingCP(Parameters.CPSolver,
                                                  container,
                                                  items,
                                                  numberStops,
                                                  loadingMask,
-                                                 Parameters.LoadingProblem.SupportArea,
+                                                 ParseInputNS::input.minSupportArea,
                                                  maxRuntimeSec);
 
     auto status = containerLoadingCP.Solve();

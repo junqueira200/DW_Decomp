@@ -1,0 +1,11 @@
+Truck 0: 13 2 16; items: 76 77 78 79 80 81 82 83 84 6 7 8 9 10 11 12 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123; 955 S; Error in ConstraintProgrammingSolver: 
+Truck 1: 8 14 15; items: 47 48 49 50 51 52 53 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105; 954 S; Error in ConstraintProgrammingSolver: 
+Truck 2: 1 16; items: 0 1 2 3 4 5 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123;  7 S; Loading was successful!
+Truck 3: 14 4; items: 85 86 87 88 89 90 91 92 93 94 95 96 97 98 15 16 17 18 19 20 21 22 23 24 25 26;  9 S; Loading was successful!
+Truck 4: 8 25 7 23; items: 47 48 49 50 51 52 53 172 173 39 40 41 42 43 44 45 46 160 161 162 163 164 165 166 167 168; 39 S; Error in ConstraintProgrammingSolver: INFEASIBLE
+Truck 5: 10 12 6 18; items: 58 59 60 61 62 63 64 65 66 69 70 71 72 73 74 75 29 30 31 32 33 34 35 36 37 38 126 127 128 129 130 131 132 133 134; 265 S; Error in ConstraintProgrammingSolver: INFEASIBLE
+Truck 6: 6 4 16; items: 29 30 31 32 33 34 35 36 37 38 15 16 17 18 19 20 21 22 23 24 25 26 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123; 691 S; Error in ConstraintProgrammingSolver: 
+Truck 7: 14 7 21; items: 85 86 87 88 89 90 91 92 93 94 95 96 97 98 39 40 41 42 43 44 45 46 152 153 154 155;  9 S; Loading was successful!
+Truck 8: 19; items: 135 136 137 138 139 140 141 142 143 144 145 146;  1 S; Loading was successful!
+Truck 9: 24 10 25; items: 169 170 171 58 59 60 61 62 63 64 65 66 172 173; 139 S; Error in ConstraintProgrammingSolver: INFEASIBLE
+Truck 10: 18 6 7 22; items: 126 127 128 129 130 131 132 133 134 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 156 157 158 159; 944 S; Error in ConstraintProgrammingSolver

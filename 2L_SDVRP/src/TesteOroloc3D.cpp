@@ -140,7 +140,7 @@ void TesteOroloc3D_NS::testeOroloc3D()
             double ompStart = omp_get_wtime();
             //PackingType::LoadingOnly
 
-            auto status = loadingChecker.ConstraintProgrammingSolver(type, container, stopIds, vetCuboids, 5.0);
+            auto status = loadingChecker.ConstraintProgrammingSolver(type, container, stopIds, vetCuboids, 60.0*60);
 
             double ompEnd = omp_get_wtime();
 
@@ -211,12 +211,24 @@ void TesteOroloc3D_NS::convertVectorOfItensToVectorOfCuboids(const VectorI& vetI
 {
     vetCuboids = std::vector<Cuboid>(vetItens.size());
 
+    int pos = 0;
+
     for(int i=0; i < (int)vetItens.size(); ++i)
     {
         Cuboid& cuboid = vetCuboids[i];
         Item& item = instanciaG.vetItens[vetItens[i]];
+
+        if(i > 0)
+        {
+            Item& item_1 = instanciaG.vetItens[vetItens[i]];
+            if(item.customer != item_1.customer)
+                pos += 1;
+
+
+        }
+
         cuboid = Cuboid((size_t)i, (size_t)vetItens[i], item.vetDim[0], item.vetDim[1], item.vetDim[2], true,
-                        Fragility::None, item.customer, item.weight);
+                        Fragility::None, pos, item.weight);
 
     }
 }

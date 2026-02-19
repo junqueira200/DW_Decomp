@@ -138,8 +138,7 @@ class Cuboid : public ICuboid
     /// Temporary
     size_t InternId = 0;
     size_t ExternId = 0;
-    size_t GroupId = 0;			// Customer
-
+    size_t GroupId = 0;
     double Weight = 0.0;
 
     bool EnableHorizontalRotation = true;

@@ -29,7 +29,7 @@ struct LoadingProblemParams
     VariantType Variant = VariantType::None;
     LoadingFlag LoadingFlags = LoadingFlag::NoneSet;
     bool EnableThreeDimensionalLoading = false;
-    double SupportArea = 0.0;
+    double SupportArea = 0.75;
     bool EnableSupport = false;
     bool EnableLifo = false;
     bool EnableFragility = false;

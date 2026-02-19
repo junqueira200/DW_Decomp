@@ -1,0 +1,558 @@
+id,country,city,country_code,delivery_address,latitude,longitude
+1000,Romania,Fagaras,RO,"Fagaras, Romania",45.8454208059873,24.9738267126969
+1002,United Kingdom,Greenock,GB,"Greenock, United Kingdom",55.93329,-4.750031
+1003,United Kingdom,Sunderland,GB,"Sunderland, United Kingdom",54.920019,-1.38003
+1004,United Kingdom,Southampton,GB,"Southampton, United Kingdom",50.900031,-1.399977
+1005,United Kingdom,Bristol,GB,"Bristol, United Kingdom",51.449998,-2.583316
+1006,United Kingdom,Bournemouth,GB,"Bournemouth, United Kingdom",50.72999,-1.90005
+1007,United Kingdom,Chester,GB,"Chester, United Kingdom",53.20002,-2.919987
+1008,United Kingdom,Swansea,GB,"Swansea, United Kingdom",51.629987,-3.950002
+1009,United Kingdom,Carlisle,GB,"Carlisle, United Kingdom",54.879995,-2.929987
+1010,United Kingdom,Southend-on-Sea,GB,"Southend-on-Sea, United Kingdom",51.550018,0.719997
+1011,United Kingdom,Reading,GB,"Reading, United Kingdom",51.469971,-0.980028
+1012,United Kingdom,Leicester,GB,"Leicester, United Kingdom",52.629977,-1.133249
+1013,United Kingdom,Bradford,GB,"Bradford, United Kingdom",53.800035,-1.749981
+1014,United Kingdom,Sheffield,GB,"Sheffield, United Kingdom",53.366677,-1.499997
+1015,United Kingdom,Fort William,GB,"Fort William, United Kingdom",56.816478,-5.112076
+1016,United Kingdom,Ayr,GB,"Ayr, United Kingdom",55.4504,-4.61668
+1017,United Kingdom,Aberdeen,GB,"Aberdeen, United Kingdom",57.170398,-2.079987
+1018,United Kingdom,Perth,GB,"Perth, United Kingdom",56.400342,-3.46998
+1019,United Kingdom,Dundee,GB,"Dundee, United Kingdom",56.470389,-3.000008
+1020,United Kingdom,Middlesbrough,GB,"Middlesbrough, United Kingdom",54.580375,-1.230013
+1021,United Kingdom,Coventry,GB,"Coventry, United Kingdom",52.420404,-1.499997
+1022,United Kingdom,Bath,GB,"Bath, United Kingdom",51.383749,-2.350022
+1023,United Kingdom,Exeter,GB,"Exeter, United Kingdom",50.700405,-3.52995
+1024,United Kingdom,Cambridge,GB,"Cambridge, United Kingdom",52.200391,0.116623
+1025,United Kingdom,Kingston upon Hull,GB,"Kingston upon Hull, United Kingdom",53.750426,-0.329991
+1026,United Kingdom,Penzance,GB,"Penzance, United Kingdom",50.133722,-5.550034
+1027,United Kingdom,York,GB,"York, United Kingdom",53.970387,-1.080022
+1028,United Kingdom,Dumfries,GB,"Dumfries, United Kingdom",55.06709,-3.550001
+1029,United Kingdom,Scarborough,GB,"Scarborough, United Kingdom",54.280394,-0.429984
+1030,United Kingdom,Plymouth,GB,"Plymouth, United Kingdom",50.385386,-4.159989
+1031,United Kingdom,Ipswich,GB,"Ipswich, United Kingdom",52.070348,1.169996
+1032,United Kingdom,Norwich,GB,"Norwich, United Kingdom",52.630365,1.300013
+1033,United Kingdom,Brighton,GB,"Brighton, United Kingdom",50.830346,-0.169974
+1034,United Kingdom,Inverness,GB,"Inverness, United Kingdom",57.467124,-4.233266
+1035,United Kingdom,Oxford,GB,"Oxford, United Kingdom",51.770418,-1.249986
+1036,United Kingdom,Luton,GB,"Luton, United Kingdom",51.880359,-0.420011
+1037,United Kingdom,Peterborough,GB,"Peterborough, United Kingdom",52.58042,-0.249995
+1038,United Kingdom,Nottingham,GB,"Nottingham, United Kingdom",52.970344,-1.170017
+1039,United Kingdom,Stoke,GB,"Stoke, United Kingdom",53.000368,-2.180007
+1040,United Kingdom,Dover,GB,"Dover, United Kingdom",51.133712,1.300013
+1041,United Kingdom,Edinburgh,GB,"Edinburgh, United Kingdom",55.948328,-3.219091
+1042,United Kingdom,Newcastle,GB,"Newcastle, United Kingdom",55.002321,-1.601936
+1043,United Kingdom,Liverpool,GB,"Liverpool, United Kingdom",53.417948,-2.919944
+1044,United Kingdom,Cardiff,GB,"Cardiff, United Kingdom",51.499995,-3.225008
+1045,United Kingdom,Leeds,GB,"Leeds, United Kingdom",53.831953,-1.581963
+1046,United Kingdom,Manchester,GB,"Manchester, United Kingdom",53.502361,-2.249933
+1047,United Kingdom,Birmingham,GB,"Birmingham, United Kingdom",52.47692,-1.921943
+1048,United Kingdom,Glasgow,GB,"Glasgow, United Kingdom",55.876351,-4.252653
+1049,United Kingdom,London,GB,"London, United Kingdom",51.501941,-0.118668
+1050,Ukraine,Mykolayiv,UA,"Mykolayiv, Ukraine",46.967739,31.984342
+1051,Ukraine,Chernihiv,UA,"Chernihiv, Ukraine",51.50493,31.301541
+1052,Ukraine,Khmelnytskyy,UA,"Khmelnytskyy, Ukraine",49.424928,27.001545
+1053,Ukraine,Kamyanets-Podilskyy,UA,"Kamyanets-Podilskyy, Ukraine",48.684301,26.580899
+1054,Ukraine,Drohobych,UA,"Drohobych, Ukraine",49.344364,23.499382
+1055,Ukraine,Uzhgorod,UA,"Uzhgorod, Ukraine",48.629989,22.250001
+1056,Ukraine,Uman,UA,"Uman, Ukraine",48.754297,30.21091
+1057,Ukraine,Brovary,UA,"Brovary, Ukraine",50.49432,30.780901
+1058,Ukraine,Bila Tserkva,UA,"Bila Tserkva, Ukraine",49.774312,30.130915
+1059,Ukraine,Illichivsk,UA,"Illichivsk, Ukraine",46.300002,30.666593
+1060,Ukraine,Konotop,UA,"Konotop, Ukraine",51.242388,33.209022
+1061,Ukraine,Kryvyy Rih,UA,"Kryvyy Rih, Ukraine",47.928326,33.344983
+1062,Ukraine,Makiyivka,UA,"Makiyivka, Ukraine",48.029664,37.974622
+1063,Ukraine,Horlivka,UA,"Horlivka, Ukraine",48.299647,38.054669
+1064,Ukraine,Kramatorsk,UA,"Kramatorsk, Ukraine",48.719363,37.534391
+1065,Ukraine,Berdyansk,UA,"Berdyansk, Ukraine",46.756822,36.78684
+1066,Ukraine,Kherson,UA,"Kherson, Ukraine",46.632537,32.600665
+1067,Ukraine,Voznesensk,UA,"Voznesensk, Ukraine",47.550365,31.333322
+1068,Ukraine,Nizhyn,UA,"Nizhyn, Ukraine",51.054079,31.890291
+1069,Ukraine,Rivne,UA,"Rivne, Ukraine",50.616586,26.252806
+1070,Ukraine,Chernivtsi,UA,"Chernivtsi, Ukraine",48.305306,25.92156
+1071,Ukraine,Ivano-Frankivsk,UA,"Ivano-Frankivsk, Ukraine",48.934751,24.709386
+1072,Ukraine,Ternopil,UA,"Ternopil, Ukraine",49.53598,25.582149
+1073,Ukraine,Lutsk,UA,"Lutsk, Ukraine",50.747198,25.333379
+1074,Ukraine,Kovel,UA,"Kovel, Ukraine",51.217066,24.71662
+1075,Ukraine,Cherkasy,UA,"Cherkasy, Ukraine",49.43472,32.0709
+1076,Ukraine,Kirovohrad,UA,"Kirovohrad, Ukraine",48.504054,32.260294
+1077,Ukraine,Izmayil,UA,"Izmayil, Ukraine",45.350344,28.837351
+1078,Ukraine,Vinnytsya,UA,"Vinnytsya, Ukraine",49.225379,28.481558
+1079,Ukraine,Korosten,UA,"Korosten, Ukraine",50.950416,28.650024
+1080,Ukraine,Shostka,UA,"Shostka, Ukraine",51.873409,33.479651
+1081,Ukraine,Nikopol,UA,"Nikopol, Ukraine",47.566591,34.40621
+1082,Ukraine,Kupyansk,UA,"Kupyansk, Ukraine",49.721783,37.598056
+1083,Ukraine,Lysychansk,UA,"Lysychansk, Ukraine",48.920411,38.42736
+1084,Ukraine,Luhansk,UA,"Luhansk, Ukraine",48.56976,39.334384
+1085,Ukraine,Poltava,UA,"Poltava, Ukraine",49.57404,34.570282
+1086,Ukraine,Kremenchuk,UA,"Kremenchuk, Ukraine",49.083527,33.429629
+1087,Ukraine,Melitopol,UA,"Melitopol, Ukraine",46.837825,35.377468
+1088,Ukraine,Zaporizhzhya,UA,"Zaporizhzhya, Ukraine",47.859243,35.174863
+1089,Ukraine,Chernobyl,UA,"Chernobyl, Ukraine",51.389407,30.098876
+1090,Ukraine,Sumy,UA,"Sumy, Ukraine",50.924293,34.780864
+1091,Ukraine,Mariupol,UA,"Mariupol, Ukraine",47.096181,37.556198
+1092,Ukraine,Lviv,UA,"Lviv, Ukraine",49.83498,24.029996
+1093,Ukraine,Odessa,UA,"Odessa, Ukraine",46.491962,30.708055
+1094,Ukraine,Zhytomyr,UA,"Zhytomyr, Ukraine",50.245575,28.662168
+1095,Ukraine,Dnipro,UA,"Dnipro, Ukraine",48.481918,34.998078
+1096,Ukraine,Donetsk,UA,"Donetsk, Ukraine",48.001948,37.828034
+1097,Ukraine,Kharkiv,UA,"Kharkiv, Ukraine",50.001929,36.248079
+1098,Ukraine,Kyiv,UA,"Kyiv, Ukraine",50.435313,30.514682
+1099,Switzerland,Lugano,CH,"Lugano, Switzerland",46.000382,8.966677
+1100,Switzerland,Luzern,CH,"Luzern, Switzerland",47.050421,8.280001
+1101,Switzerland,Lausanne,CH,"Lausanne, Switzerland",46.530427,6.650023
+1102,Switzerland,Bern,CH,"Bern, Switzerland",46.916683,7.466976
+1103,Switzerland,Basel,CH,"Basel, Switzerland",47.580389,7.590017
+1104,Switzerland,Zürich,CH,"Zürich, Switzerland",47.381934,8.548064
+1105,Switzerland,Geneva,CH,"Geneva, Switzerland",46.210008,6.140028
+1106,Sweden,Falun,SE,"Falun, Sweden",60.613002,15.647005
+1107,Sweden,Nyköping,SE,"Nyköping, Sweden",58.763997,17.015005
+1108,Sweden,Karlskrona,SE,"Karlskrona, Sweden",56.203002,15.296005
+1109,Sweden,Mariestad,SE,"Mariestad, Sweden",58.705002,13.827997
+1110,Sweden,Vannersborg,SE,"Vannersborg, Sweden",58.363002,12.330001
+1111,Sweden,Borlänge,SE,"Borlänge, Sweden",60.483322,15.416671
+1112,Sweden,Västerås,SE,"Västerås, Sweden",59.630015,16.540013
+1113,Sweden,Bollnäs,SE,"Bollnäs, Sweden",61.352003,16.366587
+1114,Sweden,Gävle,SE,"Gävle, Sweden",60.66698,17.166642
+1115,Sweden,Växjö,SE,"Växjö, Sweden",56.883697,14.816708
+1116,Sweden,Örebro,SE,"Örebro, Sweden",59.280347,15.219991
+1117,Sweden,Norrköping,SE,"Norrköping, Sweden",58.595427,16.178692
+1118,Sweden,Halmstad,SE,"Halmstad, Sweden",56.671772,12.855587
+1119,Sweden,Karlstad,SE,"Karlstad, Sweden",59.367137,13.499941
+1120,Sweden,Trollhättan,SE,"Trollhättan, Sweden",58.267101,12.299962
+1121,Sweden,Borås,SE,"Borås, Sweden",57.730441,12.919976
+1122,Sweden,Kristianstad,SE,"Kristianstad, Sweden",56.033672,14.133287
+1123,Sweden,Helsingborg,SE,"Helsingborg, Sweden",56.050492,12.700041
+1124,Sweden,Jönköping,SE,"Jönköping, Sweden",57.771343,14.165016
+1125,Sweden,Linköping,SE,"Linköping, Sweden",58.410012,15.62994
+1126,Sweden,Uppsala,SE,"Uppsala, Sweden",59.860053,17.639998
+1127,Sweden,Göteborg,SE,"Göteborg, Sweden",57.750001,12.000032
+1128,Sweden,Malmö,SE,"Malmö, Sweden",55.583337,13.033302
+1129,Spain,Mérida,ES,"Mérida, Spain",38.912004,-6.337998
+1130,Spain,Marbella,ES,"Marbella, Spain",36.51662,-4.88333
+1131,Spain,Linares,ES,"Linares, Spain",38.08332,-3.633355
+1132,Spain,Algeciras,ES,"Algeciras, Spain",36.126712,-5.46653
+1133,Spain,León,ES,"León, Spain",42.579971,-5.570007
+1134,Spain,Mataró,ES,"Mataró, Spain",41.539957,2.450021
+1135,Spain,Gijón,ES,"Gijón, Spain",43.530016,-5.67
+1136,Spain,Vitoria,ES,"Vitoria, Spain",42.84998,-2.669977
+1137,Spain,Almería,ES,"Almería, Spain",36.830348,-2.429992
+1138,Spain,Málaga,ES,"Málaga, Spain",36.720406,-4.419999
+1139,Spain,Jaén,ES,"Jaén, Spain",37.770394,-3.799985
+1140,Spain,Huelva,ES,"Huelva, Spain",37.250374,-6.929949
+1141,Spain,Albacete,ES,"Albacete, Spain",39.000344,-1.87
+1142,Spain,Toledo,ES,"Toledo, Spain",39.867036,-4.016716
+1143,Spain,Guadalajara,ES,"Guadalajara, Spain",40.633707,-3.166587
+1144,Spain,Santander,ES,"Santander, Spain",43.380465,-3.799985
+1145,Spain,Salamanca,ES,"Salamanca, Spain",40.970405,-5.67
+1146,Spain,Burgos,ES,"Burgos, Spain",42.350398,-3.679967
+1147,Spain,Tarragona,ES,"Tarragona, Spain",41.12037,1.249991
+1148,Spain,Lorca,ES,"Lorca, Spain",37.688564,-1.698512
+1149,Spain,Cartagena,ES,"Cartagena, Spain",37.60043,-0.980028
+1150,Spain,Oviedo,ES,"Oviedo, Spain",43.350492,-5.829991
+1151,Spain,Santiago de Compostela,ES,"Santiago de Compostela, Spain",42.882898,-8.541091
+1152,Spain,Badajoz,ES,"Badajoz, Spain",38.880429,-6.969973
+1153,Spain,Logroño,ES,"Logroño, Spain",42.470365,-2.429992
+1154,Spain,San Sebastián,ES,"San Sebastián, Spain",43.320391,-1.979993
+1155,Spain,Alicante,ES,"Alicante, Spain",38.35122,-0.483641
+1156,Spain,Castello,ES,"Castello, Spain",39.970414,-0.050008
+1157,Spain,Cádiz,ES,"Cádiz, Spain",36.534991,-6.225005
+1158,Spain,Granada‎,ES,"Granada‎, Spain",37.164978,-3.585011
+1159,Spain,Murcia,ES,"Murcia, Spain",37.979993,-1.129968
+1160,Spain,La Coruña,ES,"La Coruña, Spain",43.329977,-8.419988
+1161,Spain,Ourense,ES,"Ourense, Spain",42.32996,-7.869995
+1162,Spain,Pamplona,ES,"Pamplona, Spain",42.820008,-1.649987
+1163,Spain,Valladolid,ES,"Valladolid, Spain",41.650002,-4.750031
+1164,Spain,Zaragoza,ES,"Zaragoza, Spain",41.650002,-0.889982
+1165,Spain,Córdoba,ES,"Córdoba, Spain",37.879999,-4.770004
+1166,Spain,Vigo,ES,"Vigo, Spain",42.220019,-8.729995
+1167,Spain,Bilbao,ES,"Bilbao, Spain",43.249982,-2.929987
+1168,Spain,Seville,ES,"Seville, Spain",37.405015,-5.980007
+1169,Spain,Valencia,ES,"Valencia, Spain",39.486963,-0.401958
+1170,Spain,Barcelona,ES,"Barcelona, Spain",41.385245,2.181425
+1171,Spain,Madrid,ES,"Madrid, Spain",40.401972,-3.685298
+1172,Slovakia,Banská Bystrica,SK,"Banská Bystrica, Slovakia",48.73329,19.149983
+1173,Slovakia,Trnava,SK,"Trnava, Slovakia",48.366594,17.6
+1174,Slovakia,Zvolen,SK,"Zvolen, Slovakia",48.583739,19.13324
+1175,Slovakia,Žilina,SK,"Žilina, Slovakia",49.219824,18.749388
+1176,Slovakia,Košice,SK,"Košice, Slovakia",48.730448,21.25001
+1177,Slovakia,Prešov,SK,"Prešov, Slovakia",48.999734,21.239365
+1178,Slovakia,Bratislava,SK,"Bratislava, Slovakia",48.150018,17.116981
+1179,Slovenia,Maribor,SI,"Maribor, Slovenia",46.540478,15.650042
+1180,Slovenia,Ljubljana,SI,"Ljubljana, Slovenia",46.055288,14.514969
+1181,Serbia,Subotica,RS,"Subotica, Serbia",46.070016,19.680028
+1182,Serbia,Kragujevac,RS,"Kragujevac, Serbia",44.01996,20.920004
+1183,Serbia,Zrenjanin,RS,"Zrenjanin, Serbia",45.378637,20.399468
+1184,Serbia,Čačak,RS,"Čačak, Serbia",43.889736,20.330118
+1185,Serbia,Niš,RS,"Niš, Serbia",43.330416,21.899996
+1186,Serbia,Novi Sad,RS,"Novi Sad, Serbia",45.250376,19.849941
+1187,Serbia,Belgrade,RS,"Belgrade, Serbia",44.820591,20.466045
+1188,Portugal,Guarda,PT,"Guarda, Portugal",40.541004,-7.262001
+1189,Portugal,Castelo Branco,PT,"Castelo Branco, Portugal",39.810996,-7.488
+1190,Portugal,Bragança,PT,"Bragança, Portugal",41.807997,-6.755003
+1191,Portugal,Beja,PT,"Beja, Portugal",38.014002,-7.863002
+1192,Portugal,Faro,PT,"Faro, Portugal",37.01708,-7.933273
+1193,Portugal,Leiria,PT,"Leiria, Portugal",39.738996,-8.804997
+1194,Portugal,Aveiro,PT,"Aveiro, Portugal",40.641003,-8.650998
+1195,Portugal,Évora,PT,"Évora, Portugal",38.559996,-7.905996
+1196,Portugal,Portimão,PT,"Portimão, Portugal",37.13374,-8.533314
+1197,Portugal,Coimbra,PT,"Coimbra, Portugal",40.200374,-8.41668
+1198,Portugal,Setúbal,PT,"Setúbal, Portugal",38.52996,-8.90001
+1199,Portugal,Braga,PT,"Braga, Portugal",41.554995,-8.421331
+1200,Portugal,Porto,PT,"Porto, Portugal",41.151952,-8.621947
+1201,Poland,Olsztyn,PL,"Olsztyn, Poland",53.800035,20.480031
+1202,Poland,Elbląg,PL,"Elbląg, Poland",54.18996,19.402681
+1203,Poland,Inowrocław,PL,"Inowrocław, Poland",52.779942,18.249987
+1204,Poland,Bytom,PL,"Bytom, Poland",50.350039,18.909998
+1205,Poland,Opole,PL,"Opole, Poland",50.68498,17.93135
+1206,Poland,Koszalin,PL,"Koszalin, Poland",54.2,16.183333
+1207,Poland,Ełk,PL,"Ełk, Poland",53.833702,22.349995
+1208,Poland,Gdynia,PL,"Gdynia, Poland",54.520379,18.530021
+1209,Poland,Wrocław,PL,"Wrocław, Poland",51.110432,17.030009
+1210,Poland,Szczecin,PL,"Szczecin, Poland",53.420394,14.530007
+1211,Poland,Zielona Góra,PL,"Zielona Góra, Poland",51.950407,15.500025
+1212,Poland,Poznań,PL,"Poznań, Poland",52.405753,16.89994
+1213,Poland,Grudziądz,PL,"Grudziądz, Poland",53.480391,18.750008
+1214,Poland,Bydgoszcz,PL,"Bydgoszcz, Poland",53.120413,18.010001
+1215,Poland,Katowice,PL,"Katowice, Poland",50.260381,19.020017
+1216,Poland,Gliwice,PL,"Gliwice, Poland",50.330376,18.670013
+1217,Poland,Kielce,PL,"Kielce, Poland",50.890394,20.66002
+1218,Poland,Białystok,PL,"Białystok, Poland",53.150359,23.169996
+1219,Poland,Lublin,PL,"Lublin, Poland",51.250398,22.57272
+1220,Poland,Rzeszów,PL,"Rzeszów, Poland",50.07047,22.000042
+1221,Poland,Łódź,PL,"Łódź, Poland",51.776937,19.449414
+1222,Poland,Gdańsk,PL,"Gdańsk, Poland",54.359975,18.64004
+1223,Poland,Kraków,PL,"Kraków, Poland",50.061925,19.958066
+1224,Poland,Warsaw,PL,"Warsaw, Poland",52.251947,20.998054
+1225,Norway,Arendal,NO,"Arendal, Norway",58.464756,8.766001
+1226,Norway,Vossavangen,NO,"Vossavangen, Norway",60.630003,6.441004
+1227,Norway,Leikanger,NO,"Leikanger, Norway",61.183296,6.85
+1228,Norway,Bærum,NO,"Bærum, Norway",59.913486,11.347237
+1229,Norway,Hamar,NO,"Hamar, Norway",60.820002,11.069002
+1230,Norway,Gjøvik,NO,"Gjøvik, Norway",60.800021,10.700008
+1231,Norway,Sandnes,NO,"Sandnes, Norway",58.845412,5.69003
+1232,Norway,Drammen,NO,"Drammen, Norway",59.757243,10.190737
+1233,Norway,Moss,NO,"Moss, Norway",59.436978,10.669157
+1234,Norway,Haugesund,NO,"Haugesund, Norway",59.411915,5.277497
+1235,Norway,Stavanger,NO,"Stavanger, Norway",58.970004,5.680004
+1236,Norway,Skien,NO,"Skien, Norway",59.19999,9.600024
+1237,Norway,Lillehammer,NO,"Lillehammer, Norway",61.133283,10.50002
+1238,Norway,Kristiansand,NO,"Kristiansand, Norway",58.166642,8.000018
+1239,Norway,Bergen,NO,"Bergen, Norway",60.391002,5.324522
+1240,Norway,Oslo,NO,"Oslo, Norway",59.918636,10.748033
+1241,Netherlands,Groningen,NL,"Groningen, Netherlands",53.220407,6.580001
+1242,Netherlands,Haarlem,NL,"Haarlem, Netherlands",52.380432,4.629991
+1243,Netherlands,Eindhoven,NL,"Eindhoven, Netherlands",51.429973,5.500015
+1244,Netherlands,Utrecht,NL,"Utrecht, Netherlands",52.100346,5.120039
+1245,Netherlands,Rotterdam,NL,"Rotterdam, Netherlands",51.921915,4.478029
+1246,Netherlands,Amsterdam,NL,"Amsterdam, Netherlands",52.351915,4.914694
+1247,Netherlands,The Hague,NL,"The Hague, Netherlands",52.080037,4.269961
+1248,Montenegro,Podgorica,ME,"Podgorica, Montenegro",42.465973,19.266307
+1249,North Macedonia,Tetovo,MK,"Tetovo, North Macedonia",42.00923,20.970079
+1250,North Macedonia,Bitola,MK,"Bitola, North Macedonia",41.039057,21.339514
+1251,North Macedonia,Skopje,MK,"Skopje, North Macedonia",42.000006,21.433462
+1252,Luxembourg,Luxembourg,LU,"Luxembourg, Luxembourg",49.61166,6.130003
+1253,Lithuania,Panevežys,LT,"Panevežys, Lithuania",55.74002,24.370026
+1254,Lithuania,Šiauliai,LT,"Šiauliai, Lithuania",55.938639,23.325026
+1255,Lithuania,Klaipėda,LT,"Klaipėda, Lithuania",55.720409,21.119941
+1256,Lithuania,Kaunas,LT,"Kaunas, Lithuania",54.950404,23.880031
+1257,Lithuania,Vilnius,LT,"Vilnius, Lithuania",54.683366,25.316635
+1258,Latvia,Rēzekne,LV,"Rēzekne, Latvia",56.500026,27.316565
+1259,Latvia,Ventspils,LV,"Ventspils, Latvia",57.389868,21.560586
+1260,Latvia,Jelgava,LV,"Jelgava, Latvia",56.652704,23.712806
+1261,Latvia,Daugavpils,LV,"Daugavpils, Latvia",55.87996,26.509999
+1262,Latvia,Riga,LV,"Riga, Latvia",56.950024,24.099965
+1263,Kosovo,Pristina,XK,"Pristina, Kosovo",42.66671,21.165984
+1264,Italy,Potenza,IT,"Potenza, Italy",40.642002,15.798997
+1265,Italy,Campobasso,IT,"Campobasso, Italy",41.562999,14.655997
+1266,Italy,Aosta,IT,"Aosta, Italy",45.737001,7.315003
+1267,Italy,Modena,IT,"Modena, Italy",44.650025,10.919995
+1268,Italy,Crotone,IT,"Crotone, Italy",39.083337,17.123337
+1269,Italy,Vibo Valentia,IT,"Vibo Valentia, Italy",38.666592,16.10004
+1270,Italy,Caserta,IT,"Caserta, Italy",41.05996,14.337357
+1271,Italy,Barletta,IT,"Barletta, Italy",41.319996,16.270004
+1272,Italy,Asti,IT,"Asti, Italy",44.929982,8.209979
+1273,Italy,Novara,IT,"Novara, Italy",45.450002,8.61998
+1274,Italy,Como,IT,"Como, Italy",45.810006,9.080004
+1275,Italy,Udine,IT,"Udine, Italy",46.070016,13.240008
+1276,Italy,Treviso,IT,"Treviso, Italy",45.670015,12.240018
+1277,Italy,Parma,IT,"Parma, Italy",44.810429,10.320031
+1278,Italy,Ravenna,IT,"Ravenna, Italy",44.420375,12.220019
+1279,Italy,Ferrara,IT,"Ferrara, Italy",44.850427,11.609927
+1280,Italy,Bologna,IT,"Bologna, Italy",44.500422,11.340021
+1281,Italy,Pisa,IT,"Pisa, Italy",43.72047,10.400026
+1282,Italy,Siena,IT,"Siena, Italy",43.317032,11.349994
+1283,Italy,Arezzo,IT,"Arezzo, Italy",43.461726,11.874975
+1284,Italy,Catanzaro,IT,"Catanzaro, Italy",38.900376,16.60001
+1285,Italy,Salerno,IT,"Salerno, Italy",40.680397,14.769941
+1286,Italy,Benevento,IT,"Benevento, Italy",41.133702,14.749993
+1287,Italy,Bari,IT,"Bari, Italy",41.11422,16.872758
+1288,Italy,Foggia,IT,"Foggia, Italy",41.460478,15.55997
+1289,Italy,Lecce,IT,"Lecce, Italy",40.36039,18.149993
+1290,Italy,Brindisi,IT,"Brindisi, Italy",40.640348,17.930006
+1291,Italy,Taranto,IT,"Taranto, Italy",40.508392,17.229997
+1292,Italy,Pescara,IT,"Pescara, Italy",42.455431,14.218656
+1293,Italy,L'Aquila,IT,"L'Aquila, Italy",42.350398,13.390025
+1294,Italy,Civitavecchia,IT,"Civitavecchia, Italy",42.100413,11.799993
+1295,Italy,Ancona,IT,"Ancona, Italy",43.600374,13.499941
+1296,Italy,Perugia,IT,"Perugia, Italy",43.110378,12.389983
+1297,Italy,Bergamo,IT,"Bergamo, Italy",45.7004,9.669993
+1298,Italy,Trieste,IT,"Trieste, Italy",45.650378,13.800026
+1299,Italy,Bolzano,IT,"Bolzano, Italy",46.500429,11.36002
+1300,Italy,Trento,IT,"Trento, Italy",46.080429,11.119983
+1301,Italy,Verona,IT,"Verona, Italy",45.44039,10.990016
+1302,Italy,Turin,IT,"Turin, Italy",45.072333,7.668015
+1303,Italy,Genoa,IT,"Genoa, Italy",44.409988,8.930039
+1304,Italy,Florence,IT,"Florence, Italy",43.780001,11.25
+1305,Italy,Naples,IT,"Naples, Italy",40.841971,14.243066
+1306,Italy,Milan,IT,"Milan, Italy",45.471921,9.203063
+1307,Italy,Rome,IT,"Rome, Italy",41.897902,12.481313
+1308,Hungary,Veszprém,HU,"Veszprém, Hungary",47.090997,17.911
+1309,Hungary,Zalaegerszeg,HU,"Zalaegerszeg, Hungary",46.844001,16.84
+1310,Hungary,Tatabánya,HU,"Tatabánya, Hungary",47.549997,18.433
+1311,Hungary,Szekszárd,HU,"Szekszárd, Hungary",46.343997,18.712999
+1312,Hungary,Salgótarján,HU,"Salgótarján, Hungary",48.105,19.826002
+1313,Hungary,Békéscsaba,HU,"Békéscsaba, Hungary",46.672002,21.101005
+1314,Hungary,Eger,HU,"Eger, Hungary",47.895003,20.383003
+1315,Hungary,Szombathely,HU,"Szombathely, Hungary",47.225346,16.628742
+1316,Hungary,Kecskemét,HU,"Kecskemét, Hungary",46.900043,19.700027
+1317,Hungary,Székesfehérvár,HU,"Székesfehérvár, Hungary",47.194676,18.408065
+1318,Hungary,Nyíregyháza,HU,"Nyíregyháza, Hungary",47.965327,21.718715
+1319,Hungary,Pécs,HU,"Pécs, Hungary",46.080429,18.220014
+1320,Hungary,Győr,HU,"Győr, Hungary",47.700356,17.630024
+1321,Hungary,Kaposvár,HU,"Kaposvár, Hungary",46.367026,17.799988
+1322,Hungary,Vác,HU,"Vác, Hungary",47.783658,19.13324
+1323,Hungary,Miskolc,HU,"Miskolc, Hungary",48.100409,20.780013
+1324,Hungary,Szeged,HU,"Szeged, Hungary",46.250393,20.150026
+1325,Hungary,Debrecen,HU,"Debrecen, Hungary",47.53047,21.630039
+1326,Hungary,Szolnok,HU,"Szolnok, Hungary",47.186356,20.179378
+1327,Hungary,Budapest,HU,"Budapest, Hungary",47.501952,19.081375
+1328,Greece,Lamia,GR,"Lamia, Greece",38.898999,22.434004
+1329,Greece,Polygyros,GR,"Polygyros, Greece",40.381002,23.453002
+1330,Greece,Komatini,GR,"Komatini, Greece",41.133303,25.416703
+1331,Greece,Piraeus,GR,"Piraeus, Greece",37.950021,23.69999
+1332,Greece,Volos,GR,"Volos, Greece",39.36996,22.95001
+1333,Greece,Kavala,GR,"Kavala, Greece",40.941211,24.40176
+1334,Greece,Alexandroupoli,GR,"Alexandroupoli, Greece",40.848619,25.87441
+1335,Greece,Tripoli,GR,"Tripoli, Greece",37.509143,22.379399
+1336,Greece,Sparti,GR,"Sparti, Greece",37.073718,22.42968
+1337,Greece,Agrinio,GR,"Agrinio, Greece",38.621763,21.407727
+1338,Greece,Pirgos,GR,"Pirgos, Greece",37.683732,21.449998
+1339,Greece,Larissa,GR,"Larissa, Greece",39.630409,22.420016
+1340,Greece,Ioanina,GR,"Ioanina, Greece",39.6679,20.850861
+1341,Greece,Katerini,GR,"Katerini, Greece",40.272334,22.502492
+1342,Greece,Seres,GR,"Seres, Greece",41.085979,23.549715
+1343,Greece,Xanthi,GR,"Xanthi, Greece",41.14179,24.883587
+1344,Greece,Patra,GR,"Patra, Greece",38.230004,21.729981
+1345,Greece,Kalamata,GR,"Kalamata, Greece",37.038914,22.114195
+1346,Greece,Thessaloniki,GR,"Thessaloniki, Greece",40.698052,22.883055
+1347,Greece,Athens,GR,"Athens, Greece",37.985272,23.731375
+1348,Germany,Mainz,DE,"Mainz, Germany",49.982473,8.273219
+1349,Germany,Schwerin,DE,"Schwerin, Germany",53.633304,11.416699
+1350,Germany,Bielefeld,DE,"Bielefeld, Germany",52.029988,8.530011
+1351,Germany,Dortmund,DE,"Dortmund, Germany",51.529967,7.450026
+1352,Germany,Duisburg,DE,"Duisburg, Germany",51.429973,6.750017
+1353,Germany,Wuppertal,DE,"Wuppertal, Germany",51.25001,7.169991
+1354,Germany,Essen,DE,"Essen, Germany",51.449998,7.016615
+1355,Germany,Karlsruhe,DE,"Karlsruhe, Germany",48.999992,8.399993
+1356,Germany,Heidelberg,DE,"Heidelberg, Germany",49.419993,8.699975
+1357,Germany,Kassel,DE,"Kassel, Germany",51.300007,9.50003
+1358,Germany,Oldenburg,DE,"Oldenburg, Germany",53.129999,8.220004
+1359,Germany,Emden,DE,"Emden, Germany",53.366677,7.216655
+1360,Germany,Braunschweig,DE,"Braunschweig, Germany",52.249975,10.50002
+1361,Germany,Erfurt,DE,"Erfurt, Germany",50.970053,11.029962
+1362,Germany,Coburg,DE,"Coburg, Germany",50.266608,10.966607
+1363,Germany,Augsburg,DE,"Augsburg, Germany",48.350006,10.899996
+1364,Germany,Fürth,DE,"Fürth, Germany",49.470015,10.99999
+1365,Germany,Chemnitz,DE,"Chemnitz, Germany",50.829984,12.919976
+1366,Germany,Bonn,DE,"Bonn, Germany",50.720456,7.080022
+1367,Germany,Münster,DE,"Münster, Germany",51.970405,7.620041
+1368,Germany,Düsseldorf,DE,"Düsseldorf, Germany",51.220374,6.779989
+1369,Germany,Ulm,DE,"Ulm, Germany",48.400391,9.999999
+1370,Germany,Mannheim,DE,"Mannheim, Germany",49.500375,8.470015
+1371,Germany,Freiburg,DE,"Freiburg, Germany",48.000415,7.869948
+1372,Germany,Gießen,DE,"Gießen, Germany",50.58372,8.650004
+1373,Germany,Wiesbaden,DE,"Wiesbaden, Germany",50.080392,8.250028
+1374,Germany,Bremerhaven,DE,"Bremerhaven, Germany",53.550438,8.579983
+1375,Germany,Osnabrück,DE,"Osnabrück, Germany",52.280438,8.049989
+1376,Germany,Hanover,DE,"Hanover, Germany",52.36697,9.716657
+1377,Germany,Göttingen,DE,"Göttingen, Germany",51.520433,9.920004
+1378,Germany,Gera,DE,"Gera, Germany",50.870369,12.070002
+1379,Germany,Jena,DE,"Jena, Germany",50.930443,11.580006
+1380,Germany,Flensburg,DE,"Flensburg, Germany",54.783748,9.433315
+1381,Germany,Lübeck,DE,"Lübeck, Germany",53.870393,10.669984
+1382,Germany,Kiel,DE,"Kiel, Germany",54.33039,10.130017
+1383,Germany,Koblenz,DE,"Koblenz, Germany",50.350478,7.599991
+1384,Germany,Saarbrücken,DE,"Saarbrücken, Germany",49.25039,6.970003
+1385,Germany,Regensburg,DE,"Regensburg, Germany",49.020405,12.120025
+1386,Germany,Rosenheim,DE,"Rosenheim, Germany",47.850347,12.133306
+1387,Germany,Hof,DE,"Hof, Germany",50.317044,11.916678
+1388,Germany,Würzburg,DE,"Würzburg, Germany",49.800434,9.950028
+1389,Germany,Ingolstadt,DE,"Ingolstadt, Germany",48.77042,11.449988
+1390,Germany,Cottbus,DE,"Cottbus, Germany",51.770418,14.329967
+1391,Germany,Potsdam,DE,"Potsdam, Germany",52.400405,13.069993
+1392,Germany,Magdeburg,DE,"Magdeburg, Germany",52.130421,11.620004
+1393,Germany,Leipzig,DE,"Leipzig, Germany",51.335405,12.409981
+1394,Germany,Stralsund,DE,"Stralsund, Germany",54.300418,13.100017
+1395,Germany,Rostock,DE,"Rostock, Germany",54.070381,12.149997
+1396,Germany,Passau,DE,"Passau, Germany",48.575462,13.441179
+1397,Germany,Stuttgart,DE,"Stuttgart, Germany",48.77998,9.199996
+1398,Germany,Bremen,DE,"Bremen, Germany",53.080002,8.800021
+1399,Germany,Nürnberg,DE,"Nürnberg, Germany",49.449991,11.079985
+1400,Germany,Cologne,DE,"Cologne, Germany",50.93195,6.948059
+1401,Germany,Dresden,DE,"Dresden, Germany",51.049971,13.750003
+1402,Germany,Frankfurt,DE,"Frankfurt, Germany",50.099977,8.675015
+1403,Germany,Hamburg,DE,"Hamburg, Germany",53.551971,9.998053
+1404,Germany,Munich,DE,"Munich, Germany",48.131888,11.573048
+1405,Germany,Berlin,DE,"Berlin, Germany",52.523765,13.399603
+1406,France,Annecy,FR,"Annecy, France",45.899975,6.11667
+1407,France,Roanne,FR,"Roanne, France",46.033326,4.066666
+1408,France,St.-Brieuc,FR,"St.-Brieuc, France",48.516663,-2.783303
+1409,France,Poitier,FR,"Poitier, France",46.583292,0.333277
+1410,France,Angers,FR,"Angers, France",47.480008,-0.53003
+1411,France,Biarritz,FR,"Biarritz, France",43.473275,-1.561595
+1412,France,Aix-en-Provence,FR,"Aix-en-Provence, France",43.519991,5.449993
+1413,France,Perpignan,FR,"Perpignan, France",42.699989,2.899967
+1414,France,Tarbes,FR,"Tarbes, France",43.23329,0.083344
+1415,France,Clermont-Ferrand,FR,"Clermont-Ferrand, France",45.779982,3.080008
+1416,France,Melun,FR,"Melun, France",48.533302,2.666648
+1417,France,Arras,FR,"Arras, France",50.283325,2.783334
+1418,France,Besançon,FR,"Besançon, France",47.229997,6.030009
+1419,France,Saint-Étienne,FR,"Saint-Étienne, France",45.430391,4.380032
+1420,France,Grenoble,FR,"Grenoble, France",45.180381,5.720002
+1421,France,Cherbourg,FR,"Cherbourg, France",49.650392,-1.649987
+1422,France,Caen,FR,"Caen, France",49.183754,-0.349989
+1423,France,Lorient,FR,"Lorient, France",47.750405,-3.366575
+1424,France,Brest,FR,"Brest, France",48.390443,-4.495008
+1425,France,Le Mans,FR,"Le Mans, France",48.000415,0.099983
+1426,France,Nantes,FR,"Nantes, France",47.210386,-1.590017
+1427,France,Agen,FR,"Agen, France",44.200414,0.633336
+1428,France,Toulon,FR,"Toulon, France",43.134187,5.918822
+1429,France,Béziers,FR,"Béziers, France",43.350492,3.209974
+1430,France,Montpellier,FR,"Montpellier, France",43.610399,3.869986
+1431,France,Nîmes,FR,"Nîmes, France",43.830385,4.350008
+1432,France,Vichy,FR,"Vichy, France",46.117145,3.41668
+1433,France,Nevers,FR,"Nevers, France",46.983733,3.16667
+1434,France,Auxerre,FR,"Auxerre, France",47.800427,3.566593
+1435,France,Dijon,FR,"Dijon, France",47.330404,5.030018
+1436,France,Bourges,FR,"Bourges, France",47.083727,2.399998
+1437,France,Tours,FR,"Tours, France",47.380375,0.699947
+1438,France,Orléans,FR,"Orléans, France",47.900421,1.900028
+1439,France,Dieppe,FR,"Dieppe, France",49.933734,1.083334
+1440,France,Rouen,FR,"Rouen, France",49.430405,1.079975
+1441,France,Versailles,FR,"Versailles, France",48.80047,2.133348
+1442,France,Brive,FR,"Brive, France",45.150408,1.533333
+1443,France,Troyes,FR,"Troyes, France",48.340394,4.083358
+1444,France,Reims,FR,"Reims, France",49.25039,4.029976
+1445,France,Calais,FR,"Calais, France",50.950416,1.833314
+1446,France,Amiens,FR,"Amiens, France",49.900377,2.300004
+1447,France,Mulhouse,FR,"Mulhouse, France",47.750405,7.34998
+1448,France,Nancy,FR,"Nancy, France",48.683681,6.200024
+1449,France,Metz,FR,"Metz, France",49.120347,6.180026
+1450,France,Rennes,FR,"Rennes, France",48.100021,-1.670012
+1451,France,Nice,FR,"Nice, France",43.716964,7.263078
+1452,France,Toulouse,FR,"Toulouse, France",43.621905,1.447981
+1453,France,Limoges,FR,"Limoges, France",45.829979,1.249991
+1454,France,Lille,FR,"Lille, France",50.651915,3.078062
+1455,France,Strasbourg,FR,"Strasbourg, France",48.579966,7.750007
+1456,France,Bordeaux,FR,"Bordeaux, France",44.851959,-0.596959
+1457,France,Marseille,FR,"Marseille, France",43.291925,5.373064
+1458,France,Lyon,FR,"Lyon, France",45.771954,4.828085
+1459,France,Paris,FR,"Paris, France",48.868639,2.33139
+1460,Finland,Hämeenlinna,FI,"Hämeenlinna, Finland",60.996996,24.472
+1461,Finland,Kouvola,FI,"Kouvola, Finland",60.876,26.709004
+1462,Finland,Mikkeli,FI,"Mikkeli, Finland",61.689996,27.285004
+1463,Finland,Savonlinna,FI,"Savonlinna, Finland",61.866623,28.883343
+1464,Finland,Pori,FI,"Pori, Finland",61.478895,21.774939
+1465,Finland,Lappeenranta,FI,"Lappeenranta, Finland",61.067059,28.183334
+1466,Finland,Porvoo,FI,"Porvoo, Finland",60.400356,25.66602
+1467,Finland,Lahti,FI,"Lahti, Finland",60.99386,25.664934
+1468,Finland,Turku,FI,"Turku, Finland",60.453867,22.254962
+1469,Finland,Tampere,FI,"Tampere, Finland",61.500005,23.750013
+1470,Finland,Helsinki,FI,"Helsinki, Finland",60.177509,24.932181
+1471,Estonia,Haapsalu,EE,"Haapsalu, Estonia",58.943056,23.541389
+1472,Estonia,Viljandi,EE,"Viljandi, Estonia",58.363889,25.59
+1473,Estonia,Kohtla-Järve,EE,"Kohtla-Järve, Estonia",59.399978,27.283337
+1474,Estonia,Tartu,EE,"Tartu, Estonia",58.383942,26.709884
+1475,Estonia,Pärnu,EE,"Pärnu, Estonia",58.374743,24.513584
+1476,Estonia,Tallinn,EE,"Tallinn, Estonia",59.433877,24.728041
+1477,Denmark,Vejle,DK,"Vejle, Denmark",55.709001,9.534997
+1478,Denmark,Viborg,DK,"Viborg, Denmark",56.433337,9.399984
+1479,Denmark,Aalborg,DK,"Aalborg, Denmark",57.033714,9.916593
+1480,Denmark,Århus,DK,"Århus, Denmark",56.157204,10.210684
+1481,Czechia,Usti Nad Labem,CZ,"Usti Nad Labem, Czechia",50.662998,14.081005
+1482,Czechia,Hradec Králové,CZ,"Hradec Králové, Czechia",50.205996,15.812002
+1483,Czechia,České Budějovice,CZ,"České Budějovice, Czechia",48.980019,14.460037
+1484,Czechia,Liberec,CZ,"Liberec, Czechia",50.79996,15.079999
+1485,Czechia,Olomouc,CZ,"Olomouc, Czechia",49.630031,17.249996
+1486,Czechia,Pizen,CZ,"Pizen, Czechia",49.740438,13.360001
+1487,Czechia,Jihlava,CZ,"Jihlava, Czechia",49.400381,15.583328
+1488,Czechia,Zlín,CZ,"Zlín, Czechia",49.230418,17.650023
+1489,Czechia,Brno,CZ,"Brno, Czechia",49.200394,16.609983
+1490,Czechia,Pardubice,CZ,"Pardubice, Czechia",50.04042,15.760009
+1491,Czechia,Ostrava,CZ,"Ostrava, Czechia",49.830355,18.249987
+1492,Czechia,Prague,CZ,"Prague, Czechia",50.085283,14.464034
+1493,Croatia,Karlovac,HR,"Karlovac, Croatia",45.487209,15.547774
+1494,Croatia,Pula,HR,"Pula, Croatia",44.86872,13.848085
+1495,Croatia,Zadar,HR,"Zadar, Croatia",44.120135,15.262262
+1496,Croatia,Osijek,HR,"Osijek, Croatia",45.550384,18.680038
+1497,Croatia,Slavonski Brod,HR,"Slavonski Brod, Croatia",45.160278,18.015582
+1498,Croatia,Rijeka,HR,"Rijeka, Croatia",45.329984,14.450012
+1499,Croatia,Split,HR,"Split, Croatia",43.520404,16.469992
+1500,Croatia,Zagreb,HR,"Zagreb, Croatia",45.800007,15.999995
+1501,Bulgaria,Lovec,BG,"Lovec, Bulgaria",43.137999,24.719005
+1502,Bulgaria,Montana,BG,"Montana, Bulgaria",43.414002,23.237002
+1503,Bulgaria,Razgrad,BG,"Razgrad, Bulgaria",43.533999,26.535997
+1504,Bulgaria,Sliven,BG,"Sliven, Bulgaria",42.67937,26.33001
+1505,Bulgaria,Plovdiv,BG,"Plovdiv, Bulgaria",42.153976,24.753982
+1506,Bulgaria,Pernik,BG,"Pernik, Bulgaria",42.609995,23.022719
+1507,Bulgaria,Vratsa,BG,"Vratsa, Bulgaria",43.209984,23.562531
+1508,Bulgaria,Shumen,BG,"Shumen, Bulgaria",43.270006,26.929353
+1509,Bulgaria,Khaskovo,BG,"Khaskovo, Bulgaria",41.943782,25.563287
+1510,Bulgaria,Stara Zagora,BG,"Stara Zagora, Bulgaria",42.423133,25.622715
+1511,Bulgaria,Pleven,BG,"Pleven, Bulgaria",43.423769,24.613371
+1512,Bulgaria,Turnovo,BG,"Turnovo, Bulgaria",43.086245,25.655529
+1513,Bulgaria,Kyustendil,BG,"Kyustendil, Bulgaria",42.284278,22.691111
+1514,Bulgaria,Dobrich,BG,"Dobrich, Bulgaria",43.585052,27.839996
+1515,Bulgaria,Varna,BG,"Varna, Bulgaria",43.215643,27.895289
+1516,Bulgaria,Ruse,BG,"Ruse, Bulgaria",43.853691,25.973339
+1517,Bulgaria,Burgas,BG,"Burgas, Bulgaria",42.5146,27.474643
+1518,Bulgaria,Sofia,BG,"Sofia, Bulgaria",42.685295,23.314708
+1519,Bosnia and Herz.,Zenica,BA,"Zenica, Bosnia and Herz.",44.219974,17.919981
+1520,Bosnia and Herz.,Mostar,BA,"Mostar, Bosnia and Herz.",43.350492,17.820039
+1521,Bosnia and Herz.,Tuzla,BA,"Tuzla, Bosnia and Herz.",44.550471,18.680038
+1522,Bosnia and Herz.,Prijedor,BA,"Prijedor, Bosnia and Herz.",44.980393,16.700004
+1523,Bosnia and Herz.,Banja Luka,BA,"Banja Luka, Bosnia and Herz.",44.780405,17.179974
+1524,Bosnia and Herz.,Sarajevo,BA,"Sarajevo, Bosnia and Herz.",43.850022,18.383002
+1525,Belgium,Charleroi,BE,"Charleroi, Belgium",50.420397,4.450002
+1526,Belgium,Gent,BE,"Gent, Belgium",51.029998,3.700022
+1527,Belgium,Liège,BE,"Liège, Belgium",50.629996,5.580011
+1528,Belgium,Antwerpen,BE,"Antwerpen, Belgium",51.222319,4.413071
+1529,Belgium,Brussels,BE,"Brussels, Belgium",50.835263,4.331371
+1530,Belarus,Baranavichy,BY,"Baranavichy, Belarus",53.136846,26.01344
+1531,Belarus,Polatsk,BY,"Polatsk, Belarus",55.48939,28.785984
+1532,Belarus,Maladzyechna,BY,"Maladzyechna, Belarus",54.318789,26.865326
+1533,Belarus,Pinsk,BY,"Pinsk, Belarus",52.127863,26.094056
+1534,Belarus,Mazyr,BY,"Mazyr, Belarus",52.045956,29.272156
+1535,Belarus,Mahilyow,BY,"Mahilyow, Belarus",53.898505,30.32465
+1536,Belarus,Babruysk,BY,"Babruysk, Belarus",53.126562,29.192781
+1537,Belarus,Orsha,BY,"Orsha, Belarus",54.515315,30.421543
+1538,Belarus,Lida,BY,"Lida, Belarus",53.888479,25.284648
+1539,Belarus,Hrodna,BY,"Hrodna, Belarus",53.677872,23.83409
+1540,Belarus,Barysaw,BY,"Barysaw, Belarus",54.226004,28.492152
+1541,Belarus,Homyel,BY,"Homyel, Belarus",52.430016,31.000009
+1542,Belarus,Vitsyebsk,BY,"Vitsyebsk, Belarus",55.18871,30.18533
+1543,Belarus,Brest,BY,"Brest, Belarus",52.099984,23.69999
+1544,Belarus,Minsk,BY,"Minsk, Belarus",53.901923,27.564681
+1545,Austria,Bregenz,AT,"Bregenz, Austria",47.516697,9.766702
+1546,Austria,Eisenstadt,AT,"Eisenstadt, Austria",47.833299,16.533298
+1547,Austria,Wiener Neustadt,AT,"Wiener Neustadt, Austria",47.815982,16.249954
+1548,Austria,Graz,AT,"Graz, Austria",47.077758,15.410005
+1549,Austria,Klagenfurt,AT,"Klagenfurt, Austria",46.620344,14.31002
+1550,Austria,Linz,AT,"Linz, Austria",48.319233,14.288781
+1551,Austria,Salzburg,AT,"Salzburg, Austria",47.810478,13.04002
+1552,Austria,Innsbruck,AT,"Innsbruck, Austria",47.280407,11.409991
+1553,Austria,Vienna,AT,"Vienna, Austria",48.201961,16.364693
+1554,Albania,Vlorë,AL,"Vlorë, Albania",40.47736,19.498231
+1555,Albania,Shkodër,AL,"Shkodër, Albania",42.068452,19.51885
+1556,Albania,Elbasan,AL,"Elbasan, Albania",41.121507,20.083828
+1557,Albania,Tirana,AL,"Tirana, Albania",41.327541,19.818883

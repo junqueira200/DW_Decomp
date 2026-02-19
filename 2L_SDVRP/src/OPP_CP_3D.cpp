@@ -386,10 +386,15 @@ void ContainerLoadingCP::AddConstraints()
         CreateSupportItem();
     }
 
+    //std::printf("Fragility: %d\n", (int)mEnableFragility);
+
+
+    /*
     if (mEnableFragility)
     {
         CreateFragility();
     }
+    */
 
     CreateOnFloorConstraints();
 
@@ -674,9 +679,18 @@ void ContainerLoadingCP::CreateLifoSequence()
                 // Item i must be placed behind or below item j if
                 // - item i is unloaded after item j (smaller group id) and
                 // - item i is not placed left or right of item j -> in way to rear end of container
+                // Original constranit:
+                // mModelCP.AddAtLeastOne({mRelativeDirections[i][j][Behind], mRelativeDirections[i][j][Below]})
+                //    .OnlyEnforceIf({mRelativeDirections[i][j][Left].Not(), mRelativeDirections[i][j][Right].Not()});
 
-                mModelCP.AddAtLeastOne({mRelativeDirections[i][j][Behind], mRelativeDirections[i][j][Below]})
-                    .OnlyEnforceIf({mRelativeDirections[i][j][Left].Not(), mRelativeDirections[i][j][Right].Not()});
+
+                auto zGreater = mModelCP.NewBoolVar();
+
+                mModelCP.AddGreaterThan(mStartPositionsZ[i],  mEndPositionsZ[j]).OnlyEnforceIf(zGreater);
+                mModelCP.AddLessOrEqual(mStartPositionsZ[i], mEndPositionsZ[j]).OnlyEnforceIf(zGreater.Not());
+
+                mModelCP.AddAtLeastOne({mRelativeDirections[i][j][Left], mRelativeDirections[i][j][Below], zGreater})
+                    .OnlyEnforceIf({mRelativeDirections[i][j][Behind].Not(), mRelativeDirections[i][j][InFront].Not()});
             }
         }
     }
@@ -706,6 +720,7 @@ void ContainerLoadingCP::CreateLifoNoSequence()
                                         mRelativeDirections[i][j][Right].Not(),
                                         mSuccessionMatrix[customerI][position]});
                 }
+                /*
                 else
                 {
                     auto position = customerI - customerJ - 1;
@@ -714,6 +729,7 @@ void ContainerLoadingCP::CreateLifoNoSequence()
                                         mRelativeDirections[i][j][Right].Not(),
                                         mSuccessionMatrix[customerJ][position].Not()});
                 }
+                */
             }
         }
     }
