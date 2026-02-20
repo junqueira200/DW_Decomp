@@ -102,6 +102,7 @@ class ContainerLoadingCP
     ORIntVars1D mWidths;
     ORIntVars1D mLengths;
     ORIntVars1D mHeights;
+    ORIntVars1D mR;         // Distance between to the trailer axle
 
     ORBoolVars1D mPlacedOnFloor;
     ORBoolVars2D mOrientation;
@@ -125,11 +126,12 @@ class ContainerLoadingCP
     void CreateLifoNoSequence();
     void CreatePositioningConstraints();
     void CreateOnFloorConstraints();
+    void CreateAxleWeights();
 
     void AddObjective();
     void CreateVariables();
 
-    void SetParameters(operations_research::sat::SatParameters& parameters) const;
+    void SetParameters(operations_research::sat::SatParameters& parameters);
 };
 
 }

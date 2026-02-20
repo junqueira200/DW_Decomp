@@ -7,10 +7,12 @@
 #include <ranges>
 #include <stdexcept>
 #include <string>
+#include "AxleWeights.h"
 
 namespace ContainerLoading
 {
 using namespace Model;
+using namespace AxleWeightsNS;
 
 namespace Algorithms
 {
@@ -36,6 +38,8 @@ LoadingStatus ContainerLoadingCP::Solve()
     operations_research::sat::CpModelProto protoModel = mModelCP.Build();
     ////auto validationResponse = operations_research::sat::ValidateCpModel(protoModel);
     ////LOG(INFO) << validationResponse;
+
+    WriteProtoModel(protoModel);
 
     mResponse = operations_research::sat::SolveCpModel(protoModel, &model);
 
@@ -65,13 +69,14 @@ void ContainerLoadingCP::WriteProtoModel(const operations_research::sat::CpModel
     file.close();
 }
 
-void ContainerLoadingCP::SetParameters(operations_research::sat::SatParameters& parameters) const
+void ContainerLoadingCP::SetParameters(operations_research::sat::SatParameters& parameters)
 {
     parameters.set_num_search_workers(mParams.Threads);
     parameters.set_log_search_progress(mParams.LogFlag);
     ////parameters.set_search_branching(parameters.PORTFOLIO_SEARCH);
     parameters.set_max_time_in_seconds(mMaxRuntime);
     parameters.set_stop_after_first_solution(true);
+    //parameters.set_max_deterministic_time()
     // Setting seed value is without effect for parallel mode
     // https://github.com/google/or-tools/issues/2793
     ////parameters.set_random_seed(mParams.Seed);
@@ -99,6 +104,23 @@ void ContainerLoadingCP::SetParameters(operations_research::sat::SatParameters& 
     mResponse.best_objective_bound();
         });
     model.Add(observer);
+    */
+
+    /*
+    mModelCP.AddDecisionStrategy(mStartPositionsX,
+        operations_research::sat::DecisionStrategyProto::VariableSelectionStrategy::DecisionStrategyProto_VariableSelectionStrategy_CHOOSE_LOWEST_MIN,
+        operations_research::sat::DecisionStrategyProto::DomainReductionStrategy::DecisionStrategyProto_DomainReductionStrategy_SELECT_MIN_VALUE);
+
+
+    mModelCP.AddDecisionStrategy(mStartPositionsY,
+        operations_research::sat::DecisionStrategyProto::VariableSelectionStrategy::DecisionStrategyProto_VariableSelectionStrategy_CHOOSE_LOWEST_MIN,
+        operations_research::sat::DecisionStrategyProto::DomainReductionStrategy::DecisionStrategyProto_DomainReductionStrategy_SELECT_MIN_VALUE);
+
+
+    mModelCP.AddDecisionStrategy(mStartPositionsY,
+        operations_research::sat::DecisionStrategyProto::VariableSelectionStrategy::DecisionStrategyProto_VariableSelectionStrategy_CHOOSE_LOWEST_MIN,
+        operations_research::sat::DecisionStrategyProto::DomainReductionStrategy::DecisionStrategyProto_DomainReductionStrategy_SELECT_MIN_VALUE);
+
     */
 }
 
@@ -198,6 +220,8 @@ void ContainerLoadingCP::CreateVariables()
     mEndPositionsY.reserve(numberOfItems);
     mStartPositionsZ.reserve(numberOfItems);
     mEndPositionsZ.reserve(numberOfItems);
+    mR.reserve(numberOfItems);
+
 
     for (size_t i = 0; i < numberOfItems; i++)
     {
@@ -206,16 +230,18 @@ void ContainerLoadingCP::CreateVariables()
         int minWidth = item.EnableHorizontalRotation ? std::min(item.Dx, item.Dy) : item.Dy;
 
         mStartPositionsX.emplace_back(
-            mModelCP.NewIntVar(operations_research::Domain::FromValues(placementPointsPerType[item].X)));
+            mModelCP.NewIntVar({0, (int)InstanceNS::instanciaG.vetDimVeiculo[0]}));//operations_research::Domain::FromValues(placementPointsPerType[item].X)));
         mEndPositionsX.emplace_back(mModelCP.NewIntVar({minLength, mContainer.Dx}));
 
         mStartPositionsY.emplace_back(
-            mModelCP.NewIntVar(operations_research::Domain::FromValues(placementPointsPerType[item].Y)));
+            mModelCP.NewIntVar({0, (int)InstanceNS::instanciaG.vetDimVeiculo[1]}));//operations_research::Domain::FromValues(placementPointsPerType[item].Y)));
         mEndPositionsY.emplace_back(mModelCP.NewIntVar({minWidth, mContainer.Dy}));
 
         mStartPositionsZ.emplace_back(
-            mModelCP.NewIntVar(operations_research::Domain::FromValues(placementPointsPerType[item].Z)));
+            mModelCP.NewIntVar({0, (int)InstanceNS::instanciaG.vetDimVeiculo[2]}));//operations_research::Domain::FromValues(placementPointsPerType[item].Z)));
         mEndPositionsZ.emplace_back(mModelCP.NewIntVar({item.Dz, mContainer.Dz}));
+
+        mR.emplace_back(mModelCP.NewIntVar({0, mContainer.Dx}));
     }
 
     mLengths.reserve(numberOfItems);
@@ -416,7 +442,36 @@ void ContainerLoadingCP::AddConstraints()
             CreateLifoNoSequence();
         }
     }
+
+    CreateAxleWeights();
+
 }
+
+void ContainerLoadingCP::CreateAxleWeights()
+{
+
+    for(int i=0; i < mItems.size(); ++i)
+    {
+        //int dist =  semiTrailer.distanceCargoSpaceTrailerAxle;
+        //auto var = mModelCP.NewIntVar({dist, dist});
+        mModelCP.AddLessOrEqual(2*mR[i] -2*mStartPositionsX[i] - mWidths[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle);
+        mModelCP.AddGreaterOrEqual(2*mR[i] -2*mStartPositionsX[i] - mWidths[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle-1);
+
+        //mModelCP.AddLessOrEqual(2*mR[i] -2*semiTrailer.distanceCargoSpaceTrailerAxle + 2*mStartPositionsX[i] + mWidths[i], 0);
+
+        /*
+        std::cout << "i=" << i
+                  << " R in [" << mR[i].Domain() << "]"
+                  << " X in [" << mStartPositionsX[i].Domain() << "]"
+                  << " W in [" << mWidths[i].Domain()<<"]"
+                  << " D=" << semiTrailer.distanceCargoSpaceTrailerAxle
+                  << std::endl;
+        */
+
+    }
+
+}
+
 
 /// Relative directions of items. Necessary for non overlapping items.
 void ContainerLoadingCP::CreateNoOverlap()

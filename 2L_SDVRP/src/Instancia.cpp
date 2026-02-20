@@ -627,6 +627,7 @@ InstanceNS::Item::Item(double x, double y, double z, double peso_)
     vetDim[1] = y;
     vetDim[2] = z;
     weight = peso_;
+    weightForce = weight*Gravity;
     volume = 1.0;
 
     for(int d=0; d < 3; ++d)

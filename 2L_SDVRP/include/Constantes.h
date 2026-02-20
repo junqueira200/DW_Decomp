@@ -17,6 +17,7 @@ constexpr int    NumEpPorBin       = 5*NumItensPorBin;
 constexpr double INF_Double        = HUGE_VAL;
 constexpr int    TamRota           = 60;
 constexpr double DiffPermetidaDist = 1E-5;
+constexpr double Gravity           = 9.81;
 
 constexpr bool PrintEP    = false;
 constexpr bool PrintConst = false;

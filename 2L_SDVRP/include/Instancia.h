@@ -36,6 +36,7 @@ namespace InstanceNS
         Array<double,3> vetDim;    // Length, width, height
         double volume = 0.0;
         double weight   = 0.0;
+        double weightForce = 0.0;
         bool fragility  = false;
         int customer    = -1;
 

@@ -101,13 +101,9 @@ void TesteOroloc3D_NS::testeOroloc3D()
 
     for(auto& vet:vetVetRoutes)
     {
-        /*
-        if(truckId <= 1)
+
+        //if(truckId == 2)
         {
-            truckId += 1;
-            continue;
-        }
-        */
         std::string output = std::format("{}; {}; ",  input.strInst , truckId);
         //std::cout<<"Truck "<<truckId<<": "<<vet<<"; \n";
         VectorI vetItems;
@@ -140,7 +136,7 @@ void TesteOroloc3D_NS::testeOroloc3D()
             double ompStart = omp_get_wtime();
             //PackingType::LoadingOnly
 
-            auto status = loadingChecker.ConstraintProgrammingSolver(type, container, stopIds, vetCuboids, 60.0*60);
+            auto status = loadingChecker.ConstraintProgrammingSolver(type, container, stopIds, vetCuboids, 2*60*60);
 
             double ompEnd = omp_get_wtime();
 
@@ -197,8 +193,10 @@ void TesteOroloc3D_NS::testeOroloc3D()
         //output += std::format("{:.1f}; {}; {}", tempoCpu, mapPackingTypeToString[lastType], mapStatusOroloc3D_ToString[statusOroc3D]);
         std::cout<<output<<"\n";
         appendToFile("../oroloc3D.csv", output);
+        }
 
         truckId += 1;
+//        break;
     }
 
 
