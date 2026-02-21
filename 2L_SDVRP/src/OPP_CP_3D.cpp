@@ -241,7 +241,7 @@ void ContainerLoadingCP::CreateVariables()
             mModelCP.NewIntVar({0, (int)InstanceNS::instanciaG.vetDimVeiculo[2]}));//operations_research::Domain::FromValues(placementPointsPerType[item].Z)));
         mEndPositionsZ.emplace_back(mModelCP.NewIntVar({item.Dz, mContainer.Dz}));
 
-        mR.emplace_back(mModelCP.NewIntVar({0, mContainer.Dx}));
+        //mR.emplace_back(mModelCP.NewIntVar({0, mContainer.Dx}));
     }
 
     mLengths.reserve(numberOfItems);
@@ -443,7 +443,7 @@ void ContainerLoadingCP::AddConstraints()
         }
     }
 
-    CreateAxleWeights();
+    //CreateAxleWeights();
 
 }
 
@@ -454,8 +454,13 @@ void ContainerLoadingCP::CreateAxleWeights()
     {
         //int dist =  semiTrailer.distanceCargoSpaceTrailerAxle;
         //auto var = mModelCP.NewIntVar({dist, dist});
-        mModelCP.AddLessOrEqual(2*mR[i] -2*mStartPositionsX[i] - mWidths[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle);
-        mModelCP.AddGreaterOrEqual(2*mR[i] -2*mStartPositionsX[i] - mWidths[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle-1);
+        mModelCP.AddEquality(mR[i], semiTrailer.distanceCargoSpaceTrailerAxle -mStartPositionsX[i] - mItems[i].Dx/2).
+                             OnlyEnforceIf(mOrientation[i][NoRotation]);
+
+        mModelCP.AddEquality(mR[i], semiTrailer.distanceCargoSpaceTrailerAxle -mStartPositionsX[i] - mItems[i].Dy/2).
+                             OnlyEnforceIf(mOrientation[i][RotationZ]);
+
+        //mModelCP.AddGreaterOrEqual(2*mR[i] -2*mStartPositionsX[i] - mWidths[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle-1);
 
         //mModelCP.AddLessOrEqual(2*mR[i] -2*semiTrailer.distanceCargoSpaceTrailerAxle + 2*mStartPositionsX[i] + mWidths[i], 0);
 
