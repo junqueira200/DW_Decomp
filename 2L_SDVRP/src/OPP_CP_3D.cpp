@@ -204,6 +204,23 @@ void ContainerLoadingCP::CreateVariables()
 {
     size_t numberOfItems = mItems.size();
 
+    double maxFK = 0.0;
+    for(int i=0; i < numberOfItems; ++i)
+    {
+        const Cuboid& cuboid = mItems[i];
+        maxFK += cuboid.Weight*10*semiTrailer.distanceCargoSpaceTrailerAxle;
+    }
+
+    maxFK = maxFK*(1.0/semiTrailer.distanceKingpinTrailerAxle);
+    maxFK = std::round(maxFK);
+
+    forceK = mModelCP.NewIntVar({0, 2*(int)maxFK});
+    forceRA = mModelCP.NewIntVar({0, 10*semiTrailer.maxMassRearAxle});
+    forceFA = mModelCP.NewIntVar({0, 10*semiTrailer.maxMassFrontAxle});
+    forceTA = mModelCP.NewIntVar({0, 10*semiTrailer.maxMassTrailerAxle});
+
+
+
     std::vector<Cuboid> itemCopy;
     itemCopy.reserve(mItems.size());
     for (const auto& item: mItems)
@@ -221,6 +238,7 @@ void ContainerLoadingCP::CreateVariables()
     mStartPositionsZ.reserve(numberOfItems);
     mEndPositionsZ.reserve(numberOfItems);
     mR.reserve(numberOfItems);
+    //mItemsForce.reserve(numberOfItems);
 
 
     for (size_t i = 0; i < numberOfItems; i++)
@@ -241,7 +259,8 @@ void ContainerLoadingCP::CreateVariables()
             mModelCP.NewIntVar({0, (int)InstanceNS::instanciaG.vetDimVeiculo[2]}));//operations_research::Domain::FromValues(placementPointsPerType[item].Z)));
         mEndPositionsZ.emplace_back(mModelCP.NewIntVar({item.Dz, mContainer.Dz}));
 
-        //mR.emplace_back(mModelCP.NewIntVar({0, mContainer.Dx}));
+        mR.emplace_back(mModelCP.NewIntVar({-2*mContainer.Dx, 2*mContainer.Dx}));
+        //mItemsForce.emplace_back(mModelCP.NewIntVar({(int)item.Weight*10, (int)item.Weight*10}));
     }
 
     mLengths.reserve(numberOfItems);
@@ -443,26 +462,29 @@ void ContainerLoadingCP::AddConstraints()
         }
     }
 
-    //CreateAxleWeights();
+    CreateAxleWeights();
 
 }
 
 void ContainerLoadingCP::CreateAxleWeights()
 {
 
+
+    operations_research::sat::LinearExpr sumMoments;
+    int sumForces = 0;
     for(int i=0; i < mItems.size(); ++i)
     {
         //int dist =  semiTrailer.distanceCargoSpaceTrailerAxle;
         //auto var = mModelCP.NewIntVar({dist, dist});
-        mModelCP.AddEquality(mR[i], semiTrailer.distanceCargoSpaceTrailerAxle -mStartPositionsX[i] - mItems[i].Dx/2).
+        mModelCP.AddEquality(mR[i], semiTrailer.distanceCargoSpaceTrailerAxle -mStartPositionsX[i] - std::round(mItems[i].Dx/2.0)).
                              OnlyEnforceIf(mOrientation[i][NoRotation]);
 
-        mModelCP.AddEquality(mR[i], semiTrailer.distanceCargoSpaceTrailerAxle -mStartPositionsX[i] - mItems[i].Dy/2).
+        mModelCP.AddEquality(mR[i], semiTrailer.distanceCargoSpaceTrailerAxle -mStartPositionsX[i] - std::round(mItems[i].Dy/2)).
                              OnlyEnforceIf(mOrientation[i][RotationZ]);
+        int itemF = mItems[i].Weight*10;
+        sumMoments += itemF*mR[i];
+        sumForces += itemF;
 
-        //mModelCP.AddGreaterOrEqual(2*mR[i] -2*mStartPositionsX[i] - mWidths[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle-1);
-
-        //mModelCP.AddLessOrEqual(2*mR[i] -2*semiTrailer.distanceCargoSpaceTrailerAxle + 2*mStartPositionsX[i] + mWidths[i], 0);
 
         /*
         std::cout << "i=" << i
@@ -474,6 +496,15 @@ void ContainerLoadingCP::CreateAxleWeights()
         */
 
     }
+    // EQ: 10
+    mModelCP.AddEquality(semiTrailer.distanceKingpinTrailerAxle*forceK, sumMoments);
+    // EQ: 11
+    mModelCP.AddEquality(forceFA + forceRA - forceK, 0);
+    // EQ: 12
+    mModelCP.AddEquality(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK);
+    // EQ: 9
+    mModelCP.AddEquality(forceTA, sumForces - forceK);
+
 
 }
 

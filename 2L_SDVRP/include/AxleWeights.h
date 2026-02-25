@@ -13,7 +13,7 @@ namespace AxleWeightsNS
     public:
         AxleData(){};
         virtual ~AxleData(){};
-        virtual bool checkAxleWeights(SolucaoNS::Bin& bin)=0;
+        virtual bool checkAxleWeights(SolucaoNS::Bin& bin)const=0;
     };
 
     class SemiTrailer : public AxleData
@@ -22,24 +22,24 @@ namespace AxleWeightsNS
 
         SemiTrailer(){}
         ~SemiTrailer(){}
-        bool checkAxleWeights(SolucaoNS::Bin& bin) override;
-        double computeMaxFK(SolucaoNS::Bin& bin);
+        bool checkAxleWeights(SolucaoNS::Bin& bin) const override;
+        double computeMaxFK(SolucaoNS::Bin& bin) const;
 
-        int wheelBase                      = 36;        // WB
-        int maxMassFrontAxle               = 10000;
+        int wheelBase                      = 3790;        // WB
+        int maxMassFrontAxle               = 8000;
         int maxMassRearAxle                = 11500;
         int maxMassTrailerAxle             = 24000;
-        int distanceKingpinRearAxle        = 6;         // The distance between the kingpin and the rear axle (l_K|RA)
-        int distanceKingpinTrailerAxle     = 76;		// The distance between the kingpin and the resultant trailer axle (l_K|TA)
+        int distanceKingpinRearAxle        = 560;         // The distance between the kingpin and the rear axle (l_K|RA)
+        int distanceKingpinTrailerAxle     = 8160;		// The distance between the kingpin and the resultant trailer axle (l_K|TA)
         int distanceCargoSpaceTrailerAxle  = 8150;		// The distance between the cargo area to the resultant trailer axle (l_TA)
-        int distanceMassTractorRearAxle    = 25;        // ?
-        int distanceMassTrailerTrailerAxle = 16;        // ?
-        int massTractor				       = 7300;
-        int massTrailer				       = 6750;
+        int distanceMassTractorRearAxle    = 2568;        // ?
+        int distanceMassTrailerTrailerAxle = 1632;        // ?
+        int massTractor				       = 8197;
+        int massTrailer				       = 6472;
 
     };
 
-    inline SemiTrailer semiTrailer;
+    inline const SemiTrailer semiTrailer;
 
 }
 

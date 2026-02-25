@@ -14,7 +14,7 @@
 #include "safe_vector.h"
 #include "sefe_array.h"
 #include <tuple>
-
+#include <cmath>
 //#include <Eigen/Eigen>
 
 #define __PRETTYFILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)

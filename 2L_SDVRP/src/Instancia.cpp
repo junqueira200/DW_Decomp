@@ -10,9 +10,11 @@
 #include <cuchar>
 #include <fstream>
 #include "InputOutput.h"
+#include "rand.h"
 
 using namespace InstanceNS;
 using namespace ParseInputNS;
+using namespace RandNs;
 
 InstanceNS::Instance::Instance(int numClientes_, int numItens_, int numVeiculos_):
                                                                    matDist(numClientes_, numClientes_),
@@ -333,9 +335,11 @@ void InstanceNS::readOroloc3D(const std::string &strFile)
         {
             Item& item = instanciaG.vetItens[nextItem];
             file>>item.vetDim[0]>>item.vetDim[1]>>item.vetDim[2]>>item.weight;
+            std::printf("%.0f\n", item.weight);
             item.volume = item.vetDim[0] * item.vetDim[2] * item.vetDim[2];
             item.fragility = false;
             item.customer = cust;
+            item.weightForce = item.weight*Gravity;
 
             //std::cout<<item.print()<<"; ";
 
@@ -716,4 +720,54 @@ double InstanceNS::calculaDistancia(VectorI& vet, int tam)
         dist += instanciaG.matDist(vet[i], vet[i+1]);
 
     return dist;
+}
+
+
+int InstanceNS::generateRandomListOfItems(int numItens, VectorI& vetItems)
+{
+    Vector<int8_t> vetItensSelecionados(instanciaG.numItens);
+    vetItensSelecionados.setAll((int8_t)0);
+
+    vetItems = VectorI();
+
+    double volumeOcupado = 0.0;
+    double volumeVeiculo = 1.0;
+    double demanda       = 0.0;
+
+    volumeVeiculo = instanciaG.vetDimVeiculo[0]*instanciaG.vetDimVeiculo[1]*instanciaG.vetDimVeiculo[2];
+
+    for(int t=0; t < numItens; ++t)
+    {
+
+        int itemId = getRandInt(0, instanciaG.numItens-1);
+        const int itemIdIni = itemId;
+        while(vetItensSelecionados[itemId] == (int8_t)1 ||
+             (volumeOcupado+instanciaG.vetItens[itemId].volume) > volumeVeiculo/2.0 ||
+              demanda + instanciaG.vetItens[itemId].weight > instanciaG.maxPayload)
+        {
+            itemId = (itemId+1)%instanciaG.numItens;
+
+            if(itemId == itemIdIni)
+            {
+                itemId = -1;
+                break;
+            }
+        }
+
+        if(itemId == -1)
+        {
+            numItens = t;
+            break;
+        }
+
+        vetItensSelecionados[itemId] = (int8_t)1;
+        volumeOcupado += instanciaG.vetItens[itemId].volume;
+        demanda       += instanciaG.vetItens[itemId].weight;
+
+        vetItems.push_back(itemId);
+
+    }
+
+    return numItens;
+
 }

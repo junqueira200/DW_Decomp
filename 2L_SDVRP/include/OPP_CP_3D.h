@@ -103,6 +103,10 @@ class ContainerLoadingCP
     ORIntVars1D mLengths;
     ORIntVars1D mHeights;
     ORIntVars1D mR;         // Distance between to the trailer axle
+    //ORIntVars1D mItemsForce;
+
+    operations_research::sat::IntVar forceK, forceRA, forceTA, forceFA;
+
 
     ORBoolVars1D mPlacedOnFloor;
     ORBoolVars2D mOrientation;

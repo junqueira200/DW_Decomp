@@ -21,12 +21,12 @@ namespace InstanceNS
 {
     enum Rotation
     {
-        Rot0 = 0,
-        Rot1,
-        Rot2,
-        Rot3,
-        Rot4,
-        Rot5
+        Rot0 = 0,  // LWH
+        Rot1,      // WLH
+        Rot2,      // LHW
+        Rot3,      // WHL
+        Rot4,      // HLW
+        Rot5       // HWL
     };
 
     class Item
@@ -108,8 +108,12 @@ namespace InstanceNS
     int copiaItensCliente(int cliente, VectorI& vetItens);
     int copiaItensClientes(VectorI& vetClientes, int tam, VectorI& vetItens, bool push=false);
     double calculaDistancia(VectorI& vet, int tam);
-    inline Instance instanciaG;
+    int generateRandomListOfItems(int numItens, VectorI& vetItems);
 
+
+
+    inline Instance instanciaG;
+    inline static const Array<InstanceNS::Rotation, 3> vetRot = {Rot0, Rot1, Rot2};
     //std::string printItem(int itemId);
 }
 

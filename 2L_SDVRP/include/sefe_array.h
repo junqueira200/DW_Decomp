@@ -3,9 +3,10 @@
 
 #include <iostream>
 #include <array>
+#include <initializer_list>
 
 template<typename T, std::size_t n>
-class Array: std::array<T,n>
+class Array: public std::array<T,n>
 {
 public:
 
@@ -21,6 +22,18 @@ public:
         for(size_t i=0; i < n; ++i)
             std::array<T, n>::operator[](i) = T();
 #endif
+    }
+
+    Array(std::initializer_list<T> list):std::array<T,n>()
+    {
+        if(list.size() != n)
+            throw "ERROR, list size is different from templat n";
+
+        int i=0;
+        for(T e:list)
+        {
+            std::array<T,n>::operator[](i) = e;
+        }
     }
 
 
