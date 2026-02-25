@@ -65,7 +65,7 @@ LoadingStatus LoadingChecker::ConstraintProgrammingSolver(PackingType packingTyp
 
     if (status == LoadingStatus::Invalid)
     {
-        throw std::runtime_error("Loading status invalid in CP model!");
+        std::printf("Loading status invalid in CP model!");
     }
 
     /*

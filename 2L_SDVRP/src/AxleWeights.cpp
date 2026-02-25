@@ -7,29 +7,37 @@ using namespace InstanceNS;
 
 bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin& bin) const
 {
+    //std::printf("\n");
     double fK  = 0.0;
     double fFA = 0.0;
     double fRA = 0.0;
     double fTA = 0.0;
+
+    double sumF = 0.0;
+    double sumM = 0.0;
     //std::printf("numItems: %d\n", bin.numItens);
     for(int i=0; i < bin.numItens; ++i)
     {
+
         double f = instanciaG.vetItens[bin.vetItemId[i]].weightForce;
-        fTA += f;
+        sumF += f;
         double r = (double)distanceCargoSpaceTrailerAxle - bin.vetPosItem[i].vetDim[0] -
                    instanciaG.vetItens[bin.vetItemId[i]].getDimRotacionada(0, bin.vetRotacao[i])/2.0;
         //r = std::abs(r);
 
+        //std::printf("W: %0.f; F: %.2f; Px: %.1f; Dx/2: %.0f; r: %.2f; M: %.2f\n",  instanciaG.vetItens[bin.vetItemId[i]].weight, f, bin.vetPosItem[i].vetDim[0], instanciaG.vetItens[bin.vetItemId[i]].getDimRotacionada(0, bin.vetRotacao[i])/2.0, r, f*r);
+
         //std::printf("F: %.1f; px: %.1f; R: %.1f\n", f, bin.vetPosItem[i].vetDim[0], r);
 
-        fK += f*r;
+        sumM += f*r;
     }
 
+    //std::printf("\nsumF: %.2f; sumM: %.2f\n", sumF, sumM);
 
-    fK *= 1.0/distanceKingpinTrailerAxle;
-    fFA = (1.0/(double)wheelBase) * fK * distanceKingpinRearAxle;
-    fRA = fK - fFA;
-    fTA = fTA - fK;
+    fK = (1.0/distanceKingpinTrailerAxle)*(sumM + massTrailer*Gravity*distanceMassTrailerTrailerAxle);
+    fFA = (1.0/(double)wheelBase) * (fK * distanceKingpinRearAxle + massTractor*Gravity*distanceMassTractorRearAxle);
+    fRA = fK + massTractor*Gravity - fFA;
+    fTA = sumF + massTrailer*Gravity - fK;
 
     //std::printf("fK: %.1f; fFA: %.1f; fRA: %.1f; FTA: %.1f\n", fK, fFA, fRA, fTA);
 
@@ -47,15 +55,15 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin& bin) const
 
 double AxleWeightsNS::SemiTrailer::computeMaxFK(SolucaoNS::Bin& bin) const
 {
-    double maxFK = 0.0;
+    double maxFK = massTrailer*10*distanceMassTrailerTrailerAxle;
     for(int i=0; i < bin.numItens; ++i)
     {
         Item& item = instanciaG.vetItens[bin.vetItens[i]];
 
-        double f = item.weightForce;
-        double r =  (double)distanceCargoSpaceTrailerAxle - std::min(item.vetDim[0], item.vetDim[1]);
+        double f = item.weight*10;
+        double r =  (double)distanceCargoSpaceTrailerAxle;// - std::min(item.vetDim[0], item.vetDim[1]);
         maxFK += f*r;
     }
 
-    return distanceKingpinTrailerAxle*maxFK;
+    return (1.0/distanceKingpinTrailerAxle)*maxFK;
 }

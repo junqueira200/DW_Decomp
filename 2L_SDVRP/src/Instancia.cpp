@@ -335,7 +335,6 @@ void InstanceNS::readOroloc3D(const std::string &strFile)
         {
             Item& item = instanciaG.vetItens[nextItem];
             file>>item.vetDim[0]>>item.vetDim[1]>>item.vetDim[2]>>item.weight;
-            std::printf("%.0f\n", item.weight);
             item.volume = item.vetDim[0] * item.vetDim[2] * item.vetDim[2];
             item.fragility = false;
             item.customer = cust;

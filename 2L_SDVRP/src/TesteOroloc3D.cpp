@@ -80,7 +80,7 @@ void TesteOroloc3D_NS::testeOroloc3D()
         if(truckId == -1)
             break;
 
-        std::printf("%d %d %d\n", px, py, pz);
+        //std::printf("%d %d %d\n", px, py, pz);
         Bin& bin = vetBin[truckId-1];
         int nextItem = bin.numItens;
         bin.vetPosItem[nextItem] = Ponto(px, py, pz);
@@ -185,9 +185,8 @@ void TesteOroloc3D_NS::testeOroloc3D()
         bin.vetItemId = vetItems;
         bin.numItens  = (int)vetItems.size();
 
-        //std::printf("Truck %d: ", truckId);
+        std::printf("Truck %d: ", truckId);
         //semiTrailer.checkAxleWeights(bin);
-
 
         //std::cout<<vetItems<<"\n";
 
@@ -234,7 +233,6 @@ void TesteOroloc3D_NS::testeOroloc3D()
         model.optimize();
 
         */
-
 
 
         for(PackingType type:vetPackingType)

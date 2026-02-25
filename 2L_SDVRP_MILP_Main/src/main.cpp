@@ -39,7 +39,7 @@ using namespace MILP_NS;
 
 int main(int argc, const char* argv[])
 {
-    std::cout<<"main\n";
+    //std::cout<<"main\n";
     //Item item(1, 2, 3, 1);
 
     //std::cout<<"Rot1: "<<getDim(item, Rot0)<<"\n";
@@ -56,6 +56,7 @@ int main(int argc, const char* argv[])
     else
         InstanceNS::read3dInstance(input.strInstCompleto);
 
+    std::printf("After read the instance\n");
     testeOroloc3D();
     return 0;
 

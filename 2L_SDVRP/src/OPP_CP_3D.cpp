@@ -208,6 +208,7 @@ void ContainerLoadingCP::CreateVariables()
     for(int i=0; i < numberOfItems; ++i)
     {
         const Cuboid& cuboid = mItems[i];
+        int maxD = std::max(cuboid.Dz, std::max(cuboid.Dx, cuboid.Dy));
         maxFK += cuboid.Weight*10*semiTrailer.distanceCargoSpaceTrailerAxle;
     }
 
@@ -315,11 +316,13 @@ void ContainerLoadingCP::CreateVariables()
             mOrientation[i].emplace_back(mModelCP.NewBoolVar());
         }
 
+        /*
         if (!itemI.EnableHorizontalRotation)
         {
             // TODO: consider not creating the variable instead of fixing it to zero.
             mModelCP.FixVariable(mOrientation[i][RotationZ], false);
         }
+        */
     }
 
     mRelativeDirections.reserve(numberOfItems);
@@ -476,11 +479,21 @@ void ContainerLoadingCP::CreateAxleWeights()
     {
         //int dist =  semiTrailer.distanceCargoSpaceTrailerAxle;
         //auto var = mModelCP.NewIntVar({dist, dist});
+        /*
         mModelCP.AddEquality(mR[i], semiTrailer.distanceCargoSpaceTrailerAxle -mStartPositionsX[i] - std::round(mItems[i].Dx/2.0)).
                              OnlyEnforceIf(mOrientation[i][NoRotation]);
 
         mModelCP.AddEquality(mR[i], semiTrailer.distanceCargoSpaceTrailerAxle -mStartPositionsX[i] - std::round(mItems[i].Dy/2)).
                              OnlyEnforceIf(mOrientation[i][RotationZ]);
+
+        mModelCP.AddEquality(mR[i], semiTrailer.distanceCargoSpaceTrailerAxle -mStartPositionsX[i] - std::round(mItems[i].Dx/2.0)).
+                             OnlyEnforceIf(mOrientation[i][RotationX]);
+        */
+
+        mModelCP.AddEquality(2*mR[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle -2*mStartPositionsX[i] - mLengths[i]);
+
+
+
         int itemF = mItems[i].Weight*10;
         sumMoments += itemF*mR[i];
         sumForces += itemF;
@@ -497,13 +510,13 @@ void ContainerLoadingCP::CreateAxleWeights()
 
     }
     // EQ: 10
-    mModelCP.AddEquality(semiTrailer.distanceKingpinTrailerAxle*forceK, sumMoments);
+    mModelCP.AddEquality(semiTrailer.distanceKingpinTrailerAxle*forceK, sumMoments + semiTrailer.massTrailer*10*semiTrailer.distanceMassTrailerTrailerAxle);
     // EQ: 11
-    mModelCP.AddEquality(forceFA + forceRA - forceK, 0);
+    mModelCP.AddEquality(forceFA + forceRA - forceK - semiTrailer.massTractor*10, 0);
     // EQ: 12
-    mModelCP.AddEquality(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK);
+    mModelCP.AddEquality(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK + semiTrailer.massTractor*10*semiTrailer.distanceMassTractorRearAxle);
     // EQ: 9
-    mModelCP.AddEquality(forceTA, sumForces - forceK);
+    mModelCP.AddEquality(forceTA, sumForces + semiTrailer.massTrailer*10 - forceK);
 
 
 }

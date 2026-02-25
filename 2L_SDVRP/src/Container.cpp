@@ -31,6 +31,10 @@ std::tuple<int, int, int> Cuboid::DetermineDimensions(Orientation orientation) c
             return std::make_tuple(Dx, Dy, Dz);
         case RotationZ:
             return std::make_tuple(Dy, Dx, Dz);
+        case RotationX:
+            return std::make_tuple(Dx, Dz, Dy);
+        case RotationY:
+            return std::make_tuple(Dz, Dy, Dx);
         default:
             throw std::runtime_error("Orientation not implemented.");
     }

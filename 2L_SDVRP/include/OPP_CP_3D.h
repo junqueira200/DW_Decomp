@@ -75,7 +75,7 @@ class ContainerLoadingCP
     operations_research::sat::CpSolverResponse mResponse;
 
     std::vector<Dimension> mDimensions = {{AxisY, Right, Left}, {AxisX, InFront, Behind}, {AxisZ, Above, Below}};
-    std::vector<Orientation> mItemOrientations = std::vector{NoRotation, RotationZ};
+    std::vector<Orientation> mItemOrientations = std::vector{NoRotation, RotationZ, RotationX};
 
     operations_research::sat::CpModelBuilder mModelCP;
 
