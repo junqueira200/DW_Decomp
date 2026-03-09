@@ -34,7 +34,7 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin& bin) const
 
     //std::printf("\nsumF: %.2f; sumM: %.2f\n", sumF, sumM);
 
-    fK = (1.0/distanceKingpinTrailerAxle)*(sumM + massTrailer*Gravity*distanceMassTrailerTrailerAxle);
+    fK  = (1.0/distanceKingpinTrailerAxle)*(sumM + massTrailer*Gravity*distanceMassTrailerTrailerAxle);
     fFA = (1.0/(double)wheelBase) * (fK * distanceKingpinRearAxle + massTractor*Gravity*distanceMassTractorRearAxle);
     fRA = fK + massTractor*Gravity - fFA;
     fTA = sumF + massTrailer*Gravity - fK;
@@ -44,11 +44,28 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin& bin) const
     if(fFA > maxMassFrontAxle*Gravity || fRA > maxMassRearAxle*Gravity || fTA > maxMassTrailerAxle*Gravity ||
        fK < 0.0 || fFA < 0.0 || fRA < 0.0 || fTA < 0.0)
     {
-        std::printf("\tINFEASIBLE\n");
-        return false;  // physically infeasible loading
+        std::printf("\tINFEASIBLE\t");
+
+        if(fFA > maxMassFrontAxle*Gravity)
+            std::printf("fFa >; ");
+        if(fK < 0.0)
+            std::printf("fk < 0; ");
+        if(fFA < 0.0)
+            std::printf("fFA < 0; ");
+        if(fRA > maxMassRearAxle*Gravity)
+            std::printf("fRA >; ");
+        if(fRA < 0.0)
+            std::printf("fRA < 0; ");
+        if(fTA > maxMassTrailerAxle*Gravity)
+            std::printf("fTA >; ");
+        if(fTA < 0.0)
+            std::printf("fTA < 0; ");
+
+        std::printf("\n");
+        return false;
     }
 
-    std::printf("\tFEASIBLE\n");
+    //std::printf("\tFEASIBLE: Fk: %.1f; fFA: %.1f \n", fK, fFA);
 
     return true;
 }

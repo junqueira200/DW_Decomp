@@ -51,7 +51,9 @@ void ParseInputNS::parseInput(int argc, const char* argv[])
                         ("lTaype", "Labeling Type (0, 1, 2)", cxxopts::value<int>(input.labelingType))
                         ("2d", "Indicates if the instance is 2d. Default is 3d!",
                               cxxopts::value<bool>(input.inst2d))
-                        ("oroloc3D", "Indicates if the instance is the Oroloc3D type", cxxopts::value<bool>(input.instOroloc3D));
+                        ("oroloc3D", "Indicates if the instance is the Oroloc3D type", cxxopts::value<bool>(input.instOroloc3D))
+                        ("oroloc3D_2", "Indicates if the instance is the Oroloc3D_2 type", cxxopts::value<bool>(input.instOroloc3D_2))
+                        ("solOroloc3D_2", "File to read the instance of oroloc3D_2", cxxopts::value<std::string>(input.strSolOroloc3D_2));
 
         auto result = options.parse(argc, argv);
 
@@ -73,6 +75,13 @@ void ParseInputNS::parseInput(int argc, const char* argv[])
             std::cout<<"Commit: "<<Commit<<"\n";
             assertm(true, "Instancia (-f) nao foi detectada na entrada");
         }
+
+        if(result.count("oroloc3D") == 1 && result.count("oroloc3D_2") == 1)
+            assertm(true, "Options orloc3D and oroloc3D_2 cant both be active!");
+
+        if(result.count("oroloc3D_2") == 1 && result.count("solOroloc3D_2") == 0)
+            assertm(true, "Missing param solOroloc3D_2");
+
 
 
         RandNs::startEngine(output.semente, bool(result.count("seed")==1));

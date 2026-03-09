@@ -168,7 +168,11 @@ void MatrixGRBVar::start(GRBModel &model, int numLin_, int numCol_, const std::s
     numCol = numCol_;
     typeVar = type;
     vetVar = model.addVars(numLin*numCol, type);
-
+    if(!zeroI_EqualJ)
+    {
+        std::printf("numLin: %d; numCol: %d\n", numLin, numCol);
+        std::printf("numVars: %d\n", numLin*numCol);
+    }
     for(int i=0; i < numLin; ++i)
     {
 
@@ -256,24 +260,33 @@ void MILP_NS::addBasicConstraints(GRBModel& model, Variables& variables, Solucao
     double mX = instanciaG.vetDimVeiculo[0];
     double mY = instanciaG.vetDimVeiculo[1];
 
+    //std::cout<<"Constraint in matRot\n";
     for(int i=0; i < bin.numItens; ++i)
     {
         Item& item = instanciaG.vetItens[bin.vetItemId[i]];
         GRBLinExpr sumR;
 
+
+
         for(Rotation r:vetRot)
         {
+            //std::cout<<"\t"<<r<<"\n";
+
             double dx = item.getDimRotacionada(0, r);
             double dy = item.getDimRotacionada(1, r);
-            //dz = item.getDimRotacionada(2, r);
+            double dz = item.getDimRotacionada(2, r);
 
-            model.addGenConstrIndicator(variables.matRot(i, (int)r), 1, variables.vetDX(i) == dx);
-            model.addGenConstrIndicator(variables.matRot(i, (int)r), 1, variables.vetDY(i) == dy);
+            GRBVar& varR = variables.matRot(i, (int)r);
 
-            sumR += variables.matRot(i, (int)r);
+            model.addGenConstrIndicator(varR, 1, variables.vetDX(i) == dx);
+            model.addGenConstrIndicator(varR, 1, variables.vetDY(i) == dy);
+            model.addGenConstrIndicator(varR, 1, variables.vetDZ(i) == dz);
+
+            sumR += varR;
         }
 
-        model.addConstr(sumR, '=', 1);
+        std::string name = std::format("sum r item {}", i);
+        model.addConstr(sumR, '=', 1, name);
     }
 
 
@@ -301,7 +314,7 @@ void MILP_NS::addBasicConstraints(GRBModel& model, Variables& variables, Solucao
 
             linExp = variables.matX_neg(i, j) + variables.matX_pos(i, j) + variables.matY_neg(i, j) +
                      variables.matY_pos(i, j) + variables.matZ_neg(i, j) + variables.matZ_pos(i, j);
-            model.addConstr(linExp, '>', 1);
+            model.addConstr(linExp, '=', 1);
 
         }
     }
@@ -314,6 +327,9 @@ void MILP_NS::addBasicConstraints(GRBModel& model, Variables& variables, Solucao
         model.addConstr(variables.vetPosZ(i) <= max);
     }
 
+    GRBLinExpr obj = max;
+
+    model.setObjective(obj, GRB_MINIMIZE);
 
     model.update();
     model.write("model.lp");

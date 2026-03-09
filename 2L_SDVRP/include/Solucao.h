@@ -30,8 +30,36 @@ namespace SolucaoNS
             vetDim[1] = d1;
             vetDim[2] = d2;
         }
+        void set(double d0=0.0, double d1=0.0, double d2=0.0)
+        {
+            vetDim[0] = d0;
+            vetDim[1] = d1;
+            vetDim[2] = d2;
+        }
 
         std::string print()const;
+    };
+
+    struct PontoRot
+    {
+        Ponto ponto;
+        InstanceNS::Rotation rot;
+
+        PontoRot(){ponto.set(); rot=InstanceNS::Rot0;}
+        PontoRot(double px, double py, double pz, InstanceNS::Rotation r)
+        {
+            ponto.vetDim[0] = px;
+            ponto.vetDim[1] = py;
+            ponto.vetDim[2] = pz;
+            rot = r;
+        }
+        void set(double px=0.0, double py=0.0, double pz=0.0, InstanceNS::Rotation r=InstanceNS::Rot0)
+        {
+            ponto.vetDim[0] = px;
+            ponto.vetDim[1] = py;
+            ponto.vetDim[2] = pz;
+            rot = r;
+        }
     };
 
     struct Bin
@@ -118,6 +146,7 @@ namespace SolucaoNS
         Rota(const Rota &rota)=delete;
         void reset();
         std::string printRota();
+        void computeDistance();
 
         VectorI        vetRota;
         VectorD        vetTempoSaida;
@@ -137,7 +166,7 @@ namespace SolucaoNS
         Vector<Rota>    vetRota;
         double          distTotal = 0.0;
 
-        Solucao()=default;
+        Solucao();
         explicit Solucao(const InstanceNS::Instance &instancia);
 
         bool verificaSol(std::string &error);

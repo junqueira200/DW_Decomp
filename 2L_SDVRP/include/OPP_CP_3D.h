@@ -68,6 +68,8 @@ class ContainerLoadingCP
 
     const double mMaxRuntime;
 
+    const int scale = 100;
+
     PlacementPattern mPlacementPatternTypeX = PlacementPattern::None;
     PlacementPattern mPlacementPatternTypeY = PlacementPattern::None;
     PlacementPattern mPlacementPatternTypeZ = PlacementPattern::None;

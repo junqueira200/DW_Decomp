@@ -334,7 +334,7 @@ void InstanceNS::readOroloc3D(const std::string &strFile)
         for(int j=0; j < custNumItems; ++j)
         {
             Item& item = instanciaG.vetItens[nextItem];
-            file>>item.vetDim[0]>>item.vetDim[1]>>item.vetDim[2]>>item.weight;
+            file>>item.vetDim[0]>>item.vetDim[1]>>item.vetDim[2]>>item.weight>>item.oroloc3D_item_id;
             item.volume = item.vetDim[0] * item.vetDim[2] * item.vetDim[2];
             item.fragility = false;
             item.customer = cust;
@@ -357,9 +357,13 @@ void InstanceNS::readOroloc3D(const std::string &strFile)
     std::getline(file, trash); //
     std::getline(file, trash); // #Order Id
 
+    int item_id = -1;
+
+
     for(int i=0; i < numItens; ++i)
     {
-        file>>instanciaG.vetOrderId[i];
+        file>>instanciaG.vetOrderId[i]>>item_id;
+        instanciaG.mapItem_IdItem[item_id] = i;
     }
 
     //std::cout<<instanciaG.vetOrderId<<"\n";
@@ -391,6 +395,32 @@ void InstanceNS::readOroloc3D(const std::string &strFile)
     for(auto it:instanciaG.mapOrderIdCust)
         std::cout<<it.first<<" "<<it.second<<"\n";
     */
+    trash = "";
+    std::getline(file, trash);
+    trash = "";
+    std::getline(file, trash);
+
+    std::printf("Trash: %s\n", trash.c_str());
+
+    int customer_id, customer;
+    for(int i=0; i < instanciaG.numClientes; ++i)
+    {
+        file>>customer_id>>customer;
+
+        if(instanciaG.mapCustomerToCustomer_id.contains(customer) ||
+           instanciaG.mapCustomer_idToCustomer.contains(customer_id))
+        {
+            std::printf("Error while creating mapCustomerToCustomer_id and mapCustomer_idToCustomer to %d and %d\n",
+                         customer, customer_id);
+            PRINT_DEBUGG("", "");
+            throw "ERROR";
+
+            exit(EXIT_FAILURE);
+        }
+
+        instanciaG.mapCustomerToCustomer_id[customer] = customer_id;
+        instanciaG.mapCustomer_idToCustomer[customer_id] = customer;
+    }
 
     file.close();
 
@@ -768,5 +798,179 @@ int InstanceNS::generateRandomListOfItems(int numItens, VectorI& vetItems)
     }
 
     return numItens;
+
+}
+
+
+void InstanceNS::readOroloc3D2(const std::string &strFile)
+{
+    std::printf("FILE: %s\n", strFile.c_str());
+
+
+    int numClientes = 0, numVeiculos = 0, numItens = 0, numArcs = 0;
+    double maxPayload = 0.0;
+    Array<double, 3> veicDim;
+    std::string trash;
+
+    std::ifstream file(strFile);
+    assertm(!file.is_open(), "Cant open the file: : "<<strFile);
+
+    std::getline(file, trash);
+    file>>trash>>numClientes;
+    numClientes += 1;
+
+    file>>trash>>numItens;
+    std::getline(file, trash);
+    std::getline(file, trash);
+    file>>trash>>numVeiculos;
+
+    std::getline(file, trash);
+    std::getline(file, trash);
+    std::getline(file, trash);
+    std::getline(file, trash);
+
+    file>>trash>>maxPayload;
+    file>>trash>>veicDim[0];
+    file>>trash>>veicDim[1];
+    file>>trash>>veicDim[2];
+
+    //std::printf("maxPayload: %f\n", maxPayload);
+    //std::cout<<"Veic dim: "<<veicDim<<"\n";
+
+
+
+    for(int i=0; i < 13; ++i)
+    {
+        std::getline(file, trash);
+        //std::printf("Trash: %s\n", trash.c_str());
+    }
+
+    std::getline(file, trash);   // CUSTOMERS
+    std::getline(file, trash);   // i	x	y	Demand	ReadyTime	DueDate	ServiceTime	DemandedMass	DemandedVolume
+
+    /*
+    std::printf("numClientes: %d\n", numClientes);
+    std::printf("numItems: %d\n", numItens);
+    std::printf("numVeic: %d\n", numVeiculos);
+    std::printf("Trash: %s\n", trash.c_str());
+    */
+
+    instanciaG =  Instance(numClientes, numItens, numVeiculos);
+    instanciaG.numDim = 3;
+    instanciaG.maxPayload = maxPayload;
+    instanciaG.vetDimVeiculo = veicDim;
+
+    Matrix<double> matCoord(numClientes, 2);
+
+    int cust = -1;
+
+    for(int i=0; i < numClientes; ++i)
+    {
+        file>>cust>>matCoord.get(i, 0)>>matCoord.get(i, 1);
+        std::getline(file, trash);
+    }
+
+    for(int i=0; i < numClientes; ++i)
+    {
+        instanciaG.matDist.get(i, i) = INF_Double;
+        for(int j=i+1; j < numClientes; ++j)
+        {
+            double dist = std::sqrt(std::pow(matCoord(i, 0) - matCoord(j, 0), 2) +
+                                    std::pow(matCoord(i, 1) - matCoord(j, 1), 2));
+
+            instanciaG.matDist.get(i, j) = dist;
+            instanciaG.matDist.get(j, i) = dist;
+        }
+    }
+
+    //std::cout<<instanciaG.matDist<<"\n\n";
+
+    std::getline(file, trash);  // Empty line
+    std::getline(file, trash);  // Type	Length	Width	Height	Mass	Fragility	LoadBearingStrength
+    std::getline(file, trash);
+
+    Array<int, 4> vetDimMass;
+    std::map<int, Array<int, 4>> mapItem_id_to_ItemDimMass;
+    std::string bt;
+    int btInt;
+
+    for(int i=0; i < numItens; ++i)
+    {
+        file>>bt>>vetDimMass[0]>>vetDimMass[1]>>vetDimMass[2];
+        std::getline(file, trash);
+
+        bt.erase(0, 2);
+        //std::printf("%d\n", std::stoi(bt));
+        btInt = std::stoi(bt);
+
+        mapItem_id_to_ItemDimMass[btInt] = vetDimMass;
+    }
+
+    std::getline(file, trash);   // new line
+    std::getline(file, trash);   // DEMANDS PER CUSTOMER
+    std::getline(file, trash);   // i	Type Quantity
+
+    std::string line;
+
+    int nextItem = 0;
+    int maxItemsPerCust = 0;
+
+    while(std::getline(file, line))
+    {
+        std::stringstream ss(line);
+
+        int i;
+        ss >> i;
+
+        //std::cout << "i = " << i << std::endl;
+
+        std::string type;
+        int quantity;
+        int numItems = 0;
+        instanciaG.matCliItensIniFim.get(i, 0) = nextItem;
+        instanciaG.vetDemandaCliente[i] = 0;
+
+        while(ss>>type>>quantity)
+        {
+
+            // remove "Bt"
+            numItems += 1;
+            int id = std::stoi(type.substr(2));
+
+            //std::cout << "Type: " << id
+            //          << " Quantity: " << quantity << std::endl;
+            Array<int, 4> &arrayDimMass = mapItem_id_to_ItemDimMass[id];
+
+            for(int i=0; i < quantity; ++i)
+            {
+                instanciaG.matCliItensIniFim.get(i, 1) = nextItem;
+
+                Item item;// = instanciaG.vetItens[nextItem];
+
+                item.oroloc3D_item_id = id;
+                item.set((double)arrayDimMass[0], (double)arrayDimMass[1], (double)arrayDimMass[2]);
+                item.weight = arrayDimMass[3];
+                item.weightForce = item.weight*Gravity;
+                item.customer = i;
+
+                instanciaG.vetItens.push_back(item);
+                instanciaG.mapItem_IdItem[id] = nextItem;
+                instanciaG.vetPesoItens[nextItem] = arrayDimMass[3];
+                instanciaG.vetDemandaCliente[i] += arrayDimMass[3];
+
+                nextItem += 1;
+            }
+        }
+
+        maxItemsPerCust = std::max(maxItemsPerCust, numItems);
+
+        //std::printf("\n");
+
+    }
+
+    instanciaG.maxNumItensPorClie = maxItemsPerCust;
+
+    file.close();
+    //EXIT_PRINT();
 
 }

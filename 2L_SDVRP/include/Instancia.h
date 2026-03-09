@@ -34,11 +34,12 @@ namespace InstanceNS
     public:
 
         Array<double,3> vetDim;    // Length, width, height
-        double volume = 0.0;
-        double weight   = 0.0;
+        double volume        = 0.0;
+        double weight        = 0.0;
         double weightForce = 0.0;
-        bool fragility  = false;
-        int customer    = -1;
+        bool fragility       = false;
+        int customer         = -1;
+        int oroloc3D_item_id = -1;
 
         Item()=default;
         Item(double x, double y, double z, double peso_);
@@ -96,6 +97,10 @@ namespace InstanceNS
         Vector<int> vetOrderId;                     // Indicates for every item, its orderId
         std::map<int, Vector<int>> mapOrderIdItem;  // Maps orderId to its items
         std::map<int,int> mapOrderIdCust;
+        std::map<int, int> mapItem_IdItem;              // Maps original item id to itemId of the instance
+        std::map<int, int> mapCustomer_idToCustomer; // Maps the original customer_id to the customer of the instance
+        std::map<int, int> mapCustomerToCustomer_id; // Maps the  customer of the instance to the original customer_id
+
         Instance();
         Instance(int numClientes_, int numItens_, int numVeiculos_);
         void atualizaVetMinDimItens();
@@ -105,6 +110,7 @@ namespace InstanceNS
     void read2dInstance(const std::string &strFile);
     void read3dInstance(const std::string &strFile);
     void readOroloc3D(const std::string &strFile);
+    void readOroloc3D2(const std::string &strFile);
     int copiaItensCliente(int cliente, VectorI& vetItens);
     int copiaItensClientes(VectorI& vetClientes, int tam, VectorI& vetItens, bool push=false);
     double calculaDistancia(VectorI& vet, int tam);

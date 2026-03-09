@@ -295,6 +295,42 @@ SolucaoNS::Solucao::Solucao(const InstanceNS::Instance &instancia)
 
 }
 
+
+SolucaoNS::Solucao::Solucao()
+{
+    vetBin      = Vector<Bin>(instanciaG.numVeiculos);
+    for(int b=0; b < instanciaG.numVeiculos; ++b)
+    {
+        #pragma GCC uroll 3
+        for(int d=0; d < 3; ++d)
+        {
+            vetBin[b].binDim[d] = instanciaG.vetDimVeiculo[d];
+        }
+
+        vetBin[b].volumeTotal = 1;
+
+        #pragma GCC uroll 3
+        for(int d=0; d < 3; ++d)
+        {
+            vetBin[b].volumeTotal *= vetBin[b].binDim[d];
+
+            if((d+1) == instanciaG.numDim)
+                break;
+        }
+
+    }
+
+    vetRota       = Vector<Rota>(instanciaG.numVeiculos);
+
+    for(int r=0; r < instanciaG.numVeiculos; ++r)
+        vetRota[r].binPtr = &vetBin[r];
+
+//    vetItemRotaId = VectorI(instancia.numItens);
+//    vetItemRotaId.setAll(-1);
+
+}
+
+
 bool SolucaoNS::Solucao::verificaSol(std::string &error)
 {
 
@@ -724,6 +760,13 @@ std::string SolucaoNS::Rota::printRota()
         str += std::to_string(vetRota[i])+ " ";
 
     return str;
+}
+
+void SolucaoNS::Rota::computeDistance()
+{
+    distTotal = 0;
+    for(int i=0; i < (numPos-1); ++i)
+        distTotal += instanciaG.matDist(vetRota[i], vetRota[i+1]);
 }
 
 std::ostream& SolucaoNS::operator<<(std::ostream &os, const Solucao &sol)

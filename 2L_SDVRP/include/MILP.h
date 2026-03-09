@@ -109,13 +109,13 @@ namespace MILP_NS
                 throw std::out_of_range("");
             }
 
-            if(indexJ >= numCol)
+            if(indexJ >= numCol || indexJ < 0)
             {
                 std::cout<<"Erro indice j: "<<indexJ<<" esta errado para matrix de tam "<<numLin<<" x "<<numCol<<"\n";
                 throw std::out_of_range("");
             }
 #endif
-
+            //std::printf("geting(%d,%d): %d\n", indexI, indexJ, (indexI*numCol+indexJ));
             return vetVar[indexI*numCol+indexJ];
         }
 

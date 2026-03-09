@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.16)
 
 project("2L_SDVRP_Main")
 
@@ -16,7 +16,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 find_package(ortools CONFIG REQUIRED)
 #find_package(GUROBI REQUIRED)
 include_directories(${GUROBI_INCLUDE_DIRS})
-#link_directories($ENV{GUROBI_HOME}/lib)
+link_directories($ENV{GUROBI_HOME}/lib)
 find_package(Boost)
 
 add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
@@ -59,8 +59,8 @@ target_sources(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PRIVATE Eigen3::Eigen)
 target_link_libraries(${PROJECT_NAME} PRIVATE ortools::ortools)
 #target_link_libraries(${PROJECT_NAME} DwDecomp)
-#target_link_libraries(${PROJECT_NAME} PRIVATE gurobi_c++)
-#target_link_libraries(${PROJECT_NAME} PRIVATE gurobi)
+target_link_libraries(${PROJECT_NAME} PRIVATE gurobi_c++)
+target_link_libraries(${PROJECT_NAME} PRIVATE gurobi)
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 2L_SDVRP)

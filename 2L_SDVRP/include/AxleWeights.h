@@ -26,12 +26,12 @@ namespace AxleWeightsNS
         double computeMaxFK(SolucaoNS::Bin& bin) const;
 
         int wheelBase                      = 3790;        // WB
-        int maxMassFrontAxle               = 8000;
-        int maxMassRearAxle                = 11500;
-        int maxMassTrailerAxle             = 24000;
+        int maxMassFrontAxle               = 8400;
+        int maxMassRearAxle                = 12075;
+        int maxMassTrailerAxle             = 24120;
         int distanceKingpinRearAxle        = 560;         // The distance between the kingpin and the rear axle (l_K|RA)
         int distanceKingpinTrailerAxle     = 8160;		// The distance between the kingpin and the resultant trailer axle (l_K|TA)
-        int distanceCargoSpaceTrailerAxle  = 8150;		// The distance between the cargo area to the resultant trailer axle (l_TA)
+        int distanceCargoSpaceTrailerAxle  = 9550;		// The distance between the cargo area to the resultant trailer axle (l_TA)
         int distanceMassTractorRearAxle    = 2568;        // ?
         int distanceMassTrailerTrailerAxle = 1632;        // ?
         int massTractor				       = 8197;

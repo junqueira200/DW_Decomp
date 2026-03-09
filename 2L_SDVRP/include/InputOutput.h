@@ -37,7 +37,7 @@ namespace ParseInputNS
         bool        splitInstancia           = false;
         bool        splitVrp                 = false;
         double      aphaBin                  = 0.3;
-        double      aphaBinEscolhaEp         = 0.3;
+        double      aphaBinEscolhaEp         = 0.4;
         double      alphaVrp                 = 0.3;
         int         numItIG                  = 2000;
         double      gapIgReset               = 0.20;
@@ -46,10 +46,14 @@ namespace ParseInputNS
         double      cpSatTime                = -1.0;
         // 0 Forward, 1 Backard, 2 Bidirectional
         int         labelingType             = 0;
-        bool        filo                     = false;
+        bool        filo                     = true;
         bool 		inst2d                   = false;
         bool 		instOroloc3D             = false;
-        double      minSupportArea          = 0.75;
+        bool        instOroloc3D_2           = false;
+        std::string strSolOroloc3D_2;
+        double      minSupportArea           = 0.75;
+        bool        axleWights               = true;
+        int         supportLimit             = 100;
         //bool		inst3d                   = true;
 
         File file;

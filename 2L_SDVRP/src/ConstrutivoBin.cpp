@@ -13,12 +13,14 @@
 #include "rand.h"
 #include "InputOutput.h"
 #include "BinPackingCP.h"
+#include "AxleWeights.h"
 
 using namespace InstanceNS;
 using namespace SolucaoNS;
 using namespace RandNs;
 using namespace ParseInputNS;
 using namespace BinPackingCP_NS;
+using namespace AxleWeightsNS;
 
 bool ConstrutivoBinNS::canInsert(const Ponto &ep, const int itemId, const Bin &bin, Rotation r)
 {
@@ -443,8 +445,19 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
         //std::cout<<"numItensAlo: "<<numItensAlo<<"\n\n";
         if(numItensAlo == vetItensTam)
         {
-            copiaBin(binVet[0], bin);
-            return true;
+            bool feasible = true;
+            if(input.axleWights)
+            {
+                feasible = semiTrailer.checkAxleWeights(bin);
+                std::cout<<"AxleWeights: "<<feasible<<"\n";
+            }
+
+            if(feasible)
+            {
+                copiaBin(binVet[0], bin);
+                std::printf("Utilizacao %.2f%%\n", binVet[0].getPorcentagemUtilizacao());
+                return true;
+            }
         }
     }
 

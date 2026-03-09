@@ -49,15 +49,26 @@ int main(int argc, const char* argv[])
     output.setup();
     std::cout << "INST: " << input.strInst << " SEMENTE: " << RandNs::estado_ << " " << output.data << "";
 
-    if(input.instOroloc3D)
+
+    if(input.instOroloc3D_2)
+        InstanceNS::readOroloc3D2(input.strInstCompleto);
+    else if(input.instOroloc3D)
         InstanceNS::readOroloc3D(input.strInstCompleto);
     else if(input.inst2d)
         InstanceNS::read2dInstance(input.strInstCompleto);
     else
         InstanceNS::read3dInstance(input.strInstCompleto);
 
-    std::printf("After read the instance\n");
-    testeOroloc3D();
+    /*
+    for(int i=0; i < 10; ++i)
+    {
+        Item& item = instanciaG.vetItens[i];
+        std::printf("%s\n", item.print(false).c_str());
+    }
+    */
+    //return 0;
+
+    testeOroloc3D_2();
     return 0;
 
     GRBEnv env;

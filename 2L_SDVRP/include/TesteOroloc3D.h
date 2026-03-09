@@ -2,6 +2,7 @@
 #define TESTEOROLOC3D_H
 
 #include "Instancia.h"
+#include "Solucao.h"
 
 #include "ProblemParameters.h"
 #include "BCRoutingParams.h"
@@ -17,8 +18,12 @@ namespace TesteOroloc3D_NS
     };
 
     void testeOroloc3D();
-    void convertVectorOfItensToVectorOfCuboids(const VectorI& vetItens, std::vector<ContainerLoading::Cuboid>& vetCuboids);
+    void testeOroloc3D_2();
+
+    void convertVectorOfItensToVectorOfCuboids(const VectorI& vetItens, std::vector<ContainerLoading::Cuboid>& vetCuboids,
+                                               int numItems);
     void appendToFile(const std::string& fileName, const std::string& content);
+    void readSolOroloc3D_2(SolucaoNS::Solucao& sol);
 
 }
 

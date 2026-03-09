@@ -33,6 +33,7 @@ public:
         for(T e:list)
         {
             std::array<T,n>::operator[](i) = e;
+            i += 1;
         }
     }
 
