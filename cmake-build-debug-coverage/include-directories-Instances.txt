@@ -1,8 +1,0 @@
-/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/include
-/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/include
-/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/Grafo/include
-/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/SparseTeste/include
-/usr/include/eigen3
-/home/igor/gurobi1200/linux64/include
-/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/Instances/src
-/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/Instances/include

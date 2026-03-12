@@ -1,3 +1,0 @@
-/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/include
-/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/CvrpSep/src
-/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/CvrpSep/include

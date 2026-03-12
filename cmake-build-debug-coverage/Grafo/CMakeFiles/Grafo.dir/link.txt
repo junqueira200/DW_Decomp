@@ -1,1 +1,0 @@
-/usr/bin/clang++ -fPIC --coverage -O3 -g -pedantic -Wall -Wextra -fPIC -march=native  -O3 -g -pedantic -Wall -Wextra -fPIC -D __FILENAME__='"$$(subst  /home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/,,$$(abspath $$<))"' -g -Xlinker --dependency-file=CMakeFiles/Grafo.dir/link.d -shared -Wl,-soname,libGrafo.so -o libGrafo.so CMakeFiles/Grafo.dir/src/Grafo.cpp.o
