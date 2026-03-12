@@ -1,0 +1,7 @@
+/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/cmake-build-debug-coverage/CMakeFiles/DwDecomp.dir
+/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/cmake-build-debug-coverage/CMakeFiles/edit_cache.dir
+/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/cmake-build-debug-coverage/CMakeFiles/rebuild_cache.dir
+/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/cmake-build-debug-coverage/CMakeFiles/list_install_components.dir
+/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/cmake-build-debug-coverage/CMakeFiles/install.dir
+/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/cmake-build-debug-coverage/CMakeFiles/install/local.dir
+/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/cmake-build-debug-coverage/CMakeFiles/install/strip.dir

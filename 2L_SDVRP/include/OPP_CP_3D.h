@@ -7,6 +7,7 @@
 #include "CPSolverParameters.h"
 #include "LoadingStatus.h"
 #include "PlacementPoints.h"
+#include "sefe_array.h"
 
 namespace ContainerLoading
 {
@@ -19,7 +20,7 @@ class ContainerLoadingCP
     [[nodiscard]] std::tuple<ORIntVars1D, ORIntVars1D> GetIntVars(DimensionType dimension) const;
 
     void WriteProtoModel(const operations_research::sat::CpModelProto& protoModel) const;
-    void PrintSolution();
+    void PrintSolution(std::vector<Array<int, 4>>& vetPos);
     void ExtractPacking(std::vector<Cuboid>& items) const;
     [[nodiscard]] std::vector<int> ExtractSequence() const;
 
@@ -68,7 +69,7 @@ class ContainerLoadingCP
 
     const double mMaxRuntime;
 
-    const int scale = 100;
+    const int scale = 1;
 
     PlacementPattern mPlacementPatternTypeX = PlacementPattern::None;
     PlacementPattern mPlacementPatternTypeY = PlacementPattern::None;
@@ -77,8 +78,7 @@ class ContainerLoadingCP
     operations_research::sat::CpSolverResponse mResponse;
 
     std::vector<Dimension> mDimensions = {{AxisY, Right, Left}, {AxisX, InFront, Behind}, {AxisZ, Above, Below}};
-    std::vector<Orientation> mItemOrientations = std::vector{NoRotation, RotationZ, RotationX};
-
+    std::vector<Orientation> mItemOrientations = std::vector{NoRotation, RotationZ, RotationX};        
     operations_research::sat::CpModelBuilder mModelCP;
 
     ORIntVars1D mStartPositionsX;

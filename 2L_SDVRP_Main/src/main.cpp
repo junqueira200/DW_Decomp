@@ -206,8 +206,8 @@ int main(int argc, const char* argv[])
         convertVectorOfItensToVectorOfCuboids(vetItens, vetCuboids, vetItens.size());
 
 
-        auto status = loadingChecker.ConstraintProgrammingSolver(PackingType::Complete, container, stopIds, vetCuboids,
-                                                                 std::numeric_limits<double>::infinity());
+        auto status = LoadingStatus::FeasOpt;//loadingChecker.ConstraintProgrammingSolver(PackingType::Complete, container, stopIds, vetCuboids,
+                       //                                          std::numeric_limits<double>::infinity());
         if(status != LoadingStatus::FeasOpt)
         {
             std::printf("Error in ConstraintProgrammingSolver\n");

@@ -1,0 +1,100 @@
+{
+	"abstract" : true,
+	"artifacts" : 
+	[
+		{
+			"path" : "/Users/igor/Programas/or-tools/install/bin/protoc-gen-upb_minitable-33.1.0"
+		}
+	],
+	"backtrace" : 9,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"include",
+			"find_package",
+			"__find_dependency_common",
+			"find_dependency"
+		],
+		"files" : 
+		[
+			"/Users/igor/Programas/or-tools/install/lib/cmake/protobuf/protobuf-targets.cmake",
+			"/Users/igor/Programas/or-tools/install/lib/cmake/protobuf/protobuf-config.cmake",
+			"/opt/homebrew/share/cmake/Modules/CMakeFindDependencyMacro.cmake",
+			"/Users/igor/Programas/or-tools/install/lib/cmake/ortools/ortoolsConfig.cmake",
+			"2L_SDVRP_MILP_Main/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 4
+			},
+			{
+				"command" : 2,
+				"file" : 4,
+				"line" : 16,
+				"parent" : 0
+			},
+			{
+				"file" : 3,
+				"parent" : 1
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 45,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 125,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 93,
+				"parent" : 4
+			},
+			{
+				"file" : 1,
+				"parent" : 5
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 16,
+				"parent" : 6
+			},
+			{
+				"file" : 0,
+				"parent" : 7
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 114,
+				"parent" : 8
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"id" : "protobuf::protoc-gen-upb_minitable::@b490a2c3738c5aabdb71",
+	"imported" : true,
+	"local" : true,
+	"name" : "protobuf::protoc-gen-upb_minitable",
+	"nameOnDisk" : "protoc-gen-upb_minitable-33.1.0",
+	"paths" : 
+	{
+		"build" : "2L_SDVRP_MILP_Main",
+		"source" : "2L_SDVRP_MILP_Main"
+	},
+	"sources" : [],
+	"type" : "EXECUTABLE"
+}

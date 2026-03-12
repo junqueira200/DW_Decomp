@@ -1,0 +1,8 @@
+451
+4 min
+rec0 step: 400
+rec1 step: 5
+maxLabel 5000
+
+448.4
+1m 20s

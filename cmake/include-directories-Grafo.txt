@@ -1,0 +1,5 @@
+/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/DW_Decomp/include
+/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/DW_Decomp/include
+/Users/igor/Programas/or-tools/include/eigen3
+/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/Grafo/src
+/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/Grafo/include

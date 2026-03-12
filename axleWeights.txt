@@ -1,0 +1,40 @@
+S10_240
+TruckID     Status          Way
+0           INFEASIBLE      fFa >; fRA >;
+1           INFEASIBLE      fFa >; fRA >; fTA >;
+2           INFEASIBLE      fRA >; fTA >;
+3           INFEASIBLE      fFa >; fRA >; fTA >;
+4           INFEASIBLE      fTA >;
+5           INFEASIBLE      fTA >;
+6           INFEASIBLE      fRA >;
+7           INFEASIBLE      fTA >
+
+
+S20_288T
+TruckID     Status          Way
+0           INFEASIBLE      fFa >; fRA >;
+1           INFEASIBLE      fTA >;
+2           INFEASIBLE      fRA >;
+3           INFEASIBLE      fFa >; fRA >;
+4           INFEASIBLE      fFa >; fRA >; fTA >;
+5           INFEASIBLE      fFa >; fRA >; fTA >;
+6           INFEASIBLE      fFa >; fRA >; fTA >;
+7           INFEASIBLE      fFa >; fRA >;
+8           FEASIBLE
+9           INFEASIBLE      fTA >;
+10          INFEASIBLE      fFa >; fRA >; fTA >
+
+S30_288T
+TruckID     Status          Way
+0           INFEASIBLE      fFa >; fRA >;
+1           INFEASIBLE      fFa >; fRA >;
+2           INFEASIBLE      fFa >; fRA >;
+3           INFEASIBLE      fFa >; fRA >;
+4           INFEASIBLE      fFa >; fRA >;
+5           INFEASIBLE      fFa >; fRA >;
+6           INFEASIBLE      fFa >; fRA >;
+7           INFEASIBLE      fFa >; fRA >; fTA >;
+8           INFEASIBLE      fFa >; fRA >;
+9           INFEASIBLE      fFa >; fRA >;
+10          INFEASIBLE      fFa >; fRA >;
+11          INFEASIBLE      fFa >; fRA >

@@ -120,7 +120,7 @@ std::ostream& operator << (std::ostream& os, const Vector<T>& v)
 
 template <typename T>
 inline __attribute__((always_inline))
-void copiaVet(const Vector<T> &vetFonte, Vector<T> &vet, size_t tam)
+void copyVet(const Vector<T> &vetFonte, Vector<T> &vet, size_t tam)
 {
     for(size_t i=0; i < tam; ++i)
         vet[i] = vetFonte[i];

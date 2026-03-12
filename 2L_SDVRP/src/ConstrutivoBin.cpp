@@ -167,8 +167,8 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin> &vetBin,
                                             const double alpha)
 {
 
-    // TODO fix
-    VectorI vetItens(vetItensC);
+    static VectorI vetItens(instanciaG.numItens);
+    copyVet(vetItensC, vetItens, vetItensTam);
 
     if(PrintConst)
     {
@@ -306,9 +306,7 @@ std::cout<<"\t\tNumEps: "<<bin.numEps<<"\n\n";
 std::cout<<"\t\tChecando EP"<<bin.vetEp[ep].print()<<"\n";
                 // Verifica a colisao do item colocado no EP
 
-                Rotation rotacao = Rot0;//Rotation(getRandInt(0,instanciaG.numRotation-1));
-                const Rotation rotIni = rotacao;
-                do
+                for(Rotation rotacao:vetRot)
                 {
                     if(canInsert(bin.vetEp[ep], itemId, bin, rotacao))
                     {
@@ -321,8 +319,7 @@ std::cout<<"\t\tChecando EP"<<bin.vetEp[ep].print()<<"\n";
                         break;
                     }
 
-                    rotacao = static_cast<Rotation>((static_cast<int>(rotacao)+1)%instanciaG.numRotation);
-                }while(rotIni != rotacao);
+                }
             }
 
             if(numEps == 0)
@@ -379,6 +376,9 @@ std::cout<<"\t\tAdd item a EP"<<bin.vetEp[vetIdEpRot[idVetIdEp].epId].print()<<"
 std::cout << "\t\tAdd item ao bin(" << binVazioId << ") vazio\n\n";
 
             }
+
+            // TODO remove?
+            return numItensAlocados;
         }
         else
             numItensAlocados += 1;
@@ -432,15 +432,11 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
     for(int i=0; i < numRepeticoes; ++i)
     {
         copiaBin(bin, binVet[0]);
-        copiaVet(vetItens, vetItensAux, vetItensTam);
+        copyVet(vetItens, vetItensAux, vetItensTam);
 
         //std::cout<<"vetItensAux: "<<vetItensAux<<"\n\n";
 
-        int numItensAlo = construtivoBinPacking(binVet,
-                                                1,
-                                                vetItensAux,
-                                                vetItensTam,
-                                                alpha);
+        int numItensAlo = construtivoBinPacking(binVet, 1, vetItensAux, vetItensTam, alpha);
 
         //std::cout<<"numItensAlo: "<<numItensAlo<<"\n\n";
         if(numItensAlo == vetItensTam)
@@ -449,8 +445,9 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
             if(input.axleWights)
             {
                 feasible = semiTrailer.checkAxleWeights(bin);
-                std::cout<<"AxleWeights: "<<feasible<<"\n";
             }
+
+            std::cout<<"AxleWeights: "<<feasible<<"\n";
 
             if(feasible)
             {

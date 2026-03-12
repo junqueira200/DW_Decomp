@@ -23,7 +23,7 @@ Mass_Tractor                              	8197
 Mass_Trailer                              	6472
 
 CUSTOMERS
-i	x	y	Demand	ReadyTime	DueDate	ServiceTime	DemandedMass	DemandedVolume
+i	x	               y	               Demand	ReadyTime	DueDate	ServiceTime	DemandedMass	DemandedVolume
 0	-919890.802601141	-720066.7964090473	0	0	0	0	0.0	0
 1	1231266.1500408696	1468273.2232201786	2	0	0	0	4923.0	8506499600
 2	984465.5317939493	629268.1088746581	2	0	0	0	3556.0	5899745100
@@ -54,7 +54,7 @@ i	x	y	Demand	ReadyTime	DueDate	ServiceTime	DemandedMass	DemandedVolume
 27	-891013.3295036643	-1023274.1536227505	3	0	0	0	3469.0	7398121120
 
 ITEMS
-Type	Length	Width	Height	Mass	Fragility	LoadBearingStrength
+Type	     Length	Width 	Height	Mass	Fragility	LoadBearingStrength
 Bt001	5745	2240	610	3239	0	0
 Bt002	1980	1200	985	1144	0	0
 Bt003	1980	1200	985	1118	0	0

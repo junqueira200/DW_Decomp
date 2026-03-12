@@ -1,0 +1,10 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/build/cmake_install.cmake",
+		"/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/build/2L_SDVRP/cmake_install.cmake",
+		"/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/build/2L_SDVRP_Main/cmake_install.cmake",
+		"/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/build/2L_SDVRP_MILP_Main/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

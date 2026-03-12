@@ -45,7 +45,8 @@ LoadingStatus LoadingChecker::ConstraintProgrammingSolver(PackingType packingTyp
                                                           //const boost::dynamic_bitset<>& set,
                                                           const Collections::IdVector& stopIds,
                                                           const std::vector<Cuboid>& items,
-                                                          double maxRuntimeSec)
+                                                          double maxRuntimeSec,
+                                                          std::vector<Array<int, 4>>& vetPos)
                                                           //bool isCallTypeExact,
                                                           //double maxRuntime)
 {
@@ -67,6 +68,14 @@ LoadingStatus LoadingChecker::ConstraintProgrammingSolver(PackingType packingTyp
     {
         std::printf("Loading status invalid in CP model!");
     }
+
+    if(status == LoadingStatus::FeasOpt)
+    {
+        //std::cout<<"FeasOpt\n";
+        containerLoadingCP.PrintSolution(vetPos);
+    }
+
+    //containerLoadingCP.PrintSolution();
 
     /*
     if (isCallTypeExact && status == LoadingStatus::Unknown)

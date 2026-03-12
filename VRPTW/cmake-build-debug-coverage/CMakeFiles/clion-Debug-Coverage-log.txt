@@ -1,0 +1,5 @@
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=make -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G "Unix Makefiles" -DCMAKE_CXX_FLAGS=--coverage -DCMAKE_C_FLAGS=--coverage -S "/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/VRPTW" -B "/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/VRPTW/cmake-build-debug-coverage"
+set vector_sanity_check=1
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/VRPTW/cmake-build-debug-coverage

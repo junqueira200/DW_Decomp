@@ -11,6 +11,7 @@
 #include <fstream>
 #include "InputOutput.h"
 #include "rand.h"
+#include <filesystem>
 
 using namespace InstanceNS;
 using namespace ParseInputNS;
@@ -856,9 +857,11 @@ void InstanceNS::readOroloc3D2(const std::string &strFile)
     */
 
     instanciaG =  Instance(numClientes, numItens, numVeiculos);
+    std::filesystem::path path(strFile);
     instanciaG.numDim = 3;
     instanciaG.maxPayload = maxPayload;
     instanciaG.vetDimVeiculo = veicDim;
+    instanciaG.nome = path.filename();
 
     Matrix<double> matCoord(numClientes, 2);
 
@@ -896,12 +899,14 @@ void InstanceNS::readOroloc3D2(const std::string &strFile)
 
     for(int i=0; i < numItens; ++i)
     {
-        file>>bt>>vetDimMass[0]>>vetDimMass[1]>>vetDimMass[2];
+        file>>bt>>vetDimMass[0]>>vetDimMass[1]>>vetDimMass[2]>>vetDimMass[3];
         std::getline(file, trash);
 
         bt.erase(0, 2);
         //std::printf("%d\n", std::stoi(bt));
         btInt = std::stoi(bt);
+
+        //std::cout<<btInt<<" "<<vetDimMass<<"\n";
 
         mapItem_id_to_ItemDimMass[btInt] = vetDimMass;
     }
@@ -941,15 +946,16 @@ void InstanceNS::readOroloc3D2(const std::string &strFile)
             //          << " Quantity: " << quantity << std::endl;
             Array<int, 4> &arrayDimMass = mapItem_id_to_ItemDimMass[id];
 
-            for(int i=0; i < quantity; ++i)
+            for(int k=0; k < quantity; ++k)
             {
-                instanciaG.matCliItensIniFim.get(i, 1) = nextItem;
+                instanciaG.matCliItensIniFim.get(k, 1) = nextItem;
 
                 Item item;// = instanciaG.vetItens[nextItem];
-
+                //std::cout<<arrayDimMass<<"\n";
                 item.oroloc3D_item_id = id;
                 item.set((double)arrayDimMass[0], (double)arrayDimMass[1], (double)arrayDimMass[2]);
                 item.weight = arrayDimMass[3];
+                //std::cout<<item.weight<<"\n";
                 item.weightForce = item.weight*Gravity;
                 item.customer = i;
 

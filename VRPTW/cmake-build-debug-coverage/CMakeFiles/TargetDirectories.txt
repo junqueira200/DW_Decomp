@@ -1,0 +1,3 @@
+/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/VRPTW/cmake-build-debug-coverage/CMakeFiles/Vrptw.dir
+/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/VRPTW/cmake-build-debug-coverage/CMakeFiles/edit_cache.dir
+/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/VRPTW/cmake-build-debug-coverage/CMakeFiles/rebuild_cache.dir

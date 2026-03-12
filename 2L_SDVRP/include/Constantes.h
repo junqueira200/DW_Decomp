@@ -19,6 +19,8 @@ constexpr int    INF_Int           = std::numeric_limits<int>::infinity();
 constexpr int    TamRota           = 60;
 constexpr double DiffPermetidaDist = 1E-5;
 constexpr double Gravity           = 10.0;//9.81;
+constexpr int    GravityMM         = 9810;
+
 
 constexpr bool PrintEP    = false;
 constexpr bool PrintConst = false;

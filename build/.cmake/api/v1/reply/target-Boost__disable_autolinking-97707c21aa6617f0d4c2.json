@@ -1,0 +1,66 @@
+{
+	"abstract" : true,
+	"backtrace" : 5,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"find_package"
+		],
+		"files" : 
+		[
+			"/Users/igor/Programas/or-tools/install/lib/cmake/Boost-1.87.0/BoostConfig.cmake",
+			"/opt/homebrew/share/cmake/Modules/FindBoost.cmake",
+			"2L_SDVRP_MILP_Main/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 2
+			},
+			{
+				"command" : 1,
+				"file" : 2,
+				"line" : 20,
+				"parent" : 0
+			},
+			{
+				"file" : 1,
+				"parent" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 610,
+				"parent" : 2
+			},
+			{
+				"file" : 0,
+				"parent" : 3
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 140,
+				"parent" : 4
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"id" : "Boost::disable_autolinking::@b490a2c3738c5aabdb71",
+	"imported" : true,
+	"local" : true,
+	"name" : "Boost::disable_autolinking",
+	"paths" : 
+	{
+		"build" : "2L_SDVRP_MILP_Main",
+		"source" : "2L_SDVRP_MILP_Main"
+	},
+	"sources" : [],
+	"type" : "INTERFACE_LIBRARY"
+}

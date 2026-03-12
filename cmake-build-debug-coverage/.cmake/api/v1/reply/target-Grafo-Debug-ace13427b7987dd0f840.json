@@ -1,0 +1,145 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "Grafo/libGrafo.so"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"include_directories",
+			"target_include_directories",
+			"target_sources"
+		],
+		"files" : 
+		[
+			"Grafo/CMakeLists.txt",
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 32,
+				"parent" : 0
+			},
+			{
+				"file" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 17,
+				"parent" : 2
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 42,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 22,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 34,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "--coverage -O3 -g -pedantic -Wall -Wextra -fPIC -march=native  -O3 -g -pedantic -Wall -Wextra -fPIC -D __FILENAME__='\"$$(subst  /home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/,,$$(abspath $$<))\"' -g -std=gnu++23 -fPIC -fcolor-diagnostics"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"define" : "Grafo_EXPORTS"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 3,
+					"path" : "/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/include"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/Grafo/src"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/Grafo/include"
+				},
+				{
+					"backtrace" : 5,
+					"isSystem" : true,
+					"path" : "/usr/include/eigen3"
+				}
+			],
+			"language" : "CXX",
+			"languageStandard" : 
+			{
+				"backtraces" : 
+				[
+					1
+				],
+				"standard" : "23"
+			},
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"id" : "Grafo::@9d79b11c4050d1e3d6ea",
+	"link" : 
+	{
+		"language" : "CXX"
+	},
+	"name" : "Grafo",
+	"nameOnDisk" : "libGrafo.so",
+	"paths" : 
+	{
+		"build" : "Grafo",
+		"source" : "Grafo"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "Grafo/src/Grafo.cpp",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "SHARED_LIBRARY"
+}

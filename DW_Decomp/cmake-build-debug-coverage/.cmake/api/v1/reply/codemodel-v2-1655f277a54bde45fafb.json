@@ -1,0 +1,61 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-9cb43ce042ba1bbae8c7.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.31"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "DwDecomp",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "DwDecomp::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-DwDecomp-Debug-95ea74ce8806b36d318e.json",
+					"name" : "DwDecomp",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/cmake-build-debug-coverage",
+		"source" : "/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 7
+	}
+}

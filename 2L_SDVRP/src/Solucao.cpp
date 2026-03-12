@@ -532,9 +532,9 @@ void SolucaoNS::copiaRota(const Rota &rotaFonte, Rota &rota)
     //rota.demTotal  = rotaFonte.demTotal;
     rota.distTotal = rotaFonte.distTotal;
 
-    copiaVet(rotaFonte.vetRota, rota.vetRota, rota.numPos);
-    copiaVet(rotaFonte.vetTempoSaida, rota.vetTempoSaida, rota.numPos);
-    copiaVet(rotaFonte.vetDemClie, rota.vetDemClie, rota.vetDemClie.size());
+    copyVet(rotaFonte.vetRota, rota.vetRota, rota.numPos);
+    copyVet(rotaFonte.vetTempoSaida, rota.vetTempoSaida, rota.numPos);
+    copyVet(rotaFonte.vetDemClie, rota.vetDemClie, rota.vetDemClie.size());
 }
 
 std::string SolucaoNS::printBinEps(const Bin &bin)
@@ -720,11 +720,11 @@ void SolucaoNS::copiaBin(const Bin &binFonte, Bin &bin)
         bin.vetRotacao.resize(binFonte.vetRotacao.size());
     }
 
-    copiaVet(binFonte.vetEp, bin.vetEp, bin.numEps);
-    copiaVet(binFonte.vetItemId, bin.vetItemId, bin.numItens);
-    copiaVet(binFonte.vetPosItem, bin.vetPosItem, bin.numItens);
-    copiaVet(binFonte.vetRotacao, bin.vetRotacao, bin.numItens);
-    copiaVet(binFonte.vetItens, bin.vetItens, bin.vetItens.size());
+    copyVet(binFonte.vetEp, bin.vetEp, bin.numEps);
+    copyVet(binFonte.vetItemId, bin.vetItemId, bin.numItens);
+    copyVet(binFonte.vetPosItem, bin.vetPosItem, bin.numItens);
+    copyVet(binFonte.vetRotacao, bin.vetRotacao, bin.numItens);
+    copyVet(binFonte.vetItens, bin.vetItens, bin.vetItens.size());
 
 }
 

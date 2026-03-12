@@ -1,0 +1,341 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8
+					],
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.26"
+					},
+					"projectIndex" : 0,
+					"source" : "."
+				},
+				{
+					"build" : "DW_Decomp",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-DW_Decomp-Debug-2c71b4a7682d334b1ae7.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.26"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 1,
+					"source" : "DW_Decomp",
+					"targetIndexes" : 
+					[
+						3
+					]
+				},
+				{
+					"build" : "CvrpSep",
+					"jsonFile" : "directory-CvrpSep-Debug-4a40dc1f8148b50f76a1.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.26"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 2,
+					"source" : "CvrpSep",
+					"targetIndexes" : 
+					[
+						2
+					]
+				},
+				{
+					"build" : "Grafo",
+					"jsonFile" : "directory-Grafo-Debug-62c8a0d8aeffecfc13de.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.26"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 3,
+					"source" : "Grafo",
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"build" : "SparseTeste",
+					"jsonFile" : "directory-SparseTeste-Debug-cf3606e84d533deb1bce.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.26"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 4,
+					"source" : "SparseTeste",
+					"targetIndexes" : 
+					[
+						6
+					]
+				},
+				{
+					"build" : "Instances",
+					"jsonFile" : "directory-Instances-Debug-368e6548f805a574931e.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.26"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 5,
+					"source" : "Instances",
+					"targetIndexes" : 
+					[
+						5
+					]
+				},
+				{
+					"build" : "2L_SDVRP",
+					"jsonFile" : "directory-2L_SDVRP-Debug-4dcfe2045a7fbe160ff3.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.26"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 6,
+					"source" : "2L_SDVRP",
+					"targetIndexes" : 
+					[
+						0
+					]
+				},
+				{
+					"build" : "VRPTW",
+					"jsonFile" : "directory-VRPTW-Debug-6f24fe5315a14d05446a.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.31"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 7,
+					"source" : "VRPTW",
+					"targetIndexes" : 
+					[
+						7
+					]
+				},
+				{
+					"build" : "2L_SDVRP_Main",
+					"jsonFile" : "directory-2L_SDVRP_Main-Debug-cd5da8f6c4aee9dc09a1.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.31"
+					},
+					"parentIndex" : 0,
+					"projectIndex" : 8,
+					"source" : "2L_SDVRP_Main",
+					"targetIndexes" : 
+					[
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"childIndexes" : 
+					[
+						1,
+						2,
+						3,
+						4,
+						5,
+						6,
+						7,
+						8
+					],
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "DW"
+				},
+				{
+					"directoryIndexes" : 
+					[
+						1
+					],
+					"name" : "DwDecomp",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						3
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						2
+					],
+					"name" : "CvrpSep",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						2
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						3
+					],
+					"name" : "Grafo",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						4
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						4
+					],
+					"name" : "SparseTeste",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						6
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						5
+					],
+					"name" : "Instances",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						5
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						6
+					],
+					"name" : "2L_SDVRP",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						0
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						7
+					],
+					"name" : "Vrptw",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						7
+					]
+				},
+				{
+					"directoryIndexes" : 
+					[
+						8
+					],
+					"name" : "2L_SDVRP_Main",
+					"parentIndex" : 0,
+					"targetIndexes" : 
+					[
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 6,
+					"id" : "2L_SDVRP::@0c1f65c97e5aa6a547ef",
+					"jsonFile" : "target-2L_SDVRP-Debug-2939f61242af7ac8b2c6.json",
+					"name" : "2L_SDVRP",
+					"projectIndex" : 6
+				},
+				{
+					"directoryIndex" : 8,
+					"id" : "2L_SDVRP_Main::@a65fd690a1cd11ed91be",
+					"jsonFile" : "target-2L_SDVRP_Main-Debug-0c1b029cff672e8576f1.json",
+					"name" : "2L_SDVRP_Main",
+					"projectIndex" : 8
+				},
+				{
+					"directoryIndex" : 2,
+					"id" : "CvrpSep::@57b24d7b127c1b198dcd",
+					"jsonFile" : "target-CvrpSep-Debug-e6871b05c53ee1893985.json",
+					"name" : "CvrpSep",
+					"projectIndex" : 2
+				},
+				{
+					"directoryIndex" : 1,
+					"id" : "DwDecomp::@666e0445bf9106cab779",
+					"jsonFile" : "target-DwDecomp-Debug-0ffcc4836a91121b9503.json",
+					"name" : "DwDecomp",
+					"projectIndex" : 1
+				},
+				{
+					"directoryIndex" : 3,
+					"id" : "Grafo::@9d79b11c4050d1e3d6ea",
+					"jsonFile" : "target-Grafo-Debug-ace13427b7987dd0f840.json",
+					"name" : "Grafo",
+					"projectIndex" : 3
+				},
+				{
+					"directoryIndex" : 5,
+					"id" : "Instances::@56970af3c3df07f2948f",
+					"jsonFile" : "target-Instances-Debug-a8429b281cccbe2e33f3.json",
+					"name" : "Instances",
+					"projectIndex" : 5
+				},
+				{
+					"directoryIndex" : 4,
+					"id" : "SparseTeste::@6fff7e6c3d71cb44ecf8",
+					"jsonFile" : "target-SparseTeste-Debug-6d1f001b5a614c5c62b2.json",
+					"name" : "SparseTeste",
+					"projectIndex" : 4
+				},
+				{
+					"directoryIndex" : 7,
+					"id" : "Vrptw::@69e972a20c51d225dee9",
+					"jsonFile" : "target-Vrptw-Debug-c44455cc55dbd973099e.json",
+					"name" : "Vrptw",
+					"projectIndex" : 7
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/cmake-build-debug-coverage",
+		"source" : "/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 8
+	}
+}

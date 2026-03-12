@@ -78,6 +78,7 @@ void ContainerLoadingCP::SetParameters(operations_research::sat::SatParameters& 
     ////parameters.set_search_branching(parameters.PORTFOLIO_SEARCH);
     parameters.set_max_time_in_seconds(mMaxRuntime);
     parameters.set_stop_after_first_solution(true);
+    parameters.set_cp_model_presolve(mParams.Presolve);
     //parameters.set_max_deterministic_time()
     // Setting seed value is without effect for parallel mode
     // https://github.com/google/or-tools/issues/2793
@@ -126,8 +127,37 @@ void ContainerLoadingCP::SetParameters(operations_research::sat::SatParameters& 
     */
 }
 
-void ContainerLoadingCP::PrintSolution()
+void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>>& vetPos)
 {
+    vetPos = std::vector<Array<int, 4>>();
+    vetPos.reserve(mItems.size());
+
+    Array<int, 4> array;
+
+    static std::map<Orientation, int> mapOritentationRotation = {{NoRotation,0}, {RotationZ,2}, {RotationX,1}};
+
+
+    for (size_t i = 0; i < mItems.size(); ++i)
+    {
+        //std::cout<<"item: "<<i<<"\n";
+        array[0] = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsX[i]);
+        array[1] = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsY[i]);
+        array[2] = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsZ[i]);
+
+        for (size_t o = 0; o < mItemOrientations.size(); ++o)
+        {
+            bool util = operations_research::sat::SolutionBooleanValue(mResponse, mOrientation[i][o]);
+            if(util)
+            {
+                array[3] = (int)mapOritentationRotation[mItemOrientations[o]];
+                break;
+            }
+        }
+
+        vetPos.push_back(array);
+    }
+
+    /*
     for (size_t i = 0; i < mItems.size(); ++i)
     {
         LOG(INFO) << "Item " << std::to_string(i) << ": ("
@@ -165,6 +195,12 @@ void ContainerLoadingCP::PrintSolution()
             LOG(INFO) << vars.str();
         }
     }
+    */
+
+    //std::cout<<"FA: "<<operations_research::sat::SolutionIntegerValue(mResponse, forceFA);
+    //std::cout<<"\nFK: "<<operations_research::sat::SolutionIntegerValue(mResponse, forceK);
+    //std::cout<<"\nFRA: "<<operations_research::sat::SolutionIntegerValue(mResponse, forceRA);
+    //std::cout<<"\nFTA: "<<operations_research::sat::SolutionIntegerValue(mResponse, forceTA);
 }
 
 void ContainerLoadingCP::ExtractPacking(std::vector<Cuboid>& items) const
@@ -213,16 +249,20 @@ void ContainerLoadingCP::CreateVariables()
         {
             const Cuboid& cuboid = mItems[i];
             int maxD = std::max(cuboid.Dz, std::max(cuboid.Dx, cuboid.Dy));
-            maxFK += cuboid.Weight*10*semiTrailer.distanceCargoSpaceTrailerAxle;
+            maxFK += cuboid.Weight*GravityMM*semiTrailer.distanceCargoSpaceTrailerAxle;
         }
 
         maxFK = maxFK*(1.0/semiTrailer.distanceKingpinTrailerAxle);
         maxFK = std::round(maxFK);
 
-        forceK = mModelCP.NewIntVar({0, scale*(int)maxFK});
-        forceRA = mModelCP.NewIntVar({0, scale*10*semiTrailer.maxMassRearAxle});
-        forceFA = mModelCP.NewIntVar({0, scale*10*semiTrailer.maxMassFrontAxle});
-        forceTA = mModelCP.NewIntVar({0, scale*10*semiTrailer.maxMassTrailerAxle});
+        forceK = mModelCP.NewIntVar({ 0, (int)maxFK});
+        forceRA = mModelCP.NewIntVar({0, GravityMM*semiTrailer.maxMassRearAxle});
+        forceFA = mModelCP.NewIntVar({0, GravityMM*semiTrailer.maxMassFrontAxle});
+        forceTA = mModelCP.NewIntVar({0, GravityMM*semiTrailer.maxMassTrailerAxle});
+
+        std::printf("max FK: %d\nmax FRA: %d\nmax FA: %d\nmax FTA: %d", (int)maxFK, GravityMM*semiTrailer.maxMassRearAxle,
+                                                                                 GravityMM*semiTrailer.maxMassFrontAxle,
+                                                                                 GravityMM*semiTrailer.maxMassTrailerAxle);
     }
 
 
@@ -491,12 +531,25 @@ void ContainerLoadingCP::AddConstraints()
 void ContainerLoadingCP::CreateAxleWeights()
 {
 
+    int tolerance = 5;
+
+
 
     operations_research::sat::LinearExpr sumMoments;
     int sumForces = 0;
     for(int i=0; i < mItems.size(); ++i)
     {
-        mModelCP.AddEquality(2*mR[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle -2*mStartPositionsX[i] - mLengths[i]);
+        // x = y
+        // x - y = 0
+        // x - y >= -1
+        // x - y <= 1
+
+        //mModelCP.AddEquality(2*mR[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle -2*mStartPositionsX[i] - mLengths[i]);
+        mModelCP.AddGreaterOrEqual(2*mR[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle -2*mStartPositionsX[i] - mLengths[i]
+                                            -tolerance*2);
+
+        mModelCP.AddLessOrEqual(2*mR[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle -2*mStartPositionsX[i] - mLengths[i]
+                                         +tolerance*2);
 
         int itemF = mItems[i].Weight*10;
         sumMoments += itemF*mR[i];
@@ -514,38 +567,39 @@ void ContainerLoadingCP::CreateAxleWeights()
 
     }
 
-    int tolerance = 0;
 
     // EQ: 10
-    mModelCP.AddGreaterOrEqual(semiTrailer.distanceKingpinTrailerAxle*forceK, scale*sumMoments + scale*semiTrailer.massTrailer*10*semiTrailer.distanceMassTrailerTrailerAxle - tolerance);
-     mModelCP.AddLessOrEqual(semiTrailer.distanceKingpinTrailerAxle*forceK, scale*sumMoments + scale*semiTrailer.massTrailer*10*semiTrailer.distanceMassTrailerTrailerAxle + tolerance);
+    mModelCP.AddGreaterOrEqual(semiTrailer.distanceKingpinTrailerAxle*forceK, scale*sumMoments + scale*semiTrailer.massTrailer*GravityMM*semiTrailer.distanceMassTrailerTrailerAxle - tolerance);
+     mModelCP.AddLessOrEqual(semiTrailer.distanceKingpinTrailerAxle*forceK, scale*sumMoments + scale*semiTrailer.massTrailer*GravityMM*semiTrailer.distanceMassTrailerTrailerAxle + tolerance);
 
 
     // EQ: 11
-    mModelCP.AddGreaterOrEqual(forceFA + forceRA - forceK - scale*semiTrailer.massTractor*10, -tolerance);
-    mModelCP.AddLessOrEqual(forceFA + forceRA - forceK - scale*semiTrailer.massTractor*10, tolerance);
+    mModelCP.AddGreaterOrEqual(forceFA + forceRA - forceK - scale*semiTrailer.massTractor*GravityMM, -tolerance);
+    mModelCP.AddLessOrEqual(forceFA + forceRA - forceK - scale*semiTrailer.massTractor*GravityMM, tolerance);
 
     // EQ: 12
-    mModelCP.AddGreaterOrEqual(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK + scale*semiTrailer.massTractor*10*semiTrailer.distanceMassTractorRearAxle - tolerance);
-    mModelCP.AddLessOrEqual(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK + scale*semiTrailer.massTractor*10*semiTrailer.distanceMassTractorRearAxle + tolerance);
+    mModelCP.AddGreaterOrEqual(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK + scale*semiTrailer.massTractor*GravityMM*semiTrailer.distanceMassTractorRearAxle - tolerance);
+    mModelCP.AddLessOrEqual(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK + scale*semiTrailer.massTractor*GravityMM*semiTrailer.distanceMassTractorRearAxle + tolerance);
 
 
     // EQ: 9
-    mModelCP.AddGreaterOrEqual(forceTA, scale*sumForces + scale*semiTrailer.massTrailer*10 - forceK - tolerance);
-    mModelCP.AddLessOrEqual(forceTA, scale*sumForces + scale*semiTrailer.massTrailer*10 - forceK + tolerance);
+    mModelCP.AddGreaterOrEqual(forceTA, scale*sumForces + scale*semiTrailer.massTrailer*GravityMM - forceK - tolerance);
+    mModelCP.AddLessOrEqual(forceTA, scale*sumForces + scale*semiTrailer.massTrailer*GravityMM - forceK + tolerance);
+
+
+
 
     /*
-     *
     // EQ: 10
-    mModelCP.AddEquality(semiTrailer.distanceKingpinTrailerAxle*forceK, scale*sumMoments + scale*semiTrailer.massTrailer*10*semiTrailer.distanceMassTrailerTrailerAxle);
+    mModelCP.AddEquality(semiTrailer.distanceKingpinTrailerAxle*forceK, scale*sumMoments + scale*semiTrailer.massTrailer*GravityMM*semiTrailer.distanceMassTrailerTrailerAxle);
     // EQ: 11
-    mModelCP.AddEquality(forceFA + forceRA - forceK - scale*semiTrailer.massTractor*10, 0);
+    mModelCP.AddEquality(forceFA + forceRA - forceK - scale*semiTrailer.massTractor*GravityMM, 0);
     // EQ: 12
-    mModelCP.AddEquality(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK + scale*semiTrailer.massTractor*10*semiTrailer.distanceMassTractorRearAxle);
+    mModelCP.AddEquality(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK + scale*semiTrailer.massTractor*GravityMM*semiTrailer.distanceMassTractorRearAxle);
     // EQ: 9
-    mModelCP.AddEquality(forceTA, scale*sumForces + scale*semiTrailer.massTrailer*10 - forceK);
-     *
-     */
+    mModelCP.AddEquality(forceTA, scale*sumForces + scale*semiTrailer.massTrailer*GravityMM - forceK);
+    */
+
 
 
 }

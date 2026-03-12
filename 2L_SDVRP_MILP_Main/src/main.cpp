@@ -60,6 +60,16 @@ int main(int argc, const char* argv[])
         InstanceNS::read3dInstance(input.strInstCompleto);
 
     /*
+    std::cout<<"maxPayload: "<<instanciaG.maxPayload<<"\n";
+
+    for(int i=0; i < instanciaG.numItens; ++i)
+        std::cout<<instanciaG.vetItens[i].weight<<" ";
+    std::cout<<"\n\n";
+
+    EXIT_PRINT();
+    */
+
+    /*
     for(int i=0; i < 10; ++i)
     {
         Item& item = instanciaG.vetItens[i];

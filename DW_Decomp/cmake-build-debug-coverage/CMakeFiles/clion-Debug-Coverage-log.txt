@@ -1,0 +1,14 @@
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=make -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -G "Unix Makefiles" -DCMAKE_CXX_FLAGS=--coverage -DCMAKE_C_FLAGS=--coverage -S "/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp" -B "/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/cmake-build-debug-coverage"
+-- This project is a top-level one
+set vector_sanity_check=1
+CMAKE_MODULE_PATH="/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp"
+-- Listing include directories for DwDecomp...
+--   /usr/include/eigen3
+--   /home/igor/gurobi1000/linux64/include
+--   /home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/src
+--   $<BUILD_INTERFACE:/home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/include>
+--   $<INSTALL_INTERFACE:include>
+-- CMAKE_INSTALL_PREFIX has been already set. Current value: /home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/install
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/igor/Documentos/[08] Projetos/[16]_DW_Decomp/DW_Decomp/cmake-build-debug-coverage

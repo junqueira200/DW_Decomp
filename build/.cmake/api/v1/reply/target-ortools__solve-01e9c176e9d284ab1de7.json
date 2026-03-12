@@ -1,0 +1,74 @@
+{
+	"abstract" : true,
+	"artifacts" : 
+	[
+		{
+			"path" : "/Users/igor/Programas/or-tools/install/bin/solve"
+		}
+	],
+	"backtrace" : 5,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"include",
+			"find_package"
+		],
+		"files" : 
+		[
+			"/Users/igor/Programas/or-tools/install/lib/cmake/ortools/ortoolsTargets.cmake",
+			"/Users/igor/Programas/or-tools/install/lib/cmake/ortools/ortoolsConfig.cmake",
+			"2L_SDVRP/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 2
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 25,
+				"parent" : 0
+			},
+			{
+				"file" : 1,
+				"parent" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 90,
+				"parent" : 2
+			},
+			{
+				"file" : 0,
+				"parent" : 3
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 59,
+				"parent" : 4
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"id" : "ortools::solve::@0c1f65c97e5aa6a547ef",
+	"imported" : true,
+	"local" : true,
+	"name" : "ortools::solve",
+	"nameOnDisk" : "solve",
+	"paths" : 
+	{
+		"build" : "2L_SDVRP",
+		"source" : "2L_SDVRP"
+	},
+	"sources" : [],
+	"type" : "EXECUTABLE"
+}

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.16)
 
 project("DW")
 
@@ -13,7 +13,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -pedantic -Wall -Wextra -fPIC -march=native")#-Wall")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -fPIC -march=native")#-Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g")#-Wall")
 
 #add_subdirectory(DW_Decomp)
 #include_directories(DW_Decomp/include)
@@ -41,6 +41,11 @@ include_directories(2L_SDVRP/include)
 
 add_subdirectory(2L_SDVRP_Main)
 include_directories(2L_SDVRP_Main/include)
+
+
+add_subdirectory(2L_SDVRP_MILP_Main)
+include_directories(2L_SDVRP_MILP_Main/include)
+
 
 #add_executable(${PROJECT_NAME})
 #target_sources(${PROJECT_NAME}

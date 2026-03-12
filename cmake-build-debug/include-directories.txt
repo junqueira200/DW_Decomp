@@ -1,0 +1,4 @@
+/opt/homebrew/include/eigen3
+/Library/gurobi1203/macos_universal2/include
+/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/DW_Decomp/src
+/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/DW_Decomp/include

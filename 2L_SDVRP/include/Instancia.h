@@ -18,7 +18,9 @@
 #include "string"
 
 namespace InstanceNS
-{
+{   // 0->0
+    // 2 -> 1
+    // 2 -> 2
     enum Rotation
     {
         Rot0 = 0,  // LWH

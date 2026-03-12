@@ -9,6 +9,7 @@
 #include "Container.h"
 #include <boost/dynamic_bitset.hpp>
 #include <boost/functional/hash.hpp>
+#include "sefe_array.h"
 
 namespace ContainerLoading
 {
@@ -46,7 +47,8 @@ class LoadingChecker
                                                             //const boost::dynamic_bitset<>& set,
                                                             const Collections::IdVector& stopIds,
                                                             const std::vector<Cuboid>& items,
-                                                            double maxRuntimeSec);
+                                                            double maxRuntimeSec,
+                                                            std::vector<Array<int, 4>>& vetPos);
                                                             //bool isCallTypeExact,
                                                             //double maxRuntime = std::numeric_limits<double>::max());
 

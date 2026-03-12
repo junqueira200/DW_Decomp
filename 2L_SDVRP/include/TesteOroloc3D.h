@@ -24,6 +24,7 @@ namespace TesteOroloc3D_NS
                                                int numItems);
     void appendToFile(const std::string& fileName, const std::string& content);
     void readSolOroloc3D_2(SolucaoNS::Solucao& sol);
+    void printSol(SolucaoNS::Solucao& sol);
 
 }
 

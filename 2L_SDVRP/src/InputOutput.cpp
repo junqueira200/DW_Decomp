@@ -53,8 +53,9 @@ void ParseInputNS::parseInput(int argc, const char* argv[])
                               cxxopts::value<bool>(input.inst2d))
                         ("oroloc3D", "Indicates if the instance is the Oroloc3D type", cxxopts::value<bool>(input.instOroloc3D))
                         ("oroloc3D_2", "Indicates if the instance is the Oroloc3D_2 type", cxxopts::value<bool>(input.instOroloc3D_2))
-                        ("solOroloc3D_2", "File to read the instance of oroloc3D_2", cxxopts::value<std::string>(input.strSolOroloc3D_2));
-
+                        ("solOroloc3D_2", "File to read the instance of oroloc3D_2", cxxopts::value<std::string>(input.strSolOroloc3D_2))
+                        ("solOroloc3D_output", "File to read the instance of oroloc3D_2", cxxopts::value<std::string>(input.strSolOroloc3D_output));
+//SolOroloc3D_output
         auto result = options.parse(argc, argv);
 
         //if(input.inst2d)
@@ -82,6 +83,8 @@ void ParseInputNS::parseInput(int argc, const char* argv[])
         if(result.count("oroloc3D_2") == 1 && result.count("solOroloc3D_2") == 0)
             assertm(true, "Missing param solOroloc3D_2");
 
+         if(result.count("oroloc3D_2") == 1 && result.count("solOroloc3D_output") == 0)
+            assertm(true, "Missing param solOroloc3D_output");
 
 
         RandNs::startEngine(output.semente, bool(result.count("seed")==1));

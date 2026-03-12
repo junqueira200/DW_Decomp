@@ -1,0 +1,15 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/cmake/cmake_install.cmake",
+		"/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/cmake/DW_Decomp/cmake_install.cmake",
+		"/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/cmake/CvrpSep/cmake_install.cmake",
+		"/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/cmake/Grafo/cmake_install.cmake",
+		"/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/cmake/SparseTeste/cmake_install.cmake",
+		"/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/cmake/Instances/cmake_install.cmake",
+		"/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/cmake/2L_SDVRP/cmake_install.cmake",
+		"/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/cmake/VRPTW/cmake_install.cmake",
+		"/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/cmake/2L_SDVRP_Main/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

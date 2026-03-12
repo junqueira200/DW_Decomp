@@ -1,0 +1,18 @@
+3
+itemId(16)
+Pos: (8.0,0.0,12.0)
+Largura: 25
+Comprimento: 9
+Altura: 6
+
+itemId(10)
+Pos: (8.0,0.0,0.0)
+Largura: 29
+Comprimento: 11
+Altura: 12
+
+itemId(15)
+Pos: (37.0,0.0,0.0)
+Largura: 22
+Comprimento: 15
+Altura: 12

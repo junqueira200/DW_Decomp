@@ -37,7 +37,7 @@ namespace ParseInputNS
         bool        splitInstancia           = false;
         bool        splitVrp                 = false;
         double      aphaBin                  = 0.3;
-        double      aphaBinEscolhaEp         = 0.4;
+        double      aphaBinEscolhaEp         = 0.5;
         double      alphaVrp                 = 0.3;
         int         numItIG                  = 2000;
         double      gapIgReset               = 0.20;
@@ -51,9 +51,10 @@ namespace ParseInputNS
         bool 		instOroloc3D             = false;
         bool        instOroloc3D_2           = false;
         std::string strSolOroloc3D_2;
+        std::string strSolOroloc3D_output;
         double      minSupportArea           = 0.75;
         bool        axleWights               = true;
-        int         supportLimit             = 100;
+        int         supportLimit             = 0;
         //bool		inst3d                   = true;
 
         File file;

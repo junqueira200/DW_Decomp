@@ -315,7 +315,9 @@ void TesteOroloc3D_NS::testeOroloc3D()
             else
                 input.axleWights = false;
 
-            auto status = loadingChecker.ConstraintProgrammingSolver(type, container, stopIds, vetCuboids, 10*60);
+            std::vector<Array<int, 4>> vetArray;
+
+            auto status = loadingChecker.ConstraintProgrammingSolver(type, container, stopIds, vetCuboids, 10*60, vetArray);
 
             double ompEnd = omp_get_wtime();
 
@@ -454,8 +456,12 @@ void TesteOroloc3D_NS::appendToFile(const std::string& fileName, const std::stri
 void TesteOroloc3D_NS::testeOroloc3D_2()
 {
 
-    Solucao sol;
+    Solucao sol, solCp, solHeur;
     readSolOroloc3D_2(sol);
+    solCp.copiaSolucao(sol);
+    solHeur.copiaSolucao(sol);
+    //printSol(solCp);
+    //return;
 
     auto vetPackingType = {PackingType::Complete, PackingType::Complete};//, PackingType::NoSupport, PackingType::LoadingOnly};
 
@@ -479,15 +485,27 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
 
         Bin& bin = sol.vetBin[veic];
-        Bin bin2;
+        Bin& binCp = solCp.vetBin[veic];
+        Bin& bin2 = solHeur.vetBin[veic];
+        bin2.reset();
+
         if(bin.vazio())
+        {
             continue;
+        }
 
         VectorI vetItems = bin.vetItemId;
         std::reverse(vetItems.begin(), vetItems.begin()+bin.numItens);
 
-        bool feasibleSol = construtivoBinPacking(bin2, vetItems, bin.numItens, input.aphaBin, 10);
-        std::printf("Extreme Point Heuristic: %d\n", feasibleSol);
+        double ompStart = omp_get_wtime();
+        bool feasibleSolConst = construtivoBinPacking(bin2, vetItems, bin.numItens, input.aphaBin, 200);
+        if(!feasibleSolConst)
+            bin2.reset();
+
+        double ompEnd = omp_get_wtime();
+        double timeConst = ompEnd-ompStart;
+
+        std::printf("Extreme Point Heuristic: %d; Time: %.4f s\n", feasibleSolConst, timeConst);
 
 
         bool axleWeights = semiTrailer.checkAxleWeights(bin);
@@ -550,16 +568,26 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         int n = 0;
         for(PackingType type:vetPackingType)
         {
+            /*
+            if(n == 0)
+            {
+                n += 1;
+                continue;
+            }
+            */
 
             double ompStart = omp_get_wtime();
             //PackingType::LoadingOnly
             if(n == 0)
                 input.axleWights = true;
-            else
+            else if(n == 1)
                 input.axleWights = false;
 
-            auto status = loadingChecker.ConstraintProgrammingSolver(type, container, stopIds, vetCuboids, 10*60);
 
+            std::vector<Array<int, 4>> vetArray;
+            std::cout<<"n: "<<n<<"\n";
+            auto status = loadingChecker.ConstraintProgrammingSolver(type, container, stopIds, vetCuboids, 20, vetArray);
+            std::cout<<"ret\n";
             double ompEnd = omp_get_wtime();
 
             tempoCpu = ompEnd-ompStart;
@@ -593,21 +621,45 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                 output += "FEASIBLE; ";
                 doBreak = true;
 
-                if(n == 0)
+                //if(n == 1)
+                {
                     numCompleteFeasible += 1;
+                    int item = 0;
+                    for(Array<int, 4>& array: vetArray)
+                    {
+                        binCp.vetPosItem[item].set(array[0], array[1], array[2]);
+                        binCp.vetRotacao[item] = (InstanceNS::Rotation)array[3];
+
+                        std::cout<<array<<"\n";
+                        item += 1;
+                    }
+
+                }
+
+
+                if(binCp.verificaViabilidade())
+                    std::printf("CP FEASIBLE\n");
+                else
+                    std::printf("CP INFEASIBLE\n");
+
             }
 
-            output += std::format("{:.1f}; ", tempoCpu);
+            output += std::format("{:.4f}; ", tempoCpu);
 
-            if(doBreak)
-                break;
+            //if(doBreak)
+            //    break;
 
             n += 1;
+            if(n >= 2)
+                break;
         }
 
         input.axleWights = inputAxleWights;
-        if(n == 0)
-            output += "NO_RUN; Inf";
+        if(n == 1)
+        {    output += "NO_RUN; Inf; ";
+        }
+
+
         /*
         switch (lastType)
         {
@@ -623,10 +675,22 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         */
 
         //output += std::format("{:.1f}; {}; {}", tempoCpu, mapPackingTypeToString[lastType], mapStatusOroloc3D_ToString[statusOroc3D]);
+
+
+
+        if(feasibleSolConst)
+            output += std::format("FEASIBLE; {:.4f}", timeConst);
+        else
+            output += std::format("INFEASIBLE; {:.4f}", timeConst);
+
         std::cout<<output<<"\n";
         appendToFile("../oroloc3D.csv", output);
 
+        std::printf("\n\n*************************************\n\n");
+
     }
+
+    printSol(solCp);
 
 }
 
@@ -638,9 +702,9 @@ void TesteOroloc3D_NS::readSolOroloc3D_2(SolucaoNS::Solucao& sol)
     std::ifstream file(input.strSolOroloc3D_2);
     assertm(!file.is_open(), "Cant open the file: : "<<input.instOroloc3D_2);
 
-    std::printf("Before reset\n");
+    //std::printf("Before reset\n");
     sol.reset();
-    std::printf("After reset\n");
+    //std::printf("After reset\n");
 
     std::string str;
     int numItems, numCust, numVeic, veicId;
@@ -663,8 +727,10 @@ void TesteOroloc3D_NS::readSolOroloc3D_2(SolucaoNS::Solucao& sol)
     for(int i=0; i < 6; ++i)
     {
         std::getline(file, str);
-        std::printf("LINE: %s\n", str.c_str());
+        //std::printf("LINE: %s\n", str.c_str());
     }
+
+    instanciaG.numVeiculos = numVeic;
 
     for(int veic=0; veic < numVeic; ++veic)
     {
@@ -683,13 +749,13 @@ void TesteOroloc3D_NS::readSolOroloc3D_2(SolucaoNS::Solucao& sol)
         sol.vetRota[veic].numPos = numCust + 2;
         sol.vetRota[veic].computeDistance();
 
-        std::printf("Rota: %s\n", sol.vetRota[veic].printRota().c_str());
+        //std::printf("Rota: %s\n", sol.vetRota[veic].printRota().c_str());
 
         std::getline(file, str);
         std::getline(file, str);
         std::getline(file, str);  // CustId	Id	TypeId	Rotated	x	y	z	Length	Width	Height	mass	Fragilit
 
-        std::printf("LINE: %s\n", str.c_str());
+        //std::printf("LINE: %s\n", str.c_str());
 
         if(str[0] == '-')
             continue;
@@ -706,7 +772,7 @@ void TesteOroloc3D_NS::readSolOroloc3D_2(SolucaoNS::Solucao& sol)
             bin.vetRotacao[i] = mapRotation_axisToRot[rot];
             bin.vetItemId[i]  = instanciaG.mapItem_IdItem[typeId];
 
-            std::printf("Rot: %d; x(%d), y(%d), z(%d)\n", (int)bin.vetRotacao[i], pos[0], pos[1], pos[2]);
+            //std::printf("Rot: %d; x(%d), y(%d), z(%d)\n", (int)bin.vetRotacao[i], pos[0], pos[1], pos[2]);
 
             std::getline(file, str);
 
@@ -717,7 +783,7 @@ void TesteOroloc3D_NS::readSolOroloc3D_2(SolucaoNS::Solucao& sol)
         std::getline(file, str);  // new line
         std::getline(file, str);  //-----------------------------
 
-        std::printf("LINE: %s\n", str.c_str());
+        //std::printf("LINE: %s\n", str.c_str());
 
     }
 
@@ -725,3 +791,62 @@ void TesteOroloc3D_NS::readSolOroloc3D_2(SolucaoNS::Solucao& sol)
 
 
 }
+
+void TesteOroloc3D_NS::printSol(SolucaoNS::Solucao& sol)
+{
+
+
+    std::ofstream file(input.strSolOroloc3D_output);
+    assertm(!file.is_open(), "Its not possible to open the file: "<<input.strSolOroloc3D_output);
+
+    auto writeNewSeparation = [&](){file<<"\n-------------------------------------------------------------------------------------------------------------------\n";};
+
+    file<<"Name: \t\t\t\t "<<input.strInst<<"\n";
+    file<<"Problem: \t\t\t 3L-CVRP\nNumber_of_used_Vehicles: \t "<<instanciaG.numVeiculos<<"\n";
+    file<<"Total_Travel_Distance: \t\t "<<std::format("{}", sol.distTotal)<<"\n";
+    file<<"Calculation_Time: \t\t -1\nTotal_Iterations: \t\t -1\nConstraintSet: \t\t\t UNKNOWN\n";
+    writeNewSeparation();
+
+
+    std::map<InstanceNS::Rotation, int> mapRotToRotation_axis;
+    mapRotToRotation_axis[InstanceNS::Rot0]  = 0;
+    mapRotToRotation_axis[InstanceNS::Rot2]  = 3;
+    mapRotToRotation_axis[InstanceNS::Rot1]  = 1;
+
+    for(int i=0; i < instanciaG.numVeiculos; ++i)
+    {
+        Rota& rota = sol.vetRota[i];
+        Bin& bin   = sol.vetBin[i];
+
+        file<<"Tour_Id:\t"<<i+1<<"\n";
+        file<<"No_of_Customers:\t"<<(rota.numPos-2)*!bin.vazio()<<"\n";
+        file<<"No_of_Items:\t"<<bin.numItens<<"\n";
+        file<<"Customer_Sequence:\t";
+        for(int k=1; k < (rota.numPos-1); ++k)
+            file<<rota.vetRota[k]<<"\t";
+
+        if(!bin.vazio())
+        {
+
+            file<<"\n\n";
+            file<<"CustId	Id	TypeId	Rotated	x	y	z	Length	Width	Height	mass	Fragility	LoadBearingStrength\n";
+
+            for(int k=0; k < bin.numItens; ++k)
+            {
+                Item& item = instanciaG.vetItens[bin.vetItemId[k]];
+                file<<item.customer<<" \t "<<item.oroloc3D_item_id-1<<" \t "<<item.oroloc3D_item_id;
+                file<<" \t "<<mapRotToRotation_axis[bin.vetRotacao[k]]<<" \t "<<(int)bin.vetPosItem[k].vetDim[0];
+                file<<" \t "<<(int)bin.vetPosItem[k].vetDim[1]<<" \t "<<(int)bin.vetPosItem[k].vetDim[2];
+                file<<" \t "<<item.vetDim[0]<<" \t "<<item.vetDim[1]<<" \t "<<item.vetDim[2]<<" \t "<<item.weight;
+                file<<" \t 0 \t -1\n";
+            }
+        }
+
+        file<<"\n";
+        writeNewSeparation();
+    }
+
+    file.close();
+
+}
+

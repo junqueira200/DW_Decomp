@@ -1,0 +1,129 @@
+{
+	"abstract" : true,
+	"artifacts" : 
+	[
+		{
+			"path" : "/Users/igor/Programas/or-tools/install/lib/libabsl_periodic_sampler.2508.0.0.dylib"
+		}
+	],
+	"backtrace" : 9,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"include",
+			"find_package",
+			"__find_dependency_common",
+			"find_dependency",
+			"set_target_properties"
+		],
+		"files" : 
+		[
+			"/Users/igor/Programas/or-tools/install/lib/cmake/absl/abslTargets.cmake",
+			"/Users/igor/Programas/or-tools/install/lib/cmake/absl/abslConfig.cmake",
+			"/opt/homebrew/share/cmake/Modules/CMakeFindDependencyMacro.cmake",
+			"/Users/igor/Programas/or-tools/install/lib/cmake/ortools/ortoolsConfig.cmake",
+			"2L_SDVRP/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 4
+			},
+			{
+				"command" : 2,
+				"file" : 4,
+				"line" : 25,
+				"parent" : 0
+			},
+			{
+				"file" : 3,
+				"parent" : 1
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 37,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 125,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 93,
+				"parent" : 4
+			},
+			{
+				"file" : 1,
+				"parent" : 5
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 32,
+				"parent" : 6
+			},
+			{
+				"file" : 0,
+				"parent" : 7
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 1397,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 1399,
+				"parent" : 8
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"id" : "absl::periodic_sampler::@0c1f65c97e5aa6a547ef",
+	"imported" : true,
+	"interfaceCompileDependencies" : 
+	[
+		{
+			"backtrace" : 10,
+			"id" : "absl::core_headers::@0c1f65c97e5aa6a547ef"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::exponential_biased::@0c1f65c97e5aa6a547ef"
+		}
+	],
+	"interfaceLinkLibraries" : 
+	[
+		{
+			"backtrace" : 10,
+			"id" : "absl::core_headers::@0c1f65c97e5aa6a547ef"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::exponential_biased::@0c1f65c97e5aa6a547ef"
+		}
+	],
+	"local" : true,
+	"name" : "absl::periodic_sampler",
+	"nameOnDisk" : "libabsl_periodic_sampler.2508.0.0.dylib",
+	"paths" : 
+	{
+		"build" : "2L_SDVRP",
+		"source" : "2L_SDVRP"
+	},
+	"sources" : [],
+	"type" : "SHARED_LIBRARY"
+}

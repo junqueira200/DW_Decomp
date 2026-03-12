@@ -1,0 +1,226 @@
+{
+	"abstract" : true,
+	"backtrace" : 9,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"include",
+			"find_package",
+			"__find_dependency_common",
+			"find_dependency",
+			"set_target_properties"
+		],
+		"files" : 
+		[
+			"/Users/igor/Programas/or-tools/install/lib/cmake/absl/abslTargets.cmake",
+			"/Users/igor/Programas/or-tools/install/lib/cmake/absl/abslConfig.cmake",
+			"/opt/homebrew/share/cmake/Modules/CMakeFindDependencyMacro.cmake",
+			"/Users/igor/Programas/or-tools/install/lib/cmake/ortools/ortoolsConfig.cmake",
+			"2L_SDVRP_Main/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 4
+			},
+			{
+				"command" : 2,
+				"file" : 4,
+				"line" : 16,
+				"parent" : 0
+			},
+			{
+				"file" : 3,
+				"parent" : 1
+			},
+			{
+				"command" : 4,
+				"file" : 3,
+				"line" : 37,
+				"parent" : 2
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 125,
+				"parent" : 3
+			},
+			{
+				"command" : 2,
+				"file" : 2,
+				"line" : 93,
+				"parent" : 4
+			},
+			{
+				"file" : 1,
+				"parent" : 5
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 32,
+				"parent" : 6
+			},
+			{
+				"file" : 0,
+				"parent" : 7
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 337,
+				"parent" : 8
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 339,
+				"parent" : 8
+			}
+		]
+	},
+	"codemodelVersion" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	},
+	"id" : "absl::btree::@a65fd690a1cd11ed91be",
+	"imported" : true,
+	"interfaceCompileDependencies" : 
+	[
+		{
+			"backtrace" : 10,
+			"id" : "absl::common_policy_traits::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::compare::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::compressed_tuple::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::config::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::container_common::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::container_memory::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::cord::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::core_headers::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::layout::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::memory::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::raw_logging_internal::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::strings::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::throw_delegate::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::type_traits::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::weakly_mixed_integer::@a65fd690a1cd11ed91be"
+		}
+	],
+	"interfaceLinkLibraries" : 
+	[
+		{
+			"backtrace" : 10,
+			"id" : "absl::common_policy_traits::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::compare::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::compressed_tuple::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::config::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::container_common::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::container_memory::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::cord::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::core_headers::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::layout::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::memory::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::raw_logging_internal::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::strings::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::throw_delegate::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::type_traits::@a65fd690a1cd11ed91be"
+		},
+		{
+			"backtrace" : 10,
+			"id" : "absl::weakly_mixed_integer::@a65fd690a1cd11ed91be"
+		}
+	],
+	"local" : true,
+	"name" : "absl::btree",
+	"paths" : 
+	{
+		"build" : "2L_SDVRP_Main",
+		"source" : "2L_SDVRP_Main"
+	},
+	"sources" : [],
+	"type" : "INTERFACE_LIBRARY"
+}
