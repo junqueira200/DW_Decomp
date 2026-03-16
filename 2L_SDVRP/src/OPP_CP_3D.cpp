@@ -7,14 +7,11 @@
 #include <ranges>
 #include <stdexcept>
 #include <string>
-#include "AxleWeights.h"
 #include "InputOutput.h"
 
 namespace ContainerLoading
 {
 using namespace Model;
-using namespace AxleWeightsNS;
-using namespace ParseInputNS;
 
 namespace Algorithms
 {
@@ -40,8 +37,6 @@ LoadingStatus ContainerLoadingCP::Solve()
     operations_research::sat::CpModelProto protoModel = mModelCP.Build();
     ////auto validationResponse = operations_research::sat::ValidateCpModel(protoModel);
     ////LOG(INFO) << validationResponse;
-
-    WriteProtoModel(protoModel);
 
     mResponse = operations_research::sat::SolveCpModel(protoModel, &model);
 
@@ -71,15 +66,13 @@ void ContainerLoadingCP::WriteProtoModel(const operations_research::sat::CpModel
     file.close();
 }
 
-void ContainerLoadingCP::SetParameters(operations_research::sat::SatParameters& parameters)
+void ContainerLoadingCP::SetParameters(operations_research::sat::SatParameters& parameters) const
 {
     parameters.set_num_search_workers(mParams.Threads);
     parameters.set_log_search_progress(mParams.LogFlag);
     ////parameters.set_search_branching(parameters.PORTFOLIO_SEARCH);
     parameters.set_max_time_in_seconds(mMaxRuntime);
     parameters.set_stop_after_first_solution(true);
-    parameters.set_cp_model_presolve(mParams.Presolve);
-    //parameters.set_max_deterministic_time()
     // Setting seed value is without effect for parallel mode
     // https://github.com/google/or-tools/issues/2793
     ////parameters.set_random_seed(mParams.Seed);
@@ -108,67 +101,11 @@ void ContainerLoadingCP::SetParameters(operations_research::sat::SatParameters& 
         });
     model.Add(observer);
     */
-
-    /*
-    mModelCP.AddDecisionStrategy(mStartPositionsX,
-        operations_research::sat::DecisionStrategyProto::VariableSelectionStrategy::DecisionStrategyProto_VariableSelectionStrategy_CHOOSE_LOWEST_MIN,
-        operations_research::sat::DecisionStrategyProto::DomainReductionStrategy::DecisionStrategyProto_DomainReductionStrategy_SELECT_MIN_VALUE);
-
-
-    mModelCP.AddDecisionStrategy(mStartPositionsY,
-        operations_research::sat::DecisionStrategyProto::VariableSelectionStrategy::DecisionStrategyProto_VariableSelectionStrategy_CHOOSE_LOWEST_MIN,
-        operations_research::sat::DecisionStrategyProto::DomainReductionStrategy::DecisionStrategyProto_DomainReductionStrategy_SELECT_MIN_VALUE);
-
-
-    mModelCP.AddDecisionStrategy(mStartPositionsY,
-        operations_research::sat::DecisionStrategyProto::VariableSelectionStrategy::DecisionStrategyProto_VariableSelectionStrategy_CHOOSE_LOWEST_MIN,
-        operations_research::sat::DecisionStrategyProto::DomainReductionStrategy::DecisionStrategyProto_DomainReductionStrategy_SELECT_MIN_VALUE);
-
-    */
 }
 
-void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>>& vetPos)
+/*
+void ContainerLoadingCP::PrintSolution()
 {
-    vetPos = std::vector<Array<int, 4>>();
-    vetPos.reserve(mItems.size());
-
-    Array<int, 4> array;
-
-    static std::map<Orientation, int> mapOritentationRotation = {{NoRotation,0}, {RotationZ,2}, {RotationX,1}};
-
-
-    for (size_t i = 0; i < mItems.size(); ++i)
-    {
-        //std::cout<<"item: "<<i<<"\n";
-        array[0] = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsX[i]);
-        array[1] = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsY[i]);
-        array[2] = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsZ[i]);
-
-        for (size_t o = 0; o < mItemOrientations.size(); ++o)
-        {
-            bool util = operations_research::sat::SolutionBooleanValue(mResponse, mOrientation[i][o]);
-            if(util)
-            {
-                array[3] = (int)mapOritentationRotation[mItemOrientations[o]];
-                break;
-            }
-        }
-
-        for(int j=0; j < mItems.size(); ++j)
-        {
-            if(i == j)
-                std::cout<<"0 ";
-
-            bool sup = operations_research::sat::SolutionBooleanValue(mResponse, mSupportXY[i][j]);
-            std::cout<<sup<<" ";
-        }
-
-        std::cout<<"\n";
-
-        vetPos.push_back(array);
-    }
-
-    /*
     for (size_t i = 0; i < mItems.size(); ++i)
     {
         LOG(INFO) << "Item " << std::to_string(i) << ": ("
@@ -206,12 +143,113 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>>& vetPos)
             LOG(INFO) << vars.str();
         }
     }
-    */
+}
+*/
 
-    //std::cout<<"FA: "<<operations_research::sat::SolutionIntegerValue(mResponse, forceFA);
-    //std::cout<<"\nFK: "<<operations_research::sat::SolutionIntegerValue(mResponse, forceK);
-    //std::cout<<"\nFRA: "<<operations_research::sat::SolutionIntegerValue(mResponse, forceRA);
-    //std::cout<<"\nFTA: "<<operations_research::sat::SolutionIntegerValue(mResponse, forceTA);
+void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>>& vetPos)
+{
+    vetPos = std::vector<Array<int, 4>>();
+    vetPos.reserve(mItems.size());
+
+    Array<int, 4> array;
+
+    static std::map<Orientation, int> mapOritentationRotation = {{NoRotation,0}, {RotationZ,2}, {RotationX,1}};
+
+
+    for (size_t i = 0; i < mItems.size(); ++i)
+    {
+        //std::cout<<"item: "<<i<<"\n";
+        array[0] = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsX[i]);
+        array[1] = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsY[i]);
+        array[2] = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsZ[i]);
+
+        for (size_t o = 0; o < mItemOrientations.size(); ++o)
+        {
+            bool util = operations_research::sat::SolutionBooleanValue(mResponse, mOrientation[i][o]);
+            if(util)
+            {
+                array[3] = (int)mapOritentationRotation[mItemOrientations[o]];
+                break;
+            }
+        }
+
+        vetPos.push_back(array);
+
+        /*
+        for(int j=0; j < mItems.size(); ++j)
+        {
+            if(i == j)
+                std::cout<<"0 ";
+
+            bool sup = operations_research::sat::SolutionBooleanValue(mResponse, mSupportXY[i][j]);
+            std::cout<<sup<<" ";
+        }
+
+        std::cout<<"\n";
+        */
+    }
+
+
+    /*
+    size_t numberOfItems = mItems.size();
+    for (size_t i = 0; i < numberOfItems; ++i)
+    {
+        for (size_t j = 0; j < numberOfItems; ++j)
+        {
+            if (i == j || mItems[i].pos >= mItems[j].pos)
+            {
+                continue;
+            }
+
+            for (size_t d = 0; d < mDimensions.size(); ++d)
+            {
+                const Dimension& dimension = mDimensions[d];
+
+                bool fisrtDir =  operations_research::sat::SolutionBooleanValue(mResponse, mRelativeDirections[i][j][dimension.FirstDirection]);
+                bool secondDir = operations_research::sat::SolutionBooleanValue(mResponse, mRelativeDirections[i][j][dimension.SecondDirection]);
+
+
+                switch (d)
+                {
+                case AxisX:
+                    // InFrontX, BehindX
+                    std::printf("\tmRelativeDirections[%d][%d][InFrontX]: %d", (int)i, (int)j, (int)fisrtDir);
+                    //std::printf("\tmRelativeDirections[%d][%d][BehindX]: %d", (int)i, (int)j, (int)secondDir);
+                    break;
+
+                case AxisY:
+                    // AxisY, RightY, LeftY
+                    std::printf("\tmRelativeDirections[%d][%d][RightY]: %d", (int)i, (int)j, (int)fisrtDir);
+                    std::printf("\tmRelativeDirections[%d][%d][LeftY]: %d", (int)i, (int)j, (int)secondDir);
+                    break;
+
+                 case AxisZ:
+                    // AxisZ, AboveZ, BelowZ
+                    std::printf("\tmRelativeDirections[%d][%d][AboveZ]: %d", (int)i, (int)j, (int)fisrtDir);
+                    //std::printf("\tmRelativeDirections[%d][%d][LeftY]: %d", (int)i, (int)j, (int)secondDir);
+                    break;
+                default:
+                    break;
+                }
+
+            }
+
+            std::cout<<"\n";
+
+        }
+        std::cout<<"\n\n";
+    }
+
+
+    for(size_t i=0; i < numberOfItems; ++i)
+    {
+        int z = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsZ[i]);
+        std::printf("%d: %d\n", (int)i, z);
+    }
+
+    std::cout<<"\n";
+*/
+
 }
 
 void ContainerLoadingCP::ExtractPacking(std::vector<Cuboid>& items) const
@@ -253,30 +291,6 @@ void ContainerLoadingCP::CreateVariables()
 {
     size_t numberOfItems = mItems.size();
 
-    if(input.axleWights)
-    {
-        double maxFK = 0.0;
-        for(int i=0; i < numberOfItems; ++i)
-        {
-            const Cuboid& cuboid = mItems[i];
-            int maxD = std::max(cuboid.Dz, std::max(cuboid.Dx, cuboid.Dy));
-            maxFK += cuboid.Weight*GravityMM*semiTrailer.distanceCargoSpaceTrailerAxle;
-        }
-
-        maxFK = maxFK*(1.0/semiTrailer.distanceKingpinTrailerAxle);
-        maxFK = std::round(maxFK);
-
-        forceK = mModelCP.NewIntVar({ 0, (int)maxFK});
-        forceRA = mModelCP.NewIntVar({0, GravityMM*semiTrailer.maxMassRearAxle});
-        forceFA = mModelCP.NewIntVar({0, GravityMM*semiTrailer.maxMassFrontAxle});
-        forceTA = mModelCP.NewIntVar({0, GravityMM*semiTrailer.maxMassTrailerAxle});
-
-        std::printf("max FK: %d\nmax FRA: %d\nmax FA: %d\nmax FTA: %d", (int)maxFK, GravityMM*semiTrailer.maxMassRearAxle,
-                                                                                 GravityMM*semiTrailer.maxMassFrontAxle,
-                                                                                 GravityMM*semiTrailer.maxMassTrailerAxle);
-    }
-
-
     std::vector<Cuboid> itemCopy;
     itemCopy.reserve(mItems.size());
     for (const auto& item: mItems)
@@ -293,9 +307,6 @@ void ContainerLoadingCP::CreateVariables()
     mEndPositionsY.reserve(numberOfItems);
     mStartPositionsZ.reserve(numberOfItems);
     mEndPositionsZ.reserve(numberOfItems);
-    mR.reserve(numberOfItems);
-    //mItemsForce.reserve(numberOfItems);
-
 
     for (size_t i = 0; i < numberOfItems; i++)
     {
@@ -303,25 +314,17 @@ void ContainerLoadingCP::CreateVariables()
         int minLength = item.EnableHorizontalRotation ? std::min(item.Dx, item.Dy) : item.Dx;
         int minWidth = item.EnableHorizontalRotation ? std::min(item.Dx, item.Dy) : item.Dy;
 
-        int min = std::min(item.Dx, std::min(item.Dy, item.Dz));
-        int max = std::max(item.Dx, std::max(item.Dy, item.Dz));
-
-
         mStartPositionsX.emplace_back(
-            mModelCP.NewIntVar({0, (int)InstanceNS::instanciaG.vetDimVeiculo[0]}));//operations_research::Domain::FromValues(placementPointsPerType[item].X)));
-        mEndPositionsX.emplace_back(mModelCP.NewIntVar({0, mContainer.Dx}));
+            mModelCP.NewIntVar(operations_research::Domain::FromValues(placementPointsPerType[item].X)));
+        mEndPositionsX.emplace_back(mModelCP.NewIntVar({minLength, mContainer.Dx}));
 
         mStartPositionsY.emplace_back(
-            mModelCP.NewIntVar({0, (int)InstanceNS::instanciaG.vetDimVeiculo[1]}));//operations_research::Domain::FromValues(placementPointsPerType[item].Y)));
-        mEndPositionsY.emplace_back(mModelCP.NewIntVar({0, mContainer.Dy}));
+            mModelCP.NewIntVar(operations_research::Domain::FromValues(placementPointsPerType[item].Y)));
+        mEndPositionsY.emplace_back(mModelCP.NewIntVar({minWidth, mContainer.Dy}));
 
         mStartPositionsZ.emplace_back(
-            mModelCP.NewIntVar({0, (int)InstanceNS::instanciaG.vetDimVeiculo[2]}));//operations_research::Domain::FromValues(placementPointsPerType[item].Z)));
-        mEndPositionsZ.emplace_back(mModelCP.NewIntVar({0, mContainer.Dz}));
-
-        if(input.axleWights)
-            mR.emplace_back(mModelCP.NewIntVar({-10*mContainer.Dx, 10*mContainer.Dx}));
-        //mItemsForce.emplace_back(mModelCP.NewIntVar({(int)item.Weight*10, (int)item.Weight*10}));
+            mModelCP.NewIntVar(operations_research::Domain::FromValues(placementPointsPerType[item].Z)));
+        mEndPositionsZ.emplace_back(mModelCP.NewIntVar({item.Dz, mContainer.Dz}));
     }
 
     mLengths.reserve(numberOfItems);
@@ -338,16 +341,13 @@ void ContainerLoadingCP::CreateVariables()
         int maxLength = item.EnableHorizontalRotation ? std::max(item.Dx, item.Dy) : item.Dx;
         int maxWidth = item.EnableHorizontalRotation ? std::max(item.Dx, item.Dy) : item.Dy;
 
-        int min = std::min(item.Dx, std::min(item.Dy, item.Dz));
-        int max = std::max(item.Dx, std::max(item.Dy, item.Dz));
+        mLengths.emplace_back(mModelCP.NewIntVar(
+            operations_research::Domain::FromIntervals({{minLength, minLength}, {maxLength, maxLength}})));
 
-        mLengths.emplace_back(mModelCP.NewIntVar({min, max}));
-            //operations_research::Domain::FromIntervals({{min, min}, {max, max}})));
+        mWidths.emplace_back(mModelCP.NewIntVar(
+            operations_research::Domain::FromIntervals({{minWidth, minWidth}, {maxWidth, maxWidth}})));
 
-        mWidths.emplace_back(mModelCP.NewIntVar({min, max}));
-            //operations_research::Domain::FromIntervals({{min, min}, {max, max}})));
-
-        mHeights.emplace_back(mModelCP.NewIntVar({min, max}));
+        mHeights.emplace_back(mModelCP.NewIntVar({item.Dz, item.Dz}));
     }
 
     mPlacedOnFloor.reserve(numberOfItems);
@@ -360,14 +360,13 @@ void ContainerLoadingCP::CreateVariables()
     mIntervalsY.reserve(numberOfItems);
     mIntervalsZ.reserve(numberOfItems);
 
-    /*
     for (size_t i = 0; i < numberOfItems; i++)
     {
         mIntervalsX.emplace_back(mModelCP.NewIntervalVar(mStartPositionsX[i], mLengths[i], mEndPositionsX[i]));
         mIntervalsY.emplace_back(mModelCP.NewIntervalVar(mStartPositionsY[i], mWidths[i], mEndPositionsY[i]));
         mIntervalsZ.emplace_back(mModelCP.NewIntervalVar(mStartPositionsZ[i], mHeights[i], mEndPositionsZ[i]));
     }
-    */
+
     mOrientation.reserve(numberOfItems);
     for (size_t i = 0; i < numberOfItems; i++)
     {
@@ -380,13 +379,11 @@ void ContainerLoadingCP::CreateVariables()
             mOrientation[i].emplace_back(mModelCP.NewBoolVar());
         }
 
-        /*
         if (!itemI.EnableHorizontalRotation)
         {
             // TODO: consider not creating the variable instead of fixing it to zero.
             mModelCP.FixVariable(mOrientation[i][RotationZ], false);
         }
-        */
     }
 
     mRelativeDirections.reserve(numberOfItems);
@@ -434,20 +431,16 @@ void ContainerLoadingCP::CreateVariables()
             mOverlapAreasXY.reserve(numberOfItems - i);
         }
 
-        int maxI = std::max(itemI.Dx, std::max(itemI.Dy, itemI.Dz));
-
-
-        // TODO check!
         for (size_t j = i + 1; j < numberOfItems; j++)
         {
             const Cuboid& itemJ = mItems[j];
-            int maxJ = std::max(itemJ.Dx, std::max(itemJ.Dy, itemJ.Dz));
+            int maxIntersection = std::max(itemI.Dx * itemI.Dy, itemJ.Dx * itemJ.Dy);
 
             mItemsOverlapsXY[i].emplace_back(mModelCP.NewBoolVar());
 
             if (mEnableSupport)
             {
-                mOverlapAreasXY[i].emplace_back(mModelCP.NewIntVar({0, maxI*maxJ}));
+                mOverlapAreasXY[i].emplace_back(mModelCP.NewIntVar({0, maxIntersection}));
             }
         }
     }
@@ -502,15 +495,10 @@ void ContainerLoadingCP::AddConstraints()
         CreateSupportItem();
     }
 
-    //std::printf("Fragility: %d\n", (int)mEnableFragility);
-
-
-    /*
     if (mEnableFragility)
     {
         CreateFragility();
     }
-    */
 
     CreateOnFloorConstraints();
 
@@ -532,94 +520,13 @@ void ContainerLoadingCP::AddConstraints()
             CreateLifoNoSequence();
         }
     }
-
-
-    if(input.axleWights)
-        CreateAxleWeights();
-
 }
-
-void ContainerLoadingCP::CreateAxleWeights()
-{
-
-    int tolerance = 5;
-
-
-
-    operations_research::sat::LinearExpr sumMoments;
-    int sumForces = 0;
-    for(int i=0; i < mItems.size(); ++i)
-    {
-        // x = y
-        // x - y = 0
-        // x - y >= -1
-        // x - y <= 1
-
-        //mModelCP.AddEquality(2*mR[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle -2*mStartPositionsX[i] - mLengths[i]);
-        mModelCP.AddGreaterOrEqual(2*mR[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle -2*mStartPositionsX[i] - mLengths[i]
-                                            -tolerance*2);
-
-        mModelCP.AddLessOrEqual(2*mR[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle -2*mStartPositionsX[i] - mLengths[i]
-                                         +tolerance*2);
-
-        int itemF = mItems[i].Weight*GravityMM;
-        sumMoments += itemF*mR[i];
-        sumForces += itemF;
-
-
-        /*
-        std::cout << "i=" << i
-                  << " R in [" << mR[i].Domain() << "]"
-                  << " X in [" << mStartPositionsX[i].Domain() << "]"
-                  << " W in [" << mWidths[i].Domain()<<"]"
-                  << " D=" << semiTrailer.distanceCargoSpaceTrailerAxle
-                  << std::endl;
-        */
-
-    }
-
-
-    // EQ: 10
-    mModelCP.AddGreaterOrEqual(semiTrailer.distanceKingpinTrailerAxle*forceK, scale*sumMoments + scale*semiTrailer.massTrailer*GravityMM*semiTrailer.distanceMassTrailerTrailerAxle - tolerance);
-     mModelCP.AddLessOrEqual(semiTrailer.distanceKingpinTrailerAxle*forceK, scale*sumMoments + scale*semiTrailer.massTrailer*GravityMM*semiTrailer.distanceMassTrailerTrailerAxle + tolerance);
-
-
-    // EQ: 11
-    mModelCP.AddGreaterOrEqual(forceFA + forceRA - forceK - scale*semiTrailer.massTractor*GravityMM, -tolerance);
-    mModelCP.AddLessOrEqual(forceFA + forceRA - forceK - scale*semiTrailer.massTractor*GravityMM, tolerance);
-
-    // EQ: 12
-    mModelCP.AddGreaterOrEqual(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK + scale*semiTrailer.massTractor*GravityMM*semiTrailer.distanceMassTractorRearAxle - tolerance);
-    mModelCP.AddLessOrEqual(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK + scale*semiTrailer.massTractor*GravityMM*semiTrailer.distanceMassTractorRearAxle + tolerance);
-
-
-    // EQ: 9
-    mModelCP.AddGreaterOrEqual(forceTA, scale*sumForces + scale*semiTrailer.massTrailer*GravityMM - forceK - tolerance);
-    mModelCP.AddLessOrEqual(forceTA, scale*sumForces + scale*semiTrailer.massTrailer*GravityMM - forceK + tolerance);
-
-
-
-
-    /*
-    // EQ: 10
-    mModelCP.AddEquality(semiTrailer.distanceKingpinTrailerAxle*forceK, scale*sumMoments + scale*semiTrailer.massTrailer*GravityMM*semiTrailer.distanceMassTrailerTrailerAxle);
-    // EQ: 11
-    mModelCP.AddEquality(forceFA + forceRA - forceK - scale*semiTrailer.massTractor*GravityMM, 0);
-    // EQ: 12
-    mModelCP.AddEquality(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK + scale*semiTrailer.massTractor*GravityMM*semiTrailer.distanceMassTractorRearAxle);
-    // EQ: 9
-    mModelCP.AddEquality(forceTA, scale*sumForces + scale*semiTrailer.massTrailer*GravityMM - forceK);
-    */
-
-
-
-}
-
 
 /// Relative directions of items. Necessary for non overlapping items.
 void ContainerLoadingCP::CreateNoOverlap()
 {
     size_t numberOfItems = mItems.size();
+
     for (size_t i = 0; i < numberOfItems; ++i)
     {
         for (size_t j = 0; j < numberOfItems; ++j)
@@ -652,6 +559,38 @@ void ContainerLoadingCP::CreateNoOverlap()
             mModelCP.AddAtLeastOne(mRelativeDirections[i][j]);
         }
     }
+
+
+    /*
+    for (size_t i = 0; i < numberOfItems; ++i)
+    {
+        for (size_t j = i+1; j < numberOfItems; ++j)
+        {
+            std::vector<operations_research::sat::BoolVar> dirs;
+
+            for (size_t d = 0; d < mDimensions.size(); ++d)
+            {
+                const Dimension& dimension = mDimensions[d];
+                const auto [startPosition, endPosition] = GetIntVars(dimension.Type);
+
+                mModelCP.AddLessOrEqual(endPosition[j], startPosition[i])
+                    .OnlyEnforceIf(mRelativeDirections[i][j][dimension.FirstDirection]);
+
+                mModelCP.AddLessOrEqual(endPosition[i], startPosition[j])
+                    .OnlyEnforceIf(mRelativeDirections[i][j][dimension.SecondDirection]);
+
+                dirs.push_back(mRelativeDirections[i][j][dimension.FirstDirection]);
+                dirs.push_back(mRelativeDirections[i][j][dimension.SecondDirection]);
+
+                mModelCP.AddEquality(
+                    mRelativeDirections[i][j][dimension.FirstDirection],
+                    mRelativeDirections[j][i][dimension.SecondDirection]);
+            }
+
+            mModelCP.AddBoolOr(dirs);
+        }
+    }
+    */
 }
 
 /// Set dimensions of items based on orientation
@@ -756,15 +695,15 @@ void ContainerLoadingCP::CreateXYIntersectionBool()
             auto positionJ = j - i - 1;
 
             mModelCP.AddAtLeastOne({mItemsOverlapsXY[i][positionJ],
-                                    mRelativeDirections[i][j][Left],
-                                    mRelativeDirections[i][j][Right],
-                                    mRelativeDirections[i][j][Behind],
-                                    mRelativeDirections[i][j][InFront]});
+                                    mRelativeDirections[i][j][LeftY],
+                                    mRelativeDirections[i][j][RightY],
+                                    mRelativeDirections[i][j][BehindX],
+                                    mRelativeDirections[i][j][InFrontX]});
 
-            mModelCP.AddImplication(mRelativeDirections[i][j][Left], mItemsOverlapsXY[i][positionJ].Not());
-            mModelCP.AddImplication(mRelativeDirections[i][j][Right], mItemsOverlapsXY[i][positionJ].Not());
-            mModelCP.AddImplication(mRelativeDirections[i][j][Behind], mItemsOverlapsXY[i][positionJ].Not());
-            mModelCP.AddImplication(mRelativeDirections[i][j][InFront], mItemsOverlapsXY[i][positionJ].Not());
+            mModelCP.AddImplication(mRelativeDirections[i][j][LeftY], mItemsOverlapsXY[i][positionJ].Not());
+            mModelCP.AddImplication(mRelativeDirections[i][j][RightY], mItemsOverlapsXY[i][positionJ].Not());
+            mModelCP.AddImplication(mRelativeDirections[i][j][BehindX], mItemsOverlapsXY[i][positionJ].Not());
+            mModelCP.AddImplication(mRelativeDirections[i][j][InFrontX], mItemsOverlapsXY[i][positionJ].Not());
         }
     }
 }
@@ -838,10 +777,8 @@ void ContainerLoadingCP::CreateSupportItem()
             }
 
             operations_research::sat::BoolVar isVerticallyAdjacent = mModelCP.NewBoolVar();
-            mModelCP.AddLessOrEqual(mEndPositionsZ[j] - mStartPositionsZ[i], input.supportLimit).OnlyEnforceIf(isVerticallyAdjacent);
-            mModelCP.AddGreaterThan(mEndPositionsZ[j] - mStartPositionsZ[i], input.supportLimit).OnlyEnforceIf(isVerticallyAdjacent.Not());
-            //mModelCP.AddEquality(mEndPositionsZ[j], mStartPositionsZ[i]).OnlyEnforceIf(isVerticallyAdjacent);
-            //mModelCP.AddNotEqual(mEndPositionsZ[j], mStartPositionsZ[i]).OnlyEnforceIf(isVerticallyAdjacent.Not());
+            mModelCP.AddEquality(mEndPositionsZ[j], mStartPositionsZ[i]).OnlyEnforceIf(isVerticallyAdjacent);
+            mModelCP.AddNotEqual(mEndPositionsZ[j], mStartPositionsZ[i]).OnlyEnforceIf(isVerticallyAdjacent.Not());
 
             mModelCP.AddImplication(isVerticallyAdjacent.Not(), mSupportXY[i][j].Not());
 
@@ -874,26 +811,24 @@ void ContainerLoadingCP::CreateLifoSequence()
     {
         for (size_t j = 0; j < numberOfItems; ++j)
         {
-            if (i != j && mItems[i].GroupId < mItems[j].GroupId)
+            if (i != j && mItems[i].pos < mItems[j].pos)
             {
+                //std::printf("%d %d\n", (int)mItems[i].ExternId, (int)mItems[j].ExternId);
                 // Item i must be placed behind or below item j if
                 // - item i is unloaded after item j (smaller group id) and
                 // - item i is not placed left or right of item j -> in way to rear end of container
-                // Original constranit:
-                // mModelCP.AddAtLeastOne({mRelativeDirections[i][j][Behind], mRelativeDirections[i][j][Below]})
-                //    .OnlyEnforceIf({mRelativeDirections[i][j][Left].Not(), mRelativeDirections[i][j][Right].Not()});
 
+                // Original Constraint
+                //mModelCP.AddAtLeastOne({mRelativeDirections[i][j][BehindX], mRelativeDirections[i][j][BelowZ]})
+                //    .OnlyEnforceIf({mRelativeDirections[i][j][LeftY].Not(), mRelativeDirections[i][j][RightY].Not()});
+                // Funciona
+                mModelCP.AddAtLeastOne({mRelativeDirections[i][j][RightY], mRelativeDirections[i][j][LeftY], mRelativeDirections[i][j][InFrontX], mRelativeDirections[i][j][AboveZ]});                //auto varX = mModelCP.NewBoolVar();
 
-                auto zGreater = mModelCP.NewBoolVar();
-
-                mModelCP.AddGreaterThan(mStartPositionsZ[i],  mEndPositionsZ[j]).OnlyEnforceIf(zGreater);
-                mModelCP.AddLessOrEqual(mStartPositionsZ[i], mEndPositionsZ[j]).OnlyEnforceIf(zGreater.Not());
-
-                mModelCP.AddAtLeastOne({mRelativeDirections[i][j][Left], mRelativeDirections[i][j][Below], zGreater})
-                    .OnlyEnforceIf({mRelativeDirections[i][j][Behind].Not(), mRelativeDirections[i][j][InFront].Not()});
             }
         }
     }
+
+    //std::printf("\n\n");
 }
 
 /// LIFO unloading without given customer sequence
@@ -915,21 +850,19 @@ void ContainerLoadingCP::CreateLifoNoSequence()
                 if (customerI < customerJ)
                 {
                     auto position = customerJ - customerI - 1;
-                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][Behind], mRelativeDirections[i][j][Below]})
-                        .OnlyEnforceIf({mRelativeDirections[i][j][Left].Not(),
-                                        mRelativeDirections[i][j][Right].Not(),
+                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][BehindX], mRelativeDirections[i][j][BelowZ]})
+                        .OnlyEnforceIf({mRelativeDirections[i][j][LeftY].Not(),
+                                        mRelativeDirections[i][j][RightY].Not(),
                                         mSuccessionMatrix[customerI][position]});
                 }
-                /*
                 else
                 {
                     auto position = customerI - customerJ - 1;
-                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][Behind], mRelativeDirections[i][j][Below]})
-                        .OnlyEnforceIf({mRelativeDirections[i][j][Left].Not(),
-                                        mRelativeDirections[i][j][Right].Not(),
+                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][BehindX], mRelativeDirections[i][j][BelowZ]})
+                        .OnlyEnforceIf({mRelativeDirections[i][j][LeftY].Not(),
+                                        mRelativeDirections[i][j][RightY].Not(),
                                         mSuccessionMatrix[customerJ][position].Not()});
                 }
-                */
             }
         }
     }

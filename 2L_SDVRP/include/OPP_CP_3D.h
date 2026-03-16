@@ -77,7 +77,7 @@ class ContainerLoadingCP
 
     operations_research::sat::CpSolverResponse mResponse;
 
-    std::vector<Dimension> mDimensions = {{AxisY, Right, Left}, {AxisX, InFront, Behind}, {AxisZ, Above, Below}};
+    std::vector<Dimension> mDimensions = {{AxisY, RightY, LeftY}, {AxisX, InFrontX, BehindX}, {AxisZ, AboveZ, BelowZ}};
     std::vector<Orientation> mItemOrientations = std::vector{NoRotation};//, RotationZ, RotationX};
     operations_research::sat::CpModelBuilder mModelCP;
 
@@ -139,7 +139,7 @@ class ContainerLoadingCP
     void AddObjective();
     void CreateVariables();
 
-    void SetParameters(operations_research::sat::SatParameters& parameters);
+    void SetParameters(operations_research::sat::SatParameters& parameters) const;
 };
 
 }
