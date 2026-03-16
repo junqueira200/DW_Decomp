@@ -46,7 +46,8 @@ namespace ParseInputNS
         double      cpSatTime                = -1.0;
         // 0 Forward, 1 Backard, 2 Bidirectional
         int         labelingType             = 0;
-        bool        filo                     = true;
+        bool        lifo                     = true;
+        bool        mlifo                    = false;
         bool 		inst2d                   = false;
         bool 		instOroloc3D             = false;
         bool        instOroloc3D_2           = false;
@@ -66,6 +67,7 @@ namespace ParseInputNS
     class Output
     {
     public:
+        std::string strMsg = "CP MODEL WITHOUT ROTATION!";
         std::string  data;
         std::string  fileSaida;
         unsigned int semente;

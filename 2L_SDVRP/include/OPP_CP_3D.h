@@ -78,7 +78,7 @@ class ContainerLoadingCP
     operations_research::sat::CpSolverResponse mResponse;
 
     std::vector<Dimension> mDimensions = {{AxisY, Right, Left}, {AxisX, InFront, Behind}, {AxisZ, Above, Below}};
-    std::vector<Orientation> mItemOrientations = std::vector{NoRotation, RotationZ, RotationX};        
+    std::vector<Orientation> mItemOrientations = std::vector{NoRotation};//, RotationZ, RotationX};
     operations_research::sat::CpModelBuilder mModelCP;
 
     ORIntVars1D mStartPositionsX;
@@ -101,9 +101,11 @@ class ContainerLoadingCP
     ORIntVars2D
         mOverlapAreasXY; // mOverlapAreasXY[i][j], integer, size of intersection area in xy-plane of items i and j
 
+    // Dx, Dy, Dz
     ORIntVars1D mWidths;
     ORIntVars1D mLengths;
     ORIntVars1D mHeights;
+
     ORIntVars1D mR;         // Distance between to the trailer axle
     //ORIntVars1D mItemsForce;
 

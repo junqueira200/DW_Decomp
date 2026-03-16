@@ -68,7 +68,7 @@ namespace InstanceNS
         int numDim = 2;
         int numRotation = 6;
         double maxPayload = 0;
-        double minSupport = 0.7;
+        double minSupport = 0.75;
 
         Array<double,3> vetDimVeiculo;
         //double veicAltura = 0.0;
@@ -121,7 +121,7 @@ namespace InstanceNS
 
 
     inline Instance instanciaG;
-    inline static const Array<InstanceNS::Rotation, 3> vetRot = {Rot0, Rot1, Rot2};
+    inline static const Array<InstanceNS::Rotation, 1> vetRot = {Rot0};//, Rot1, Rot2};
     //std::string printItem(int itemId);
 }
 

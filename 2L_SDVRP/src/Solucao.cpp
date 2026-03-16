@@ -11,10 +11,11 @@
 #include "Solucao.h"
 #include "sefe_array.h"
 #include "ConstrutivoBin.h"
+#include "InputOutput.h"
 
 using namespace InstanceNS;
 using namespace ConstrutivoBinNS;
-
+using namespace ParseInputNS;
 
 SolucaoNS::Bin::Bin()
 {
@@ -638,6 +639,40 @@ bool SolucaoNS::Bin::verificaViabilidade()
                 return false;
             }
         }
+
+        if(vetPosItem[i].vetDim[2] == 0)
+            continue;
+
+        double areaSuport = 0.0;
+
+        for(int j=0; j < numItens; ++j)
+        {
+            if(i == j)
+                continue;
+
+            const Ponto& exPointOutro = vetPosItem[j];
+            double outroZ_Ex = exPointOutro.vetDim[2] +
+                               instanciaG.vetItens[vetItemId[j]].getDimRotacionada(2, vetRotacao[j]);
+            //double dif = std::abs(outroZ_Ex-ep.vetDim[2]);
+            if(doubleEqual(outroZ_Ex, vetPosItem[i].vetDim[2]))
+            {
+                double sup = computeXY_Overlap(instanciaG.vetItens[vetItemId[i]], vetRotacao[i], vetPosItem[i],
+                                               instanciaG.vetItens[vetItemId[j]], vetRotacao[j], vetPosItem[j]);
+                //std::cout<<"sup: "<<sup<<"\n";
+                areaSuport += sup;
+            }
+
+        }
+
+        double area = instanciaG.vetItens[vetItemId[i]].getDimRotacionada(0, vetRotacao[i])*
+                      instanciaG.vetItens[vetItemId[i]].getDimRotacionada(1, vetRotacao[i]);
+
+        double support = areaSuport/area;
+
+        if(support < instanciaG.minSupport)
+            return false;
+
+
     }
 
     return true;
@@ -806,4 +841,62 @@ std::ostream& SolucaoNS::operator<<(std::ostream &os, const Bin& bin)
 
 
     return os;
+}
+
+bool SolucaoNS::checkUnloadingSequence(Bin& bin, Rota& rota)
+{
+    if(!input.lifo)
+        return true;
+
+    for(int i=0; i < bin.numItens; ++i)
+    {
+        Item& itemI = instanciaG.vetItens[bin.vetItemId[i]];
+        int posItemI = findPos(rota, bin.vetItemId[i]);
+        //std::cout<<rota.printRota()<<"\nCliente: "<<itemI.customer<<"\nPos: "<<posItemI<<"\n\n";
+
+        for(int j=0; j < bin.numItens; ++j)
+        {
+            Item& itemJ = instanciaG.vetItens[bin.vetItemId[j]];
+
+            if(i == j || itemI.customer == itemJ.customer)
+                continue;
+
+            int posItemJ = findPos(rota, bin.vetItemId[j]);
+            if(posItemJ < posItemI)
+            {
+                //std::cout<<"ItemI: "<<itemI.oroloc3D_item_id<<"\n";
+                //std::cout<<"ItemJ: "<<itemJ.oroloc3D_item_id<<"\n";
+
+                if(!lifo(itemI, bin.vetPosItem[i], bin.vetRotacao[i],
+                         itemJ, bin.vetPosItem[j], bin.vetRotacao[j], ParseInputNS::input.mlifo))
+                    return false;
+
+                //EXIT_PRINT();
+                /*
+                if(isBehind(itemI, bin.vetPosItem[i], bin.vetRotacao[i], itemJ, bin.vetPosItem[j], bin.vetRotacao[j]))
+                {
+                    std::cout<<"Unloading Sequence for Item "<<bin.vetItemId[i]<<" not respected due to Item "<<
+                                bin.vetItemId[j]<<"\n";
+
+                    return false;
+                }
+
+                if(isBelow(itemI, bin.vetPosItem[i], bin.vetRotacao[i], itemJ, bin.vetPosItem[j], bin.vetRotacao[j], true))
+                {
+                    std::cout<<"Unloading Sequence for Item "<<bin.vetItemId[i]<<" not respected due to Item "<<
+                                bin.vetItemId[j]<<"\n";
+
+                    return false;
+                }
+                */
+
+            }
+
+            //std::cout<<"\n************\n\n";
+        }
+    }
+
+    //EXIT_PRINT();
+    return true;
+
 }

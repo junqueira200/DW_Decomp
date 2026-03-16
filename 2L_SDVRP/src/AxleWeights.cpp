@@ -19,7 +19,7 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin& bin) const
     for(int i=0; i < bin.numItens; ++i)
     {
 
-        double f = instanciaG.vetItens[bin.vetItemId[i]].weightForce;
+        double f = instanciaG.vetItens[bin.vetItemId[i]].weight*GravityMM;
         sumF += f;
         double r = (double)distanceCargoSpaceTrailerAxle - bin.vetPosItem[i].vetDim[0] -
                    instanciaG.vetItens[bin.vetItemId[i]].getDimRotacionada(0, bin.vetRotacao[i])/2.0;
@@ -34,29 +34,29 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin& bin) const
 
     //std::printf("\nsumF: %.2f; sumM: %.2f\n", sumF, sumM);
 
-    fK  = (1.0/distanceKingpinTrailerAxle)*(sumM + massTrailer*Gravity*distanceMassTrailerTrailerAxle);
-    fFA = (1.0/(double)wheelBase) * (fK * distanceKingpinRearAxle + massTractor*Gravity*distanceMassTractorRearAxle);
-    fRA = fK + massTractor*Gravity - fFA;
-    fTA = sumF + massTrailer*Gravity - fK;
+    fK  = (1.0/distanceKingpinTrailerAxle)*(sumM + massTrailer*GravityMM*distanceMassTrailerTrailerAxle);
+    fFA = (1.0/(double)wheelBase) * (fK * distanceKingpinRearAxle + massTractor*GravityMM*distanceMassTractorRearAxle);
+    fRA = fK + massTractor*GravityMM - fFA;
+    fTA = sumF + massTrailer*GravityMM - fK;
 
     std::printf("fK: %.1f; fFA: %.1f; fRA: %.1f; FTA: %.1f\n", fK, fFA, fRA, fTA);
 
-    if(fFA > maxMassFrontAxle*Gravity || fRA > maxMassRearAxle*Gravity || fTA > maxMassTrailerAxle*Gravity ||
-       fK < 0.0 || fFA < 0.0 || fRA < 0.0 || fTA < 0.0)
+    if(fFA > maxMassFrontAxle*GravityMM || fRA > maxMassRearAxle*GravityMM || fTA > maxMassTrailerAxle*GravityMM)// ||
+       //fK < 0.0 || fFA < 0.0 || fRA < 0.0 || fTA < 0.0)
     {
         std::printf("\tINFEASIBLE\t");
 
-        if(fFA > maxMassFrontAxle*Gravity)
+        if(fFA > maxMassFrontAxle*GravityMM)
             std::printf("fFa >; ");
         if(fK < 0.0)
             std::printf("fk < 0; ");
         if(fFA < 0.0)
             std::printf("fFA < 0; ");
-        if(fRA > maxMassRearAxle*Gravity)
+        if(fRA > maxMassRearAxle*GravityMM)
             std::printf("fRA >; ");
         if(fRA < 0.0)
             std::printf("fRA < 0; ");
-        if(fTA > maxMassTrailerAxle*Gravity)
+        if(fTA > maxMassTrailerAxle*GravityMM)
             std::printf("fTA >; ");
         if(fTA < 0.0)
             std::printf("fTA < 0; ");

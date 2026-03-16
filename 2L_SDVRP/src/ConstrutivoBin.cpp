@@ -205,7 +205,7 @@ std::cout << "***********************************************\n\n";
         if(PrintConst)
 std::cout<<"tamTemp: "<<tamTemp<<"; ((vetItensTam-k)): "<<vetItensTam-k<<"\n";
         int i = k;
-        if(tamTemp > 1 && !input.filo)
+        if(tamTemp > 1 && !input.lifo)
             i = getRandInt(k, (k+tamTemp-1));
 
         const int itemId = vetItens[i];
@@ -408,7 +408,8 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
                                              VectorI &vetItens,
                                              const int vetItensTam,
                                              const double alpha,
-                                             const int numRepeticoes)
+                                             const int numRepeticoes,
+                                             SolucaoNS::Rota* rota)
 {
     double volume  = bin.volumeOcupado;
     double demanda = bin.demandaTotal;
@@ -441,7 +442,7 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
         //std::cout<<"numItensAlo: "<<numItensAlo<<"\n\n";
         if(numItensAlo == vetItensTam)
         {
-            bool feasible = true;
+            bool feasible = binVet[0].verificaViabilidade();
             if(input.axleWights)
             {
                 feasible = semiTrailer.checkAxleWeights(bin);
@@ -451,6 +452,14 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
 
             if(feasible)
             {
+                if(rota)
+                    feasible = SolucaoNS::checkUnloadingSequence(binVet[0], *rota);
+                else
+                    std::printf("Unloading Sequence diden't run, route=null\n");
+
+                if(!feasible)
+                    return false;
+
                 copiaBin(binVet[0], bin);
                 std::printf("Utilizacao %.2f%%\n", binVet[0].getPorcentagemUtilizacao());
                 return true;

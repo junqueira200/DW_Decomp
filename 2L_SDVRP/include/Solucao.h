@@ -14,6 +14,7 @@
 #include "safe_matrix.h"
 #include "Instancia.h"
 #include "AuxT.h"
+//#include "InputOutput.h"
 
 
 namespace SolucaoNS
@@ -213,7 +214,85 @@ namespace SolucaoNS
         return true;
     }
 
+    bool checkUnloadingSequence(Bin& bin, Rota& rota);
+
+    inline __attribute__((always_inline))
+    int findPos(Rota& rota, int itemId)
+    {
+
+        int customer = InstanceNS::instanciaG.vetItens[itemId].customer;
+        return std::distance(rota.vetRota.begin(), std::find(rota.vetRota.begin(), rota.vetRota.begin()+rota.numPos,
+                                                             customer));
+
+    }
+
+    inline __attribute__((always_inline))
+    bool isBehind(InstanceNS::Item& item0, Ponto p0, InstanceNS::Rotation r0,
+                  InstanceNS::Item& item1, Ponto p1, InstanceNS::Rotation r1)
+    {
+        //double maxX0, maxY0, maxZ0, maxX1, maxY1, maxZ1;
+
+        double maxX0 = p0.vetDim[0] + item0.getDimRotacionada(0, r0);
+        double maxY0 = p0.vetDim[1] + item0.getDimRotacionada(1, r0);
+        double maxZ0 = p0.vetDim[2] + item0.getDimRotacionada(2, r0);
+
+        //double maxX1 = p1.vetDim[0] + item1.vetDim[0];
+        double maxY1 = p1.vetDim[1] + item1.getDimRotacionada(1, r1);
+        double maxZ1 = p1.vetDim[2] + item1.getDimRotacionada(2, r1);
+
+        return maxX0        <= p1.vetDim[0] &&
+               maxZ0        > p1.vetDim[2]  &&
+               p0.vetDim[0] < maxZ1         &&
+               maxY0        > p1.vetDim[1]  &&
+               p0.vetDim[1] < maxY1;
+
+    }
+
+    inline __attribute__((always_inline))
+    bool isBelow(InstanceNS::Item& item0, Ponto p0, InstanceNS::Rotation r0,
+                 InstanceNS::Item& item1, Ponto p1, InstanceNS::Rotation r1, bool touch)
+    {
+        double maxX0 = p0.vetDim[0] + item0.getDimRotacionada(0, r0);
+        double maxY0 = p0.vetDim[1] + item0.getDimRotacionada(1, r0);
+
+        double maxX1 = p1.vetDim[0] + item1.getDimRotacionada(0, r1);
+        double maxY1 = p1.vetDim[1] + item1.getDimRotacionada(1, r1);
+
+        double maxZ0 = p0.vetDim[2] + item0.getDimRotacionada(2, r0);
+
+        return ((touch && maxZ0 == p1.vetDim[2]) || !touch && maxZ0 <= p1.vetDim[2])
+               && p0.vetDim[1] < maxY1
+               && p1.vetDim[1] < maxY0
+               && p0.vetDim[0] < maxX1
+               && p1.vetDim[0] < maxX0;
+
+    }
+
+    inline __attribute__((always_inline))
+    bool lifo(InstanceNS::Item& item0, Ponto p0, InstanceNS::Rotation r0,
+              InstanceNS::Item& item1, Ponto p1, InstanceNS::Rotation r1, bool mlifo)
+    {
+            double maxX0 = p0.vetDim[0] + item0.getDimRotacionada(0, r0);
+            double maxY0 = p0.vetDim[1] + item0.getDimRotacionada(1, r0);
+            double maxZ0 = p0.vetDim[2] + item0.getDimRotacionada(2, r0);
+
+            double maxX1 = p1.vetDim[0] + item1.getDimRotacionada(0, r1);
+            double maxY1 = p1.vetDim[1] + item1.getDimRotacionada(1, r1);
+            double maxZ1 = p1.vetDim[2] + item1.getDimRotacionada(2, r1);
+
+            if((maxX1 <= p0.vetDim[0]) ||   // The end of j is less then the begining of i. It's correct for LIFO
+                (maxY0 <= p1.vetDim[1]) ||   // Item i is complete at left of item j. It's correct for LIFO
+                (maxY1 <= p0.vetDim[1]) ||   // Item i is complete at right of item j. It's correct for LIFO
+                (maxZ1 <= p0.vetDim[2]) ||   // Item i is above item j. It's correct for LIFO
+                (maxZ0 <= p1.vetDim[2]))     // Item i is below item j. It's correct for LIFO
+                return true;
+
+            return mlifo;
+    }
+
     inline const Ponto PontoZero(0.0, 0.0, 0.0);
+
+
 }
 
 #endif //INC_2L_SDVRP_SOLUCAO_H

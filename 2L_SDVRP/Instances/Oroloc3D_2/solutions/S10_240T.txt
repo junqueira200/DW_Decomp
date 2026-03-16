@@ -13,7 +13,7 @@ No_of_Items:            	17
 Customer_Sequence:      	26 9 12
 
 CustId	Id	TypeId	Rotated	x	y	z	Length	Width	Height	mass	Fragility	LoadBearingStrength
-12		30	31		0		570	120	0	5840	2210	610	3682	0	-1
+12	30	31		0		570	120	0	5840	2210	610	3682	0	-1
 12	124	125	0	570	385	610	2870	1680	340	905	0	-1
 12	125	126	0	570	385	950	2870	1680	340	906	0	-1
 12	126	127	0	570	385	1290	2870	1680	340	906	0	-1

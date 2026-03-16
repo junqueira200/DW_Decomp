@@ -47,7 +47,7 @@ void ParseInputNS::parseInput(int argc, const char* argv[])
                         //("comprimentoAlturaIguais1", "Desabilita o bin packing, fazendo largura e altura de todos os itens iguais a 1", cxxopts::value<bool>(input.comprimentoAlturaIguais1))
                         //("cpSat", "Abilita o cp-sat no empacotamento", cxxopts::value<bool>(input.cpSat))
                         //("cpSatTime", "Tempo limite para o cp-sat", cxxopts::value<double>(input.cpSatTime))
-                        ("filo", "", cxxopts::value<bool>(input.filo))
+                        ("filo", "", cxxopts::value<bool>(input.lifo))
                         ("lTaype", "Labeling Type (0, 1, 2)", cxxopts::value<int>(input.labelingType))
                         ("2d", "Indicates if the instance is 2d. Default is 3d!",
                               cxxopts::value<bool>(input.inst2d))
@@ -201,7 +201,7 @@ void ParseInputNS::escreveFileSol(const SolucaoNS::Solucao &sol, const std::stri
     std::ofstream file;
     file.open(fileSol, std::ios_base::out);
 
-    file << output.data << "\n" << input.strInstCompleto << "\n\n";
+    file << output.data << "\n" << input.strInstCompleto << "\n"<<output.strMsg<<"\n";
     file<<sol;
     file.close();
 }

@@ -154,6 +154,17 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>>& vetPos)
             }
         }
 
+        for(int j=0; j < mItems.size(); ++j)
+        {
+            if(i == j)
+                std::cout<<"0 ";
+
+            bool sup = operations_research::sat::SolutionBooleanValue(mResponse, mSupportXY[i][j]);
+            std::cout<<sup<<" ";
+        }
+
+        std::cout<<"\n";
+
         vetPos.push_back(array);
     }
 
@@ -551,7 +562,7 @@ void ContainerLoadingCP::CreateAxleWeights()
         mModelCP.AddLessOrEqual(2*mR[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle -2*mStartPositionsX[i] - mLengths[i]
                                          +tolerance*2);
 
-        int itemF = mItems[i].Weight*10;
+        int itemF = mItems[i].Weight*GravityMM;
         sumMoments += itemF*mR[i];
         sumForces += itemF;
 

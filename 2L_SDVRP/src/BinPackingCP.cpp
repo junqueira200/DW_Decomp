@@ -268,7 +268,7 @@ bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult, VectorI &vetIt
             //
             // x[i] + dx[i] <= x[j] v x[j] + dx[j] <= x[i] v y[j] + dy[j] <= y[i]
 
-            if(input.filo)
+            if(input.lifo)
             {
                 BoolVar filo0 = model.NewBoolVar();
                 BoolVar filo1 = model.NewBoolVar();
@@ -538,7 +538,7 @@ bool  BinPackingCP_NS::binPacking(VectorI &vetItens, int tamVet)
      */
     static Bin bin;
     bin.reset();
-    if(input.filo)
+    if(input.lifo)
         std::reverse(vetItens.begin(), vetItens.begin()+tamVet);
 
     if(construtivoBinPacking(bin, vetItens, tamVet, input.aphaBin, 10))

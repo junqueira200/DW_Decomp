@@ -43,7 +43,8 @@ namespace ConstrutivoBinNS
                                VectorI &vetItens,
                                const int vetItensTam,
                                const double alpha,
-                               const int numRepeticoes);
+                               const int numRepeticoes,
+                               SolucaoNS::Rota* rota=nullptr);
 
     double computeXY_Overlap(InstanceNS::Item& item0, InstanceNS::Rotation r0, const SolucaoNS::Ponto& p0,
                              InstanceNS::Item& item1, InstanceNS::Rotation r1, const SolucaoNS::Ponto& p1);
