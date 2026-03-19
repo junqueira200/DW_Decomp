@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.16)
 
 project("Vrptw")
 
@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 23)
 #set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 add_compile_definitions(EIGEN_DONT_PARALLELIZE)
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Eigen3 REQUIRED)
 find_package(GUROBI REQUIRED)
 include_directories(${GUROBI_INCLUDE_DIRS})
 include_directories(include)
@@ -20,7 +20,9 @@ message("set vector_sanity_check=1")
 #set(CMAKE_CXX_FLAGS "-pedantic")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g")# -pedantic -Wall -Wextra -fPIC")
 
-find_package(Boost CONFIG)
+cmake_policy(SET CMP0144 NEW)
+cmake_policy(SET CMP0167 NEW)
+find_package(Boost REQUIRED)#CONFIG)
 
 #add_library(DW_Decomp SHARED)
 #find_package(DW_Decomp CONFIG REQUIRED)

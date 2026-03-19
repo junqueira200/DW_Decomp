@@ -21,7 +21,7 @@ namespace TesteOroloc3D_NS
     void testeOroloc3D_2();
 
     void convertVectorOfItensToVectorOfCuboids(const VectorI& vetItens, std::vector<ContainerLoading::Cuboid>& vetCuboids,
-                                               int numItems);
+                                               int numItems, SolucaoNS::Rota& rota);
     void appendToFile(const std::string& fileName, const std::string& content);
     void readSolOroloc3D_2(SolucaoNS::Solucao& sol);
     void printSol(SolucaoNS::Solucao& sol);

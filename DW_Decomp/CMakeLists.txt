@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.16)
 
 project("DwDecomp"
     VERSION 0
@@ -21,11 +21,13 @@ message(CMAKE_MODULE_PATH="${CMAKE_SOURCE_DIR}")
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 
-find_package(Eigen3 3.3 REQUIRED)# NO_MODULE)
+find_package(Eigen3 REQUIRED)# NO_MODULE)
 include_directories(${EIGEN3_INCLUDE_DIR})
 find_package(GUROBI REQUIRED)
 include_directories(${GUROBI_INCLUDE_DIRS})
 link_directories($ENV{GUROBI_HOME}/lib)
+cmake_policy(SET CMP0144 NEW)
+cmake_policy(SET CMP0167 NEW)
 find_package(Boost)
 #find_package(OpenMP)
 
@@ -44,12 +46,13 @@ target_sources(${PROJECT_NAME}
         src/SearchStrategy.cpp
         src/PrimalHeuristic.cpp
         src/Branch.cpp
+        src/rand.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
-target_link_libraries(${PROJECT_NAME} gurobi_c++)
-target_link_libraries(${PROJECT_NAME} gurobi)
-target_link_libraries(${PROJECT_NAME} Boost::boost)
+target_link_libraries(${PROJECT_NAME} PRIVATE Eigen3::Eigen)
+target_link_libraries(${PROJECT_NAME} PRIVATE gurobi_c++)
+target_link_libraries(${PROJECT_NAME} PRIVATE gurobi)
+target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost)
 #target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
 
                         

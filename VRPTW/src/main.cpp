@@ -213,12 +213,12 @@ int main(int argc, const char **argv)
         input.comprimentoAlturaIguais1 = true;
         input.numItIG = 2;
         int numRotas = 0;
-        for(int i=0; i < 10; ++i)
+        for(int i=0; i < 50; ++i)
         {
             SolucaoNS::Solucao best(instanciaG);
             metaheuristicaIg(best);
 
-            //std::cout<<"IG: "<<best.distTotal<<"\n";
+            std::cout<<"IG: "<<best.distTotal<<"\n";
 
             for(int j=0; j < (int)best.vetRota.size(); ++j)
             {
@@ -417,7 +417,7 @@ void convertInstance(const InstanceVRPTW& instanceVrptw, Instance& instancia)
 
     instancia.vetDimVeiculo[0] = 5000;
     instancia.vetDimVeiculo[1] = 5000;
-    instancia.veicCap = instanceVrptw.capVeic;
+    instancia.maxPayload = instanceVrptw.capVeic;
 
 }
 

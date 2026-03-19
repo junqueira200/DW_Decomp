@@ -68,10 +68,20 @@ namespace LabelingAlgorithmNS
         bool operator()(Label *l0, Label *l1) const
         {
             //return doubleLess(l0->vetResources[0], l1->vetResources[0], std::numeric_limits<FloatType>::epsilon());
+            return (l0->index < l1->index);// && l0->vetResources[0] < l1->vetResources[0];
+            /*
+            return true;
+            else if(l0->vetResources[1] > l1->vetResources[1])
+                return false;
+            else
+                return l0->vetResources[0] < l1->vetResources[0];
+            */
+            /*
             if(MinHeap)
                 return l0->HEAP_KEY < l1->HEAP_KEY;// && l0->vetResources[1] < l1->vetResources[1];
             else
                 return l0->HEAP_KEY > l1->HEAP_KEY;
+            */
         }
 
         INLINE

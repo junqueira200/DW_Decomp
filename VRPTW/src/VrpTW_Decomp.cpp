@@ -2,6 +2,7 @@
 // Created by igor on 15/11/24.
 //
 #include "VrpTW_Decomp.h"
+#include "rand.h"
 
 void VrpTW_DecompNS::criaMestre(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model)
 {

@@ -8,10 +8,13 @@
 #include <stdexcept>
 #include <string>
 #include "InputOutput.h"
+#include "AxleWeights.h"
 
 namespace ContainerLoading
 {
 using namespace Model;
+using namespace ParseInputNS;
+using namespace AxleWeightsNS;
 
 namespace Algorithms
 {
@@ -291,6 +294,29 @@ void ContainerLoadingCP::CreateVariables()
 {
     size_t numberOfItems = mItems.size();
 
+    if(input.axleWights)
+    {
+        double maxFK = 0.0;
+        for(int i=0; i < numberOfItems; ++i)
+        {
+            const Cuboid& cuboid = mItems[i];
+            //int maxD = std::max(cuboid.Dz, std::max(cuboid.Dx, cuboid.Dy));
+            maxFK += cuboid.Weight*GravityMM*semiTrailer.distanceCargoSpaceTrailerAxle;
+        }
+
+        maxFK = maxFK*(1.0/semiTrailer.distanceKingpinTrailerAxle);
+        maxFK = std::round(maxFK);
+
+        forceK = mModelCP.NewIntVar({ -100*(int)maxFK, 100*(int)maxFK});
+        forceRA = mModelCP.NewIntVar({-GravityMM*semiTrailer.maxMassRearAxle, GravityMM*semiTrailer.maxMassRearAxle});
+        forceFA = mModelCP.NewIntVar({-GravityMM*semiTrailer.maxMassFrontAxle, GravityMM*semiTrailer.maxMassFrontAxle});
+        forceTA = mModelCP.NewIntVar({-GravityMM*semiTrailer.maxMassTrailerAxle, GravityMM*semiTrailer.maxMassTrailerAxle});
+
+        //std::printf("max FK: %d\nmax FRA: %d\nmax FA: %d\nmax FTA: %d", (int)maxFK, GravityMM*semiTrailer.maxMassRearAxle,
+        //            GravityMM*semiTrailer.maxMassFrontAxle,
+        //            GravityMM*semiTrailer.maxMassTrailerAxle);
+    }
+
     std::vector<Cuboid> itemCopy;
     itemCopy.reserve(mItems.size());
     for (const auto& item: mItems)
@@ -314,17 +340,23 @@ void ContainerLoadingCP::CreateVariables()
         int minLength = item.EnableHorizontalRotation ? std::min(item.Dx, item.Dy) : item.Dx;
         int minWidth = item.EnableHorizontalRotation ? std::min(item.Dx, item.Dy) : item.Dy;
 
+        // operations_research::Domain::FromValues(placementPointsPerType[item].X
         mStartPositionsX.emplace_back(
-            mModelCP.NewIntVar(operations_research::Domain::FromValues(placementPointsPerType[item].X)));
+            mModelCP.NewIntVar({0, mContainer.Dx}));
         mEndPositionsX.emplace_back(mModelCP.NewIntVar({minLength, mContainer.Dx}));
 
+        // operations_research::Domain::FromValues(placementPointsPerType[item].Y
         mStartPositionsY.emplace_back(
-            mModelCP.NewIntVar(operations_research::Domain::FromValues(placementPointsPerType[item].Y)));
+            mModelCP.NewIntVar({0, mContainer.Dy}));
         mEndPositionsY.emplace_back(mModelCP.NewIntVar({minWidth, mContainer.Dy}));
 
+        // operations_research::Domain::FromValues(placementPointsPerType[item].Z
         mStartPositionsZ.emplace_back(
-            mModelCP.NewIntVar(operations_research::Domain::FromValues(placementPointsPerType[item].Z)));
+            mModelCP.NewIntVar({0, mContainer.Dz}));
         mEndPositionsZ.emplace_back(mModelCP.NewIntVar({item.Dz, mContainer.Dz}));
+
+        if(input.axleWights)
+            mR.emplace_back(mModelCP.NewIntVar({-10*mContainer.Dx, 10*mContainer.Dx}));
     }
 
     mLengths.reserve(numberOfItems);
@@ -520,6 +552,93 @@ void ContainerLoadingCP::AddConstraints()
             CreateLifoNoSequence();
         }
     }
+
+    if(ParseInputNS::input.axleWights)
+        CreateAxleWeights();
+}
+
+void ContainerLoadingCP::CreateAxleWeights()
+{
+
+    int tolerance = 100;
+
+    operations_research::sat::LinearExpr sumMoments;
+    int sumForces = 0;
+    for(int i=0; i < mItems.size(); ++i)
+    {
+        // x = y
+        // x - y = 0
+        // x - y >= -1
+        // x - y <= 1
+        //mModelCP.AddEquality(2*mR[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle -2*mStartPositionsX[i] - mLengths[i]);
+        mModelCP.AddGreaterOrEqual(2*mR[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle -2*mStartPositionsX[i] - mLengths[i]
+                                                  -tolerance*2).WithName("R0");
+
+        mModelCP.AddLessOrEqual(2*mR[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle -2*mStartPositionsX[i] - mLengths[i]
+                                               +tolerance*2).WithName("R1");
+
+        int itemF = mItems[i].Weight*GravityMM;
+        sumMoments += itemF*mR[i];
+        sumForces += itemF;
+
+
+        /*
+        std::cout << "i=" << i
+                  << " R in [" << mR[i].Domain() << "]"
+                  << " X in [" << mStartPositionsX[i].Domain() << "]"
+                  << " W in [" << mWidths[i].Domain()<<"]"
+                  << " D=" << semiTrailer.distanceCargoSpaceTrailerAxle
+                  << std::endl;
+        */
+
+    }
+
+
+    // EQ: 10
+    mModelCP.AddGreaterOrEqual(semiTrailer.distanceKingpinTrailerAxle*forceK, scale*sumMoments +
+                               scale*semiTrailer.massTrailer*GravityMM*semiTrailer.distanceMassTrailerTrailerAxle - tolerance)
+                               .WithName("EQ10_0");
+    mModelCP.AddLessOrEqual(semiTrailer.distanceKingpinTrailerAxle*forceK, scale*sumMoments +
+                            scale*semiTrailer.massTrailer*GravityMM*semiTrailer.distanceMassTrailerTrailerAxle + tolerance)
+                            .WithName("EQ10_1");
+
+
+    // EQ: 11
+    mModelCP.AddGreaterOrEqual(forceFA + forceRA - forceK - scale*semiTrailer.massTractor*GravityMM, -tolerance).WithName("EQ11_0");
+    mModelCP.AddLessOrEqual(forceFA + forceRA - forceK - scale*semiTrailer.massTractor*GravityMM, tolerance).WithName("EQ11_1");
+
+    // EQ: 12
+    mModelCP.AddGreaterOrEqual(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK +
+                               scale*semiTrailer.massTractor*GravityMM*semiTrailer.distanceMassTractorRearAxle - tolerance)
+                               .WithName("EQ12_0");
+    mModelCP.AddLessOrEqual(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK +
+                            scale*semiTrailer.massTractor*GravityMM*semiTrailer.distanceMassTractorRearAxle + tolerance)
+                            .WithName("EQ12_1");
+
+
+    // EQ: 9
+    mModelCP.AddGreaterOrEqual(forceTA, scale*sumForces + scale*semiTrailer.massTrailer*GravityMM - forceK - tolerance)
+                              .WithName("EQ9_0");
+    mModelCP.AddLessOrEqual(forceTA, scale*sumForces + scale*semiTrailer.massTrailer*GravityMM - forceK + tolerance)
+                            .WithName("EQ9_1");
+
+
+
+
+
+    /*
+    // EQ: 10
+    mModelCP.AddEquality(semiTrailer.distanceKingpinTrailerAxle*forceK, scale*sumMoments + scale*semiTrailer.massTrailer*GravityMM*semiTrailer.distanceMassTrailerTrailerAxle);
+    // EQ: 11
+    mModelCP.AddEquality(forceFA + forceRA - forceK - scale*semiTrailer.massTractor*GravityMM, 0);
+    // EQ: 12
+    mModelCP.AddEquality(semiTrailer.wheelBase*forceFA, semiTrailer.distanceKingpinRearAxle*forceK + scale*semiTrailer.massTractor*GravityMM*semiTrailer.distanceMassTractorRearAxle);
+    // EQ: 9
+    mModelCP.AddEquality(forceTA, scale*sumForces + scale*semiTrailer.massTrailer*GravityMM - forceK);
+    */
+
+
+
 }
 
 /// Relative directions of items. Necessary for non overlapping items.
@@ -822,7 +941,25 @@ void ContainerLoadingCP::CreateLifoSequence()
                 //mModelCP.AddAtLeastOne({mRelativeDirections[i][j][BehindX], mRelativeDirections[i][j][BelowZ]})
                 //    .OnlyEnforceIf({mRelativeDirections[i][j][LeftY].Not(), mRelativeDirections[i][j][RightY].Not()});
                 // Funciona
-                mModelCP.AddAtLeastOne({mRelativeDirections[i][j][RightY], mRelativeDirections[i][j][LeftY], mRelativeDirections[i][j][InFrontX], mRelativeDirections[i][j][AboveZ]});                //auto varX = mModelCP.NewBoolVar();
+
+                operations_research::sat::LinearExpr linExp;
+
+                if(input.mlifo)
+                {
+                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][InFrontX], mRelativeDirections[i][j][BehindX],
+                                            mRelativeDirections[i][j][RightY], mRelativeDirections[i][j][AboveZ],
+                                            mRelativeDirections[i][j][LeftY]});
+                }
+                else if(input.removeFromShortSide)
+                {
+                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][RightY], mRelativeDirections[i][j][LeftY],
+                                            mRelativeDirections[i][j][InFrontX], mRelativeDirections[i][j][AboveZ]});
+                }
+                else
+                {
+                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][InFrontX], mRelativeDirections[i][j][BehindX],
+                                            mRelativeDirections[i][j][RightY], mRelativeDirections[i][j][AboveZ]});
+                }
 
             }
         }

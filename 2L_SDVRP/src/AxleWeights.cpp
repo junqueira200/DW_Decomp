@@ -39,13 +39,14 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin& bin) const
     fRA = fK + massTractor*GravityMM - fFA;
     fTA = sumF + massTrailer*GravityMM - fK;
 
-    std::printf("fK: %.1f; fFA: %.1f; fRA: %.1f; FTA: %.1f\n", fK, fFA, fRA, fTA);
+    //std::printf("fK: %.1f; fFA: %.1f; fRA: %.1f; FTA: %.1f\n", fK, fFA, fRA, fTA);
 
     if(fFA > maxMassFrontAxle*GravityMM || fRA > maxMassRearAxle*GravityMM || fTA > maxMassTrailerAxle*GravityMM)// ||
        //fK < 0.0 || fFA < 0.0 || fRA < 0.0 || fTA < 0.0)
     {
-        std::printf("\tINFEASIBLE\t");
+        //std::printf("\tINFEASIBLE\t");
 
+        /*
         if(fFA > maxMassFrontAxle*GravityMM)
             std::printf("fFa >; ");
         if(fK < 0.0)
@@ -62,6 +63,7 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin& bin) const
             std::printf("fTA < 0; ");
 
         std::printf("\n");
+        */
         return false;
     }
 

@@ -270,7 +270,7 @@ namespace SolucaoNS
 
     inline __attribute__((always_inline))
     bool lifo(InstanceNS::Item& item0, Ponto p0, InstanceNS::Rotation r0,
-              InstanceNS::Item& item1, Ponto p1, InstanceNS::Rotation r1, bool mlifo)
+              InstanceNS::Item& item1, Ponto p1, InstanceNS::Rotation r1, bool mlifo, bool removeFromShortSide)
     {
             double maxX0 = p0.vetDim[0] + item0.getDimRotacionada(0, r0);
             double maxY0 = p0.vetDim[1] + item0.getDimRotacionada(1, r0);
@@ -280,14 +280,33 @@ namespace SolucaoNS
             double maxY1 = p1.vetDim[1] + item1.getDimRotacionada(1, r1);
             double maxZ1 = p1.vetDim[2] + item1.getDimRotacionada(2, r1);
 
-            if((maxX1 <= p0.vetDim[0]) ||   // The end of j is less then the begining of i. It's correct for LIFO
+
+            if(removeFromShortSide &&
+                ((maxX1 <= p0.vetDim[0]) ||   // The end of j is less then the begining of i. It's correct for LIFO
                 (maxY0 <= p1.vetDim[1]) ||   // Item i is complete at left of item j. It's correct for LIFO
                 (maxY1 <= p0.vetDim[1]) ||   // Item i is complete at right of item j. It's correct for LIFO
                 (maxZ1 <= p0.vetDim[2]) ||   // Item i is above item j. It's correct for LIFO
-                (maxZ0 <= p1.vetDim[2]))     // Item i is below item j. It's correct for LIFO
+                mlifo && (maxX0 <= p1.vetDim[0])))     // Item i is below item j. It's correct for LIFO
                 return true;
 
-            return mlifo;
+            if(!removeFromShortSide &&
+                ((maxY1 <= p0.vetDim[1]) ||   // The end of j is less then the begining of i. It's correct for LIFO
+                 (maxX0 <= p1.vetDim[0]) ||   // Item i is complete at left of item j. It's correct for LIFO
+                 (maxX1 <= p0.vetDim[0]) ||   // Item i is complete at right of item j. It's correct for LIFO
+                 (maxZ1 <= p0.vetDim[2]) ||   // Item i is above item j. It's correct for LIFO
+                 mlifo && (maxY0 <= p1.vetDim[1])))     // Item i is below item j. It's correct for LIFO
+                return true;
+
+            //std::printf("maxX1(%.1f); minX0(%.1f)\n", maxX1, p0.vetDim[0]);
+            //std::printf("maxY0(%.1f); minY0(%.1f)\n", maxY0, p1.vetDim[1]);
+            /*
+            printf("maxX1=%f p0.x=%f -> %d\n", maxX1, p0.vetDim[0], (maxX1 <= p0.vetDim[0]));
+            printf("maxY0=%f p1.y=%f -> %d\n", maxY0, p1.vetDim[1], (maxY0 <= p1.vetDim[1]));
+            printf("maxY1=%f p0.y=%f -> %d\n", maxY1, p0.vetDim[1], (maxY1 <= p0.vetDim[1]));
+            printf("maxZ1=%f p0.z=%f -> %d\n\n", maxZ1, p0.vetDim[2], (maxZ1 <= p0.vetDim[2]));
+            */
+
+            return false;
     }
 
     inline const Ponto PontoZero(0.0, 0.0, 0.0);

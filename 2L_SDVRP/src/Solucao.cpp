@@ -614,7 +614,7 @@ bool SolucaoNS::verificaColisaoDoisItens(const int item0, const int item1, const
 bool SolucaoNS::Bin::verificaViabilidade()
 {
 
-    if(vazio())
+    if(vazio() || input.comprimentoAlturaIguais1)
         return true;
 
 
@@ -852,7 +852,7 @@ bool SolucaoNS::checkUnloadingSequence(Bin& bin, Rota& rota)
     {
         Item& itemI = instanciaG.vetItens[bin.vetItemId[i]];
         int posItemI = findPos(rota, bin.vetItemId[i]);
-        //std::cout<<rota.printRota()<<"\nCliente: "<<itemI.customer<<"\nPos: "<<posItemI<<"\n\n";
+        //std::cout<<rota.printRota()<<"\nCliente: "<<itemI.customer<<"; Pos: "<<posItemI<<"\n\n";
 
         for(int j=0; j < bin.numItens; ++j)
         {
@@ -862,14 +862,18 @@ bool SolucaoNS::checkUnloadingSequence(Bin& bin, Rota& rota)
                 continue;
 
             int posItemJ = findPos(rota, bin.vetItemId[j]);
-            if(posItemJ < posItemI)
+            if(posItemJ > posItemI)
             {
+                //std::cout<<"\tCliente: "<<itemJ.customer<<"; pos: "<<posItemJ<<"\n";
                 //std::cout<<"ItemI: "<<itemI.oroloc3D_item_id<<"\n";
                 //std::cout<<"ItemJ: "<<itemJ.oroloc3D_item_id<<"\n";
 
                 if(!lifo(itemI, bin.vetPosItem[i], bin.vetRotacao[i],
-                         itemJ, bin.vetPosItem[j], bin.vetRotacao[j], ParseInputNS::input.mlifo))
+                         itemJ, bin.vetPosItem[j], bin.vetRotacao[j], input.mlifo, input.removeFromShortSide))
+                {
+                    //std::cout<<"Pos: "<<i<<" "<<j<<"\n";
                     return false;
+                }
 
                 //EXIT_PRINT();
                 /*

@@ -28,6 +28,7 @@ namespace LabelingAlgorithmNS
 {
 
     inline Vector<FloatType> vetValueOfReducedCostsG;
+    inline int G_numRecDominance = 2;
 
     enum LabelingTypeAlg
     {
@@ -35,6 +36,26 @@ namespace LabelingAlgorithmNS
         AlgBackward,
         AlgBidirectional
     };
+
+    class Arc
+    {
+    public:
+        int i, j;
+        FloatType redCost;
+
+        void set(int i_, int j_, FloatType redCost_)
+        {
+            i = i_;
+            j = j_;
+            redCost = redCost_;
+        }
+    };
+
+    INLINE
+    bool operator<(const Arc& arc0, const Arc& arc1)
+    {
+        return arc0.redCost < arc1.redCost;
+    }
 
     class SortRoute
     {
@@ -88,12 +109,12 @@ namespace LabelingAlgorithmNS
                              const EigenMatrixRowD& matDist);
 
 
-    bool bidirectionalAlgorithm(int numRes, int numCust, const Vet3D_ResCost& vetMatResCostForward,
+    bool bidirectionalAlgorithm(int numRes, int numCust, const Vet3D_ResCost& vetMatResCostForwardConst,
                                 const Vet3D_ResCost& vetMatResCostBackward, const MatBoundRes& vetVetBound, int dest,
                                 const NgSet& ngSet, LabelingData& lData, Eigen::MatrixXd& matColX, int& numSol,
                                 FloatType labelStart, int NumMaxLabePerBucket, bool dominaceCheck, FloatType& maxDist,
                                 Eigen::VectorX<FloatType>& vetRedCost, bool exact, LabelingTypeAlg labelingTypeAlg,
-                                bool arc, Eigen::VectorXd* vetLowerBoundRedCost);
+                                bool arc, Eigen::VectorXd* vetLowerBoundRedCost, double percentage);
 
     //inline __attribute__((always_inline))
     bool checkCompleteDominance(const Label& l0, const Label& l1, int numResources);
@@ -180,5 +201,8 @@ namespace LabelingAlgorithmNS
     void invertRoutes(Vector<VectorI>& vetRoutes);
 
     bool checkIfAllLabelsInHeapHaveA_Bucket(LabelHeap& labelHeap, LabelingData& lData);
+
+    void selectXArcs(const Vet3D_ResCost& vetMatResCostForwardConst, Vet3D_ResCost& vetMatResCostForward,
+                     double percentage, int numCust);
 }
 #endif //DW_LABELINGALGORITHM_H

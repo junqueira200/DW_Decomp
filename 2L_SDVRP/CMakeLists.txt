@@ -20,6 +20,8 @@ message(CMAKE_MODULE_PATH="${CMAKE_SOURCE_DIR}")
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 cmake_policy(SET CMP0074 NEW)
+cmake_policy(SET CMP0167 NEW)
+cmake_policy(SET CMP0144 NEW)
 #find_package(Eigen3 3.3 REQUIRED)# NO_MODULE)
 include_directories(${EIGEN3_INCLUDE_DIR})
 find_package(ortools CONFIG REQUIRED)
@@ -28,6 +30,9 @@ include_directories(${GUROBI_INCLUDE_DIRS})
 link_directories($ENV{GUROBI_HOME}/lib)
 find_package(Boost)
 find_package(OpenMP REQUIRED)
+
+find_package(CPLEX REQUIRED)
+
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -fPIC")# -Wall -Wextra -fPIC")# -fsanitize=address")# -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D __FILENAME__='\"$$(subst  ${CMAKE_SOURCE_DIR}/,,$$(abspath $$<))\"'")
@@ -61,13 +66,14 @@ target_sources(${PROJECT_NAME}
 )
 
 
-target_link_libraries(${PROJECT_NAME} Eigen3::Eigen)
-target_link_libraries(${PROJECT_NAME} ortools::ortools)
+target_link_libraries(${PROJECT_NAME} PRIVATE Eigen3::Eigen)
+target_link_libraries(${PROJECT_NAME} PRIVATE ortools::ortools)
 #target_link_libraries(${PROJECT_NAME} DwDecomp)
-target_link_libraries(${PROJECT_NAME} gurobi_c++)
-target_link_libraries(${PROJECT_NAME} gurobi)
-target_link_libraries(${PROJECT_NAME} Boost::boost)
-target_link_libraries(${PROJECT_NAME} OpenMP::OpenMP_CXX)
+target_link_libraries(${PROJECT_NAME} PRIVATE gurobi_c++)
+target_link_libraries(${PROJECT_NAME} PRIVATE gurobi)
+target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+target_link_libraries(${PROJECT_NAME} PRIVATE CPLEX::CPLEX)
 
                         
 target_include_directories(${PROJECT_NAME}

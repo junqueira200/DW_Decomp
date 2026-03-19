@@ -1,276 +1,209 @@
-/* ****************************************
- * ****************************************
- *  Data:    05/11/24
- *  Arquivo: main.cpp
- * ****************************************
- * ****************************************/
+// -------------------------------------------------------------- -*- C++ -*-
+// File: ./examples/src/cpp/facility.cpp
+// --------------------------------------------------------------------------
+// Licensed Materials - Property of IBM
+//
+// 5724-Y48 5724-Y49 5724-Y54 5724-Y55 5725-A06 5725-A29
+// Copyright IBM Corporation 1990, 2021. All Rights Reserved.
+//
+// Note to U.S. Government Users Restricted Rights:
+// Use, duplication or disclosure restricted by GSA ADP Schedule
+// Contract with IBM Corp.
+// --------------------------------------------------------------------------
 
-#include "InputOutput.h"
-#include "Instancia.h"
-#include "ConstrutivoBin.h"
-#include "Construtivo.h"
-#include "AuxT.h"
-#include "rand.h"
-#include "Ig.h"
-#include "BinPackingCP.h"
-#include "TesteOroloc3D.h"
+/* ------------------------------------------------------------
 
+Problem Description
+-------------------
 
-#include "ProblemParameters.h"
-#include "BCRoutingParams.h"
-#include "LoadingChecker.h"
+A company has 10 stores.  Each store must be supplied by one warehouse. The
+company has five possible locations where it has property and can build a
+supplier warehouse: Bonn, Bordeaux, London, Paris, and Rome. The warehouse
+locations have different capacities. A warehouse built in Bordeaux or Rome
+could supply only one store. A warehouse built in London could supply two
+stores; a warehouse built in Bonn could supply three stores; and a warehouse
+built in Paris could supply four stores.
 
-#include <iostream>
-#include <ostream>
+The supply costs vary for each store, depending on which warehouse is the
+supplier. For example, a store that is located in Paris would have low supply
+costs if it were supplied by a warehouse also in Paris.  That same store would
+have much higher supply costs if it were supplied by the other warehouses.
 
-#include "absl/log/check.h"
-#include "absl/status/statusor.h"
-#include "ortools/base/init_google.h"
-#include "ortools/math_opt/cpp/math_opt.h"
-#include "ortools/third_party_solvers/gurobi_environment.h"
-#include "ortools/base/version.h"
+The cost of building a warehouse varies depending on warehouse location.
 
-using namespace InstanceNS;
-using namespace ConstrutivoBinNS;
-using namespace SolucaoNS;
-using namespace RandNs;
-using namespace ParseInputNS;
-using namespace ConstrutivoNS;
-using namespace IgNs;
-using namespace BinPackingCP_NS;
-using namespace TesteOroloc3D_NS;
+The problem is to find the most cost-effective solution to this problem, while
+making sure that each store is supplied by a warehouse.
 
-using namespace ContainerLoading;
-using namespace VehicleRouting;
-using namespace VehicleRouting::Algorithms;
+------------------------------------------------------------ */
 
+#include <ilcp/cp.h>
+//#include "util.h"
 
-Array<double, 3> getDim(Item& item, InstanceNS::Rotation r)
-{
-    Array<double,3> array;
-    array[0] = item.getDimRotacionada(0, r);
-    array[1] = item.getDimRotacionada(1, r);
-    array[2] = item.getDimRotacionada(2, r);
+#include <ilconcert/ilomodel.h>
 
-    return array;
+void NameVars(IloIntVarArray a, const char * base) {
+    for (IloInt i = 0; i < a.getSize(); i++) {
+        char name[100];
+        sprintf(name, "%s[%ld]", base, (long)i);
+        a[i].setName(name);
+    }
 }
 
-
-
-int main(int argc, const char* argv[])
-{
-    std::cout << "OR-Tools Version: " << operations_research::OrToolsVersionString() << std::endl;
-
-    //LoadGurobiDynamicLibrary({});
-    namespace math_opt = ::operations_research::math_opt;
-    math_opt::Model lp_model("getting_started_lp");
-    const math_opt::Variable x = lp_model.AddContinuousVariable(-1.0, 1.5, "x");
-    const math_opt::Variable y = lp_model.AddContinuousVariable(0.0, 1.0, "y");
-    lp_model.AddLinearConstraint(x + y <= 1.5, "c");
-    lp_model.Maximize(x + 2 * y);
-
-
-    // Set parameters, e.g. turn on logging.
-    math_opt::SolveArguments args;
-    args.parameters.enable_output = true;
-
-
-    //try
-    {
-
-
-
-    // Solve and ensure an optimal solution was found with no errors.
-    const absl::StatusOr<math_opt::SolveResult> result =
-        math_opt::Solve(lp_model, math_opt::SolverType::kGscip, args);
-    CHECK_OK(result.status());
-    //CHECK_OK(result->termination.EnsureIsOptimal());
-
-    // Print some information from the result.
-    std::cout << "MathOpt solve succeeded" << std::endl;
-    std::cout << "Objective value: " << result->objective_value() << std::endl;
-    std::cout << "x: " << result->variable_values().at(x) << std::endl;
-    std::cout << "y: " << result->variable_values().at(y) << std::endl;
-
+void NameVars(IloIntervalVarArray a, const char * base) {
+    for (IloInt i = 0; i < a.getSize(); i++) {
+        char name[100];
+        sprintf(name, "%s[%ld]", base, (long)i);
+        a[i].setName(name);
     }
-    /*
-    catch (std::exception& e)
-    {
-        std::cout<<e.what()<<"\n";
+}
+
+void NameVars(IloArray<IloIntVarArray> a, const char * base) {
+    for (IloInt i = 0; i < a.getSize(); i++) {
+        for (IloInt j = 0; j < a[i].getSize(); j++) {
+            char name[100];
+            sprintf(name, "%s[%ld][%ld]", base, (long)i, long(j));
+            a[i][j].setName(name);
+        }
     }
-    */
+}
 
-    return 0;
+void NameVars(IloArray<IloIntervalVarArray> a, const char * base) {
+    for (IloInt i = 0; i < a.getSize(); i++) {
+        for (IloInt j = 0; j < a[i].getSize(); j++) {
+            char name[100];
+            sprintf(name, "%s[%ld][%ld]", base, (long)i, long(j));
+            a[i][j].setName(name);
+        }
+    }
+}
+
+// Interval [s, e)
+class DisplayInterval {
+private:
+    IloInt _s;
+    IloInt _e;
+    void displayTime(std::ostream& out, IloInt t) const {
+        if (t == IloIntervalMin)      out << "IntervalMin";
+        else if (t == IloIntervalMax) out << "IntervalMax";
+        else                          out << t;
+    }
+public:
+    DisplayInterval(IloInt s, IloInt e) : _s(s), _e(e) { }
+    virtual void display(std::ostream& out) const {
+        out << "[";
+        displayTime(out, _s);
+        out << ", ";
+        displayTime(out, _e);
+        out << ")";
+    }
+};
+std::ostream& operator << (std::ostream& out, const DisplayInterval& itv) {
+    itv.display(out);
+    return out;
+}
+
+class DisplayCumulSegment : public DisplayInterval {
+public:
+    DisplayCumulSegment(IloCP cp, IloCumulFunctionExpr sf, IloInt seg)
+        : DisplayInterval(cp.getSegmentStart(sf, seg), cp.getSegmentEnd(sf, seg)) { }
+};
+
+class DisplayStateSegment : public DisplayInterval {
+public:
+    DisplayStateSegment(IloCP cp, IloStateFunction sf, IloInt seg)
+        : DisplayInterval(cp.getSegmentStart(sf, seg), cp.getSegmentEnd(sf, seg)) { }
+};
 
 
+class FileError: public IloException {
+public:
+    FileError() : IloException("Cannot open data file") {}
+};
 
-    std::printf("main\n");
-    //Item item(1, 2, 3, 1);
+int main(int argc, const char* argv[]) {
+    IloEnv env;
+    try {
+        IloModel model(env);
 
-    //std::cout<<"Rot1: "<<getDim(item, Rot0)<<"\n";
-    //return 0;
-
-    ParseInputNS::parseInput(argc, argv);
-    output.setup();
-    std::cout << "INST: " << input.strInst << " SEMENTE: " << RandNs::estado_ << " " << output.data << "";
-
-    if(input.instOroloc3D)
-        InstanceNS::readOroloc3D(input.strInstCompleto);
-    else if(input.inst2d)
-        InstanceNS::read2dInstance(input.strInstCompleto);
-    else
-        InstanceNS::read3dInstance(input.strInstCompleto);
-
-    testeOroloc3D();
-    return 0;
-
-    //std::cout<<"clie: "<<instanciaG.numClientes<<"\t"<<instanciaG.numItens<<"\n";
-    //std::cout<<instanciaG.matDist<<"\n\n";
-    //escreveFileNum(input.file.fileNum);
-
-    //return 0;
-
-
-
-    try
-    {
-        clock_t start = clock();
-        //double ompStart = omp_get_wtime();
-
-        //Solucao best(instanciaG);
-        //metaheuristicaIg(best);
-
-        InputParameters inputParam;
-        inputParam.ContainerLoading.LoadingProblem.Variant = LoadingProblemParams::VariantType::AllConstraints;
-        inputParam.SetLoadingFlags();
-
-        LoadingChecker loadingChecker(inputParam.ContainerLoading);
-        Container container((int)instanciaG.vetDimVeiculo[0], (int)instanciaG.vetDimVeiculo[1],
-                            (int)instanciaG.vetDimVeiculo[2], (int)instanciaG.maxPayload);
-
-        int numItens = 5;
-
-        VectorI vetItens(numItens);
-        VectorI vetCustomers(numItens);
-        vetItens.setAll(0);
-        Collections::IdVector stopIds(numItens);
-
-        for(int i=1; i <= numItens; ++i)
-        {
-            vetCustomers[i-1] = i;
-            stopIds[i-1] = i;
+        const char* filename = "../../../examples/data/facility.data";
+        if (argc > 1)
+            filename = argv[1];
+        std::ifstream file(filename);
+        if (!file) {
+            env.out() << "usage: " << argv[0] << " <file>" << std::endl;
+            throw FileError();
         }
 
-        Vector<int8_t> vetItensSelecionados(instanciaG.numItens);
-        vetItensSelecionados.setAll((int8_t)0);
+        IloIntArray capacity(env), fixedCost(env);
+        IloArray<IloIntArray> cost(env);
+        IloInt nbLocations;
+        IloInt nbStores;
 
-        double volumeOcupado = 0.0;
-        double volumeVeiculo = 1.0;
-        double demanda       = 0.0;
+        file >> nbLocations;
+        file >> nbStores;
+        capacity = IloIntArray(env, nbLocations);
+        for (IloInt i = 0; i < nbLocations; i++) {
+            file >> capacity[i];
+        }
+        fixedCost = IloIntArray(env, nbLocations);
+        for (IloInt i = 0; i < nbLocations; i++) {
+            file >> fixedCost[i];
+        }
+        for (IloInt j = 0; j < nbStores; j++) {
+            cost.add(IloIntArray(env, nbLocations));
+            for (IloInt i = 0; i < nbLocations; i++) {
+                file >> cost[j][i];
+            }
+        }
 
-        for(int i=0; i < instanciaG.numDim; ++i)
-            volumeVeiculo *= instanciaG.vetDimVeiculo[i];
+        IloBool consistentData = (fixedCost.getSize() == nbLocations);
+        consistentData = consistentData && nbStores <= IloSum(capacity);
+        for (IloInt i = 0; consistentData && (i < nbStores); i++)
+            consistentData = (cost[i].getSize() == nbLocations);
+        if (!consistentData) {
+            env.out() << "ERROR: data file '"
+                      << filename << "' contains inconsistent data" << std::endl;
+        }
 
+        IloIntVarArray supplier(env, nbStores, 0, nbLocations - 1);
+        NameVars(supplier, "S");
+        IloIntVarArray open(env, nbLocations, 0, 1);
+        NameVars(open, "O");
+        for (IloInt i = 0; i < nbStores; i++)
+            model.add(open[supplier[i]] == 1);
+        for (IloInt j = 0; j < nbLocations; j++)
+            model.add(IloCount(supplier, j)  <= capacity[j]);
 
-        for(int t=0; t < numItens; ++t)
-        {
-            int itemId = getRandInt(0, instanciaG.numItens-1);
-            const int itemIdIni = itemId;
-            while(vetItensSelecionados[itemId] == (int8_t)1 ||
-                 (volumeOcupado+instanciaG.vetItens[itemId].volume) > volumeVeiculo/2.0 ||
-                  demanda + instanciaG.vetItens[itemId].weight > instanciaG.maxPayload)
-            {
-                itemId = (itemId+1)%instanciaG.numItens;
+        IloIntExpr obj = IloScalProd(open, fixedCost);
+        for (IloInt i = 0; i < nbStores; i++)
+            obj += cost[i][supplier[i]];
+        model.add(IloMinimize(env, obj));
+        IloCP cp(model);
+        cp.solve();
 
-                if(itemId == itemIdIni)
-                {
-                    itemId = -1;
-                    break;
+        cp.out() << std::endl << "Optimal value: " << cp.getValue(obj) << std::endl;
+        for (IloInt j = 0; j < nbLocations; j++) {
+            if (cp.getValue(open[j]) == 1) {
+                cp.out() << "Facility " << j << " is open, it serves stores ";
+                for (IloInt i = 0; i < nbStores; i++) {
+                    if (cp.getValue(supplier[i]) == j)
+                        cp.out() << i << " ";
                 }
-            }
-
-            if(itemId == -1)
-            {
-                numItens = t;
-                break;
-            }
-
-            vetItensSelecionados[itemId] = (int8_t)1;
-            volumeOcupado += instanciaG.vetItens[itemId].volume;
-            demanda       += instanciaG.vetItens[itemId].weight;
-            vetItens[t] = itemId;
-
-        }
-
-        std::vector<Cuboid> vetCuboids;
-        convertVectorOfItensToVectorOfCuboids(vetItens, vetCuboids, vetItens.size());
-
-
-        auto status = LoadingStatus::FeasOpt;//loadingChecker.ConstraintProgrammingSolver(PackingType::Complete, container, stopIds, vetCuboids,
-                       //                                          std::numeric_limits<double>::infinity());
-        if(status != LoadingStatus::FeasOpt)
-        {
-            std::printf("Error in ConstraintProgrammingSolver\n");
-            if(status == LoadingStatus::Infeasible)
-                std::printf("INFEASIBLE\n");
-        }
-        else
-        {
-            std::printf("Loading was successful!\n");
-        }
-
-        int heuristica, exato, inviavel, total;
-        heuristica = exato = inviavel = total = 0;
-        /*
-        for(int i=0; i < 600; ++i)
-        {
-            if((i%200) == 0)
-                std::cout<<"IT: "<<i<<"\n";
-
-            Resultado resul =  testaCpSatBinPacking(50);
-            total += 1;
-            switch (resul)
-            {
-            case HEURISTICA:
-                heuristica += 1;
-                break;
-
-            case EXATO:
-                exato += 1;
-                break;
-
-            case INVIAVEL:
-                inviavel += 1;
-                break;
-
+                cp.out() << std::endl;
             }
         }
-
-        */
-        clock_t end = clock();
-        //double ompEnd = omp_get_wtime();
-
-        output.tempoCpu = double(end-start)/CLOCKS_PER_SEC;
-        //output.tempoRelogio = ompEnd - ompStart;
-
-        //std::cout<<"Num Clientes: "<<instanciaG.numClientes<<"\n";
-        //std::cout<<"Num Veic: "<<instanciaG.numVeiculos<<"\n\n";
-
-        //escreveSaidas(best, output.tempoCpu);
-        //int tamVet = std::min(instanciaG.numItens, 15);
-        //testaCpSatBinPacking(tamVet);
-
-        //std::cout<<"\nTotal: \t\t"<<total<<"\nHEURISTIC: \t"<<heuristica<<"\nCP-SAT: \t"<<exato<<"\nUNFEASIBLE: \t"<<inviavel<<"\n\n";
-
-        //std::cout<<"TOTAL TIME : "<<output.tempoCpu<<" s\n\n";
-        std::printf("TOTAL TIME: \t%.2f s\n\n", output.tempoCpu);
-
+        cp.end();
     }
-    catch (char const* exeption)
-    {
-        std::cout<<"\nCAT EXEPTION: "<<exeption<<"\n";
-        return -1;
+    catch (IloException& ex) {
+        env.out() << "Caught: " << ex << std::endl;
     }
-
+    env.end();
     return 0;
 }
+
+/*
+Optimal value: 1383
+Facility 0 is open, it serves stores 2 5 7
+Facility 1 is open, it serves stores 3
+Facility 3 is open, it serves stores 0 1 4 6
+*/

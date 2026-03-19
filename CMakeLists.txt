@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 project("DW")
 
 set(CMAKE_CXX_STANDARD 23)
-
+set(CMAKE_BUILD_TYPE Release)
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 #find_package(Eigen3 3.3 REQUIRED NO_MODULE)
@@ -15,14 +15,14 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g")#-Wall")
 
-#add_subdirectory(DW_Decomp)
-#include_directories(DW_Decomp/include)
-
-#add_subdirectory(CvrpSep)
+add_subdirectory(DW_Decomp)
 include_directories(DW_Decomp/include)
 
-#add_subdirectory(Grafo)
-#include_directories(Grafo/include)
+add_subdirectory(CvrpSep)
+include_directories(CvrpSep/include)
+
+add_subdirectory(Grafo)
+include_directories(Grafo/include)
 
 #add_subdirectory(Mnfp)
 #include_directories(Mnfp/include)
@@ -30,14 +30,14 @@ include_directories(DW_Decomp/include)
 #add_subdirectory(SparseTeste)
 #include_directories(SparseTeste/include)
 
-#add_subdirectory(Instances)
-#include_directories(Instances/include)
+add_subdirectory(Instances)
+include_directories(Instances/include)
 
 add_subdirectory(2L_SDVRP)
 include_directories(2L_SDVRP/include)
 
-#add_subdirectory(VRPTW)
-#include_directories(VRPTW/include)
+add_subdirectory(VRPTW)
+include_directories(VRPTW/include)
 
 add_subdirectory(2L_SDVRP_Main)
 include_directories(2L_SDVRP_Main/include)

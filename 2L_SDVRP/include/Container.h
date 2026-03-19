@@ -19,12 +19,12 @@ enum DimensionType
 
 enum RelativeDirection
 {
-    Right = 0,
-    Left,
-    InFront,
-    Behind,
-    Above,
-    Below
+    RightY = 0,  // y
+    LeftY,       // y
+    InFrontX,    // x
+    BehindX,     // x
+    AboveZ,      // z
+    BelowZ       // z
 };
 
 enum Orientation
@@ -139,6 +139,7 @@ class Cuboid : public ICuboid
     size_t InternId = 0;
     size_t ExternId = 0;
     size_t GroupId = 0;
+    int    pos     = -1;
     double Weight = 0.0;
 
     bool EnableHorizontalRotation = true;
@@ -172,14 +173,16 @@ class Cuboid : public ICuboid
            bool enableHorizontalRotation,
            Model::Fragility fragility,
            size_t groupId,
-           double weight)
+           double weight,
+           int pos_=-1)
     : ICuboid(0, 0, 0, dx, dy, dz),
       InternId(internId),
       ExternId(externId),
       GroupId(groupId),
       Weight(weight),
       EnableHorizontalRotation(enableHorizontalRotation),
-      Fragility(fragility)
+      Fragility(fragility),
+      pos(pos_)
     {
     }
 

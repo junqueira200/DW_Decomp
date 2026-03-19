@@ -411,6 +411,9 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
                                              const int numRepeticoes,
                                              SolucaoNS::Rota* rota)
 {
+    //if(input.comprimentoAlturaIguais1)
+    //    return true;
+
     double volume  = bin.volumeOcupado;
     double demanda = bin.demandaTotal;
 
@@ -442,26 +445,30 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
         //std::cout<<"numItensAlo: "<<numItensAlo<<"\n\n";
         if(numItensAlo == vetItensTam)
         {
-            bool feasible = binVet[0].verificaViabilidade();
-            if(input.axleWights)
+            bool feasible = true;
+            if(!input.comprimentoAlturaIguais1)
             {
-                feasible = semiTrailer.checkAxleWeights(bin);
-            }
+                feasible = binVet[0].verificaViabilidade();
+                if(input.axleWights)
+                {
+                    feasible = semiTrailer.checkAxleWeights(bin);
+                }
 
-            std::cout<<"AxleWeights: "<<feasible<<"\n";
+                std::cout<<"AxleWeights: "<<feasible<<"\n";
+            }
 
             if(feasible)
             {
                 if(rota)
                     feasible = SolucaoNS::checkUnloadingSequence(binVet[0], *rota);
-                else
+                else if(!input.comprimentoAlturaIguais1)
                     std::printf("Unloading Sequence diden't run, route=null\n");
 
                 if(!feasible)
                     return false;
 
                 copiaBin(binVet[0], bin);
-                std::printf("Utilizacao %.2f%%\n", binVet[0].getPorcentagemUtilizacao());
+                //std::printf("Utilizacao %.2f%%\n", binVet[0].getPorcentagemUtilizacao());
                 return true;
             }
         }
@@ -485,6 +492,6 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
         return false;
     }
     */
-    std::printf("Utilizacao %.2f%%\n", binVet[0].getPorcentagemUtilizacao());
+    //std::printf("Utilizacao %.2f%%\n", binVet[0].getPorcentagemUtilizacao());
     return false;
 }

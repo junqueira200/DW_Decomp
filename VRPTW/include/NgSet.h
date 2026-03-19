@@ -27,9 +27,9 @@ namespace LabelingAlgorithmNS
         inline __attribute__((always_inline))
         bool contain(int i, int j) const
         {
-            return false;
-            //if(!active)
-            //    return true;
+            //return false;
+            if(!active)
+                return true;
             return (bool)vetNgSet[i][j];
         };
 

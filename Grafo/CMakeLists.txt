@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.16)
 
 project("Grafo"
     VERSION 0
@@ -23,7 +23,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 #set(CMAKE_CXX_FLAGS "-O0 -g3")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -O3 -g -pedantic -Wall -Wextra -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}  -O3 -g -fPIC") # -pedantic -Wall -Wextr
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D __FILENAME__='\"$$(subst  ${CMAKE_SOURCE_DIR}/,,$$(abspath $$<))\"'")
 

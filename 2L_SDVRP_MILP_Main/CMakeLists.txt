@@ -17,6 +17,9 @@ find_package(ortools CONFIG REQUIRED)
 #find_package(GUROBI REQUIRED)
 include_directories(${GUROBI_INCLUDE_DIRS})
 link_directories($ENV{GUROBI_HOME}/lib)
+
+cmake_policy(SET CMP0144 NEW)
+cmake_policy(SET CMP0167 NEW)
 find_package(Boost)
 
 add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)

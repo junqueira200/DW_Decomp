@@ -10,6 +10,7 @@
 
 #include "VrpTW_DecompLabeling.h"
 #include "LowerBound.h"
+#include "../../2L_SDVRP/include/sefe_array.h"
 
 using namespace LabelingAlgorithmNS;
 using namespace TestNS;
@@ -28,9 +29,9 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
     double numSteps = 1.0; // 2
 
     //vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 999999.0;//  10 // 5
-    vetStepSize[0].start    = -70;// -200 -50
-    vetStepSize[0].end      = 200;//  200 50
+    vetStepSize[0].stepSize = 99999.0; // 999999
+    vetStepSize[0].start    = -200;      // -70
+    vetStepSize[0].end      = 200;      // 200
 
 
 
@@ -284,8 +285,11 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 {
     //std::cout<<"star value: "<<constPiValue<<"\n\n";
     static Eigen::VectorXd vetDist(instVrpTw->numClientes+1);
-    vetDist.setConstant(0.0);
-    //LowerBoundNS::getDistLowerBound(vetMatResCostForward, vetDist, instVrpTw->numClientes, &labelingData);
+    Eigen::VectorXd* ptrVetDist = nullptr;//&vetDist;
+    vetDist.setConstant(-MaxFloatType);
+
+    //if(LowerBoundNS::getDistLowerBound(vetMatResCostForward, vetDist, instVrpTw->numClientes, &labelingData))
+    //    ptrVetDist = &vetDist;
 
     static DW_DecompNS::PhaseStatus phase = phaseStatus;
 
@@ -344,6 +348,15 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
               vetMatResCostBackward.get(i, instVrpTw->numClientes, 0) = value;
         }
     }
+
+
+    /*
+    if(LowerBoundNS::getDistLowerBound(vetMatResCostForward, vetDist, instVrpTw->numClientes, &labelingData))
+    {
+        std::printf("Seting Lower Bound\n");
+        ptrVetDist = &vetDist;
+    }
+    */
 
     for(int i=0; i < instVrpTw->numClientes; ++i)
     {
@@ -436,11 +449,25 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     //LowerBoundNS::getDistLowerBound(vetMatResCostForward, vetDist, instVrpTw->numClientes, &labelingData);
 
 
+    /*
+    matColX.setZero();
+    vetRedCostFT.setZero();
+    bidirectionalAlgorithm(1, (instVrpTw->numClientes+1), vetMatResCostForward,
+                           vetMatResCostBackward, vetVetResBound, instVrpTw->numClientes, ngSet,
+                           labelingData, matColX, numSol, (FloatType) constPiValue, -1, true,
+                           maxDist, vetRedCostFT, true, typeLabel, true, ptrVetDist);
+
+    std::cout<<vetRedCostFT.transpose()<<"\n";
+    PRINT_EXIT();
+    */
+
+    G_numRecDominance = 1;
+    //static Array<double, 3> arrayPercentage
 
 // TODO remove comments!
     if(!exact)
     {
-        for(int i = 2; i <= 4; i += 2)
+        for(int i = 1; i <= 20; i += 5)
         {
             std::cout<<i<<": ";
             //std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
@@ -448,23 +475,43 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
             custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward,
                                                  vetMatResCostBackward, vetVetResBound, instVrpTw->numClientes, ngSet,
                                                  labelingData, matColX, numSol, (FloatType) constPiValue, i, true,
-                                                 maxDist, vetRedCostFT, exact, typeLabel, true, &vetDist);
+                                                 maxDist, vetRedCostFT, exact, typeLabel, true, ptrVetDist, 1.0);
 
             it += 1;
-            if(custoRedNeg && numSol >= 5)//DW_DecompNS::NumMaxSolSubProb/2)
+            if(custoRedNeg && numSol >= DW_DecompNS::NumMaxSolSubProb) // 20
                 break;
 
         }
     }
 
 
-    if(!custoRedNeg || numSol < 5)
+    if(!custoRedNeg || numSol < DW_DecompNS::NumMaxSolSubProb)
     {
         matColX.setZero();
         custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
                                              vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
                                              numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
-                                             typeLabel, true, &vetDist);
+                                             typeLabel, true, ptrVetDist, .1);
+    }
+
+
+    if(!custoRedNeg)
+    {
+        G_numRecDominance = 2;
+
+        /*
+        matColX.setZero();
+        custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
+                                             vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
+                                             numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
+                                             typeLabel, true, ptrVetDist, .61);
+        */
+
+        matColX.setZero();
+        custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
+                                             vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
+                                             numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
+                                             typeLabel, true, ptrVetDist, 1.0);
     }
 
 

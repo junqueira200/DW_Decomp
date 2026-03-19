@@ -35,8 +35,20 @@ public:
     Vector3D(size_t n): std::vector<T>(n){}
     Vector3D(){}
 
-    Vector3D(const Vector3D<T> &temp):n(temp.n), m(temp.n), p(temp.p), std::vector<T>(temp.n*temp.m*temp.p)
+    Vector3D(const Vector3D<T,C> &temp):n(temp.n), m(temp.n), p(temp.p), std::vector<T>(temp.n*temp.m*temp.p)
     {
+        for(size_t i=0; i < n*m*p; ++i)
+            std::vector<T>::operator[](i) = temp.get(i);
+    }
+
+    void copy(const Vector3D<T,C>& temp)
+    {
+        if(n != temp.n || m != temp.m || p != p)
+        {
+            std::printf("ERROR, Matrix have a different sizes\n");
+            throw std::out_of_range("");
+        }
+
         for(size_t i=0; i < n*m*p; ++i)
             std::vector<T>::operator[](i) = temp.get(i);
     }

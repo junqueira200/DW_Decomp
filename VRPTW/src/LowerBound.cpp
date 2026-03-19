@@ -13,7 +13,7 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
-
+#include <boost/graph/bellman_ford_shortest_paths.hpp>
 
 using namespace LabelingAlgorithmNS;
 using namespace boost;
@@ -45,32 +45,66 @@ bool LowerBoundNS::getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost& v
                                      LabelingAlgorithmNS::LabelingData*        lDataPtr)
 
 {
-    std::cout<<"ini\n";
+    //return false;
+    //return false;
+    //std::cout<<"ini\n";
 
     Eigen::MatrixXd distMat(vetDist.size(), vetDist.size());
     copyDistMat(vetMatResCost, distMat);
     static int numNodes = vetDist.size();
-    static std::vector<Vertex> predecessor(numNodes+1);
+    static std::vector<Vertex> predecessor(numNodes);
+    static std::vector<double> distance(numNodes, std::numeric_limits<double>::infinity());
 
     //std::cout<<distMat<<"\n";
 
     // Create the graph
     graph_t g(numNodes+1);
 
+    /*
+    // Reverse graph: edges j -> i
     for(int i=0; i < numNodes; ++i)
     {
         for(int j=0; j < numNodes; ++j)
         {
+            if(i == j) continue;
+            if(distMat(i, j) == std::numeric_limits<double>::infinity())
+                continue;
+
+            add_edge(i, j, EdgeWeightProperty(distMat(i,j)), g);
+        }
+    }
+
+
+//    dijkstra_shortest_paths(g, dest, predecessor_map(make_iterator_property_map(predecessor.begin(), get(vertex_index, g)))
+//            .distance_map(make_iterator_property_map(distance.begin(), get(vertex_index, g))));
+
+
+    bool ok = bellman_ford_shortest_paths(g, numNodes, weight_map(get(edge_weight, g)).distance_map(make_iterator_property_map(
+                                          distance.begin(), get(vertex_index, g))));
+
+
+    if(!ok)
+    {
+        vetDist.setConstant(-MaxFloatType);
+        return false;
+    }
+
+
+    // Copy result
+    for(int i = 0; i < numNodes; ++i)
+    {
+        vetDist[i] = distance[i];
+    }
+    */
+
+    for(int i=0; i < numNodes+1; ++i)
+    {
+        for(int j=0; j < numNodes+1; ++j)
+        {
             if(i == j)
                 continue;
             //std::cout<<i<<", "<<j<<"\n";
-            if(distMat(i, j) < -1E-5)
-            {
-                std::cout<<"dist("<<i<<", "<<j<<") : "<<distMat(i, j)<<"\n\n";
-                std::cout<<distMat<<"\n";
-                PRINT_EXIT();
-            }
-            add_edge(i, j, EdgeWeightProperty(distMat(i,j)), g);
+           add_edge(i, j, EdgeWeightProperty(distMat(i,j)), g);
         }
     }
 
@@ -109,11 +143,7 @@ bool LowerBoundNS::getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost& v
         vetDist[i] = dist;
     }
 
-    for(double& val:vetDist)
-    {
-        if(val > 0.0)
-            val = 0.0;
-    }
+
 
     std::cout<<"Dist: "<<vetDist.transpose()<<"\n";
     //PRINT_EXIT();

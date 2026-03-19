@@ -28,14 +28,14 @@ namespace LabelingAlgorithmNS
     constexpr int   NumMaxResources   = 2;
     constexpr int   NumMaxRoute       = 100;
     constexpr int   NumMaxCust        = 100; //100
-    constexpr int   NgSetSize         = 8; // 12 8 2
+    constexpr int   NgSetSize         = 4; // 8
     constexpr int   NumBuckets        = 10;
     constexpr int   vetPtrLabelSize   = 10;
-    constexpr bool  NullFlush         = true;
+    constexpr bool  NullFlush         = false;
     constexpr bool  Print             = false;
-    constexpr int   numMaxLabelG      = 150; // 2000
-    constexpr bool  DominaIterBuckets = true;
-    constexpr FloatType FloatEp       = 1E-15;
+    constexpr int   numMaxLabelG      = 40; // 2000
+    constexpr bool  DominaIterBuckets = false;
+    constexpr FloatType FloatEp       = 1E-5;
     constexpr bool  TrackingRoutes    = false;
     constexpr bool  SortLabels        = false;
 

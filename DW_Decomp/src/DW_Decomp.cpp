@@ -14,6 +14,8 @@
 #include <utility>
 #include <boost/unordered_set.hpp>
 #include <format>
+#include "../../2L_SDVRP/include/sefe_array.h"
+#include "rand.h"
 
 using namespace SparseOpNS;
 
@@ -762,6 +764,10 @@ std::cout<<"*******************Column Generation*******************\n\n";
     }
 
 
+    Array<double, 2> arraySolVal;
+    double localStabilizationAlpha = 0.0;
+
+
     while(subProbCustR_neg)
     {
         bool exit = false;
@@ -791,6 +797,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
         //std::cout<<"Val fun OBJ: "<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\n";
         double objRmlp = uRmlp->get(GRB_DoubleAttr_ObjVal);
+        arraySolVal[itCG%2] = objRmlp;
 
         GRBVar *vetVar = uRmlp->getVars();
         bool changePhase = false;
@@ -865,9 +872,22 @@ std::cout<<"*******************Column Generation*******************\n\n";
 
         if(stabilization && !exactPi && itCG > 0)// && phaseStatus == PhaseStatus::PhaseStatusColGen)
         {
-            auxVect.vetRowRmlpSmoothPi = (1.0-StabilizationAlpha)*auxVect.vetRowRmlpSmoothPi +
-                                          StabilizationAlpha * (auxVect.vetRowRmlpPi);
-            //std::cout << "SPI: " << auxVect.vetRowRmlpSmoothPi << "\n\n";
+            localStabilizationAlpha = StabilizationAlpha;
+            //if(itCG > 2)
+            /*
+            {
+                //if(doubleEqual(arraySolVal[(itCG-1)%2], objRmlp, 1E-5))
+                {
+                    localStabilizationAlpha = RandNs::getRandDouble(StabilizationAlpha-0.1, StabilizationAlpha+0.1);
+                    if(localStabilizationAlpha < 0.0 || localStabilizationAlpha > 1.0)
+                        localStabilizationAlpha = StabilizationAlpha;
+                }
+            }
+            */
+
+            auxVect.vetRowRmlpSmoothPi = (1.0-localStabilizationAlpha)*auxVect.vetRowRmlpSmoothPi +
+                                          localStabilizationAlpha * (auxVect.vetRowRmlpPi);
+            std::cout << "SPI[1]: " << auxVect.vetRowRmlpSmoothPi[1] << "\n\n";
         }
         else
         {
@@ -1081,8 +1101,14 @@ std::cout<<"*******************Column Generation*******************\n\n";
         if(exit)
             break;
 
-        if(!missPricing && !subProbCustR_neg)
-            std::cout<<"END!\n";
+        if(!subProbCustR_neg && !exactPricing)
+        {
+            std::cout<<"END!; stabilization: "<<stabilization<<"\n";
+            stabilization = false;
+            subProbCustR_neg = true;
+            exactPricing = true;
+
+        }
 
         if(!subProbCustR_neg)
             std::cout<<"Sub Problem have a positive value!\n";
@@ -1108,7 +1134,7 @@ std::cout<<"*******************Column Generation*******************\n\n";
             //std::cout<<"\t"<<itCG<<"\t"<<uRmlp->get(GRB_DoubleAttr_ObjVal)<<"\t\""<<gap<<"%\"\n";
             if(varA == '*')
                 std::cout<<"* ";
-            std::cout<<std::format("\t{0}\t{1:.1f}\t{2:.1f}\t{3:.1f}%\n", itCG, objRmlp, lagrangeDualBound, gap);
+            std::cout<<std::format("\t{0}\t{1:.1f}\t{2:.1f}\t{3:.1f}%\tStabili: {4:.2f}\n", itCG, objRmlp, lagrangeDualBound, gap, localStabilizationAlpha);
         }
 
         itCG += 1;
