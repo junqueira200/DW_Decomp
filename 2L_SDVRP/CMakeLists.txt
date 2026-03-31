@@ -28,11 +28,16 @@ find_package(ortools CONFIG REQUIRED)
 find_package(GUROBI REQUIRED)
 include_directories(${GUROBI_INCLUDE_DIRS})
 link_directories($ENV{GUROBI_HOME}/lib)
+
+include_directories($ENV{SCIPpp}/include)
+link_directories($ENV{SCIPpp}/lib)
+
+
 find_package(Boost)
 find_package(OpenMP REQUIRED)
 
 find_package(CPLEX REQUIRED)
-
+link_directories(${CPLEX_CP_LIBRARY})
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -fPIC")# -Wall -Wextra -fPIC")# -fsanitize=address")# -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D __FILENAME__='\"$$(subst  ${CMAKE_SOURCE_DIR}/,,$$(abspath $$<))\"'")
@@ -43,7 +48,7 @@ message("set solution_borrow_checker=1")
 
 add_library(${PROJECT_NAME} SHARED
     include/Commit.h
-    )
+)
 
 target_sources(${PROJECT_NAME}
     PRIVATE
@@ -63,6 +68,8 @@ target_sources(${PROJECT_NAME}
         src/AxleWeights.cpp
         src/TesteOroloc3D.cpp
         src/MILP.cpp
+        src/IBM_CpOptimizer.cpp
+        src/SCIP.cpp
 )
 
 
@@ -74,7 +81,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE gurobi)
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
 target_link_libraries(${PROJECT_NAME} PRIVATE CPLEX::CPLEX)
-
+target_link_libraries(${PROJECT_NAME} PRIVATE ScipPP)
                         
 target_include_directories(${PROJECT_NAME}
     PRIVATE
@@ -133,6 +140,8 @@ set(public_headers
     include/AxleWeights.h
     include/TesteOroloc3D.h
     include/MILP.h
+    include/IBM_CpOptimizer.h
+    include/SCIP.h
 )
 
 # where to find our CMake modules

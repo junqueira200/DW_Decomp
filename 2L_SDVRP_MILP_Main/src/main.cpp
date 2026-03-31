@@ -15,6 +15,7 @@
 #include "BinPackingCP.h"
 #include "TesteOroloc3D.h"
 #include "MILP.h"
+#include "IBM_CpOptimizer.h"
 
 #include "ProblemParameters.h"
 #include "BCRoutingParams.h"
@@ -79,6 +80,7 @@ int main(int argc, const char* argv[])
     //return 0;
 
     testeOroloc3D_2();
+    //IBM_CpOptimizerNS::testSCIP();
     return 0;
 
     GRBEnv env;

@@ -36,8 +36,8 @@ include_directories(Instances/include)
 add_subdirectory(2L_SDVRP)
 include_directories(2L_SDVRP/include)
 
-add_subdirectory(VRPTW)
-include_directories(VRPTW/include)
+#add_subdirectory(VRPTW)
+#include_directories(VRPTW/include)
 
 add_subdirectory(2L_SDVRP_Main)
 include_directories(2L_SDVRP_Main/include)

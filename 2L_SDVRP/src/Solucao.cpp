@@ -640,6 +640,8 @@ bool SolucaoNS::Bin::verificaViabilidade()
             }
         }
 
+        //continue;
+
         if(vetPosItem[i].vetDim[2] == 0)
             continue;
 
@@ -670,11 +672,13 @@ bool SolucaoNS::Bin::verificaViabilidade()
         double support = areaSuport/area;
 
         if(support < instanciaG.minSupport)
+       {	std::cout<<"support: "<<support<<"\n";
             return false;
+        }
 
 
     }
-
+    //std::printf("verificaViabilidade so testou colisoes!\n");
     return true;
 
 }

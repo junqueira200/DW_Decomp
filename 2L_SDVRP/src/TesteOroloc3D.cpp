@@ -6,6 +6,9 @@
 #include "Solucao.h"
 #include "AxleWeights.h"
 #include "ConstrutivoBin.h"
+#include "IBM_CpOptimizer.h"
+#include "SCIP.h"
+
 
 using namespace TesteOroloc3D_NS;
 using namespace InstanceNS;
@@ -18,6 +21,8 @@ using namespace MILP_NS;
 using namespace SolucaoNS;
 using namespace AxleWeightsNS;
 using namespace ConstrutivoBinNS;
+using namespace IBM_CpOptimizerNS;
+using namespace SCIP_NS;
 
 
 void TesteOroloc3D_NS::testeOroloc3D()
@@ -455,10 +460,11 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 {
     int numItems = 2;
 
-    Solucao sol, solCp, solHeur;
+    Solucao sol, solCp, solCp2, solHeur;
     readSolOroloc3D_2(sol);
     solCp.copiaSolucao(sol);
     solHeur.copiaSolucao(sol);
+    solCp2.copiaSolucao(sol);
     //printSol(solCp);
     //return;
 
@@ -485,6 +491,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
         Bin& bin = sol.vetBin[veic];
         Bin& binCp = solCp.vetBin[veic];
+        Bin& binCp2 = solCp2.vetBin[veic];
         Bin& bin2 = solHeur.vetBin[veic];
         Rota& rota = solCp.vetRota[veic];
         bin2.reset();
@@ -584,6 +591,11 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
             else if(n == 1)
                 input.axleWights = false;
 
+            CpOptimizer cpOptimizer(bin.vetItemId, bin.numItens, rota);
+            //cpOptimizer.solve(binCp2);
+
+            Scip3dPacking scip3dPacking(bin.vetItemId, bin.numItens, rota);
+            EXIT_PRINT();
 
             std::vector<Array<int, 4>> vetArray;
             //std::cout<<"n: "<<n<<"\n";

@@ -25,6 +25,8 @@ find_package(Boost)
 add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
 message("set vector_sanity_check=1")
 
+find_package(CPLEX REQUIRED)
+link_directories(${CPLEX_CP_LIBRARY})
 
 #set(CMAKE_CXX_FLAGS "-pedantic")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g")# -pedantic -Wall -Wextra -fPIC")
@@ -67,4 +69,4 @@ target_link_libraries(${PROJECT_NAME} PRIVATE gurobi)
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE 2L_SDVRP)
-
+target_link_libraries(${PROJECT_NAME} PRIVATE CPLEX::CPLEX)

@@ -24,7 +24,7 @@
 
 #define assertm(exp, msg) if(exp){std::cout<<msg<<"\n\nLINE: "<<__LINE__<<"\nFILE: "<<__PRETTYFILE__<<"\nFUNC: "<<__PRETTY_FUNCTION__<<"\n\n"; throw "ERROR";}
 
-
+#define INLINE inline __attribute__((always_inline))
 
 template<typename T>
 void applyPermutation(Vector<T> &vet, const std::vector<int> &permutation, const size_t tam)

@@ -461,7 +461,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     PRINT_EXIT();
     */
 
-    G_numRecDominance = 1;
+    G_numRecDominance = 2;
     //static Array<double, 3> arrayPercentage
 
 // TODO remove comments!
@@ -491,7 +491,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1), vetMatResCostForward, vetMatResCostBackward,
                                              vetVetResBound, instVrpTw->numClientes, ngSet, labelingData, matColX,
                                              numSol, (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact,
-                                             typeLabel, true, ptrVetDist, .1);
+                                             typeLabel, true, ptrVetDist, .6);
     }
 
 

@@ -18,11 +18,11 @@ find_package(ortools CONFIG REQUIRED)
 include_directories(${GUROBI_INCLUDE_DIRS})
 link_directories($ENV{GUROBI_HOME}/lib)
 
+
 cmake_policy(SET CMP0144 NEW)
 cmake_policy(SET CMP0167 NEW)
 find_package(Boost)
 find_package(CPLEX REQUIRED)
-
 
 add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
 message("set vector_sanity_check=1")

@@ -121,7 +121,7 @@ namespace InstanceNS
 
 
     inline Instance instanciaG;
-    inline static const Array<InstanceNS::Rotation, 1> vetRot = {Rot0};//, Rot1, Rot2};
+    inline static const Array<InstanceNS::Rotation, 2> vetRot = {Rot0, Rot1};//, Rot2};
     //std::string printItem(int itemId);
 }
 

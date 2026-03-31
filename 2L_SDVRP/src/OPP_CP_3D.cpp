@@ -166,6 +166,31 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>>& vetPos)
         array[1] = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsY[i]);
         array[2] = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsZ[i]);
 
+        Array<int, 3> arrayEnd;
+        arrayEnd[0] = operations_research::sat::SolutionIntegerValue(mResponse, mEndPositionsX[i]);
+        arrayEnd[1] = operations_research::sat::SolutionIntegerValue(mResponse, mEndPositionsY[i]);
+        arrayEnd[2] = operations_research::sat::SolutionIntegerValue(mResponse, mEndPositionsZ[i]);
+
+        int dx, dy, dz;
+        dx = operations_research::sat::SolutionIntegerValue(mResponse, mLengths[i]);
+        dy = operations_research::sat::SolutionIntegerValue(mResponse, mWidths[i]);
+        dz = operations_research::sat::SolutionIntegerValue(mResponse, mHeights[i]);
+
+        if((array[0]+dx) != arrayEnd[0])
+        {
+            std::cout<<"Erro: start0("<<array[0]<<") + dx("<<dx<<"): "<<array[0]+dx<<" != "<<arrayEnd[0]<<"\n";
+        }
+
+        if((array[1]+dy) != arrayEnd[1])
+        {
+            std::cout<<"Erro: start0("<<array[1]<<") + dy("<<dy<<"): "<<array[1]+dy<<" != "<<arrayEnd[1]<<"\n";
+        }
+
+        if((array[2]+dz) != arrayEnd[2])
+        {
+            std::cout<<"Erro: start0("<<array[2]<<") + dz("<<dz<<"): "<<array[2]+dz<<" != "<<arrayEnd[2]<<"\n";
+        }
+
         for (size_t o = 0; o < mItemOrientations.size(); ++o)
         {
             bool util = operations_research::sat::SolutionBooleanValue(mResponse, mOrientation[i][o]);
@@ -266,6 +291,7 @@ void ContainerLoadingCP::ExtractPacking(std::vector<Cuboid>& items) const
         item.X = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsX[i]);
         item.Y = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsY[i]);
         item.Z = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsZ[i]);
+
     }
 }
 
@@ -553,8 +579,8 @@ void ContainerLoadingCP::AddConstraints()
         }
     }
 
-    if(ParseInputNS::input.axleWights)
-        CreateAxleWeights();
+    //if(ParseInputNS::input.axleWights)
+    //    CreateAxleWeights();
 }
 
 void ContainerLoadingCP::CreateAxleWeights()

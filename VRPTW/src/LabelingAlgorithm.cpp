@@ -28,14 +28,14 @@ inline bool startLabelPoolG = false;
 void LabelingAlgorithmNS::startGlobalMemory(const Vector<VectorI>& vetRoutes)
 {
     vetRoutesG = Vector(vetRoutes);
-    std::println("startGlobalMemory");
+    std::printf("startGlobalMemory\n");
 
     for(const VectorI& vet:vetRoutesG)
     {
         std::cout<<vet<<"\n";
     }
 
-    std::println();
+    std::printf("\n");
 
 }
 void LabelingAlgorithmNS::invertRoutes(Vector<VectorI>& vetRoutes)
@@ -927,9 +927,13 @@ bool LabelingAlgorithmNS::
 
     //newLabel.typeLabel = label.typeLabel;
 
-    for(int i=0; i < numResources; ++i)//NumMaxResources; ++i)
-    {
+    newLabel.vetResources[0] = label.vetResources[0] + vetMatResCost(custI, t, 0);
+    boundOk = boundOk && (newLabel.vetResources[0] <= vetVetBound(t, 0).upperBound);
+    newLabel.vetResources[1] = label.vetResources[1] + vetMatResCost(custI, t, 1);
+    boundOk = boundOk && (newLabel.vetResources[1] <= vetVetBound(t, 1).upperBound);
 
+    for(int i=2; i < numResources; ++i)//NumMaxResources; ++i)
+    {
         // Extend the iº resource
         //std::cout<<"\t\tresource("<<label.vetResources[i]<<") + "<<vetMatResCost(custI, t, i)<<"\n";
         newLabel.vetResources[i] = label.vetResources[i] + vetMatResCost(custI, t, i);
@@ -2467,6 +2471,8 @@ bool LabelingAlgorithmNS::checkCompleteDominance(const Label& l0, const Label& l
         throw "ERROR";
     }
 
+    bool oneIsStrictLess = false;
+
     if(l0.typeLabel == Forward)
     {
         // Check the resources
@@ -2480,19 +2486,25 @@ bool LabelingAlgorithmNS::checkCompleteDominance(const Label& l0, const Label& l
     }
     else
     {
-        if(l0.vetResources[0] > l1.vetResources[0])
-        //if(doubleGreater(l0.vetResources[0], l1.vetResources[0], FloatEp))
+        //if(l0.vetResources[0] > l1.vetResources[0])
+        if(doubleGreater(l0.vetResources[0], l1.vetResources[0], FloatEp))
             return false;
 
         // Check the resources
         //#pragma GCC unroll NumMaxResources
         for(int i=1; i < numResources; ++i)
         {
-            if(l0.vetResources[i] < l1.vetResources[i])
-            //if(doubleLess(l0.vetResources[i], l1.vetResources[i], FloatEp))
+            //if(l0.vetResources[i] < l1.vetResources[i])
+            if(doubleLess(l0.vetResources[i], l1.vetResources[i], FloatEp))
                 return false;
         }
+
     }
+
+    //if(!oneIsStrictLess)
+    //    return false;
+
+
 
     // Check if l0 is a subset of l1
     //return (l0.bitSetNg & l1.bitSetNg) == l0.bitSetNg;
@@ -2662,7 +2674,7 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketSlow(int cust, Label* label, La
             {
                 if(labelHaveRoute(vetRoutesG, bucketPtr->vetPtrLabel[i]))
                 {
-                    std::println("The route(%s) dominates the route(%s)(in vetRoutesG)", printRoute(label),
+                    std::printf("The route(%s) dominates the route(%s)(in vetRoutesG)\n", printRoute(label),
                                  printRoute(bucketPtr->vetPtrLabel[i]));
                     PRINT_EXIT();
                 }
