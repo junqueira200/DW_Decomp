@@ -2,13 +2,13 @@
 #include "OPP_CP_3D.h"
 #include <ilcplex/ilocplex.h>
 #include "AuxT.h"
-#include <scippp/model.hpp>
+//#include <scippp/model.hpp>
 
 using namespace IBM_CpOptimizerNS;
 using namespace ParseInputNS;
 using namespace InstanceNS;
 
-using namespace scippp;
+//using namespace scippp;
 
 IloEnv* CpOptimizer::envPtr = nullptr;
 
@@ -789,16 +789,4 @@ IloIntVar& CpOptimizer::getIntVars(DimensionType dimension, bool first, int i)
         throw std::runtime_error("DimensionType not implemented.");
 
     }
-}
-
-void IBM_CpOptimizerNS::testSCIP()
-{
-
-    scippp::Model model("Simple");
-    auto x1 = model.addVar("x_1", 1);
-    auto x2 = model.addVar("x_2", 1);
-    model.addConstr(3 * x1 + 2 * x2 <= 1, "capacity");
-    model.setObjsense(Sense::MAXIMIZE);
-    model.solve();
-
 }

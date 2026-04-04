@@ -34,14 +34,14 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin& bin) const
 
     //std::printf("\nsumF: %.2f; sumM: %.2f\n", sumF, sumM);
 
-    fK  = (1.0/distanceKingpinTrailerAxle)*(sumM + massTrailer*GravityMM*distanceMassTrailerTrailerAxle);
-    fFA = (1.0/(double)wheelBase) * (fK * distanceKingpinRearAxle + massTractor*GravityMM*distanceMassTractorRearAxle);
-    fRA = fK + massTractor*GravityMM - fFA;
-    fTA = sumF + massTrailer*GravityMM - fK;
+    fK  = (1.0/(double)distanceKingpinTrailerAxle)*(sumM + (double)massTrailer*GravityMM*distanceMassTrailerTrailerAxle);
+    fFA = (1.0/(double)wheelBase) * (fK * (double)distanceKingpinRearAxle + (double)massTractor*GravityMM*distanceMassTractorRearAxle);
+    fRA = fK + (double)massTractor*GravityMM - fFA;
+    fTA = sumF + (double)massTrailer*GravityMM - fK;
 
     //std::printf("fK: %.1f; fFA: %.1f; fRA: %.1f; FTA: %.1f\n", fK, fFA, fRA, fTA);
 
-    if(fFA > maxMassFrontAxle*GravityMM || fRA > maxMassRearAxle*GravityMM || fTA > maxMassTrailerAxle*GravityMM)// ||
+    if(fFA > (double)maxMassFrontAxle*GravityMM || fRA > (double)maxMassRearAxle*GravityMM || fTA > (double)maxMassTrailerAxle*GravityMM)// ||
        //fK < 0.0 || fFA < 0.0 || fRA < 0.0 || fTA < 0.0)
     {
         //std::printf("\tINFEASIBLE\t");
@@ -84,5 +84,5 @@ double AxleWeightsNS::SemiTrailer::computeMaxFK(SolucaoNS::Bin& bin) const
         maxFK += f*r;
     }
 
-    return (1.0/distanceKingpinTrailerAxle)*maxFK;
+    return (1.0/(double)distanceKingpinTrailerAxle)*maxFK;
 }

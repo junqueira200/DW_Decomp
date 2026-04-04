@@ -591,11 +591,12 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
             else if(n == 1)
                 input.axleWights = false;
 
-            CpOptimizer cpOptimizer(bin.vetItemId, bin.numItens, rota);
+            //CpOptimizer cpOptimizer(bin.vetItemId, bin.numItens, rota);
             //cpOptimizer.solve(binCp2);
 
-            Scip3dPacking scip3dPacking(bin.vetItemId, bin.numItens, rota);
-            EXIT_PRINT();
+            Scip3dPacking scip3dPacking(bin.vetItemId, bin.numItens, rota, binCp);
+            break; // for(PackingType type:vetPackingType)
+            //EXIT_PRINT();
 
             std::vector<Array<int, 4>> vetArray;
             //std::cout<<"n: "<<n<<"\n";

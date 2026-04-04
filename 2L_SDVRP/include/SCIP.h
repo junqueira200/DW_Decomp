@@ -3,10 +3,20 @@
 
 #include "Instancia.h"
 #include "Solucao.h"
+#include "Container.h"
 #include <scippp/model.hpp>
+
+#define MY_SCIP_CALL(x)                           \
+do {                                           	  \
+        SCIP_RETCODE _restat_;                    \
+        if( (_restat_ = (x)) != SCIP_OKAY )       \
+        {printf("SCIP error: %d", _restat_); throw "ERROR";}									  \
+} while(false)
 
 namespace SCIP_NS
 {
+    using namespace ContainerLoading;
+    using namespace Model;
 
     typedef std::vector<scippp::Var> VectorVar;
     class MatrixVar
@@ -82,22 +92,41 @@ namespace SCIP_NS
         VectorVar mStartPositionsZ;
         VectorVar mEndPositionsZ;
 
-        Matrix3DVar mRelativeDirections;
+        Matrix3DVar mRelativeDirections;	// mRelativeDirections[i][j][direction], bool, 1 if item i is placed relatively to
+                                            // item j in direction
 
         MatrixVar mItemsOverlapsXY; 	// mItemsOverlapsXY[i][j], bool, items i and j intersect in xy-plane
         MatrixVar mSupportXY; 			// mSupportXY[i][j], bool, 1, if item i is supported by item j xy-plane ? -> items
                                         // intersect AND item j is directly below item i
         MatrixVar mOverlapAreasXY; 		// mOverlapAreasXY[i][j], integer, size of intersection area in xy-plane of items i and j
 
-        MatrixVar mWidths;
-        MatrixVar mLengths;
-        MatrixVar mHeights;
+        VectorVar mWidths;
+        VectorVar mLengths;
+        VectorVar mHeights;
 
-        Scip3dPacking(const VectorI& vetItems_, const int numItems_, const SolucaoNS::Rota& rota_);
+        VectorVar mPlacedOnFloor;
+        MatrixVar mOrientation;
 
+        Array<RelativeDirection, 6> arrayRelaDirections = {RightY, LeftY, InFrontX, BehindX, AboveZ, BelowZ};
+        std::map<RelativeDirection, std::string> mapRelaDirections = {{RightY, "RightY"}, {LeftY, "LeftY"},
+                                                                      {InFrontX, "InFrontX"}, {BehindX, "BehindX"},
+                                                                      {AboveZ, "AboveZ"}, {BelowZ, "BelowZ"}};
+        std::vector<Dimension> mDimensions = {{AxisY, RightY, LeftY}, {AxisX, InFrontX, BehindX},
+                                              {AxisZ, AboveZ, BelowZ}};
 
+        Scip3dPacking(const VectorI& vetItems_, const int numItems_, const SolucaoNS::Rota& rota_, SolucaoNS::Bin& bin);
+        void createVariables();
+        void createConstraints();
+        void CreateNoOverlap();
+        void CreateItemOrientations();
+        void CreateEnd();
+        void CreateOnFloorConstraints();
+        scippp::Var& getIntVars(DimensionType dimension, bool first, int i);
 
     };
+
+
+    inline const std::string emptyStr;
 
 
 }

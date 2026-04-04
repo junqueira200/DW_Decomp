@@ -44,6 +44,18 @@ InstanceNS::Instance::Instance(int numClientes_, int numItens_, int numVeiculos_
     matCliItensIniFim = Matrix<int>(numClientes, 2);
     matCliItensIniFim.setVal(-1);
 
+    for(int i=0; i < vetRot.size()-1; ++i)
+    {
+        for(int j=i+1; j < vetRot.size(); ++j)
+        {
+            if(vetRot[j] < vetRot[i])
+            {
+                std::printf("Error in vetRot. It shuld be sorted\n%s", getStrFromObj(vetRot).c_str());
+                EXIT_PRINT();
+            }
+        }
+    }
+
 }
 
 InstanceNS::Instance::Instance():

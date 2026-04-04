@@ -640,7 +640,7 @@ bool SolucaoNS::Bin::verificaViabilidade()
             }
         }
 
-        //continue;
+        continue;
 
         if(vetPosItem[i].vetDim[2] == 0)
             continue;

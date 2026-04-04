@@ -15,6 +15,7 @@
 #include "sefe_array.h"
 #include <tuple>
 #include <cmath>
+#include <sstream>
 //#include <Eigen/Eigen>
 
 #define __PRETTYFILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
@@ -161,6 +162,14 @@ std::string printVet(const Vector<T> &vet, int tam)
     return str;
 }
 
+template<typename T>
+std::string getStrFromObj(T& obj)
+{
+
+    std::ostringstream os;
+    os<<obj;
+    return os.str();
+}
 
 
 #endif //DW_DECOMP_AUX_H
