@@ -54,7 +54,8 @@ void ParseInputNS::parseInput(int argc, const char* argv[])
                         ("oroloc3D", "Indicates if the instance is the Oroloc3D type", cxxopts::value<bool>(input.instOroloc3D))
                         ("oroloc3D_2", "Indicates if the instance is the Oroloc3D_2 type", cxxopts::value<bool>(input.instOroloc3D_2))
                         ("solOroloc3D_2", "File to read the instance of oroloc3D_2", cxxopts::value<std::string>(input.strSolOroloc3D_2))
-                        ("solOroloc3D_output", "File to read the instance of oroloc3D_2", cxxopts::value<std::string>(input.strSolOroloc3D_output));
+                        ("solOroloc3D_output", "File to read the instance of oroloc3D_2", cxxopts::value<std::string>(input.strSolOroloc3D_output))
+                        ("balancedLoadingD", "Parameter D to compute balanced Loading", cxxopts::value<double>(input.balancedLoadingD));
 //SolOroloc3D_output
         auto result = options.parse(argc, argv);
 

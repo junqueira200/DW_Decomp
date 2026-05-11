@@ -1,6 +1,6 @@
 #ifndef SCIP_H
 #define SCIP_H
-
+/*
 #include "Instancia.h"
 #include "Solucao.h"
 #include "Container.h"
@@ -121,6 +121,12 @@ namespace SCIP_NS
         void CreateItemOrientations();
         void CreateEnd();
         void CreateOnFloorConstraints();
+
+        void CreateXYIntersectionBool();
+        void CreateSupportItem();
+        void CreateXYIntersectionArea();
+        void CreateSupportArea();
+
         scippp::Var& getIntVars(DimensionType dimension, bool first, int i);
 
     };
@@ -130,5 +136,6 @@ namespace SCIP_NS
 
 
 }
+*/
 
 #endif // SCIP_H

@@ -3,6 +3,12 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 import re
 
 
+# Truck dimensions
+TRUCK_WIDTH = 13500
+TRUCK_LENGTH = 2450
+TRUCK_HEIGHT = 2700
+
+
 def read_items(filename):
     with open(filename, "r") as f:
         lines = [line.strip() for line in f if line.strip()]
@@ -32,15 +38,17 @@ def read_items(filename):
             "x": x,
             "y": y,
             "z": z,
-            "dx": largura,
-            "dy": comprimento,
-            "dz": altura
+            "dx": largura,      # width
+            "dy": comprimento,  # length
+            "dz": altura        # height
         })
 
     return items
 
 
-def draw_box(ax, x, y, z, dx, dy, dz):
+def draw_box(ax, x, y, z, dx, dy, dz,
+             alpha=0.4, edgecolor="black"):
+
     vertices = [
         [(x, y, z), (x+dx, y, z), (x+dx, y+dy, z), (x, y+dy, z)],
         [(x, y, z+dz), (x+dx, y, z+dz), (x+dx, y+dy, z+dz), (x, y+dy, z+dz)],
@@ -50,29 +58,68 @@ def draw_box(ax, x, y, z, dx, dy, dz):
         [(x+dx, y, z), (x+dx, y+dy, z), (x+dx, y+dy, z+dz), (x+dx, y, z+dz)]
     ]
 
-    ax.add_collection3d(Poly3DCollection(vertices, alpha=0.4))
+    poly = Poly3DCollection(
+        vertices,
+        alpha=alpha,
+        edgecolors=edgecolor,
+        linewidths=0.5
+    )
+
+    ax.add_collection3d(poly)
 
 
 def plot_items(items):
-    fig = plt.figure()
+    fig = plt.figure(figsize=(14, 8))
     ax = fig.add_subplot(111, projection="3d")
 
-    for it in items:
-        draw_box(ax, it["x"], it["y"], it["z"],
-                 it["dx"], it["dy"], it["dz"])
+    # Truck boundary
+    draw_box(
+        ax,
+        0, 0, 0,
+        TRUCK_WIDTH,
+        TRUCK_LENGTH,
+        TRUCK_HEIGHT,
+        alpha=0.02,
+        edgecolor="red"
+    )
 
-        ax.text(it["x"], it["y"], it["z"],
-                f'ID {it["id"]}', fontsize=9)
+    for it in items:
+
+        draw_box(
+            ax,
+            it["x"],
+            it["y"],
+            it["z"],
+            it["dx"],   # largura
+            it["dy"],   # comprimento
+            it["dz"]    # altura
+        )
+
+        ax.text(
+            it["x"],
+            it["y"],
+            it["z"],
+            f'ID {it["id"]}',
+            fontsize=9
+        )
 
     ax.set_xlabel("X (Largura)")
     ax.set_ylabel("Y (Comprimento)")
     ax.set_zlabel("Z (Altura)")
 
-    ax.set_box_aspect([1, 1, 1])
+    ax.set_xlim(0, TRUCK_WIDTH)
+    ax.set_ylim(0, TRUCK_LENGTH)
+    ax.set_zlim(0, TRUCK_HEIGHT)
+
+    ax.set_box_aspect([
+        TRUCK_WIDTH,
+        TRUCK_LENGTH,
+        TRUCK_HEIGHT
+    ])
+
     plt.show()
 
 
 if __name__ == "__main__":
     items = read_items("items.txt")
     plot_items(items)
-

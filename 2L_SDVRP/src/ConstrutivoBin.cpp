@@ -40,6 +40,19 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep, const int itemId, const Bin &b
             return false;
     }
 
+    double left = computeLeftBalancedLoading(ep.vetDim[1], instanciaG.vetItens[itemId].getDimRotacionada(1, r),
+                                             instanciaG.vetItens[itemId].weight);
+
+    double right = instanciaG.vetItens[itemId].weight - left;
+
+    double sumLeft  = left  + bin.sumLeftBalancedLoading;
+    double sumRight = right + bin.sumRightBalancedLoading;
+
+    static const double limit = input.balancedLoadingD*instanciaG.maxPayload;
+
+    if(sumRight > limit || sumLeft > limit)
+        return false;
+
     if(input.inst2d || ep.vetDim[2] == 0.0)
     {
         //std::cout<<"z = 0\n";
@@ -447,30 +460,8 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin &bin,
         {
             bool feasible = true;
             if(!input.comprimentoAlturaIguais1)
-            {
-                feasible = binVet[0].verificaViabilidade();
-                if(input.axleWights)
-                {
-                    feasible = semiTrailer.checkAxleWeights(bin);
-                }
+                return binVet[0].checkFeasibility(rota);
 
-                std::cout<<"AxleWeights: "<<feasible<<"\n";
-            }
-
-            if(feasible)
-            {
-                if(rota)
-                    feasible = SolucaoNS::checkUnloadingSequence(binVet[0], *rota);
-                else if(!input.comprimentoAlturaIguais1)
-                    std::printf("Unloading Sequence diden't run, route=null\n");
-
-                if(!feasible)
-                    return false;
-
-                copiaBin(binVet[0], bin);
-                //std::printf("Utilizacao %.2f%%\n", binVet[0].getPorcentagemUtilizacao());
-                return true;
-            }
         }
     }
 

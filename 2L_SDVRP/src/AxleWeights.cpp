@@ -1,13 +1,14 @@
 #include "AxleWeights.h"
 #include "Instancia.h"
-#include "Constantes.h"
+#include "Constants.h"
 
 using namespace AxleWeightsNS;
 using namespace InstanceNS;
 
 bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin& bin) const
 {
-    //std::printf("\n");
+    GravityMM = GravityMM_const;
+
     double fK  = 0.0;
     double fFA = 0.0;
     double fRA = 0.0;
@@ -15,7 +16,7 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin& bin) const
 
     double sumF = 0.0;
     double sumM = 0.0;
-    //std::printf("numItems: %d\n", bin.numItens);
+
     for(int i=0; i < bin.numItens; ++i)
     {
 
@@ -23,51 +24,20 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin& bin) const
         sumF += f;
         double r = (double)distanceCargoSpaceTrailerAxle - bin.vetPosItem[i].vetDim[0] -
                    instanciaG.vetItens[bin.vetItemId[i]].getDimRotacionada(0, bin.vetRotacao[i])/2.0;
-        //r = std::abs(r);
-
-        //std::printf("W: %0.f; F: %.2f; Px: %.1f; Dx/2: %.0f; r: %.2f; M: %.2f\n",  instanciaG.vetItens[bin.vetItemId[i]].weight, f, bin.vetPosItem[i].vetDim[0], instanciaG.vetItens[bin.vetItemId[i]].getDimRotacionada(0, bin.vetRotacao[i])/2.0, r, f*r);
-
-        //std::printf("F: %.1f; px: %.1f; R: %.1f\n", f, bin.vetPosItem[i].vetDim[0], r);
 
         sumM += f*r;
     }
-
-    //std::printf("\nsumF: %.2f; sumM: %.2f\n", sumF, sumM);
 
     fK  = (1.0/(double)distanceKingpinTrailerAxle)*(sumM + (double)massTrailer*GravityMM*distanceMassTrailerTrailerAxle);
     fFA = (1.0/(double)wheelBase) * (fK * (double)distanceKingpinRearAxle + (double)massTractor*GravityMM*distanceMassTractorRearAxle);
     fRA = fK + (double)massTractor*GravityMM - fFA;
     fTA = sumF + (double)massTrailer*GravityMM - fK;
 
-    //std::printf("fK: %.1f; fFA: %.1f; fRA: %.1f; FTA: %.1f\n", fK, fFA, fRA, fTA);
 
     if(fFA > (double)maxMassFrontAxle*GravityMM || fRA > (double)maxMassRearAxle*GravityMM || fTA > (double)maxMassTrailerAxle*GravityMM)// ||
-       //fK < 0.0 || fFA < 0.0 || fRA < 0.0 || fTA < 0.0)
     {
-        //std::printf("\tINFEASIBLE\t");
-
-        /*
-        if(fFA > maxMassFrontAxle*GravityMM)
-            std::printf("fFa >; ");
-        if(fK < 0.0)
-            std::printf("fk < 0; ");
-        if(fFA < 0.0)
-            std::printf("fFA < 0; ");
-        if(fRA > maxMassRearAxle*GravityMM)
-            std::printf("fRA >; ");
-        if(fRA < 0.0)
-            std::printf("fRA < 0; ");
-        if(fTA > maxMassTrailerAxle*GravityMM)
-            std::printf("fTA >; ");
-        if(fTA < 0.0)
-            std::printf("fTA < 0; ");
-
-        std::printf("\n");
-        */
         return false;
     }
-
-    //std::printf("\tFEASIBLE: Fk: %.1f; fFA: %.1f \n", fK, fFA);
 
     return true;
 }

@@ -63,6 +63,25 @@ namespace SolucaoNS
         }
     };
 
+    enum Face
+    {
+        Top 	= 0,  // z
+        Bottom,       // z
+        Front,        // y
+        Back,         // y
+        Left,         // x
+        Right         // x
+    };
+
+    inline std::vector<std::string> vetFaceStr = {"Top",
+                                                  "Bottom",
+                                                  "Front",
+                                                  "Back",
+                                                  "Left",
+                                                  "Right"};
+
+    class Rota;
+
     struct Bin
     {
 
@@ -75,14 +94,17 @@ namespace SolucaoNS
         Vector<InstanceNS::Rotation>    vetRotacao;
         Vector<int8_t>                  vetItens;               // Indica se o bin empacota o i° item
         Array<double,3>                 binDim;
-        double                          volumeTotal     = 0.0;
-        double                          volumeOcupado   = 0.0;
-        double                          demandaTotal    = 0.0;
-        int                             numItens        = 0;
-        int                             numEps          = 0;    // Numero de pontos extremos
+        double                          volumeTotal     		= 0.0;
+        double                          volumeOcupado   		= 0.0;
+        double                          demandaTotal    		= 0.0;
+        int                             numItens        		= 0;
+        int                             numEps          		= 0;    // Numero de pontos extremos
+        double 							sumLeftBalancedLoading  = 0.0;
+        double 							sumRightBalancedLoading = 0.0;
 
         void addItem(int idEp, int idItem, InstanceNS::Rotation r);
         void addEp(const Ponto &ep);
+        std::string printPlot();
 
         inline __attribute__((always_inline))
         void setItem(int pos, int itemId, double x, double y, double z)
@@ -125,11 +147,12 @@ namespace SolucaoNS
 
         void reset();
         int getEpComMenorCoord(const VectorI &vetIdEp, int tam);
-        bool verificaViabilidade();
+        bool checkFeasibility(Rota* rota=nullptr, bool fromCp=false);
 
         void rmItens(const VectorI &vetItensRm, const int tam);
 
         double getPorcentagemUtilizacao()const;
+        void computeLoadingBalancing();
 
         Bin();
         Bin(const Bin &bin)=delete;
@@ -166,6 +189,7 @@ namespace SolucaoNS
         Vector<Bin>     vetBin;
         Vector<Rota>    vetRota;
         double          distTotal = 0.0;
+
 
         Solucao();
         explicit Solucao(const InstanceNS::Instance &instancia);
@@ -272,6 +296,8 @@ namespace SolucaoNS
     bool lifo(InstanceNS::Item& item0, Ponto p0, InstanceNS::Rotation r0,
               InstanceNS::Item& item1, Ponto p1, InstanceNS::Rotation r1, bool mlifo, bool removeFromShortSide)
     {
+            // Item0 is delevery first
+
             double maxX0 = p0.vetDim[0] + item0.getDimRotacionada(0, r0);
             double maxY0 = p0.vetDim[1] + item0.getDimRotacionada(1, r0);
             double maxZ0 = p0.vetDim[2] + item0.getDimRotacionada(2, r0);
@@ -286,7 +312,7 @@ namespace SolucaoNS
                 (maxY0 <= p1.vetDim[1]) ||   // Item i is complete at left of item j. It's correct for LIFO
                 (maxY1 <= p0.vetDim[1]) ||   // Item i is complete at right of item j. It's correct for LIFO
                 (maxZ1 <= p0.vetDim[2]) ||   // Item i is above item j. It's correct for LIFO
-                mlifo && (maxX0 <= p1.vetDim[0])))     // Item i is below item j. It's correct for LIFO
+                (mlifo && (maxZ0 < p1.vetDim[2]))))     // Item i is below item j. It's correct for LIFO
                 return true;
 
             if(!removeFromShortSide &&
@@ -311,7 +337,56 @@ namespace SolucaoNS
 
     inline const Ponto PontoZero(0.0, 0.0, 0.0);
 
+    INLINE
+    double computeLeftBalancedLoading(double y, double width, int mass)
+    {
+        double center = (InstanceNS::instanciaG.vetDimVeiculo[1]/2.0);
+        // center -
+        return (mass/width)*(std::max(0.0, center - y) -
+                              std::max(0.0, center - (y+width)));
+    }
 
+    INLINE
+    double computeRightBalancedLoading(double y, double width, int mass)
+    {
+        double center = (InstanceNS::instanciaG.vetDimVeiculo[1]/2.0);
+        return (mass/width)*(std::max(0.0, (y+width) - center) -
+                              std::max(0.0, y - center));
+    }
+
+    double getIntercetion(int item0, Ponto p0, InstanceNS::Rotation r0, Face f0,
+                          int item1, Ponto p1, InstanceNS::Rotation r1, Face f1);
+
+    INLINE
+    bool tochRightSideOfTruck(int item, Ponto p, InstanceNS::Rotation r)
+    {
+        double maxY = p.vetDim[0] + InstanceNS::instanciaG.vetItens[item].getDimRotacionada(0, r);
+
+        return doubleEqual(maxY, InstanceNS::instanciaG.vetDimVeiculo[0], DifDistColision);
+    }
+
+    INLINE
+    bool tochLeftSideOfTruck(int item, Ponto p, InstanceNS::Rotation r)
+    {
+        return doubleEqual(0.0, p.vetDim[1], DifDistColision);
+    }
+
+    INLINE
+    bool tochBackSideOfTruck(int item, Ponto p, InstanceNS::Rotation r)
+    {
+        return doubleEqual(0.0, p.vetDim[0], DifDistColision);
+    }
+
+    INLINE
+    bool tochFrontSideOfTruck(int item, Ponto p, InstanceNS::Rotation r)
+    {
+        double maxX = p.vetDim[1] + InstanceNS::instanciaG.vetItens[item].getDimRotacionada(1, r);
+
+        return doubleEqual(maxX, InstanceNS::instanciaG.vetDimVeiculo[1], DifDistColision);
+    }
+
+
+    bool checkCompactness(Bin& bin, const VectorI& vetTop, std::string* strError=nullptr);
 }
 
 #endif //INC_2L_SDVRP_SOLUCAO_H

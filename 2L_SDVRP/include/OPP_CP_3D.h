@@ -70,6 +70,7 @@ class ContainerLoadingCP
     const double mMaxRuntime;
 
     const int scale = 1;
+    const int scaleBalancedLoading = 10;
 
     PlacementPattern mPlacementPatternTypeX = PlacementPattern::None;
     PlacementPattern mPlacementPatternTypeY = PlacementPattern::None;
@@ -109,7 +110,7 @@ class ContainerLoadingCP
     ORIntVars1D mR;         // Distance between to the trailer axle
     //ORIntVars1D mItemsForce;
 
-    operations_research::sat::IntVar forceK, forceRA, forceTA, forceFA;
+    operations_research::sat::IntVar forceK, forceRA, forceTA, forceFA, sumRightBalancedLoading, sumLeftBalancedLoading;
 
 
     ORBoolVars1D mPlacedOnFloor;
@@ -135,7 +136,7 @@ class ContainerLoadingCP
     void CreatePositioningConstraints();
     void CreateOnFloorConstraints();
     void CreateAxleWeights();
-
+    void CreateBalancedLoading();
     void AddObjective();
     void CreateVariables();
 

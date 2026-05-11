@@ -69,7 +69,8 @@ target_sources(${PROJECT_NAME}
         src/TesteOroloc3D.cpp
         src/MILP.cpp
         src/IBM_CpOptimizer.cpp
-        src/SCIP.cpp
+        #src/SCIP.cpp
+        src/Constants.cpp
 )
 
 
@@ -81,7 +82,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE gurobi)
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
 target_link_libraries(${PROJECT_NAME} PRIVATE CPLEX::CPLEX)
-target_link_libraries(${PROJECT_NAME} PRIVATE ScipPP)
+#target_link_libraries(${PROJECT_NAME} PRIVATE ScipPP)
                         
 target_include_directories(${PROJECT_NAME}
     PRIVATE
@@ -142,6 +143,7 @@ set(public_headers
     include/MILP.h
     include/IBM_CpOptimizer.h
     include/SCIP.h
+    include/AuxGeometry.h
 )
 
 # where to find our CMake modules

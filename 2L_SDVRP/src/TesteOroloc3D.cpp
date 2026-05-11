@@ -22,7 +22,7 @@ using namespace SolucaoNS;
 using namespace AxleWeightsNS;
 using namespace ConstrutivoBinNS;
 using namespace IBM_CpOptimizerNS;
-using namespace SCIP_NS;
+//using namespace SCIP_NS;
 
 
 void TesteOroloc3D_NS::testeOroloc3D()
@@ -486,8 +486,10 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     for(int veic=0; veic < sol.vetBin.size(); ++veic)
     {
-        std::string output = std::format("{}; {}; ",  input.strInst , veic);
+        if(veic != 1)
+            continue;
 
+        std::string output = std::format("{}; {}; ",  input.strInst , veic);
 
         Bin& bin = sol.vetBin[veic];
         Bin& binCp = solCp.vetBin[veic];
@@ -501,18 +503,20 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
             continue;
         }
 
+
         VectorI vetItems = bin.vetItemId;
         std::reverse(vetItems.begin(), vetItems.begin()+bin.numItens);
 
         double ompStart = omp_get_wtime();
-        bool feasibleSolConst = construtivoBinPacking(bin2, vetItems, bin.numItens, input.aphaBin, 400, &solCp.vetRota[veic]);
+        // TODO remove comment!
+        bool feasibleSolConst = false;//construtivoBinPacking(bin2, vetItems, bin.numItens, input.aphaBin, 2500, &solCp.vetRota[veic]);
         if(!feasibleSolConst)
             bin2.reset();
 
         double ompEnd = omp_get_wtime();
         double timeConst = ompEnd-ompStart;
 
-        std::printf("Extreme Point Heuristic: %d; Time: %.4f s\n", feasibleSolConst, timeConst);
+        //std::printf("Extreme Point Heuristic: %d; Time: %.4f s\n", feasibleSolConst, timeConst);
 
         //copiaBin(bin2, binCp);
         //continue;
@@ -522,8 +526,12 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         std::printf("Veic %d:\n", veic);
         //std::printf("AxleWeights: %d\n", (int)axleWeights);
 
-        bool feasible = bin.verificaViabilidade();
-        //std::printf("Bin check: %d\n", feasible);
+        bool feasible = bin.checkFeasibility(&rota);
+        std::printf("Bin check: %d\n", feasible);
+        std::cout<<bin.printPlot()<<"\n***********************\n***********************\n\n";
+
+
+        continue;
 
         std::vector<Cuboid> vetCuboids;
         Collections::IdVector stopIds;
@@ -594,8 +602,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
             //CpOptimizer cpOptimizer(bin.vetItemId, bin.numItens, rota);
             //cpOptimizer.solve(binCp2);
 
-            Scip3dPacking scip3dPacking(bin.vetItemId, bin.numItens, rota, binCp);
-            break; // for(PackingType type:vetPackingType)
+            //Scip3dPacking scip3dPacking(bin.vetItemId, bin.numItens, rota, binCp);
+            //break; // for(PackingType type:vetPackingType)
             //EXIT_PRINT();
 
             std::vector<Array<int, 4>> vetArray;
@@ -634,7 +642,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                 statusOroc3D = FEASIBLE;
                 //output += "FEASIBLE; ";
                 doBreak = true;
-
+                //std::printf("W = %.1f\n\n", instanciaG.vetDimVeiculo[2]);
                 if(n == 0)
                 {
                     numCompleteFeasible += 1;
@@ -644,14 +652,19 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                         binCp.vetPosItem[item].set(array[0], array[1], array[2]);
                         binCp.vetRotacao[item] = (InstanceNS::Rotation)array[3];
 
-                        //std::cout<<array<<"\n";
+                        std::cout<<array[1]<<"\n";
                         item += 1;
                     }
 
+                    binCp.computeLoadingBalancing();
+
+                    //std::printf("\n\n");
                 }
 
+                //std::cout<<binCp.printPlot()<<"\n**********\n\n";
+
                 //binCp.numItens = numItems;
-                if(binCp.verificaViabilidade())
+                if(binCp.checkFeasibility(&rota, true))
                 {
                     if(checkUnloadingSequence(binCp, rota))
                     {

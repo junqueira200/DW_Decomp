@@ -60,24 +60,36 @@ int main(int argc, const char* argv[])
     else
         InstanceNS::read3dInstance(input.strInstCompleto);
 
+    startConstGlobalVaribles();
+
+
     /*
-    std::cout<<"maxPayload: "<<instanciaG.maxPayload<<"\n";
+    instanciaG.vetItens[0].set(3320.0, 1780.0, 640.0);   // 64
+    Ponto p0(1480.0, 335.0, 0.0);
 
-    for(int i=0; i < instanciaG.numItens; ++i)
-        std::cout<<instanciaG.vetItens[i].weight<<" ";
-    std::cout<<"\n\n";
+    instanciaG.vetItens[1].set(3320.0, 1780.0, 640.0);   // 65
+    Ponto p1(4800.0, 335.0, 0.0);
 
-    EXIT_PRINT();
+    //instanciaG.vetItens[2].set(2031.0, 1270.0, 1170.0); // 75
+    //Ponto p2(11469.0, 590.0, 0.0);
+    InstanceNS::Rotation r = InstanceNS::Rot0;
+
+    double area0 = getIntercetion(0, p0, r, Right, 1, p1, r, Left); // area 75 and 52
+    double areaYZ = instanciaG.vetItens[0].vetDim[1]*instanciaG.vetItens[0].vetDim[2];
+
+    std::printf("areaInterc(64 and 65): %.1f\nareaYZ: %.1f\n\n", area0, areaYZ);
     */
 
     /*
-    for(int i=0; i < 10; ++i)
-    {
-        Item& item = instanciaG.vetItens[i];
-        std::printf("%s\n", item.print(false).c_str());
-    }
+    bool toch = tochRightSideOfTruck(2, p2, r);
+    if(toch)
+        std::printf("75 tochs the right side\n");
+    else
+        std::printf("75 dont tochs the right side\n\n");
     */
-    //return 0;
+
+    //EXIT_PRINT();
+
 
     testeOroloc3D_2();
     //IBM_CpOptimizerNS::testSCIP();

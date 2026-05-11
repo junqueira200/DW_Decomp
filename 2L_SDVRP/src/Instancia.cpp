@@ -36,6 +36,8 @@ InstanceNS::Instance::Instance(int numClientes_, int numItens_, int numVeiculos_
     numItens    = numItens_;
     numVeiculos = numVeiculos_;
 
+    assertm(numClientes > MaxNumOfCustorms, "Error, constant MaxNumOfCustorms is under estimate!\n");
+
     if(numClientes < 0 || numItens < (numClientes-1))
     {
         assertm(true, "numClientes("<<numClientes<<") < 0 || numItens("<<numItens<<") < numClientes-1("<<numClientes<<")");

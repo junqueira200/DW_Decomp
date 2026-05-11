@@ -122,7 +122,7 @@ bool CpOptimizer::solve(SolucaoNS::Bin &bin)
             bin.vetRotacao[i] = (InstanceNS::Rotation)((int)Rot1*rot);
         }
 
-        if(bin.verificaViabilidade())
+        if(bin.checkFeasibility())
         {
             std::printf("BIN is feaseble!\n");
         }

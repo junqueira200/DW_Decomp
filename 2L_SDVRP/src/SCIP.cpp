@@ -6,7 +6,6 @@ using namespace InstanceNS;
 
 SCIP_NS::MatrixVar::MatrixVar(scippp::Model &model, size_t n_, size_t m_, std::string&& prex, scippp::VarType type)
 {
-    std::printf("Start MatrixVar\n");
     n = n_;
     m = m_;
     vetVar = model.addVars(prex, n*m, scippp::COEFF_ZERO, type);
@@ -26,7 +25,6 @@ SCIP_NS::MatrixVar::MatrixVar(scippp::Model &model, size_t n_, size_t m_, std::s
         }
     }
 
-    std::printf("END MatrixVar\n");
 }
 
 SCIP_NS::Scip3dPacking::Scip3dPacking(const VectorI &vetItems_,
@@ -34,33 +32,50 @@ SCIP_NS::Scip3dPacking::Scip3dPacking(const VectorI &vetItems_,
                                       const SolucaoNS::Rota &rota_,
                                       SolucaoNS::Bin& bin):
                                                             vetItems(vetItems_),
-                                                            numItems(numItems_),
+                                                            numItems(8),
                                                             rota(rota_),
                                                             model("Scip3dPacking")
 {
-    std::printf("Scip3dPacking Start!\n\n");
+
+    std::printf("numItems: %d\n", numItems);
+
+
     ptrScip = model.scip();
 
-    MY_SCIP_CALL(SCIPsetEmphasis(ptrScip, SCIP_PARAMEMPHASIS_CPSOLVER, TRUE));
+    MY_SCIP_CALL( SCIPsetEmphasis(ptrScip, SCIP_PARAMEMPHASIS_CPSOLVER, TRUE));
+    MY_SCIP_CALL( SCIPsetIntParam(ptrScip, "parallel/maxnthreads", 4));
+    MY_SCIP_CALL( SCIPsetIntParam(ptrScip, "parallel/minnthreads", 4));
+    MY_SCIP_CALL( SCIPsetIntParam(ptrScip, "parallel/mode", 1) );
+
+
 
     /*
-    MatrixVar matVar(model, 5, 5, "Test", scippp::VarType::BINARY);
-    Matrix3DVar mat3dVar(model, 3, 3, 3, "t", scippp::VarType::BINARY);
+    Var x = model.addVar("x", 0, VarType::CONTINUOUS, 5, 200);
+    Var y = model.addVar("y", 0, VarType::CONTINUOUS, 400, 600);
+    Var m = model.addVar("m", 0, VarType::CONTINUOUS, 0.0, SCIPinfinity(ptrScip));
 
-    scippp::LinExpr lin = matVar(0, 0);
-    //scippp::LinIneq expr = lin == 0;
 
-    model.createIndicatorConstraint(matVar(0,1) == 1, matVar(0, 0), "teste");
+    model.addConstr(x == 10.0, "x=10");
+    model.addConstr(y == 500.1, "y=50");
 
-    model.addConstr(lin == 1, "const0");
+    //std::vector<Var> vetVar = {x, y};
+
+    //model.addMinConstraint(m, vetVar, "m=min{x,y}");
+    model.createMultConstraint(m, x, y, "mult");
+
     std::printf("Before solve()\n");
     model.solve();
     std::printf("After solve()\n");
     std::filesystem::directory_entry file("model.lp");
     model.writeOrigProblem(file);
 
-    */
+    auto sol = model.getBestSol();
+    double valM = m.getSolVal(sol);
+    std::printf("M: %.2f\n", valM);
 
+
+    EXIT_PRINT();
+    */
     //auto sol = model.getBestSol();
     //std::cout<<"(0,0): "<<matVar(0,0).getSolVal(sol);
     //std::cout<<"\n(0,1): "<<matVar(0,1).getSolVal(sol);
@@ -69,12 +84,26 @@ SCIP_NS::Scip3dPacking::Scip3dPacking(const VectorI &vetItems_,
     createVariables();
     createConstraints();
 
-    model.solve();
+    std::filesystem::directory_entry file("model.lp");
+    model.writeOrigProblem(file);
+
+    //model.solve();
+
+    MY_SCIP_CALL(SCIPsolveConcurrent(ptrScip));
+
 
     if(model.getStatus() != SCIP_STATUS_OPTIMAL)
-        return;
-    //auto iis = model.generateIIS();
+    {
+        auto iis = model.generateIIS();
+        std::printf("\n\nScip3dPacking END!\n\nIIS:\n");
+        for(std::string& name:iis.consIds)
+            std::printf("%s\n", name.c_str());
 
+        EXIT_PRINT();
+
+        return;
+
+    }
 
     //std::filesystem::directory_entry file("model.lp");
     //model.writeOrigProblem(file);
@@ -87,6 +116,8 @@ SCIP_NS::Scip3dPacking::Scip3dPacking(const VectorI &vetItems_,
         px = mStartPositionsX[i].getSolVal(sol);
         py = mStartPositionsY[i].getSolVal(sol);
         pz = mStartPositionsZ[i].getSolVal(sol);
+
+        std::printf("pz: %.1f\n", pz);
 
         double length = mLengths[i].getSolVal(sol);
         double width = mWidths[i].getSolVal(sol);
@@ -138,8 +169,13 @@ SCIP_NS::Scip3dPacking::Scip3dPacking(const VectorI &vetItems_,
 
     }
 
+    bin.numItens = numItems;
+
     if(bin.verificaViabilidade())
+    {
         std::printf("MODEL IS FEASIBLE!\n");
+        EXIT_PRINT();
+    }
 
     else
     {
@@ -147,9 +183,6 @@ SCIP_NS::Scip3dPacking::Scip3dPacking(const VectorI &vetItems_,
         EXIT_PRINT();
     }
 
-    std::printf("\n\nScip3dPacking END!\n\nIIS:\n");
-    //for(std::string& name:iis.consIds)
-    //    std::printf("%s\n", name.c_str());
 
 }
 
@@ -195,12 +228,19 @@ void SCIP_NS::Scip3dPacking::createVariables()
 
     }
 
+
     mRelativeDirections = Matrix3DVar(model, numItems, numItems, 6, "", VarType::BINARY);
     mOrientation = MatrixVar(model, numItems, 2, "", VarType::BINARY);
 
     mItemsOverlapsXY = MatrixVar(model, numItems, numItems, "over", VarType::BINARY);
     mSupportXY = MatrixVar(model, numItems, numItems, "supp", VarType::BINARY);
     mOverlapAreasXY = MatrixVar(model, numItems, numItems, "overA", VarType::CONTINUOUS);
+
+    int maxArea;
+    if(instanciaG.vetDimVeiculo[0] > instanciaG.vetDimVeiculo[1])
+        maxArea = instanciaG.vetDimVeiculo[0]*instanciaG.vetDimVeiculo[0];
+    else
+        maxArea = instanciaG.vetDimVeiculo[1]*instanciaG.vetDimVeiculo[1];
 
     for(int i=0; i < numItems; ++i)
     {
@@ -213,6 +253,13 @@ void SCIP_NS::Scip3dPacking::createVariables()
                 std::string name = "relDir"+std::format("[{}][{}][{}]", i, j, dirStr);
                 MY_SCIP_CALL(SCIPchgVarName(ptrScip, var, name.c_str()));
             }
+
+            if(i== j)
+                continue;
+
+
+            MY_SCIP_CALL(SCIPchgVarLb(ptrScip, mOverlapAreasXY(i, j).getVar(), 0.0));
+            MY_SCIP_CALL(SCIPchgVarUb(ptrScip, mOverlapAreasXY(i,j).getVar(), maxArea));
         }
 
         std::string nameNoRot = "orien"+std::format("[{}][noRot]", i);
@@ -232,6 +279,14 @@ void SCIP_NS::Scip3dPacking::createConstraints()
     CreateEnd();
     CreateNoOverlap();
     CreateOnFloorConstraints();
+
+
+
+    CreateXYIntersectionBool();
+    CreateSupportItem();
+    CreateXYIntersectionArea();
+    CreateSupportArea();
+
 
 }
 
@@ -354,9 +409,6 @@ void SCIP_NS::Scip3dPacking::CreateItemOrientations()
 
 void SCIP_NS::Scip3dPacking::CreateEnd()
 {
-    std::printf("Start CreateEnd\n");
-    std::string empty = "";
-
     for(int i=0; i < numItems; ++i)
     {
         std::string strI = std::format("_({})", i);
@@ -372,7 +424,7 @@ void SCIP_NS::Scip3dPacking::CreateEnd()
         //std::printf("3\n");
     }
 
-    std::printf("END CreateEnd\n");
+
 }
 
 void SCIP_NS::Scip3dPacking::CreateOnFloorConstraints()
@@ -386,6 +438,8 @@ void SCIP_NS::Scip3dPacking::CreateOnFloorConstraints()
             minZ = z;
     }
 
+    LinExpr  sum;
+
     for (size_t i = 0; i < numItems; ++i)
     {
         std::string strI = std::format("_({})", i);
@@ -397,15 +451,226 @@ void SCIP_NS::Scip3dPacking::CreateOnFloorConstraints()
         // If mPlacedOnFloor[i] -> mStartPositionsZ[i] == 0
 
         // mStartPositionsZ[i] >= 0 => -mStartPositionsZ[i] <= 0
-        model.createIndicatorConstraintLessThan(-1*mStartPositionsZ[i], 0.0, mPlacedOnFloor[i], str13);
+        //model.createIndicatorConstraintLessThan(-1*mStartPositionsZ[i], 0.0, mPlacedOnFloor[i], str13);
         // mStartPositionsZ[i] <= 0
         model.createIndicatorConstraintLessThan(mStartPositionsZ[i], 0.0, mPlacedOnFloor[i], str13_);
 
         // mStartPositionsZ[i] >= minZ
         // -mStartPositionsZ[i] <= -minZ
-        model.createIndicatorConstraintLessThan(-1*mStartPositionsZ[i], -minZ, mPlacedOnFloor[i], str14);
+        model.createIndicatorConstraintLessThan(-1*mStartPositionsZ[i], -minZ, mPlacedOnFloor[i].getNeg(ptrScip), str14);
 
-        //model.createIndicatorConstraint(mStartPositionsZ[i] >= minZ, mPlacedOnFloor[i], str14, true);
+        sum += mPlacedOnFloor[i];
+
+    }
+
+    model.addConstr(sum >= 1, "sum_mPlacedOnFloor");
+}
+
+// ok
+void SCIP_NS::Scip3dPacking::CreateXYIntersectionBool()
+{
+
+    for (size_t i = 0; i < numItems - 1; ++i)
+    {
+        for (size_t j = i + 1; j < numItems; ++j)
+        {
+            int positionJ = j - i - 1;
+            std::string str = "R16_" + std::format("({},{})", i, j);
+            model.addConstr(mItemsOverlapsXY(i, positionJ) + mRelativeDirections(i, j, LeftY) +
+                            mRelativeDirections(i, j, RightY) + mRelativeDirections(i, j, BehindX) +
+                            mRelativeDirections(i, j, InFrontX) >= 1, str);
+
+            // If mRelativeDirections(i, j, LeftY) => mItemsOverlapsXY(i, positionJ) <= 0
+            model.createIndicatorConstraintLessThan(mItemsOverlapsXY(i, positionJ), 0, mRelativeDirections(i, j, LeftY),
+                                                    str+"_LeftY");
+            model.createIndicatorConstraintLessThan(mItemsOverlapsXY(i, positionJ), 0, mRelativeDirections(i, j, RightY),
+                                                    str+"_RightY");
+            model.createIndicatorConstraintLessThan(mItemsOverlapsXY(i, positionJ), 0, mRelativeDirections(i, j, BehindX),
+                                                    str+"_BehindX");
+            model.createIndicatorConstraintLessThan(mItemsOverlapsXY(i, positionJ), 0, mRelativeDirections(i, j, InFrontX),
+                                                    str+"_InFrontX");
+
+        }
+    }
+
+}
+
+void SCIP_NS::Scip3dPacking::CreateSupportItem()
+{
+
+    for (size_t i = 0; i < numItems; ++i)
+    {
+        //mModelCP.FixVariable(mSupportXY[i][i], false);
+        std::string str0 = std::format("R18_({})",i);
+        model.addConstr(mSupportXY(i, i) == 0, str0);
+        for (size_t j = 0; j < numItems; ++j)
+        {
+            if(i == j)
+                continue;
+
+            std::string str1 = std::format("R19_({},{})", i, j);
+
+            // If isVerticalAdjacent -> mEndPositionsZ[j] <= mStartPositionsZ[i]
+            Var isVerticalAdjacent = model.addVar(str1+"_isVerticalAdj", 0.0, VarType::BINARY);
+            model.createIndicatorConstraintLessThan(mEndPositionsZ[j]-mStartPositionsZ[i], 0.0, isVerticalAdjacent, str1);
+            // mEndPositionsZ[j] >= mStartPositionsZ[i]
+            // -mEndPositionsZ[j] <= -mStartPositionsZ[i]
+            // -mEndPositionsZ[j] + mStartPositionsZ[i] <= 0
+            model.createIndicatorConstraintLessThan(-1*mEndPositionsZ[j]+mStartPositionsZ[i], 0.0, isVerticalAdjacent, str1+"_");
+
+            // If isVerticalAdjacent == 0 -> mSupportXY(i, j) <= 0
+            model.createIndicatorConstraintLessThan(mSupportXY(i, j), 0.0, isVerticalAdjacent.getNeg(ptrScip),
+                                                    str1+"msup<=0");
+
+            if(i < j)
+            {
+                int position = j-i-1;
+                model.addConstr(mSupportXY(i, j) + (isVerticalAdjacent.getNeg(ptrScip)) +
+                                (mItemsOverlapsXY(i, position).getNeg(ptrScip)) >= 1, str1+"_atLeastOne_0");
+
+                model.createIndicatorConstraintLessThan(mSupportXY(i, j), 0.0, mItemsOverlapsXY(i,position).getNeg(ptrScip),
+                                                        str1+"_ind_0");
+            }
+            else
+            {
+                int position = i-j-1;
+                model.addConstr(mSupportXY(i, j) + (isVerticalAdjacent.getNeg(ptrScip)) +
+                                (mItemsOverlapsXY(j, position).getNeg(ptrScip)) >= 1, str1+"_atLeastOne_1");
+                model.createIndicatorConstraintLessThan(mSupportXY(i, j), 0.0, mItemsOverlapsXY(j,position).getNeg(ptrScip),
+                                                        str1+"_ind_1");
+            }
+        }
+
+    }
+
+}
+
+// TODO rever
+void SCIP_NS::Scip3dPacking::CreateXYIntersectionArea()
+{
+    for (size_t i = 0; i < numItems - 1; ++i)
+    {
+        for (size_t j = i+1; j < numItems; ++j)
+        {
+            if (instanciaG.vetItens[vetItems[i]].vetDim[2] + instanciaG.vetItens[vetItems[j]].vetDim[2] >
+                instanciaG.vetDimVeiculo[2])
+                continue;
+
+            auto positionJ = j - i - 1;
+            std::string str = "R17_("+std::format("{},{})", i, j);
+            Var diffXij = model.addVar(str+"_diffxij", 0.0, VarType::CONTINUOUS, 0, instanciaG.vetDimVeiculo[0]);
+
+            // IF mItemsOverlapsXY[i][positionJ] => diffXij = mEndPositionsX(i) - mStartPositionsX(j)
+            // diffXij - mEndPositionsX(i) + mStartPositionsX(j) <= 0
+            model.createIndicatorConstraintLessThan(diffXij - mEndPositionsX[i] + mStartPositionsX[j], 0,
+                                                    mItemsOverlapsXY(i, positionJ), str+"_difXij_0");
+
+            // diffXij - mEndPositionsX(i) + mStartPositionsX(j) >= 0
+            // -diffXij + mEndPositionsX(i) - mStartPositionsX(j) <= 0
+            model.createIndicatorConstraintLessThan(-1*diffXij + mEndPositionsX[i] - mStartPositionsX[j], 0,
+                                                    mItemsOverlapsXY(i, positionJ), str+"_difXij_1");
+
+
+            Var diffXji = model.addVar(str+"_diffxji", 0.0, VarType::CONTINUOUS, 0, instanciaG.vetDimVeiculo[0]);
+
+            model.createIndicatorConstraintLessThan(diffXji - mEndPositionsX[j] + mStartPositionsX[i], 0,
+                                                    mItemsOverlapsXY(i, positionJ), str+"_difXji_0");
+
+            model.createIndicatorConstraintLessThan(-1*diffXji + mEndPositionsX[j] - mStartPositionsX[i], 0,
+                                                    mItemsOverlapsXY(i, positionJ), str+"_difXji_1");
+
+            Var xOverlap = model.addVar(str+"_xOverlap", 0.0, VarType::CONTINUOUS, 0, instanciaG.vetDimVeiculo[0]);
+            Var temp0 = model.addVar(str+"_temp0", 0.0, VarType::CONTINUOUS, 0.0, SCIPinfinity(ptrScip));
+            Var temp1 = model.addVar(str+"_temp1", 0.0, VarType::CONTINUOUS, instanciaG.vetDimVeiculo[0], instanciaG.vetDimVeiculo[0]);
+
+            model.createMultConstraint(temp0, mItemsOverlapsXY(i, positionJ), temp1, str+"_mult0");
+
+            std::vector<Var> vetMinX = {diffXij, diffXji, mLengths[i], mLengths[j], temp0};
+            model.addMinConstraint(xOverlap, vetMinX, str+"MinXoverlap");
+
+            //model.createIndicatorConstraintLessThan(xOverlap, 0, mItemsOverlapsXY(i, positionJ), str+"_xOver<=0", true);
+
+            // *********************************************************************************************************
+
+            std::string str2 = "R18_("+std::format("{},{})", i, j);
+            Var diffYij = model.addVar(str+"_diffyij", 0.0, VarType::CONTINUOUS, 0, instanciaG.vetDimVeiculo[1]);
+            model.createIndicatorConstraintLessThan(diffYij - mEndPositionsY[i] + mStartPositionsY[j], 0,
+                                                    mItemsOverlapsXY(i, positionJ), str2+"_difXij_0");
+
+            model.createIndicatorConstraintLessThan(-1*diffYij + mEndPositionsY[i] - mStartPositionsY[j], 0,
+                                                    mItemsOverlapsXY(i, positionJ), str2+"_difXij_1");
+
+
+            Var diffYji = model.addVar(str2+"_diffxji", 0.0, VarType::CONTINUOUS, 0, instanciaG.vetDimVeiculo[1]);
+
+            model.createIndicatorConstraintLessThan(diffYji - mEndPositionsY[j] + mStartPositionsY[i], 0,
+                                                    mItemsOverlapsXY(i, positionJ), str2+"_difYji_0");
+
+            model.createIndicatorConstraintLessThan(-1*diffYji + mEndPositionsY[j] - mStartPositionsY[i], 0,
+                                                    mItemsOverlapsXY(i, positionJ), str2+"_difYji_1");
+
+            Var yOverlap = model.addVar(str2+"_yOverlap", 0.0, VarType::CONTINUOUS, 0, instanciaG.vetDimVeiculo[1]);
+            Var temp2 = model.addVar(str+"_temp2", 0.0, VarType::CONTINUOUS, 0.0, SCIPinfinity(ptrScip));
+            Var temp3 = model.addVar(str+"_temp3", 0.0, VarType::CONTINUOUS, instanciaG.vetDimVeiculo[1], instanciaG.vetDimVeiculo[1]);
+
+            model.createMultConstraint(temp2, mItemsOverlapsXY(i, positionJ), temp3, str+"_mult1");
+            std::vector<Var> vetMinY = {diffYij, diffYji, mWidths[i], mWidths[j], temp2};
+            model.addMinConstraint(yOverlap, vetMinY, str2+"MinYoverlap");
+
+            //model.createIndicatorConstraintLessThan(yOverlap, 0, mItemsOverlapsXY(i, positionJ), str2+"_yOver<=0", true);
+
+            //mModelCP.AddMultiplicationEquality(mOverlapAreasXY[i][positionJ], {xOverlap, yOverlap});
+            std::string str3 = "R19_("+std::format("{},{})_mult_XoverlapXyOverlap", i, j);
+            model.createMultConstraint(mOverlapAreasXY(i,positionJ), xOverlap, yOverlap, str3);
+
+        }
+    }
+}
+
+void SCIP_NS::Scip3dPacking::CreateSupportArea()
+{
+
+    for (size_t i = 0; i < numItems; ++i)
+    {
+        LinExpr supportedAreaExpr;
+        int areaI = instanciaG.vetItens[vetItems[i]].vetDim[0] * instanciaG.vetItens[vetItems[i]].vetDim[1];
+        for (size_t j = 0; j < numItems; ++j)
+        {
+            if(i == j)
+                continue;
+
+            std::string strIJ = std::format("({},{})", i, j);
+
+            int areaJ = instanciaG.vetItens[vetItems[j]].vetDim[0] * instanciaG.vetItens[vetItems[j]].vetDim[1];
+            int minArea = std::min(areaI, areaJ);
+            Var usableArea = model.addVar("area_"+strIJ, 0.0, VarType::CONTINUOUS, 0.0, minArea);
+
+            std::string str0 = "R20_"+strIJ;
+            std::string str1 = "R21_"+strIJ;
+
+            if(i < j)
+            {
+                int position = j-i-1;
+                //model.addConstr(usableArea = mOverlapAreasXY(i, position)*mSupportXY(i, j));
+                model.createMultConstraint(usableArea, mOverlapAreasXY(i, position), mSupportXY(i, j), str0);
+            }
+            else
+            {
+                int position = i-j-1;
+                model.createMultConstraint(usableArea, mOverlapAreasXY(j, position), mSupportXY(i, j), str0);
+            }
+
+            model.createIndicatorConstraintLessThan(usableArea, 0.0, mSupportXY(i, j).getNeg(ptrScip), str1);
+            supportedAreaExpr += usableArea;
+
+        }
+
+
+        std::string str2 = "R22_"+std::format("{}",i);
+        // supportedAreaExpr >= supportArea*item.dx*item.dy
+        // -supportedAreaExpr <= -supportArea*item.dx*item.dy
+        double rhs = std::ceil(instanciaG.minSupport*areaI);
+        model.createIndicatorConstraintLessThan(-1*supportedAreaExpr, -rhs, mPlacedOnFloor[i].getNeg(ptrScip), str2);
     }
 }
 

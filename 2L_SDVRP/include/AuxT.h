@@ -22,6 +22,7 @@
 #define PRINT_DEBUGG(inicio, texto) std::cout<<inicio<<"DEBUG: "<<texto<<"  FILE: "<<__PRETTYFILE__<<"  FUNC: "<<__PRETTY_FUNCTION__<<"  LINHA: "<<__LINE__<<"\n";
 
 #define EXIT_PRINT() PRINT_DEBUGG("",""); exit(-1);
+#define PRINT_THROW() PRINT_DEBUGG("",""); throw "ERROR";
 
 #define assertm(exp, msg) if(exp){std::cout<<msg<<"\n\nLINE: "<<__LINE__<<"\nFILE: "<<__PRETTYFILE__<<"\nFUNC: "<<__PRETTY_FUNCTION__<<"\n\n"; throw "ERROR";}
 
@@ -109,6 +110,12 @@ inline __attribute__((always_inline))
 bool doubleLess(double a, double b, double ep=1E-3)
 {
     return (a-b) <-ep;
+}
+
+inline __attribute__((always_inline))
+bool doubleGreater(double a, double b, double ep=std::numeric_limits<double>::epsilon())
+{
+    return (a-b) > ep;
 }
 
 /*

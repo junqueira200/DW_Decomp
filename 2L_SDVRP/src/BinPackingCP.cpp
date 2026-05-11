@@ -144,7 +144,7 @@ bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetIte
             //std::cout<<instanciaG.vetItens[vetItens[i]].vetDim<<"\n\n";
         }
 
-        if(!binResult.verificaViabilidade())
+        if(!binResult.checkFeasibility())
         {
 
             std::cout<<"CP-SAT Encontrou Solucao Viavel!\n";
@@ -312,7 +312,7 @@ bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult, VectorI &vetIt
             //std::cout<<instanciaG.vetItens[vetItens[i]].vetDim<<"\n\n";
         }
 
-        if(!binResult.verificaViabilidade())
+        if(!binResult.checkFeasibility())
         {
 
             std::cout<<"CP-SAT Encontrou Solucao Viavel!\n";
@@ -403,7 +403,7 @@ Resultado BinPackingCP_NS::testaCpSatBinPacking(int numItens)
             */
             //std::cout<<binHeu.vetEp.printN(binHeu.numItens)<<"\n";
             //std::cout << "Construtivo Encontrou Solucao Viavel!\n";
-            if(!binHeu.verificaViabilidade())
+            if(!binHeu.checkFeasibility())
             {
                 //std::cout<<"Bin NAO eh Viavel\n";
                 PRINT_DEBUGG("", "");
@@ -544,7 +544,7 @@ bool  BinPackingCP_NS::binPacking(VectorI &vetItens, int tamVet)
     if(construtivoBinPacking(bin, vetItens, tamVet, input.aphaBin, 10))
     {
             //std::cout << "Construtivo Encontrou Solucao Viavel!\n";
-        if(!bin.verificaViabilidade())
+        if(!bin.checkFeasibility())
         {
                 //std::cout<<"Bin NAO eh Viavel\n";
             PRINT_DEBUGG("", "");

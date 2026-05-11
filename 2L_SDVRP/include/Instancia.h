@@ -14,7 +14,7 @@
 #include "safe_vector.h"
 #include "safe_matrix.h"
 #include "sefe_array.h"
-#include "Constantes.h"
+#include "Constants.h"
 #include "string"
 
 namespace InstanceNS
@@ -69,6 +69,7 @@ namespace InstanceNS
         int numRotation = 6;
         double maxPayload = 0;
         double minSupport = 0.75;
+        double minLR_Support = 0.55;
 
         Array<double,3> vetDimVeiculo;
         //double veicAltura = 0.0;

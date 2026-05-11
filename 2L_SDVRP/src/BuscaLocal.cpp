@@ -234,7 +234,7 @@ bool BuscaLocalNS::mvInterRotasShift(SolucaoNS::Solucao &sol, double alphaBin, i
 
     copiaBin(sol.vetBin[idRota0], binAux[0]);
 
-    if(!rota0.binPtr->verificaViabilidade() || !rota1.binPtr->verificaViabilidade())
+    if(!rota0.binPtr->checkFeasibility() || !rota1.binPtr->checkFeasibility())
     {
         std::cout<<"ERRO\n";
         throw "ERROR";
