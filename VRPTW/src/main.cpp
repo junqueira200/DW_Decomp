@@ -211,9 +211,9 @@ int main(int argc, const char **argv)
         std::cout<<"\nNum Vars vetVarLambdaCol:"<<decompNode.vetVarLambdaCol.size()<<"\n";
 
         input.comprimentoAlturaIguais1 = true;
-        input.numItIG = 2;
+        input.numItIG = 5;
         int numRotas = 0;
-        for(int i=0; i < 50; ++i)
+        for(int i=0; i < 100; ++i)
         {
             SolucaoNS::Solucao best(instanciaG);
             metaheuristicaIg(best);

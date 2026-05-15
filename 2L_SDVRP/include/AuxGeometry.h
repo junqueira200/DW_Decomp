@@ -23,6 +23,8 @@ namespace AuxGeometryNS
         return std::max(0.0, (std::min(a1, b1) - std::max(a0, b0)));
     }
 
+
+
 }
 
 #endif // AUXGEOMETRY_H

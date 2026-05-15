@@ -47,7 +47,7 @@ def read_items(filename):
 
 
 def draw_box(ax, x, y, z, dx, dy, dz,
-             alpha=0.4, edgecolor="black"):
+             alpha=0.4, facecolor=None, edgecolor="black"):
 
     vertices = [
         [(x, y, z), (x+dx, y, z), (x+dx, y+dy, z), (x, y+dy, z)],
@@ -62,7 +62,8 @@ def draw_box(ax, x, y, z, dx, dy, dz,
         vertices,
         alpha=alpha,
         edgecolors=edgecolor,
-        linewidths=0.5
+        linewidths=0.5,
+        facecolors=facecolor
     )
 
     ax.add_collection3d(poly)
@@ -85,6 +86,10 @@ def plot_items(items):
 
     for it in items:
 
+        facecolor=None
+        if it["id"] == 65:
+            facecolor='cyan'
+
         draw_box(
             ax,
             it["x"],
@@ -92,7 +97,8 @@ def plot_items(items):
             it["z"],
             it["dx"],   # largura
             it["dy"],   # comprimento
-            it["dz"]    # altura
+            it["dz"],    # altura
+            facecolor=facecolor
         )
 
         ax.text(

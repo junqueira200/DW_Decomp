@@ -486,8 +486,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     for(int veic=0; veic < sol.vetBin.size(); ++veic)
     {
-        if(veic != 1)
-            continue;
+        //if(veic != 1)
+        //    continue;
 
         std::string output = std::format("{}; {}; ",  input.strInst , veic);
 

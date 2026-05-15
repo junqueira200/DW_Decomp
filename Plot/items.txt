@@ -1,84 +1,66 @@
-14
-itemId(64)
-Pos: (1480.0,335.0,0.0)
-Largura: 3320
-Comprimento: 1780
-Altura: 640
-
+11
 itemId(65)
-Pos: (4800.0,335.0,0.0)
-Largura: 3320
-Comprimento: 1780
-Altura: 640
+Pos: (3096.0,332.0,1390.0)
+Largura: 3210
+Comprimento: 1450
+Altura: 519
 
 itemId(66)
-Pos: (1480.0,335.0,640.0)
-Largura: 3320
-Comprimento: 1780
-Altura: 640
-
-itemId(67)
-Pos: (1480.0,335.0,1280.0)
-Largura: 3320
-Comprimento: 1780
-Altura: 640
-
-itemId(68)
-Pos: (1480.0,335.0,1920.0)
-Largura: 3320
-Comprimento: 1780
-Altura: 640
-
-itemId(61)
-Pos: (4800.0,335.0,640.0)
-Largura: 3320
-Comprimento: 1780
-Altura: 330
-
-itemId(62)
-Pos: (4800.0,335.0,970.0)
-Largura: 3320
-Comprimento: 1780
-Altura: 610
+Pos: (3096.0,332.0,1909.0)
+Largura: 3210
+Comprimento: 1450
+Altura: 519
 
 itemId(63)
-Pos: (4800.0,335.0,1580.0)
-Largura: 3320
-Comprimento: 1780
-Altura: 610
+Pos: (758.0,327.0,960.0)
+Largura: 2865
+Comprimento: 1460
+Altura: 430
 
-itemId(69)
-Pos: (4800.0,511.0,2190.0)
-Largura: 3270
-Comprimento: 1428
-Altura: 190
+itemId(64)
+Pos: (3623.0,327.0,960.0)
+Largura: 2865
+Comprimento: 1460
+Altura: 430
 
-itemId(131)
-Pos: (2570.0,720.0,2560.0)
-Largura: 2230
-Comprimento: 1010
-Altura: 40
+itemId(58)
+Pos: (743.0,117.0,0.0)
+Largura: 5745
+Comprimento: 2240
+Altura: 480
 
-itemId(132)
-Pos: (4800.0,670.0,2380.0)
-Largura: 2100
-Comprimento: 1110
-Altura: 270
+itemId(59)
+Pos: (6488.0,117.0,0.0)
+Largura: 5745
+Comprimento: 2240
+Altura: 480
 
-itemId(134)
-Pos: (8120.0,80.0,0.0)
-Largura: 5380
-Comprimento: 2290
-Altura: 509
+itemId(60)
+Pos: (743.0,117.0,480.0)
+Largura: 5745
+Comprimento: 2240
+Altura: 480
 
-itemId(135)
-Pos: (8120.0,80.0,509.0)
-Largura: 5380
-Comprimento: 2290
-Altura: 509
+itemId(61)
+Pos: (6488.0,117.0,480.0)
+Largura: 5745
+Comprimento: 2240
+Altura: 480
 
-itemId(133)
-Pos: (8120.0,518.0,1018.0)
-Largura: 2380
-Comprimento: 1414
-Altura: 934
+itemId(62)
+Pos: (6488.0,117.0,960.0)
+Largura: 5745
+Comprimento: 2240
+Altura: 480
+
+itemId(27)
+Pos: (6306.0,327.0,1440.0)
+Largura: 6110
+Comprimento: 2030
+Altura: 280
+
+itemId(28)
+Pos: (6306.0,327.0,1720.0)
+Largura: 6110
+Comprimento: 2030
+Altura: 280

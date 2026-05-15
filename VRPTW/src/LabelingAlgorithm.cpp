@@ -230,7 +230,9 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int numRes, const int num
     static Vet3D_ResCost vetMatResCostForward(vetMatResCostForwardConst);
 
     if(percentage <= .99)
-    {	vetMatResCostForward.setVal(InfFloatType);
+    {
+        std::printf("selectXArcs\n");
+        vetMatResCostForward.setVal(InfFloatType);
         selectXArcs(vetMatResCostForwardConst, vetMatResCostForward, percentage, numCust);
     }
     else
@@ -2674,8 +2676,8 @@ Bucket* LabelingAlgorithmNS::dominanceIntraBucketSlow(int cust, Label* label, La
             {
                 if(labelHaveRoute(vetRoutesG, bucketPtr->vetPtrLabel[i]))
                 {
-                    std::printf("The route(%s) dominates the route(%s)(in vetRoutesG)\n", printRoute(label),
-                                 printRoute(bucketPtr->vetPtrLabel[i]));
+                    std::printf("The route(%s) dominates the route(%s)(in vetRoutesG)\n", printRoute(label).c_str(),
+                                printRoute(bucketPtr->vetPtrLabel[i]).c_str());
                     PRINT_EXIT();
                 }
             }
@@ -3363,3 +3365,18 @@ bool  LabelingAlgorithmNS::checkIfAllLabelsInHeapHaveA_Bucket(LabelHeap& labelHe
 
 
 
+
+bool dominanceInterBuckets(int cust, Label *label, LabelingData &lData, LabelHeap *labelHeap, int numRes, int dest, int &correctPos)
+{
+    for(int i=0; i <= label->i; ++i)
+    {
+        for(int j=0; j <= label->j; ++j)
+        {
+            if(i == label->i && j == label->j)
+                continue;
+
+
+            Bucket& bucket = lData.vetMatBucketForward[label->cust].mat(i, j);
+        }
+    }
+}

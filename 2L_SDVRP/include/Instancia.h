@@ -69,7 +69,7 @@ namespace InstanceNS
         int numRotation = 6;
         double maxPayload = 0;
         double minSupport = 0.75;
-        double minLR_Support = 0.55;
+        double minLR_Support = 0.12;
 
         Array<double,3> vetDimVeiculo;
         //double veicAltura = 0.0;

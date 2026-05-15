@@ -26,7 +26,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(InstanceVRPTW_NS:
     }
 
     instVrpTw = &instVrpTw_;
-    double numSteps = 1.0; // 2
+    double numSteps = 5.0; // 2
 
     //vetStepSize[0].stepSize = 400;
     vetStepSize[0].stepSize = 99999.0; // 999999

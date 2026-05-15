@@ -63,21 +63,24 @@ int main(int argc, const char* argv[])
     startConstGlobalVaribles();
 
 
-    /*
-    instanciaG.vetItens[0].set(3320.0, 1780.0, 640.0);   // 64
-    Ponto p0(1480.0, 335.0, 0.0);
 
-    instanciaG.vetItens[1].set(3320.0, 1780.0, 640.0);   // 65
-    Ponto p1(4800.0, 335.0, 0.0);
+    /*
+    instanciaG.vetItens[0].set(2380.0, 1414.0, 934.0);   // 133
+    Ponto p0(8120.0, 518.0, 1018.0);
+
+    instanciaG.vetItens[1].set(3320.0, 1780.0, 610.0);   // 63
+    Ponto p1(4800.0, 335.0, 1580.0);
 
     //instanciaG.vetItens[2].set(2031.0, 1270.0, 1170.0); // 75
     //Ponto p2(11469.0, 590.0, 0.0);
     InstanceNS::Rotation r = InstanceNS::Rot0;
 
-    double area0 = getIntercetion(0, p0, r, Right, 1, p1, r, Left); // area 75 and 52
-    double areaYZ = instanciaG.vetItens[0].vetDim[1]*instanciaG.vetItens[0].vetDim[2];
+    double area0 = getIntercetion(1, p1, r, Right, 0, p0, r, Left); // area 75 and 52
+    double areaYZ = instanciaG.vetItens[1].vetDim[1]*instanciaG.vetItens[1].vetDim[2];
 
-    std::printf("areaInterc(64 and 65): %.1f\nareaYZ: %.1f\n\n", area0, areaYZ);
+    std::printf("areaInterc(133 and 63): %.1f\nareaYZ: %.1f\n\n", area0, areaYZ);
+
+    EXIT_PRINT();
     */
 
     /*
