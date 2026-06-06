@@ -9,21 +9,21 @@
  *  *****************************************************************/
 
 #include "PrimalHeuristic.h"
-#include "SearchStrategy.h"
 #include "BranchAndPrice.h"
+#include "SearchStrategy.h"
 
 using namespace DW_DecompNS;
 using namespace SearchStrategyNS;
 using namespace BranchAndPriceNS;
 
-DW_DecompNode* PrimalHeuristicNS::SimpleDiving::operator()(DW_DecompNode *node,
-                                                           AuxData &auxVet,
-                                                           double upperBound)
+DW_DecompNode *PrimalHeuristicNS::SimpleDiving::operator()(DW_DecompNode *node,
+                                                           AuxData       &auxVet,
+                                                           double         upperBound)
 {
-    DepthFirst dfs;
-    DW_DecompNode* root = new DW_DecompNode(*node);
+    DepthFirst     dfs;
+    DW_DecompNode *root = new DW_DecompNode(*node);
 
-    std::cout<<"ROOT\n";
+    std::cout << "ROOT\n";
     int status = root->columnGeneration(auxVet);
     if(status != StatusSubProb_Otimo)
     {
@@ -39,7 +39,7 @@ DW_DecompNode* PrimalHeuristicNS::SimpleDiving::operator()(DW_DecompNode *node,
     {
         numIt += 1;
 
-        DW_DecompNode* nodeTemp = dfs.pop();
+        DW_DecompNode *nodeTemp = dfs.pop();
 
         if(nodeTemp->funcObj > upperBound)
         {
@@ -47,11 +47,11 @@ DW_DecompNode* PrimalHeuristicNS::SimpleDiving::operator()(DW_DecompNode *node,
             return nullptr;
         }
 
-        bool didCut = false;
+        bool      didCut = false;
         const int numItMax = std::min(15, (int)nodeTemp->vetSolX.size());
-        for(int j=0; j < numItMax; ++j)
+        for(int j = 0; j < numItMax; ++j)
         {
-            int id = -1;
+            int    id = -1;
             double val = std::numeric_limits<double>::infinity();
 
             // Chose a variable to branch
@@ -96,5 +96,4 @@ DW_DecompNode* PrimalHeuristicNS::SimpleDiving::operator()(DW_DecompNode *node,
 
         dfs.insert(nodeTemp);
     }
-
 }

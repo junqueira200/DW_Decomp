@@ -30,13 +30,13 @@ enum Resultado
 namespace BinPackingCP_NS
 {
 
-    bool cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetItens, int tamVet);
-    bool cpSatBinPacking2(SolucaoNS::Bin &binResult, VectorI &vetItens, int tamVet);
-    Resultado testaCpSatBinPacking(int numItens);
-    void criaEPs(SolucaoNS::Bin &bin);
-    bool verificaInviabilidadePares(VectorI& vetItens, int tamVet);
-    bool binPacking(VectorI &vetItens, int tamVet);
+bool      cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetItens, int tamVet);
+bool      cpSatBinPacking2(SolucaoNS::Bin &binResult, VectorI &vetItens, int tamVet);
+Resultado testaCpSatBinPacking(int numItens);
+void      criaEPs(SolucaoNS::Bin &bin);
+bool      verificaInviabilidadePares(VectorI &vetItens, int tamVet);
+bool      binPacking(VectorI &vetItens, int tamVet);
 
-}
+} // namespace BinPackingCP_NS
 
-#endif //INC_2L_SDVRP_BINPACKINGCP_H
+#endif // INC_2L_SDVRP_BINPACKINGCP_H

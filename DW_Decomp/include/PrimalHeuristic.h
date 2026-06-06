@@ -16,30 +16,26 @@
 namespace PrimalHeuristicNS
 {
 
-    class PrimalHeuristicInter
-    {
-    public:
+class PrimalHeuristicInter
+{
+  public:
+    virtual ~PrimalHeuristicInter() = default;
+    virtual DW_DecompNS::DW_DecompNode *operator()(DW_DecompNS::DW_DecompNode *node,
+                                                   DW_DecompNS::AuxData       &auxVet,
+                                                   double upperBound) = 0;
+};
 
-        virtual ~PrimalHeuristicInter()=default;
-        virtual DW_DecompNS::DW_DecompNode* operator()(DW_DecompNS::DW_DecompNode* node,
-                                                        DW_DecompNS::AuxData &auxVet,
-                                                        double upperBound)=0;
+class SimpleDiving : public PrimalHeuristicInter
+{
+  public:
+    DW_DecompNS::DW_DecompNode *operator()(DW_DecompNS::DW_DecompNode *node,
+                                           DW_DecompNS::AuxData       &auxVet,
+                                           double upperBound) override;
 
-    };
+    SimpleDiving() = default;
+    ~SimpleDiving() override = default;
+};
 
-    class SimpleDiving : public PrimalHeuristicInter
-    {
-    public:
+} // namespace PrimalHeuristicNS
 
-        DW_DecompNS::DW_DecompNode* operator()(DW_DecompNS::DW_DecompNode* node,
-                                               DW_DecompNS::AuxData &auxVet,
-                                               double upperBound) override;
-
-        SimpleDiving()=default;
-        ~SimpleDiving() override=default;
-
-    };
-
-}
-
-#endif //DW_PRIMALHEURISTIC_H
+#endif // DW_PRIMALHEURISTIC_H

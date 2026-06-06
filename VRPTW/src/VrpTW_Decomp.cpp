@@ -4,47 +4,44 @@
 #include "VrpTW_Decomp.h"
 #include "rand.h"
 
-void VrpTW_DecompNS::criaMestre(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model)
+void VrpTW_DecompNS::criaMestre(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
+                                GRBModel                              &model)
 {
     const int NumClie = instVrpTw.numClientes;
 
-    GRBVar *varX = model.addVars(NumClie*NumClie, GRB_BINARY);
+    GRBVar *varX = model.addVars(NumClie * NumClie, GRB_BINARY);
 
-    for(int i=0; i < NumClie; ++i)
+    for(int i = 0; i < NumClie; ++i)
     {
-        for(int j=0; j < NumClie; ++j)
+        for(int j = 0; j < NumClie; ++j)
         {
             int index = getIndex(i, j, NumClie);
-            varX[index].set(GRB_StringAttr_VarName, "X_"+std::to_string(i)+"_"+std::to_string(j));
+            varX[index].set(GRB_StringAttr_VarName,
+                            "X_" + std::to_string(i) + "_" + std::to_string(j));
             varX[index].set(GRB_DoubleAttr_Obj, instVrpTw.matDist(i, j));
         }
     }
 
-    for(int i=1; i < NumClie; ++i)
+    for(int i = 1; i < NumClie; ++i)
     {
         GRBLinExpr linExpr;
-        for(int j=0; j < NumClie; ++j)
+        for(int j = 0; j < NumClie; ++j)
         {
-            if(i==j)
+            if(i == j)
                 continue;
 
-            linExpr += 1*varX[getIndex(j, i, NumClie)];
+            linExpr += 1 * varX[getIndex(j, i, NumClie)];
         }
 
-        model.addConstr(linExpr >= 1, "Clie_"+std::to_string(i));
-
+        model.addConstr(linExpr >= 1, "Clie_" + std::to_string(i));
     }
 
     model.update();
     model.write("vrp.lp");
-    delete []varX;
+    delete[] varX;
 }
 
-int VrpTW_DecompNS::getIndex(int i, int j, int numClie)
-{
-    return i*numClie+j;
-}
-
+int VrpTW_DecompNS::getIndex(int i, int j, int numClie) { return i * numClie + j; }
 
 /*int64_t VrpTW_DecompNS::VrpSubProb::getNumberOfConvConstr()
 {
@@ -64,7 +61,8 @@ VrpTW_DecompNS::VrpSubProb::VrpSubProb(GRBEnv &e, InstanciaNS::InstVRP_TW &instV
 
 }
 
-void VrpTW_DecompNS::VrpSubProb::iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA)
+void VrpTW_DecompNS::VrpSubProb::iniConvConstr(GRBModel &rmlp, void *data, const double
+custoVarA)
 {
 
 }
@@ -267,7 +265,8 @@ void VrpTW_DecompNS::VrpSubProb::buildSubProbModel()
 
 
         //if(modelo3Index)
-        model.addConstr(grbLinExpr + grbLinExpr1 == 0, "Restricao_4_j_" + std::to_string(j));
+        model.addConstr(grbLinExpr + grbLinExpr1 == 0, "Restricao_4_j_" +
+std::to_string(j));
     }
 
     const int capacidade = instVrpTw->capVeic;
@@ -280,9 +279,9 @@ void VrpTW_DecompNS::VrpSubProb::buildSubProbModel()
                 GRBLinExpr linExpr = 0;
 
                 // uj - ui + Q(1-xijk)>=  qj
-                linExpr = -grbVarU[i] + grbVarU[j] + capacidade * (1-grbVarX[getIndex(i, j, numClie)]);
-                double rhs = instVrpTw->vetClieDem[j];
-                model.addConstr(linExpr >= rhs, "Restricao_5_ij_" + std::to_string(i)+"_"+std::to_string(j));
+                linExpr = -grbVarU[i] + grbVarU[j] + capacidade * (1-grbVarX[getIndex(i,
+j, numClie)]); double rhs = instVrpTw->vetClieDem[j]; model.addConstr(linExpr >= rhs,
+"Restricao_5_ij_" + std::to_string(i)+"_"+std::to_string(j));
             }
         }
     }
@@ -310,8 +309,10 @@ void VrpTW_DecompNS::VrpSubProb::buildSubProbModel()
             if(i == j)
                 continue;
 
-            linExpr += grbVarT_Cheg[j] - grbVarT_Saida[i] - instVrpTw->matDist(i, j) + instVrpTw->vetClieTime[0].dueTime*(1-grbVarX[getIndex(i, j, numClie)]);
-            subProb->addConstr(linExpr, '>', 0, "Rest5_"+std::to_string(i)+"_"+std::to_string(j));
+            linExpr += grbVarT_Cheg[j] - grbVarT_Saida[i] - instVrpTw->matDist(i, j) +
+instVrpTw->vetClieTime[0].dueTime*(1-grbVarX[getIndex(i, j, numClie)]);
+            subProb->addConstr(linExpr, '>', 0,
+"Rest5_"+std::to_string(i)+"_"+std::to_string(j));
         }
 
     }
@@ -319,8 +320,8 @@ void VrpTW_DecompNS::VrpSubProb::buildSubProbModel()
     for(int i=1; i < numClie; ++i)
     {
         GRBLinExpr linExpr;
-        linExpr += grbVarT_Cheg[i] + instVrpTw->vetClieTime[i].servTime - grbVarT_Saida[i];
-        subProb->addConstr(linExpr, '<', 0, "Rest6_"+std::to_string(i));
+        linExpr += grbVarT_Cheg[i] + instVrpTw->vetClieTime[i].servTime -
+grbVarT_Saida[i]; subProb->addConstr(linExpr, '<', 0, "Rest6_"+std::to_string(i));
 
         linExpr = 0;
         linExpr += instVrpTw->vetClieTime[i].readyTime - grbVarT_Cheg[i];
@@ -339,7 +340,8 @@ void VrpTW_DecompNS::VrpSubProb::buildSubProbModel()
 
 }
 
-void VrpTW_DecompNS::criaVRP_TW_CompleteModel(const InstanciaNS::InstVRP_TW &instVrpTw, GRBModel &model)
+void VrpTW_DecompNS::criaVRP_TW_CompleteModel(const InstanciaNS::InstVRP_TW &instVrpTw,
+GRBModel &model)
 {
 
     const int numClie = instVrpTw.numClientes;
@@ -354,8 +356,9 @@ void VrpTW_DecompNS::criaVRP_TW_CompleteModel(const InstanciaNS::InstVRP_TW &ins
     {
         for(int j=0; j < numClie; ++j)
         {
-            grbVarX[getIndex(i, j, numClie)].set(GRB_StringAttr_VarName, "x_"+std::to_string(i) + "_"+std::to_string(j));
-            grbVarX[getIndex(i, j, numClie)].set(GRB_DoubleAttr_Obj, instVrpTw.matDist(i, j));
+            grbVarX[getIndex(i, j, numClie)].set(GRB_StringAttr_VarName,
+"x_"+std::to_string(i) + "_"+std::to_string(j)); grbVarX[getIndex(i, j,
+numClie)].set(GRB_DoubleAttr_Obj, instVrpTw.matDist(i, j));
         }
 
         grbVarU[i].set(GRB_StringAttr_VarName, "U_"+std::to_string(i));
@@ -421,7 +424,8 @@ void VrpTW_DecompNS::criaVRP_TW_CompleteModel(const InstanciaNS::InstVRP_TW &ins
 
 
         //if(modelo3Index)
-        model.addConstr(grbLinExpr + grbLinExpr1 == 0, "Restricao_4_j_" + std::to_string(j));
+        model.addConstr(grbLinExpr + grbLinExpr1 == 0, "Restricao_4_j_" +
+std::to_string(j));
     }
 
     const int capacidade = instVrpTw.capVeic;
@@ -434,9 +438,9 @@ void VrpTW_DecompNS::criaVRP_TW_CompleteModel(const InstanciaNS::InstVRP_TW &ins
                 GRBLinExpr linExpr = 0;
 
                 // uj - ui + Q(1-xijk)>=  qj
-                linExpr = -grbVarU[i] + grbVarU[j] + capacidade * (1-grbVarX[getIndex(i, j, numClie)]);
-                double rhs = instVrpTw.vetClieDem[j];
-                model.addConstr(linExpr >= rhs, "Restricao_5_ij_" + std::to_string(i)+"_"+std::to_string(j));
+                linExpr = -grbVarU[i] + grbVarU[j] + capacidade * (1-grbVarX[getIndex(i,
+j, numClie)]); double rhs = instVrpTw.vetClieDem[j]; model.addConstr(linExpr >= rhs,
+"Restricao_5_ij_" + std::to_string(i)+"_"+std::to_string(j));
             }
         }
     }
@@ -461,8 +465,8 @@ void VrpTW_DecompNS::criaVRP_TW_CompleteModel(const InstanciaNS::InstVRP_TW &ins
 
 }
 
-double VrpTW_DecompNS::geraSolHeuristica(const InstanciaNS::InstVRP_TW &instVrpTw, Eigen::VectorXd &vetRedCost,
-                                         Eigen::VectorXi &rota, int &routeTam)
+double VrpTW_DecompNS::geraSolHeuristica(const InstanciaNS::InstVRP_TW &instVrpTw,
+Eigen::VectorXd &vetRedCost, Eigen::VectorXi &rota, int &routeTam)
 {
 std::cout<<"ini geraSolHeuristica"<<"\n";
 

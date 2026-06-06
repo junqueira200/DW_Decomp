@@ -4,29 +4,32 @@
 #include "Instancia.h"
 #include "Solucao.h"
 
-#include "ProblemParameters.h"
 #include "BCRoutingParams.h"
 #include "LoadingChecker.h"
-
+#include "ProblemParameters.h"
 
 namespace TesteOroloc3D_NS
 {
-    enum StatusOroloc3D
-    {
-        INFEASIBLE = 0,
-        TIME_LIMIT = 1,
-        FEASIBLE   = 2
-    };
+enum StatusOroloc3D
+{
+    INFEASIBLE = 0,
+    TIME_LIMIT = 1,
+    FEASIBLE = 2
+};
 
-    void testeOroloc3D();
-    void testeOroloc3D_2();
+void testeOroloc3D();
+void testeOroloc3D_2();
 
-    void convertVectorOfItensToVectorOfCuboids(const VectorI& vetItens, std::vector<ContainerLoading::Cuboid>& vetCuboids,
-                                               int numItems, SolucaoNS::Rota& rota);
-    void appendToFile(const std::string& fileName, const std::string& content);
-    void readSolOroloc3D_2(SolucaoNS::Solucao& sol);
-    void printSol(SolucaoNS::Solucao& sol);
+void convertVectorOfItensToVectorOfCuboids(
+    const VectorI                         &vetItens,
+    std::vector<ContainerLoading::Cuboid> &vetCuboids,
+    int                                    numItems,
+    SolucaoNS::Rota                       &rota);
 
-}
+void appendToFile(const std::string &fileName, const std::string &content);
+void readSolOroloc3D_2(SolucaoNS::Solucao &sol);
+void printSol(SolucaoNS::Solucao &sol);
+
+} // namespace TesteOroloc3D_NS
 
 #endif // TESTEOROLOC3D_H

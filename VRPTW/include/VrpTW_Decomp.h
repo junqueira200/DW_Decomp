@@ -11,13 +11,14 @@
 namespace VrpTW_DecompNS
 {
 
-    void criaMestre(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model);
-    void criaVRP_TW_CompleteModel(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model);
-    int getIndex(int i, int j, int numClie);
-    double geraSolHeuristica(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
-                             Eigen::VectorXd &vetRedCost,
-                             Eigen::VectorXi &rota,
-                             int &routeTam);
+void   criaMestre(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model);
+void   criaVRP_TW_CompleteModel(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
+                                GRBModel                              &model);
+int    getIndex(int i, int j, int numClie);
+double geraSolHeuristica(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
+                         Eigen::VectorXd                       &vetRedCost,
+                         Eigen::VectorXi                       &rota,
+                         int                                   &routeTam);
 
 /*    class VrpSubProb : public DW_DecompNS::SubProb
     {
@@ -54,6 +55,6 @@ namespace VrpTW_DecompNS
 
     }; // FIM MySubProb*/
 
-}
+} // namespace VrpTW_DecompNS
 
-#endif //DW_VRPTW_DECOMP_H
+#endif // DW_VRPTW_DECOMP_H

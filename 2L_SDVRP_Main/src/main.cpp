@@ -37,29 +37,36 @@ making sure that each store is supplied by a warehouse.
 ------------------------------------------------------------ */
 
 #include <ilcp/cp.h>
-//#include "util.h"
+// #include "util.h"
 
 #include <ilconcert/ilomodel.h>
 
-void NameVars(IloIntVarArray a, const char * base) {
-    for (IloInt i = 0; i < a.getSize(); i++) {
+void NameVars(IloIntVarArray a, const char *base)
+{
+    for(IloInt i = 0; i < a.getSize(); i++)
+    {
         char name[100];
         sprintf(name, "%s[%ld]", base, (long)i);
         a[i].setName(name);
     }
 }
 
-void NameVars(IloIntervalVarArray a, const char * base) {
-    for (IloInt i = 0; i < a.getSize(); i++) {
+void NameVars(IloIntervalVarArray a, const char *base)
+{
+    for(IloInt i = 0; i < a.getSize(); i++)
+    {
         char name[100];
         sprintf(name, "%s[%ld]", base, (long)i);
         a[i].setName(name);
     }
 }
 
-void NameVars(IloArray<IloIntVarArray> a, const char * base) {
-    for (IloInt i = 0; i < a.getSize(); i++) {
-        for (IloInt j = 0; j < a[i].getSize(); j++) {
+void NameVars(IloArray<IloIntVarArray> a, const char *base)
+{
+    for(IloInt i = 0; i < a.getSize(); i++)
+    {
+        for(IloInt j = 0; j < a[i].getSize(); j++)
+        {
             char name[100];
             sprintf(name, "%s[%ld][%ld]", base, (long)i, long(j));
             a[i][j].setName(name);
@@ -67,9 +74,12 @@ void NameVars(IloArray<IloIntVarArray> a, const char * base) {
     }
 }
 
-void NameVars(IloArray<IloIntervalVarArray> a, const char * base) {
-    for (IloInt i = 0; i < a.getSize(); i++) {
-        for (IloInt j = 0; j < a[i].getSize(); j++) {
+void NameVars(IloArray<IloIntervalVarArray> a, const char *base)
+{
+    for(IloInt i = 0; i < a.getSize(); i++)
+    {
+        for(IloInt j = 0; j < a[i].getSize(); j++)
+        {
             char name[100];
             sprintf(name, "%s[%ld][%ld]", base, (long)i, long(j));
             a[i][j].setName(name);
@@ -78,18 +88,25 @@ void NameVars(IloArray<IloIntervalVarArray> a, const char * base) {
 }
 
 // Interval [s, e)
-class DisplayInterval {
-private:
+class DisplayInterval
+{
+  private:
     IloInt _s;
     IloInt _e;
-    void displayTime(std::ostream& out, IloInt t) const {
-        if (t == IloIntervalMin)      out << "IntervalMin";
-        else if (t == IloIntervalMax) out << "IntervalMax";
-        else                          out << t;
+    void   displayTime(std::ostream &out, IloInt t) const
+    {
+        if(t == IloIntervalMin)
+            out << "IntervalMin";
+        else if(t == IloIntervalMax)
+            out << "IntervalMax";
+        else
+            out << t;
     }
-public:
-    DisplayInterval(IloInt s, IloInt e) : _s(s), _e(e) { }
-    virtual void display(std::ostream& out) const {
+
+  public:
+    DisplayInterval(IloInt s, IloInt e) : _s(s), _e(e) {}
+    virtual void display(std::ostream &out) const
+    {
         out << "[";
         displayTime(out, _s);
         out << ", ";
@@ -97,96 +114,114 @@ public:
         out << ")";
     }
 };
-std::ostream& operator << (std::ostream& out, const DisplayInterval& itv) {
+std::ostream &operator<<(std::ostream &out, const DisplayInterval &itv)
+{
     itv.display(out);
     return out;
 }
 
-class DisplayCumulSegment : public DisplayInterval {
-public:
+class DisplayCumulSegment : public DisplayInterval
+{
+  public:
     DisplayCumulSegment(IloCP cp, IloCumulFunctionExpr sf, IloInt seg)
-        : DisplayInterval(cp.getSegmentStart(sf, seg), cp.getSegmentEnd(sf, seg)) { }
+        : DisplayInterval(cp.getSegmentStart(sf, seg), cp.getSegmentEnd(sf, seg))
+    {
+    }
 };
 
-class DisplayStateSegment : public DisplayInterval {
-public:
+class DisplayStateSegment : public DisplayInterval
+{
+  public:
     DisplayStateSegment(IloCP cp, IloStateFunction sf, IloInt seg)
-        : DisplayInterval(cp.getSegmentStart(sf, seg), cp.getSegmentEnd(sf, seg)) { }
+        : DisplayInterval(cp.getSegmentStart(sf, seg), cp.getSegmentEnd(sf, seg))
+    {
+    }
 };
 
-
-class FileError: public IloException {
-public:
+class FileError : public IloException
+{
+  public:
     FileError() : IloException("Cannot open data file") {}
 };
 
-int main(int argc, const char* argv[]) {
+int main(int argc, const char *argv[])
+{
     IloEnv env;
-    try {
+    try
+    {
         IloModel model(env);
 
-        const char* filename = "../../../examples/data/facility.data";
-        if (argc > 1)
+        const char *filename = "../../../examples/data/facility.data";
+        if(argc > 1)
             filename = argv[1];
         std::ifstream file(filename);
-        if (!file) {
+        if(!file)
+        {
             env.out() << "usage: " << argv[0] << " <file>" << std::endl;
             throw FileError();
         }
 
-        IloIntArray capacity(env), fixedCost(env);
+        IloIntArray           capacity(env), fixedCost(env);
         IloArray<IloIntArray> cost(env);
-        IloInt nbLocations;
-        IloInt nbStores;
+        IloInt                nbLocations;
+        IloInt                nbStores;
 
         file >> nbLocations;
         file >> nbStores;
         capacity = IloIntArray(env, nbLocations);
-        for (IloInt i = 0; i < nbLocations; i++) {
+        for(IloInt i = 0; i < nbLocations; i++)
+        {
             file >> capacity[i];
         }
         fixedCost = IloIntArray(env, nbLocations);
-        for (IloInt i = 0; i < nbLocations; i++) {
+        for(IloInt i = 0; i < nbLocations; i++)
+        {
             file >> fixedCost[i];
         }
-        for (IloInt j = 0; j < nbStores; j++) {
+        for(IloInt j = 0; j < nbStores; j++)
+        {
             cost.add(IloIntArray(env, nbLocations));
-            for (IloInt i = 0; i < nbLocations; i++) {
+            for(IloInt i = 0; i < nbLocations; i++)
+            {
                 file >> cost[j][i];
             }
         }
 
         IloBool consistentData = (fixedCost.getSize() == nbLocations);
         consistentData = consistentData && nbStores <= IloSum(capacity);
-        for (IloInt i = 0; consistentData && (i < nbStores); i++)
+        for(IloInt i = 0; consistentData && (i < nbStores); i++)
             consistentData = (cost[i].getSize() == nbLocations);
-        if (!consistentData) {
-            env.out() << "ERROR: data file '"
-                      << filename << "' contains inconsistent data" << std::endl;
+        if(!consistentData)
+        {
+            env.out() << "ERROR: data file '" << filename
+                      << "' contains inconsistent data" << std::endl;
         }
 
         IloIntVarArray supplier(env, nbStores, 0, nbLocations - 1);
         NameVars(supplier, "S");
         IloIntVarArray open(env, nbLocations, 0, 1);
         NameVars(open, "O");
-        for (IloInt i = 0; i < nbStores; i++)
+        for(IloInt i = 0; i < nbStores; i++)
             model.add(open[supplier[i]] == 1);
-        for (IloInt j = 0; j < nbLocations; j++)
-            model.add(IloCount(supplier, j)  <= capacity[j]);
+        for(IloInt j = 0; j < nbLocations; j++)
+            model.add(IloCount(supplier, j) <= capacity[j]);
 
         IloIntExpr obj = IloScalProd(open, fixedCost);
-        for (IloInt i = 0; i < nbStores; i++)
+        for(IloInt i = 0; i < nbStores; i++)
             obj += cost[i][supplier[i]];
         model.add(IloMinimize(env, obj));
         IloCP cp(model);
         cp.solve();
 
         cp.out() << std::endl << "Optimal value: " << cp.getValue(obj) << std::endl;
-        for (IloInt j = 0; j < nbLocations; j++) {
-            if (cp.getValue(open[j]) == 1) {
+        for(IloInt j = 0; j < nbLocations; j++)
+        {
+            if(cp.getValue(open[j]) == 1)
+            {
                 cp.out() << "Facility " << j << " is open, it serves stores ";
-                for (IloInt i = 0; i < nbStores; i++) {
-                    if (cp.getValue(supplier[i]) == j)
+                for(IloInt i = 0; i < nbStores; i++)
+                {
+                    if(cp.getValue(supplier[i]) == j)
                         cp.out() << i << " ";
                 }
                 cp.out() << std::endl;
@@ -194,7 +229,8 @@ int main(int argc, const char* argv[]) {
         }
         cp.end();
     }
-    catch (IloException& ex) {
+    catch(IloException &ex)
+    {
         env.out() << "Caught: " << ex << std::endl;
     }
     env.end();

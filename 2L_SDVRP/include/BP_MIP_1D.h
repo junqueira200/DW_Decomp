@@ -14,40 +14,37 @@ class BinPacking1D
 {
   public:
     void BuildModel();
-    int Solve();
-    int ReSolve(const boost::dynamic_bitset<>& selectedGroups);
+    int  Solve();
+    int  ReSolve(const boost::dynamic_bitset<> &selectedGroups);
 
-    GRBVar2D& GetVariablesX() { return mVariablesX; }
+    GRBVar2D &GetVariablesX() { return mVariablesX; }
 
-    void SetContainer(const std::vector<Container>& containers)
+    void SetContainer(const std::vector<Container> &containers)
     {
         mContainers = containers;
         mNumberContainers = containers.size();
     }
 
-    void SetGroups(const std::vector<Group>& groups)
+    void SetGroups(const std::vector<Group> &groups)
     {
         mGroups = groups;
         mNumberGroups = groups.size();
     }
 
-    BinPacking1D(GRBEnv* env,
-                 const std::vector<Container>& containers,
-                 const std::vector<Group>& groups,
-                 const std::string& outputPath = "")
-    : mEnv(env),
-      mNumberContainers(containers.size()),
-      mNumberGroups(groups.size()),
-      mContainers(containers),
-      mGroups(groups)
+    BinPacking1D(GRBEnv                       *env,
+                 const std::vector<Container> &containers,
+                 const std::vector<Group>     &groups,
+                 const std::string            &outputPath = "")
+        : mEnv(env), mNumberContainers(containers.size()), mNumberGroups(groups.size()),
+          mContainers(containers), mGroups(groups)
     {
         mModel = std::make_unique<GRBModel>(*mEnv);
         mModel->set(GRB_StringParam_LogFile, outputPath + "BinPackLowerBound.log");
     }
 
-    BinPacking1D& operator=(BinPacking1D&& bp) noexcept
+    BinPacking1D &operator=(BinPacking1D &&bp) noexcept
     {
-        if (this != &bp)
+        if(this != &bp)
         {
             mEnv = bp.mEnv;
             mContainers = bp.mContainers;
@@ -60,16 +57,16 @@ class BinPacking1D
         return *this;
     }
 
-    BinPacking1D(BinPacking1D&& bp) noexcept : mModel(std::move(bp.mModel)) {}
+    BinPacking1D(BinPacking1D &&bp) noexcept : mModel(std::move(bp.mModel)) {}
 
   private:
-    GRBEnv* mEnv;
+    GRBEnv *mEnv;
 
     size_t mNumberContainers = 0;
     size_t mNumberGroups = 0;
 
     std::vector<Container> mContainers;
-    std::vector<Group> mGroups;
+    std::vector<Group>     mGroups;
 
     std::unique_ptr<GRBModel> mModel = nullptr;
 
@@ -84,5 +81,5 @@ class BinPacking1D
     void CreateSolution();
 };
 
-}
-}
+} // namespace Algorithms
+} // namespace ContainerLoading

@@ -109,9 +109,9 @@ def plot_items(items):
             fontsize=9
         )
 
-    ax.set_xlabel("X (Largura)")
-    ax.set_ylabel("Y (Comprimento)")
-    ax.set_zlabel("Z (Altura)")
+    #ax.set_xlabel("X (Largura)")
+    #ax.set_ylabel("Y (Comprimento)")
+    #ax.set_zlabel("Z (Altura)")
 
     ax.set_xlim(0, TRUCK_WIDTH)
     ax.set_ylim(0, TRUCK_LENGTH)

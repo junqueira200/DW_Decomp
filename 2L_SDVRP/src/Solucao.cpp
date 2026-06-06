@@ -7,14 +7,14 @@
  * ****************************************
  * ****************************************/
 
-#include <format>
 #include "Solucao.h"
-#include "sefe_array.h"
-#include "ConstrutivoBin.h"
-#include "InputOutput.h"
-#include "AxleWeights.h"
 #include "AuxGeometry.h"
 #include "AuxT.h"
+#include "AxleWeights.h"
+#include "ConstrutivoBin.h"
+#include "InputOutput.h"
+#include "sefe_array.h"
+#include <format>
 
 using namespace InstanceNS;
 using namespace ConstrutivoBinNS;
@@ -26,31 +26,29 @@ SolucaoNS::Bin::Bin()
 {
 
     vetPosItem = Vector<Ponto>(NumItensPorBin);
-    vetEp      = Vector<Ponto>(NumEpPorBin);
-    vetItemId  = VectorI(NumItensPorBin);
+    vetEp = Vector<Ponto>(NumEpPorBin);
+    vetItemId = VectorI(NumItensPorBin);
     vetPosItem.setAll(Ponto());
     vetRotacao = Vector<Rotation>(NumItensPorBin);
     vetRotacao.setAll(Rot0);
 
-    vetItens   = Vector<int8_t>(instanciaG.numItens);
+    vetItens = Vector<int8_t>(instanciaG.numItens);
     vetItens.setAll((int8_t)0);
 
-
-    #pragma GCC uroll 3
-    for(int d=0; d < 3; ++d)
+#pragma GCC uroll 3
+    for(int d = 0; d < 3; ++d)
     {
         binDim[d] = instanciaG.vetDimVeiculo[d];
     }
 
-
     volumeTotal = 1;
 
-    #pragma GCC uroll 3
-    for(int d=0; d < 3; ++d)
+#pragma GCC uroll 3
+    for(int d = 0; d < 3; ++d)
     {
         volumeTotal *= binDim[d];
 
-        if((d+1) == instanciaG.numDim)
+        if((d + 1) == instanciaG.numDim)
             break;
     }
 }
@@ -58,10 +56,10 @@ SolucaoNS::Bin::Bin()
 std::string SolucaoNS::Ponto::print() const
 {
     std::string str = "(";
-    for(int i=0; i < instanciaG.numDim; ++i)
+    for(int i = 0; i < instanciaG.numDim; ++i)
     {
         str += std::format("{:.1f}", vetDim[i]);
-        if(i < instanciaG.numDim-1)
+        if(i < instanciaG.numDim - 1)
             str += ",";
     }
 
@@ -73,33 +71,35 @@ std::string SolucaoNS::Ponto::print() const
 void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
 {
 
-    if(vetPosItem.size() < (numItens+1))
+    if(vetPosItem.size() < (numItens + 1))
     {
         vetPosItem.push_back(Ponto());
         vetItemId.push_back(0);
         vetRotacao.push_back(Rot0);
-
     }
 
     if(ParseInputNS::input.comprimentoAlturaIguais1 == false)
     {
         double y = vetEp[idEp].vetDim[1];
-        double left = computeLeftBalancedLoading(y, instanciaG.vetItens[idItem].getDimRotacionada(1, r),
-                                                 instanciaG.vetItens[idItem].weight);
+        double left = computeLeftBalancedLoading(
+            y,
+            instanciaG.vetItens[idItem].getDimRotacionada(1, r),
+            instanciaG.vetItens[idItem].weight);
 
-        double right = instanciaG.vetItens[idItem].weight - left;
-        static const double massLimit = instanciaG.maxPayload*input.balancedLoadingD;
+        double              right = instanciaG.vetItens[idItem].weight - left;
+        static const double massLimit = instanciaG.maxPayload * input.balancedLoadingD;
 
-        sumLeftBalancedLoading  += left;
+        sumLeftBalancedLoading += left;
         sumRightBalancedLoading += right;
 
         if(sumLeftBalancedLoading > massLimit || sumRightBalancedLoading > massLimit)
         {
-            std::printf("Error! left(%.1f), right(%.1f); massLimit(%.1f)\n", sumLeftBalancedLoading,
-                        sumRightBalancedLoading, massLimit);
+            std::printf("Error! left(%.1f), right(%.1f); massLimit(%.1f)\n",
+                        sumLeftBalancedLoading,
+                        sumRightBalancedLoading,
+                        massLimit);
             PRINT_THROW();
         }
-
     }
 
     // Add item
@@ -108,31 +108,29 @@ void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
     vetRotacao[numItens] = r;
     vetItens[idItem] = (int8_t)1;
 
-    numItens      += 1;
+    numItens += 1;
     volumeOcupado += instanciaG.vetItens[idItem].volume;
-    demandaTotal  += instanciaG.vetItens[idItem].weight;
-
+    demandaTotal += instanciaG.vetItens[idItem].weight;
 
     // Cria dois novos EPs
-    Ponto ponto;
-    const Ponto pontoRefe = vetPosItem[numItens-1];
+    Ponto       ponto;
+    const Ponto pontoRefe = vetPosItem[numItens - 1];
     ponto = pontoRefe;
     ponto.vetDim[0] += instanciaG.vetItens[idItem].getDimRotacionada(0, r);
 
     if(PrintEP)
-std::cout<<"posItem: "<<vetPosItem[numItens-1].print()<<"\n";
+        std::cout << "posItem: " << vetPosItem[numItens - 1].print() << "\n";
 
     if(PrintEP)
-std::cout<<"\t\t\tCriando EP"<<ponto.print()<<"\n";
+        std::cout << "\t\t\tCriando EP" << ponto.print() << "\n";
 
     addEp(ponto);
-
 
     ponto = pontoRefe;
     ponto.vetDim[1] += instanciaG.vetItens[idItem].getDimRotacionada(1, r);
 
     if(PrintEP)
-std::cout<<"\t\t\tCriando EP"<<ponto.print()<<"\n";
+        std::cout << "\t\t\tCriando EP" << ponto.print() << "\n";
     addEp(ponto);
 
     if(instanciaG.numDim == 3)
@@ -146,46 +144,44 @@ std::cout<<"\t\t\tCriando EP"<<ponto.print()<<"\n";
 
     // Percorre os EPs antigos e verifica colisao com o novo item
     static VectorI vetEpRm(NumEpPorBin);
-    int tamVetEpRm = 0;
+    int            tamVetEpRm = 0;
 
     if(vetEpRm.size() < numEps)
         vetEpRm.resize(numEps);
 
-
-    for(int i=0; i < numEps; ++i)
+    for(int i = 0; i < numEps; ++i)
     {
-        if(epColideItem(vetEp[i], vetPosItem[numItens-1], idItem))
+        if(epColideItem(vetEp[i], vetPosItem[numItens - 1], idItem))
         {
             vetEpRm[tamVetEpRm] = i;
             tamVetEpRm += 1;
         }
     }
 
-    for(int i=tamVetEpRm-1; i >= 0; --i)
+    for(int i = tamVetEpRm - 1; i >= 0; --i)
         rmI_Ep(vetEpRm[i]);
-
 }
 
 int SolucaoNS::Bin::getEpComMenorCoord(const VectorI &vetIdEp, int tam)
 {
 
-//std::cout<<"\t\t\tvetIdEp: "<<vetIdEp.printN(tam)<<"\n";
-//std::cout<<"\t\t\tvetEp: ";
+    // std::cout<<"\t\t\tvetIdEp: "<<vetIdEp.printN(tam)<<"\n";
+    // std::cout<<"\t\t\tvetEp: ";
 
-
-    int menorId = 0;
-    double dimMin  = get<1>(getMinArray(vetEp[vetIdEp[menorId]].vetDim, instanciaG.numDim));
-//std::cout<<vetEp[vetIdEp[menorId]].print()<<" ["<<dimMin<<"]; ";
+    int    menorId = 0;
+    double dimMin =
+        get<1>(getMinArray(vetEp[vetIdEp[menorId]].vetDim, instanciaG.numDim));
+    // std::cout<<vetEp[vetIdEp[menorId]].print()<<" ["<<dimMin<<"]; ";
 
     // Percorre o vetor de indices
-    for(int i=1; i < tam; ++i)
+    for(int i = 1; i < tam; ++i)
     {
         int id = vetIdEp[i];
 
-//std::cout<<vetEp[id].print()<<" ";
+        // std::cout<<vetEp[id].print()<<" ";
 
         double dimMinTemp = get<1>(getMinArray(vetEp[id].vetDim, instanciaG.numDim));
-//std::cout<<"["<<dimMinTemp<<"]; ";
+        // std::cout<<"["<<dimMinTemp<<"]; ";
         if(dimMinTemp < dimMin)
         {
             menorId = i;
@@ -193,20 +189,20 @@ int SolucaoNS::Bin::getEpComMenorCoord(const VectorI &vetIdEp, int tam)
         }
     }
 
-//std::cout<<"\n\t\t\tMenor dim: "<<dimMin<<"\n\n";
+    // std::cout<<"\n\t\t\tMenor dim: "<<dimMin<<"\n\n";
 
     return menorId;
 }
 
 void SolucaoNS::Bin::reset()
 {
-    numItens      = 0;
-    numEps        = 0;
+    numItens = 0;
+    numEps = 0;
     volumeOcupado = 0.0;
-    demandaTotal  = 0.0;
+    demandaTotal = 0.0;
     vetItens.setAll((int8_t)0);
 
-    sumLeftBalancedLoading  = 0.0;
+    sumLeftBalancedLoading = 0.0;
     sumRightBalancedLoading = 0.0;
 }
 
@@ -227,14 +223,14 @@ bool SolucaoNS::Bin::rmI_Item(int i)
 
     // Shifit vetPosItem, vetItemId para a direita
 
-    for(int ii=i; ii < (numItens-1); ++ii)
-        vetPosItem[ii] = vetPosItem[ii+1];
+    for(int ii = i; ii < (numItens - 1); ++ii)
+        vetPosItem[ii] = vetPosItem[ii + 1];
 
-    for(int ii=i; ii < (numItens-1); ++ii)
-        vetItemId[ii] = vetItemId[ii+1];
+    for(int ii = i; ii < (numItens - 1); ++ii)
+        vetItemId[ii] = vetItemId[ii + 1];
 
-    for(int ii=i; ii < (numItens-1); ++ii)
-        vetRotacao[ii] = vetRotacao[ii+1];
+    for(int ii = i; ii < (numItens - 1); ++ii)
+        vetRotacao[ii] = vetRotacao[ii + 1];
 
     numItens -= 1;
 
@@ -244,26 +240,26 @@ bool SolucaoNS::Bin::rmI_Item(int i)
 void SolucaoNS::Bin::addEp(const Ponto &ep)
 {
     if(PrintEP)
-std::cout<<"addEp"<<ep.print()<<"\n";
+        std::cout << "addEp" << ep.print() << "\n";
 
-    if(vetEp.size() < (numEps+1))
+    if(vetEp.size() < (numEps + 1))
         vetEp.push_back(Ponto());
 
-    #pragma GCC unroll 3
-    for(int d=0; d < 3; ++d)
+#pragma GCC unroll 3
+    for(int d = 0; d < 3; ++d)
     {
         if(PrintEP)
-std::cout<<"\t\t\t\t("<<ep.vetDim[d]<<"; "<<binDim[d]<<")\n";
+            std::cout << "\t\t\t\t(" << ep.vetDim[d] << "; " << binDim[d] << ")\n";
         if(ep.vetDim[d] >= binDim[d])
             return;
 
-        if((d+1) == instanciaG.numDim)
+        if((d + 1) == instanciaG.numDim)
             break;
     }
 
     if(PrintEP)
-std::cout<<"\t\t\t\t"<<"EP criado\n\n";
-    //std::cout<<"Cria EP("<<x<<","<<y<<")\n\n";
+        std::cout << "\t\t\t\t" << "EP criado\n\n";
+    // std::cout<<"Cria EP("<<x<<","<<y<<")\n\n";
 
     vetEp[numEps] = ep;
     numEps += 1;
@@ -274,14 +270,23 @@ std::string SolucaoNS::Bin::printPlot()
     std::string str;
     str += std::format("{}\n", numItens);
 
-    for(int i=0; i < numItens; ++i)
+    for(int i = 0; i < numItens; ++i)
     {
-        Ponto& pos = vetPosItem[i];
-        str += std::format("itemId({})\nPos: ({:.1f},{:.1f},{:.1f})\n", vetItemId[i], pos.vetDim[0], pos.vetDim[1],
-                                                                      pos.vetDim[2]);
-        str += std::format("Largura: {}\n", (int)instanciaG.vetItens[vetItemId[i]].getDimRotacionada(0, vetRotacao[i]));
-        str += std::format("Comprimento: {}\n", (int)instanciaG.vetItens[vetItemId[i]].getDimRotacionada(1, vetRotacao[i]));
-        str += std::format("Altura: {}\n\n", (int)instanciaG.vetItens[vetItemId[i]].getDimRotacionada(2, vetRotacao[i]));
+        Ponto &pos = vetPosItem[i];
+        str += std::format("itemId({})\nPos: ({:.1f},{:.1f},{:.1f})\n",
+                           vetItemId[i],
+                           pos.vetDim[0],
+                           pos.vetDim[1],
+                           pos.vetDim[2]);
+        str += std::format(
+            "Largura: {}\n",
+            (int)instanciaG.vetItens[vetItemId[i]].getDimRotacionada(0, vetRotacao[i]));
+        str += std::format(
+            "Comprimento: {}\n",
+            (int)instanciaG.vetItens[vetItemId[i]].getDimRotacionada(1, vetRotacao[i]));
+        str += std::format(
+            "Altura: {}\n\n",
+            (int)instanciaG.vetItens[vetItemId[i]].getDimRotacionada(2, vetRotacao[i]));
     }
 
     return str;
@@ -301,8 +306,8 @@ bool SolucaoNS::Bin::rmI_Ep(int i)
 
     // Shifit vetEpX, vetEpY para a esquerda
 
-    for(int ii=i; ii < (numEps-1); ++ii)
-        vetEp[ii] = vetEp[ii+1];
+    for(int ii = i; ii < (numEps - 1); ++ii)
+        vetEp[ii] = vetEp[ii + 1];
 
     numEps -= 1;
     return true;
@@ -311,68 +316,62 @@ bool SolucaoNS::Bin::rmI_Ep(int i)
 SolucaoNS::Solucao::Solucao(const InstanceNS::Instance &instancia)
 {
     vetBin = Vector<Bin>(instancia.numVeiculos);
-    for(int b=0; b < instancia.numVeiculos; ++b)
+    for(int b = 0; b < instancia.numVeiculos; ++b)
     {
-        for(int d=0; d < 3; ++d)
+        for(int d = 0; d < 3; ++d)
         {
             vetBin[b].binDim[d] = instancia.vetDimVeiculo[d];
         }
 
         vetBin[b].volumeTotal = 1;
 
-        for(int d=0; d < 3; ++d)
+        for(int d = 0; d < 3; ++d)
         {
             vetBin[b].volumeTotal *= vetBin[b].binDim[d];
 
-            if((d+1) == instancia.numDim)
+            if((d + 1) == instancia.numDim)
                 break;
         }
-
     }
 
     vetRota = Vector<Rota>(instancia.numVeiculos);
 
-    for(int r=0; r < instancia.numVeiculos; ++r)
+    for(int r = 0; r < instancia.numVeiculos; ++r)
         vetRota[r].binPtr = &vetBin[r];
 
-//    vetItemRotaId = VectorI(instancia.numItens);
-//    vetItemRotaId.setAll(-1);
-
+    //    vetItemRotaId = VectorI(instancia.numItens);
+    //    vetItemRotaId.setAll(-1);
 }
-
 
 SolucaoNS::Solucao::Solucao()
 {
-    vetBin      = Vector<Bin>(instanciaG.numVeiculos);
-    for(int b=0; b < instanciaG.numVeiculos; ++b)
+    vetBin = Vector<Bin>(instanciaG.numVeiculos);
+    for(int b = 0; b < instanciaG.numVeiculos; ++b)
     {
-        for(int d=0; d < 3; ++d)
+        for(int d = 0; d < 3; ++d)
         {
             vetBin[b].binDim[d] = instanciaG.vetDimVeiculo[d];
         }
 
         vetBin[b].volumeTotal = 1;
 
-        for(int d=0; d < 3; ++d)
+        for(int d = 0; d < 3; ++d)
         {
             vetBin[b].volumeTotal *= vetBin[b].binDim[d];
 
-            if((d+1) == instanciaG.numDim)
+            if((d + 1) == instanciaG.numDim)
                 break;
         }
-
     }
 
-    vetRota       = Vector<Rota>(instanciaG.numVeiculos);
+    vetRota = Vector<Rota>(instanciaG.numVeiculos);
 
-    for(int r=0; r < instanciaG.numVeiculos; ++r)
+    for(int r = 0; r < instanciaG.numVeiculos; ++r)
         vetRota[r].binPtr = &vetBin[r];
 
-//    vetItemRotaId = VectorI(instancia.numItens);
-//    vetItemRotaId.setAll(-1);
-
+    //    vetItemRotaId = VectorI(instancia.numItens);
+    //    vetItemRotaId.setAll(-1);
 }
-
 
 bool SolucaoNS::Solucao::verificaSol(std::string &error)
 {
@@ -385,12 +384,12 @@ bool SolucaoNS::Solucao::verificaSol(std::string &error)
     vetClieAtend.setAll(0);
     vetItens.setAll(0);
 
-    for(int r=0; r < instanciaG.numVeiculos; ++r)
+    for(int r = 0; r < instanciaG.numVeiculos; ++r)
     {
-        Rota &rota = vetRota[r];
+        Rota  &rota = vetRota[r];
         double demTotal = 0.0;
 
-        for(int i=1; i < (rota.numPos-1); ++i)
+        for(int i = 1; i < (rota.numPos - 1); ++i)
         {
             double temp = rota.vetDemClie[rota.vetRota[i]];
             vetDem[rota.vetRota[i]] += temp;
@@ -400,8 +399,9 @@ bool SolucaoNS::Solucao::verificaSol(std::string &error)
 
         if(!doubleEqual(demTotal, rota.binPtr->demandaTotal, 1E-5))
         {
-            error += "Demandas sao diferentes, rota("+std::format("{}", rota.binPtr->demandaTotal)+
-                     "); calculado("+std::format("{}", demTotal)+"\n";
+            error += "Demandas sao diferentes, rota(" +
+                     std::format("{}", rota.binPtr->demandaTotal) + "); calculado(" +
+                     std::format("{}", demTotal) + "\n";
 
             return false;
         }
@@ -412,69 +412,72 @@ bool SolucaoNS::Solucao::verificaSol(std::string &error)
     if(instanciaG.split)
         num = std::numeric_limits<int>::infinity();
 
-    for(int i=1; i < instanciaG.numClientes; ++i)
+    for(int i = 1; i < instanciaG.numClientes; ++i)
     {
         if(!(vetClieAtend[i] > 0 && vetClieAtend[i] <= num))
         {
             if(vetClieAtend[i] == 0)
-                error += "Cliente("+std::to_string(i)+") nao atendido\n";
+                error += "Cliente(" + std::to_string(i) + ") nao atendido\n";
             else if(!instanciaG.split && vetClieAtend[i] > 1)
-                error += "Cliente("+std::to_string(i)+") atendido mais de uma vez\n";
+                error += "Cliente(" + std::to_string(i) + ") atendido mais de uma vez\n";
 
             return false;
         }
 
         if(!doubleEqual(vetDem[i], instanciaG.vetDemandaCliente[i]))
         {
-            error += "Cliente("+std::to_string(i)+") nao recebeu sua demanda completa\n";
+            error +=
+                "Cliente(" + std::to_string(i) + ") nao recebeu sua demanda completa\n";
             return false;
         }
     }
 
     // Verificar os bins
-    for(int b=0; b < instanciaG.numVeiculos; ++b)
+    for(int b = 0; b < instanciaG.numVeiculos; ++b)
     {
         Bin &bin = vetBin[b];
 
-        for(int i=0; i < bin.numItens; ++i)
+        for(int i = 0; i < bin.numItens; ++i)
             vetItens[bin.vetItemId[i]] += 1;
 
         if(!bin.checkFeasibility(nullptr))
         {
-            error += "Colisao entre itens no bin("+std::to_string(b)+")\n";
+            error += "Colisao entre itens no bin(" + std::to_string(b) + ")\n";
             return false;
         }
     }
 
-    for(int i=0; i < instanciaG.numItens; ++i)
+    for(int i = 0; i < instanciaG.numItens; ++i)
     {
         if(vetItens[i] != 1)
         {
-            error += "Item eh entregue ("+std::to_string(vetItens[i]) + ") vezes\n";
+            error += "Item eh entregue (" + std::to_string(vetItens[i]) + ") vezes\n";
             return false;
         }
     }
 
     double distTotalTemp = 0.0;
 
-    for(int r=0; r < instanciaG.numVeiculos; ++r)
+    for(int r = 0; r < instanciaG.numVeiculos; ++r)
     {
         double distRota = 0.0;
-        Rota &rota = vetRota[r];
+        Rota  &rota = vetRota[r];
 
-        for(int i=0; i < (rota.numPos-1); ++i)
+        for(int i = 0; i < (rota.numPos - 1); ++i)
         {
             int cli0 = rota.vetRota[i];
-            int cli1 = rota.vetRota[i+1];
+            int cli1 = rota.vetRota[i + 1];
 
             distRota += instanciaG.matDist(cli0, cli1);
         }
 
-        //std::cout<<"Dist Rota: "<<distRota<<"\n";
+        // std::cout<<"Dist Rota: "<<distRota<<"\n";
 
         if(!doubleEqual(distRota, rota.distTotal, DiffPermetidaDist))
         {
-            error += "Rota: "+rota.printRota()+"; esta com a distancia errada. Dist calculada("+std::to_string(distRota)+")";
+            error += "Rota: " + rota.printRota() +
+                     "; esta com a distancia errada. Dist calculada(" +
+                     std::to_string(distRota) + ")";
             return false;
         }
 
@@ -483,19 +486,17 @@ bool SolucaoNS::Solucao::verificaSol(std::string &error)
 
     if(!doubleEqual(distTotalTemp, distTotal, DiffPermetidaDist))
     {
-        error += "Dist total esta errada, calculada("+std::to_string(distTotalTemp)+"), dist sol("+std::to_string(distTotal)+")";
+        error += "Dist total esta errada, calculada(" + std::to_string(distTotalTemp) +
+                 "), dist sol(" + std::to_string(distTotal) + ")";
         return false;
     }
 
-
-
     return true;
-
 }
 
 int SolucaoNS::Solucao::getBinVazio()
 {
-    for(int b=0; b < vetRota.size(); ++b)
+    for(int b = 0; b < vetRota.size(); ++b)
     {
         if(vetBin[b].vazio())
             return b;
@@ -508,7 +509,7 @@ void SolucaoNS::Solucao::copiaSolucao(const SolucaoNS::Solucao &sol)
 {
 
     distTotal = sol.distTotal;
-    for(int b=0; b < instanciaG.numVeiculos; ++b)
+    for(int b = 0; b < instanciaG.numVeiculos; ++b)
     {
         copiaBin(sol.vetBin[b], vetBin[b]);
         copiaRota(sol.vetRota[b], vetRota[b]);
@@ -519,7 +520,7 @@ void SolucaoNS::Solucao::reset()
 {
 
     distTotal = 0.0;
-    for(int r=0; r < instanciaG.numVeiculos; ++r)
+    for(int r = 0; r < instanciaG.numVeiculos; ++r)
     {
         vetRota[r].reset();
         vetBin[r].reset();
@@ -528,51 +529,53 @@ void SolucaoNS::Solucao::reset()
 
 double SolucaoNS::Solucao::getUtilizacaoMediaBins() const
 {
-   double val = 0.0;
-   for(int i=0; i < instanciaG.numVeiculos; ++i)
-       val += vetBin[i].getPorcentagemUtilizacao();
+    double val = 0.0;
+    for(int i = 0; i < instanciaG.numVeiculos; ++i)
+        val += vetBin[i].getPorcentagemUtilizacao();
 
-    return val/instanciaG.numVeiculos;
+    return val / instanciaG.numVeiculos;
 }
 
 double SolucaoNS::Solucao::getUtilizacaoMedianaBins() const
 {
     VectorD vetUtil(instanciaG.numVeiculos, 0.0);
 
-    for(int i=0; i < instanciaG.numVeiculos; ++i)
+    for(int i = 0; i < instanciaG.numVeiculos; ++i)
         vetUtil[i] = vetBin[i].getPorcentagemUtilizacao();
 
     std::sort(vetUtil.begin(), vetUtil.end());
 
-    //std::cout<<vetUtil<<"\n\n";
+    // std::cout<<vetUtil<<"\n\n";
 
-    if((instanciaG.numVeiculos%2) == 0)
-        return (vetUtil[instanciaG.numVeiculos/2]+vetUtil[(instanciaG.numVeiculos/2)+1])/2.0;
+    if((instanciaG.numVeiculos % 2) == 0)
+        return (vetUtil[instanciaG.numVeiculos / 2] +
+                vetUtil[(instanciaG.numVeiculos / 2) + 1]) /
+               2.0;
     else
-        return vetUtil[instanciaG.numVeiculos/2];
-
+        return vetUtil[instanciaG.numVeiculos / 2];
 }
 
 double SolucaoNS::Solucao::getTamMedianaRota() const
 {
     VectorI vetTam(instanciaG.numVeiculos, 0);
 
-    for(int i=0; i < instanciaG.numVeiculos; ++i)
+    for(int i = 0; i < instanciaG.numVeiculos; ++i)
         vetTam[i] = vetRota[i].numPos - 2;
 
     std::sort(vetTam.begin(), vetTam.end());
 
-    if((instanciaG.numVeiculos%2) == 0)
-        return ((double)vetTam[instanciaG.numVeiculos/2]+vetTam[(instanciaG.numVeiculos/2)+1])/2.0;
+    if((instanciaG.numVeiculos % 2) == 0)
+        return ((double)vetTam[instanciaG.numVeiculos / 2] +
+                vetTam[(instanciaG.numVeiculos / 2) + 1]) /
+               2.0;
     else
-        return vetTam[instanciaG.numVeiculos/2];
-
+        return vetTam[instanciaG.numVeiculos / 2];
 }
 
 void SolucaoNS::copiaRota(const Rota &rotaFonte, Rota &rota)
 {
-    rota.numPos    = rotaFonte.numPos;
-    //rota.demTotal  = rotaFonte.demTotal;
+    rota.numPos = rotaFonte.numPos;
+    // rota.demTotal  = rotaFonte.demTotal;
     rota.distTotal = rotaFonte.distTotal;
 
     copyVet(rotaFonte.vetRota, rota.vetRota, rota.numPos);
@@ -583,10 +586,10 @@ void SolucaoNS::copiaRota(const Rota &rotaFonte, Rota &rota)
 std::string SolucaoNS::printBinEps(const Bin &bin)
 {
     std::string str;
-    for(int i=0; i < bin.numEps; ++i)
+    for(int i = 0; i < bin.numEps; ++i)
     {
         str += "(";
-        for(int d=0; d < instanciaG.numDim; ++d)
+        for(int d = 0; d < instanciaG.numDim; ++d)
             str += std::to_string(bin.vetEp[i].vetDim[d]) + " ";
 
         str += "); ";
@@ -595,12 +598,11 @@ std::string SolucaoNS::printBinEps(const Bin &bin)
     return std::move(str);
 }
 
-
 int SolucaoNS::getBinVazio(const Vector<Bin> &vetBin, int tam)
 {
     int idVazio = -1;
 
-    for(int b=0; b < tam; ++b)
+    for(int b = 0; b < tam; ++b)
     {
         if(vetBin[b].vazio())
             return b;
@@ -609,24 +611,31 @@ int SolucaoNS::getBinVazio(const Vector<Bin> &vetBin, int tam)
     return -1;
 }
 
-bool SolucaoNS::verificaColisaoDoisItens(const int item0, const int item1, const Ponto &p0, const Ponto &p1, const InstanceNS::Rotation r0, const InstanceNS::Rotation r1)
+bool SolucaoNS::verificaColisaoDoisItens(const int                  item0,
+                                         const int                  item1,
+                                         const Ponto               &p0,
+                                         const Ponto               &p1,
+                                         const InstanceNS::Rotation r0,
+                                         const InstanceNS::Rotation r1)
 {
 
     // Representacao dois segmentos de reta em um unica dimensao
-    static Array<double,2> arrayTemp0;
-    static Array<double,2> arrayTemp1;
+    static Array<double, 2> arrayTemp0;
+    static Array<double, 2> arrayTemp1;
 
     int numInterc = 0;
 
     // Verfica a intersecao em cada dimensao
-    for(int d=0; d < 3; ++d)
+    for(int d = 0; d < 3; ++d)
     {
         arrayTemp0[0] = p0.vetDim[d];
-        //arrayTemp0[1] = arrayTemp0[0] + instanciaG.vetItens[item0].vetDim[d];
-        arrayTemp0[1] = arrayTemp0[0] + instanciaG.vetItens[item0].getDimRotacionada(d, r0);
+        // arrayTemp0[1] = arrayTemp0[0] + instanciaG.vetItens[item0].vetDim[d];
+        arrayTemp0[1] =
+            arrayTemp0[0] + instanciaG.vetItens[item0].getDimRotacionada(d, r0);
 
         arrayTemp1[0] = p1.vetDim[d];
-        arrayTemp1[1] = arrayTemp1[0] + instanciaG.vetItens[item1].getDimRotacionada(d, r1);
+        arrayTemp1[1] =
+            arrayTemp1[0] + instanciaG.vetItens[item1].getDimRotacionada(d, r1);
 
         double ini = std::max(arrayTemp0[0], arrayTemp1[0]);
         double fim = std::min(arrayTemp0[1], arrayTemp1[1]);
@@ -644,79 +653,95 @@ bool SolucaoNS::verificaColisaoDoisItens(const int item0, const int item1, const
             break;
         */
 
-        if((d+1) == instanciaG.numDim)
+        if((d + 1) == instanciaG.numDim)
             break;
     }
-
 
     return (numInterc == instanciaG.numDim);
 }
 
-bool SolucaoNS::Bin::checkFeasibility(Rota* rota, bool fromCp)
+bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp)
 {
 
     if(vazio() || input.comprimentoAlturaIguais1)
         return true;
 
-    double sumLeftTemp  = 0.0;
+    double sumLeftTemp = 0.0;
     double sumRightTemp = 0.0;
 
     /// matTop(i,t) == j; Indicates if custorm i is on top of j
-    //static Matrix<int> matTop(instanciaG.numClientes, instanciaG.numClientes);
-    //static Vector<int> vetMatTopSize(instanciaG.numClientes);
+    // static Matrix<int> matTop(instanciaG.numClientes, instanciaG.numClientes);
+    // static Vector<int> vetMatTopSize(instanciaG.numClientes);
     static VectorI vetTop(instanciaG.numItens);
-    for(int i=0; i < numItens; ++i)
+    for(int i = 0; i < numItens; ++i)
         vetTop[i] = 1;
 
-    //matTop.setVal(-1);
-    //vetMatTopSize.setAll(0);
+    // matTop.setVal(-1);
+    // vetMatTopSize.setAll(0);
 
-
-    for(int i=0; i < numItens; ++i)
+    for(int i = 0; i < numItens; ++i)
     {
-        for(int j=i+1; j < numItens; ++j)
+        for(int j = i + 1; j < numItens; ++j)
         {
-            bool a = verificaColisaoDoisItens(vetItemId[i], vetItemId[j], vetPosItem[i], vetPosItem[j],
-                                              vetRotacao[i], vetRotacao[j]);
-            bool b = verificaColisaoDoisItens(vetItemId[j], vetItemId[i], vetPosItem[j], vetPosItem[i],
-                                              vetRotacao[j], vetRotacao[i]);
+            bool a = verificaColisaoDoisItens(vetItemId[i],
+                                              vetItemId[j],
+                                              vetPosItem[i],
+                                              vetPosItem[j],
+                                              vetRotacao[i],
+                                              vetRotacao[j]);
+            bool b = verificaColisaoDoisItens(vetItemId[j],
+                                              vetItemId[i],
+                                              vetPosItem[j],
+                                              vetPosItem[i],
+                                              vetRotacao[j],
+                                              vetRotacao[i]);
 
             if(a || b)
             {
-                std::cout<<"EP i: "<<vetPosItem[i].print()<<"\nEP j: "<<vetPosItem[j].print()<<"\n";
-                std::cout<<"Rot i: "<<vetRotacao[i]<<"\nRot j: "<<vetRotacao[j]<<"\n\n";
-                std::cout<<"ItemId i: "<<vetItemId[i]<<"\nItemId j: "<<vetItemId[j]<<"\n";
-                std::cout<<"Item i: "<<instanciaG.vetItens[vetItemId[i]].vetDim<<"\n";
-                std::cout<<"Item j: "<<instanciaG.vetItens[vetItemId[j]].vetDim<<"\n";
+                std::cout << "EP i: " << vetPosItem[i].print()
+                          << "\nEP j: " << vetPosItem[j].print() << "\n";
+                std::cout << "Rot i: " << vetRotacao[i] << "\nRot j: " << vetRotacao[j]
+                          << "\n\n";
+                std::cout << "ItemId i: " << vetItemId[i]
+                          << "\nItemId j: " << vetItemId[j] << "\n";
+                std::cout << "Item i: " << instanciaG.vetItens[vetItemId[i]].vetDim
+                          << "\n";
+                std::cout << "Item j: " << instanciaG.vetItens[vetItemId[j]].vetDim
+                          << "\n";
 
                 if(a != b)
-                    std::cout<<"a!=b\n";
+                    std::cout << "a!=b\n";
 
                 return false;
             }
         }
 
-        //continue;
+        // continue;
 
         if(vetPosItem[i].vetDim[2] == 0)
             continue;
 
         double areaSuport = 0.0;
 
-        for(int j=0; j < numItens; ++j)
+        for(int j = 0; j < numItens; ++j)
         {
             if(i == j)
                 continue;
 
-            const Ponto& exPointOutro = vetPosItem[j];
-            double outroZ_Ex = exPointOutro.vetDim[2] +
-                               instanciaG.vetItens[vetItemId[j]].getDimRotacionada(2, vetRotacao[j]);
-            //double dif = std::abs(outroZ_Ex-ep.vetDim[2]);
+            const Ponto &exPointOutro = vetPosItem[j];
+            double       outroZ_Ex =
+                exPointOutro.vetDim[2] +
+                instanciaG.vetItens[vetItemId[j]].getDimRotacionada(2, vetRotacao[j]);
+            // double dif = std::abs(outroZ_Ex-ep.vetDim[2]);
             if(doubleEqual(outroZ_Ex, vetPosItem[i].vetDim[2]))
             {
-                double sup = computeXY_Overlap(instanciaG.vetItens[vetItemId[i]], vetRotacao[i], vetPosItem[i],
-                                               instanciaG.vetItens[vetItemId[j]], vetRotacao[j], vetPosItem[j]);
-                //std::cout<<"sup: "<<sup<<"\n";
+                double sup = computeXY_Overlap(instanciaG.vetItens[vetItemId[i]],
+                                               vetRotacao[i],
+                                               vetPosItem[i],
+                                               instanciaG.vetItens[vetItemId[j]],
+                                               vetRotacao[j],
+                                               vetPosItem[j]);
+                // std::cout<<"sup: "<<sup<<"\n";
                 areaSuport += sup;
                 if(doubleGreater(sup, (double)0.0))
                 {
@@ -731,31 +756,30 @@ bool SolucaoNS::Bin::checkFeasibility(Rota* rota, bool fromCp)
                  * |____|
                  */
             }
-
         }
 
-        double area = instanciaG.vetItens[vetItemId[i]].getDimRotacionada(0, vetRotacao[i])*
-                      instanciaG.vetItens[vetItemId[i]].getDimRotacionada(1, vetRotacao[i]);
+        double area =
+            instanciaG.vetItens[vetItemId[i]].getDimRotacionada(0, vetRotacao[i]) *
+            instanciaG.vetItens[vetItemId[i]].getDimRotacionada(1, vetRotacao[i]);
 
-        double support = areaSuport/area;
+        double support = areaSuport / area;
 
         if(support < instanciaG.minSupport)
-        {	std::cout<<"support: "<<support<<"\n";
+        {
+            std::cout << "support: " << support << "\n";
             return false;
         }
 
-        int itemId = vetItemId[i];
+        int    itemId = vetItemId[i];
         double w = instanciaG.vetItens[itemId].getDimRotacionada(1, vetRotacao[i]);
-        double left = computeLeftBalancedLoading(vetPosItem[i].vetDim[1], w, instanciaG.vetItens[itemId].weight);
+        double left = computeLeftBalancedLoading(
+            vetPosItem[i].vetDim[1], w, instanciaG.vetItens[itemId].weight);
         sumLeftTemp += left;
         double right = instanciaG.vetItens[itemId].weight - left;
         sumRightTemp += right;
-
-
     }
 
-
-    for(int i=0; i < numItens; ++i)
+    for(int i = 0; i < numItens; ++i)
     {
         if(vetTop[i])
             std::printf("%d is a top item\n", vetItemId[i]);
@@ -763,7 +787,7 @@ bool SolucaoNS::Bin::checkFeasibility(Rota* rota, bool fromCp)
 
     bool feasible = true;
 
-    if(!fromCp)
+    //if(!fromCp)
     {
         /*
         if(!doubleEqual(sumLeftTemp, sumLeftBalancedLoading, 1E-5) ||
@@ -773,11 +797,11 @@ bool SolucaoNS::Bin::checkFeasibility(Rota* rota, bool fromCp)
             feasible = false;
         }
         */
-        static const double limit = input.balancedLoadingD*instanciaG.maxPayload;
+        double limit = input.balancedLoadingD * this->demandaTotal;
         if(sumLeftBalancedLoading > limit || sumRightBalancedLoading > limit)
         {
-            std::printf("BalancedLoading Limit\n");
-            feasible = false;
+            std::printf("Balanced Loading Limit\n");
+            feasible = fromCp;
         }
     }
 
@@ -789,7 +813,7 @@ bool SolucaoNS::Bin::checkFeasibility(Rota* rota, bool fromCp)
             std::printf("Axle Weights fails\n");
         }
 
-        feasible = axleWeights*feasible;
+        feasible = axleWeights * feasible;
     }
 
     bool unloadingSequence = true;
@@ -802,7 +826,7 @@ bool SolucaoNS::Bin::checkFeasibility(Rota* rota, bool fromCp)
     if(!unloadingSequence)
         std::printf("Unloading Sequence is not feasible\n");
 
-    feasible = feasible*unloadingSequence;
+    feasible = feasible * unloadingSequence;
 
     std::string error;
 
@@ -812,25 +836,23 @@ bool SolucaoNS::Bin::checkFeasibility(Rota* rota, bool fromCp)
         std::printf("compactness fails: %s\n", error.c_str());
     }
 
-    feasible = feasible*compactness;
+    feasible = feasible * compactness;
 
-
-    //std::printf("verificaViabilidade so testou colisoes!\n");
+    // std::printf("verificaViabilidade so testou colisoes!\n");
     return feasible;
-
 }
 
 // TODO sumLeftBalancedLoading and sumRightBalancedLoading are not removed!
 void SolucaoNS::Bin::rmItens(const VectorI &vetItensRm, const int tam)
 {
     Ponto ponto;
-    for(int i=0; i < tam; ++i)
+    for(int i = 0; i < tam; ++i)
     {
         const int item = vetItensRm[i];
 
         // Acha o item em vetItemId
         int posItem = -1;
-        for(int j=0; j < numItens; ++j)
+        for(int j = 0; j < numItens; ++j)
         {
             if(vetItemId[j] == item)
             {
@@ -841,60 +863,64 @@ void SolucaoNS::Bin::rmItens(const VectorI &vetItensRm, const int tam)
 
         if(posItem == -1)
         {
-            std::cout<<"Item("<<item<<") nao esta no bin!\n";
+            std::cout << "Item(" << item << ") nao esta no bin!\n";
             throw "ERROR";
         }
 
         ponto = vetPosItem[posItem];
-        //rmI_Ep(posItem);
+        // rmI_Ep(posItem);
         rmI_Item(posItem);
         addEp(ponto);
         volumeOcupado -= instanciaG.vetItens[item].volume;
-
     }
-
 }
 
 double SolucaoNS::Bin::getPorcentagemUtilizacao() const
 {
-    return (volumeOcupado/volumeTotal)*100;
+    return (volumeOcupado / volumeTotal) * 100;
 }
 
 void SolucaoNS::Bin::computeLoadingBalancing()
 {
-    for(int i=0; i < numItens; ++i)
+    for(int i = 0; i < numItens; ++i)
     {
-        double w = InstanceNS::instanciaG.vetItens[vetItemId[i]].getDimRotacionada(1, vetRotacao[i]);
+        double w = InstanceNS::instanciaG.vetItens[vetItemId[i]].getDimRotacionada(
+            1, vetRotacao[i]);
         double wight = InstanceNS::instanciaG.vetItens[vetItemId[i]].weight;
 
         double left = computeLeftBalancedLoading(vetPosItem[i].vetDim[1], w, wight);
         double right = wight - left;
 
-        sumLeftBalancedLoading  += left;
+        sumLeftBalancedLoading += left;
         sumRightBalancedLoading += right;
     }
 
-    static double limit = input.balancedLoadingD*instanciaG.maxPayload;
+    this->demandaTotal = 0;
+    for(int i=0; i < numItens; ++i)
+        demandaTotal += instanciaG.vetItens[vetItemId[i]].weight;
+
+    double limit = input.balancedLoadingD * this->demandaTotal;
 
     if(sumLeftBalancedLoading > limit || sumRightBalancedLoading > limit)
     {
         std::printf("computeLoadingBalancing:\n\n");
         std::printf("limit: %.1f\n", limit);
-        std::printf("LeftBalancedLoading: %.1f; RightBalancedLoading: %.1f", sumLeftBalancedLoading, sumRightBalancedLoading);
+        std::printf("LeftBalancedLoading: %.1f; RightBalancedLoading: %.1f",
+                    sumLeftBalancedLoading,
+                    sumRightBalancedLoading);
         std::print("Limit hit in Balanced Loading\n");
     }
 }
-
 
 std::string SolucaoNS::printPonto(const Ponto &ponto, int dim)
 {
     std::string str;
 
-    for(int d=0; d < dim; ++d)
+    for(int d = 0; d < dim; ++d)
     {
-        str += std::to_string(ponto.vetDim[d]) +  " ";
+        str += std::to_string(ponto.vetDim[d]) + " ";
 
-        if((d+1) == dim)
+        if((d + 1) == dim)
             break;
     }
 
@@ -904,12 +930,11 @@ std::string SolucaoNS::printPonto(const Ponto &ponto, int dim)
 void SolucaoNS::copiaBin(const Bin &binFonte, Bin &bin)
 {
 
-
-    bin.numItens      = binFonte.numItens;
-    bin.numEps        = binFonte.numEps;
-    bin.binDim        = binFonte.binDim;
-    bin.demandaTotal  = binFonte.demandaTotal;
-    bin.volumeTotal   = binFonte.volumeTotal;
+    bin.numItens = binFonte.numItens;
+    bin.numEps = binFonte.numEps;
+    bin.binDim = binFonte.binDim;
+    bin.demandaTotal = binFonte.demandaTotal;
+    bin.volumeTotal = binFonte.volumeTotal;
     bin.volumeOcupado = binFonte.volumeOcupado;
 
     if(binFonte.vetEp.size() < bin.vetEp.size())
@@ -928,16 +953,15 @@ void SolucaoNS::copiaBin(const Bin &binFonte, Bin &bin)
     copyVet(binFonte.vetRotacao, bin.vetRotacao, bin.numItens);
     copyVet(binFonte.vetItens, bin.vetItens, bin.vetItens.size());
 
-    bin.sumLeftBalancedLoading  = binFonte.sumLeftBalancedLoading;
+    bin.sumLeftBalancedLoading = binFonte.sumLeftBalancedLoading;
     bin.sumRightBalancedLoading = binFonte.sumRightBalancedLoading;
-
 }
 
 SolucaoNS::Rota::Rota()
 {
-    vetRota       = VectorI(TamRota);
+    vetRota = VectorI(TamRota);
     vetTempoSaida = VectorD(TamRota);
-    vetDemClie    = VectorD(instanciaG.numClientes);
+    vetDemClie = VectorD(instanciaG.numClientes);
 
     vetRota.setAll(0);
     vetTempoSaida.setAll(0.0);
@@ -946,11 +970,11 @@ SolucaoNS::Rota::Rota()
 
 void SolucaoNS::Rota::reset()
 {
-    numPos           = 2;
-    distTotal        = 0.0;
-    //demTotal         = 0;
-    vetRota[0]       = 0;
-    vetRota[1]       = 0;
+    numPos = 2;
+    distTotal = 0.0;
+    // demTotal         = 0;
+    vetRota[0] = 0;
+    vetRota[1] = 0;
     vetDemClie.setAll(0);
     vetTempoSaida[0] = 0;
     vetTempoSaida[1] = 0;
@@ -959,10 +983,10 @@ void SolucaoNS::Rota::reset()
 std::string SolucaoNS::Rota::printRota()
 {
     std::string str;
-    str += "Dist("+std::to_string(distTotal) + "); ";
+    str += "Dist(" + std::to_string(distTotal) + "); ";
 
-    for(int i=0; i < numPos; ++i)
-        str += std::to_string(vetRota[i])+ " ";
+    for(int i = 0; i < numPos; ++i)
+        str += std::to_string(vetRota[i]) + " ";
 
     return str;
 }
@@ -970,63 +994,64 @@ std::string SolucaoNS::Rota::printRota()
 void SolucaoNS::Rota::computeDistance()
 {
     distTotal = 0;
-    for(int i=0; i < (numPos-1); ++i)
-        distTotal += instanciaG.matDist(vetRota[i], vetRota[i+1]);
+    for(int i = 0; i < (numPos - 1); ++i)
+        distTotal += instanciaG.matDist(vetRota[i], vetRota[i + 1]);
 }
 
-std::ostream& SolucaoNS::operator<<(std::ostream &os, const Solucao &sol)
+std::ostream &SolucaoNS::operator<<(std::ostream &os, const Solucao &sol)
 {
-    os<<"DISTANCIA TOTAL: "<<sol.distTotal<<"\n\n";
+    os << "DISTANCIA TOTAL: " << sol.distTotal << "\n\n";
 
-    for(int r=0; r < instanciaG.numVeiculos; ++r)
+    for(int r = 0; r < instanciaG.numVeiculos; ++r)
     {
-        os<<"ROTA("<<r<<"); DIST("<<sol.vetRota[r].distTotal<<"); DEM("<<sol.vetRota[r].binPtr->demandaTotal<<"); ";
-        for(int i=0; i < sol.vetRota[r].numPos; ++i)
-            os<<sol.vetRota[r].vetRota[i]<<" ";
+        os << "ROTA(" << r << "); DIST(" << sol.vetRota[r].distTotal << "); DEM("
+           << sol.vetRota[r].binPtr->demandaTotal << "); ";
+        for(int i = 0; i < sol.vetRota[r].numPos; ++i)
+            os << sol.vetRota[r].vetRota[i] << " ";
 
-        os<<"\n\n";
+        os << "\n\n";
     }
 
-    os<<"BIN:\n";
-    for(int r=0; r < instanciaG.numVeiculos; ++r)
+    os << "BIN:\n";
+    for(int r = 0; r < instanciaG.numVeiculos; ++r)
     {
-        os<<sol.vetBin[r]<<"\n";
+        os << sol.vetBin[r] << "\n";
     }
 
     return os;
 }
 
-std::ostream& SolucaoNS::operator<<(std::ostream &os, const Bin& bin)
+std::ostream &SolucaoNS::operator<<(std::ostream &os, const Bin &bin)
 {
-    os<<"ITENS: ";
-    for(int i=0; i < bin.numItens; ++i)
-        os<<bin.vetItemId[i]<<" ";
-    os<<"\n";
+    os << "ITENS: ";
+    for(int i = 0; i < bin.numItens; ++i)
+        os << bin.vetItemId[i] << " ";
+    os << "\n";
 
-    os<<"Posicoes: ";
-    for(int i=0; i < bin.numItens; ++i)
+    os << "Posicoes: ";
+    for(int i = 0; i < bin.numItens; ++i)
     {
-        os<<bin.vetPosItem[i].print()<<" ";
+        os << bin.vetPosItem[i].print() << " ";
     }
-
 
     return os;
 }
 
-bool SolucaoNS::checkUnloadingSequence(Bin& bin, Rota& rota)
+bool SolucaoNS::checkUnloadingSequence(Bin &bin, Rota &rota)
 {
     if(!input.lifo)
         return true;
 
-    for(int i=0; i < bin.numItens; ++i)
+    for(int i = 0; i < bin.numItens; ++i)
     {
-        Item& itemI = instanciaG.vetItens[bin.vetItemId[i]];
-        int posItemI = findPos(rota, bin.vetItemId[i]);
-        //std::cout<<rota.printRota()<<"\nCliente: "<<itemI.customer<<"; Pos: "<<posItemI<<"\n\n";
+        Item &itemI = instanciaG.vetItens[bin.vetItemId[i]];
+        int   posItemI = findPos(rota, bin.vetItemId[i]);
+        // std::cout<<rota.printRota()<<"\nCliente: "<<itemI.customer<<"; Pos:
+        // "<<posItemI<<"\n\n";
 
-        for(int j=0; j < bin.numItens; ++j)
+        for(int j = 0; j < bin.numItens; ++j)
         {
-            Item& itemJ = instanciaG.vetItens[bin.vetItemId[j]];
+            Item &itemJ = instanciaG.vetItens[bin.vetItemId[j]];
 
             if(i == j || itemI.customer == itemJ.customer)
                 continue;
@@ -1034,58 +1059,61 @@ bool SolucaoNS::checkUnloadingSequence(Bin& bin, Rota& rota)
             int posItemJ = findPos(rota, bin.vetItemId[j]);
             if(posItemJ > posItemI)
             {
-                //std::cout<<"\tCliente: "<<itemJ.customer<<"; pos: "<<posItemJ<<"\n";
-                //std::cout<<"ItemI: "<<itemI.oroloc3D_item_id<<"\n";
-                //std::cout<<"ItemJ: "<<itemJ.oroloc3D_item_id<<"\n";
+                // std::cout<<"\tCliente: "<<itemJ.customer<<"; pos: "<<posItemJ<<"\n";
+                // std::cout<<"ItemI: "<<itemI.oroloc3D_item_id<<"\n";
+                // std::cout<<"ItemJ: "<<itemJ.oroloc3D_item_id<<"\n";
 
-                if(!lifo(itemI, bin.vetPosItem[i], bin.vetRotacao[i],
-                         itemJ, bin.vetPosItem[j], bin.vetRotacao[j], input.mlifo, input.removeFromShortSide))
+                if(!lifo(itemI,
+                         bin.vetPosItem[i],
+                         bin.vetRotacao[i],
+                         itemJ,
+                         bin.vetPosItem[j],
+                         bin.vetRotacao[j],
+                         input.mlifo,
+                         input.removeFromShortSide))
                 {
-                    //std::cout<<"Pos: "<<i<<" "<<j<<"\n";
+                    // std::cout<<"Pos: "<<i<<" "<<j<<"\n";
                     return false;
                 }
 
-                //EXIT_PRINT();
+                // EXIT_PRINT();
                 /*
-                if(isBehind(itemI, bin.vetPosItem[i], bin.vetRotacao[i], itemJ, bin.vetPosItem[j], bin.vetRotacao[j]))
+                if(isBehind(itemI, bin.vetPosItem[i], bin.vetRotacao[i], itemJ,
+                bin.vetPosItem[j], bin.vetRotacao[j]))
                 {
-                    std::cout<<"Unloading Sequence for Item "<<bin.vetItemId[i]<<" not respected due to Item "<<
-                                bin.vetItemId[j]<<"\n";
+                    std::cout<<"Unloading Sequence for Item "<<bin.vetItemId[i]<<" not
+                respected due to Item "<< bin.vetItemId[j]<<"\n";
 
                     return false;
                 }
 
-                if(isBelow(itemI, bin.vetPosItem[i], bin.vetRotacao[i], itemJ, bin.vetPosItem[j], bin.vetRotacao[j], true))
+                if(isBelow(itemI, bin.vetPosItem[i], bin.vetRotacao[i], itemJ,
+                bin.vetPosItem[j], bin.vetRotacao[j], true))
                 {
-                    std::cout<<"Unloading Sequence for Item "<<bin.vetItemId[i]<<" not respected due to Item "<<
-                                bin.vetItemId[j]<<"\n";
+                    std::cout<<"Unloading Sequence for Item "<<bin.vetItemId[i]<<" not
+                respected due to Item "<< bin.vetItemId[j]<<"\n";
 
                     return false;
                 }
                 */
-
             }
 
-            //std::cout<<"\n************\n\n";
+            // std::cout<<"\n************\n\n";
         }
     }
 
-    //EXIT_PRINT();
+    // EXIT_PRINT();
     return true;
-
 }
 
-
-
-
-bool SolucaoNS::checkCompactness(Bin &bin, const VectorI& vetTop, std::string* strError)
+bool SolucaoNS::checkCompactness(Bin &bin, const VectorI &vetTop, std::string *strError)
 {
     if(bin.vazio())
         return true;
 
     // Check front
     double minDist = INF_Double;
-    for(int i=0; i < bin.numItens; ++i)
+    for(int i = 0; i < bin.numItens; ++i)
     {
         if(bin.vetPosItem[i].vetDim[1] < minDist)
             minDist = bin.vetPosItem[i].vetDim[1];
@@ -1093,57 +1121,65 @@ bool SolucaoNS::checkCompactness(Bin &bin, const VectorI& vetTop, std::string* s
 
     if(minDist > DistCompactnessFront)
     {
-        //std::printf("Compactness, minDist(%.1f) is gretter then limit (%.1f)\n", minDist, DistCompactnessFront);
+        // std::printf("Compactness, minDist(%.1f) is gretter then limit (%.1f)\n",
+        // minDist, DistCompactnessFront);
         if(strError)
-            *strError += std::format("Compactness, minDist({:.1f}) is gretter then limit ({:.1f})\n", minDist, DistCompactnessFront);
+            *strError += std::format(
+                "Compactness, minDist({:.1f}) is gretter then limit ({:.1f})\n",
+                minDist,
+                DistCompactnessFront);
         return false;
     }
 
-    //return true;
+    // return true;
 
     /*
     double sumAreas = 0.0;
     for(int i=0; i < bin.numItens; ++i)
     {
-        // 													5 cm
-        if(std::abs(bin.vetPosItem[i].vetDim[0]-minDist) <= 50)
+        //
+    5 cm if(std::abs(bin.vetPosItem[i].vetDim[0]-minDist) <= 50)
         {
-            double dy = instanciaG.vetItens[bin.vetItens[i]].getDimRotacionada(1, bin.vetRotacao[i]);
-            double dz = instanciaG.vetItens[bin.vetItens[i]].getDimRotacionada(2, bin.vetRotacao[i]);
+            double dy = instanciaG.vetItens[bin.vetItens[i]].getDimRotacionada(1,
+    bin.vetRotacao[i]); double dz =
+    instanciaG.vetItens[bin.vetItens[i]].getDimRotacionada(2, bin.vetRotacao[i]);
         }
     }
     */
 
-    for(int i=0; i < bin.numItens; ++i)
+    for(int i = 0; i < bin.numItens; ++i)
     {
         if(vetTop[i])
             continue;
 
-        //bool tochRight = tochRightSideOfTruck(bin.vetItemId[i], bin.vetPosItem[i], bin.vetRotacao[i]);
-        bool tochLeft  = tochLeftSideOfTruck(bin.vetItemId[i], bin.vetPosItem[i], bin.vetRotacao[i]);
+        // bool tochRight = tochRightSideOfTruck(bin.vetItemId[i], bin.vetPosItem[i],
+        // bin.vetRotacao[i]);
+        bool tochLeft =
+            tochLeftSideOfTruck(bin.vetItemId[i], bin.vetPosItem[i], bin.vetRotacao[i]);
 
         const int      itemI = bin.vetItemId[i];
-        const Ponto    pI    = bin.vetPosItem[i];
-        const Rotation rI    = bin.vetRotacao[i];
+        const Ponto    pI = bin.vetPosItem[i];
+        const Rotation rI = bin.vetRotacao[i];
 
         double sumAreasRight = 0.0;
-        double sumAreasLeft  = 0.0;
-        bool   mostLeftItem  = true;
+        double sumAreasLeft = 0.0;
+        bool   mostLeftItem = true;
 
-        for(int j=0; j < bin.numItens; ++j)
+        for(int j = 0; j < bin.numItens; ++j)
         {
             if(i == j)
                 continue;
 
             const int      itemJ = bin.vetItemId[j];
-            const Ponto    pJ    = bin.vetPosItem[j];
-            const Rotation rJ    = bin.vetRotacao[j];
+            const Ponto    pJ = bin.vetPosItem[j];
+            const Rotation rJ = bin.vetRotacao[j];
 
             if(doubleLess(pJ.vetDim[0], pI.vetDim[0]))
                 mostLeftItem = false;
 
-            //if(!tochRight)
-            //    sumAreasRight += getIntercetion(itemI, pI, rI, Right, itemJ, pJ, rJ, Left);
+            // if(!tochRight)
+            //     sumAreasRight += getIntercetion(itemI, pI, rI, Right, itemJ, pJ, rJ,
+            //     Left);
 
             if(!tochLeft)
                 sumAreasLeft += getIntercetion(itemI, pI, rI, Left, itemJ, pJ, rJ, Right);
@@ -1151,9 +1187,9 @@ bool SolucaoNS::checkCompactness(Bin &bin, const VectorI& vetTop, std::string* s
 
         double dz = instanciaG.vetItens[itemI].getDimRotacionada(2, rI);
         double dy = instanciaG.vetItens[itemI].getDimRotacionada(1, rI);
-        double areaTotal = dz*dy;
+        double areaTotal = dz * dy;
 
-        //std::printf("areaTotal: %.1f\n", areaTotal);
+        // std::printf("areaTotal: %.1f\n", areaTotal);
 
         /*
         if(!tochRight)
@@ -1163,8 +1199,8 @@ bool SolucaoNS::checkCompactness(Bin &bin, const VectorI& vetTop, std::string* s
             {
                 if(strError)
                 {
-                    (*strError) = std::format("There isn't enough right support({}%) for the item({})", ratio, itemI);
-                    return false;
+                    (*strError) = std::format("There isn't enough right support({}%) for
+        the item({})", ratio, itemI); return false;
                 }
             }
         }
@@ -1172,12 +1208,15 @@ bool SolucaoNS::checkCompactness(Bin &bin, const VectorI& vetTop, std::string* s
 
         if(!tochLeft && !mostLeftItem)
         {
-            double ratio = sumAreasLeft/areaTotal;
+            double ratio = sumAreasLeft / areaTotal;
             if(ratio < instanciaG.minLR_Support)
             {
                 if(strError)
                 {
-                    (*strError) = std::format("There isn't enough left support({}%) for the item({})", ratio, itemI);
+                    (*strError) = std::format(
+                        "There isn't enough left support({}%) for the item({})",
+                        ratio,
+                        itemI);
                     return false;
                 }
             }
@@ -1187,12 +1226,19 @@ bool SolucaoNS::checkCompactness(Bin &bin, const VectorI& vetTop, std::string* s
     return true;
 }
 
-double SolucaoNS::getIntercetion(int item0, Ponto p0, InstanceNS::Rotation r0, Face f0,
-                                 int item1, Ponto p1, InstanceNS::Rotation r1, Face f1)
+double SolucaoNS::getIntercetion(int                  item0,
+                                 Ponto                p0,
+                                 InstanceNS::Rotation r0,
+                                 Face                 f0,
+                                 int                  item1,
+                                 Ponto                p1,
+                                 InstanceNS::Rotation r1,
+                                 Face                 f1)
 {
 
-    //std::printf("item0(%d), p0(%s), f0(%s); ",   item0, p0.print().c_str(), vetFaceStr[f0].c_str());
-    //std::printf("item1(%d), p1(%s), f1(%s)\n\n", item1, p1.print().c_str(), vetFaceStr[f1].c_str());
+    // std::printf("item0(%d), p0(%s), f0(%s); ",   item0, p0.print().c_str(),
+    // vetFaceStr[f0].c_str()); std::printf("item1(%d), p1(%s), f1(%s)\n\n", item1,
+    // p1.print().c_str(), vetFaceStr[f1].c_str());
 
     double max = 0.0;
     double collisionDI = 0.0;
@@ -1203,48 +1249,58 @@ double SolucaoNS::getIntercetion(int item0, Ponto p0, InstanceNS::Rotation r0, F
 
     if(f0 == Left)
     {
-        assertm(f1!=Right, "f1 shuld be Back\n");
+        assertm(f1 != Right, "f1 shuld be Back\n");
 
         // Test Colision
-        max = p1.vetDim[0]+instanciaG.vetItens[item1].getDimRotacionada(0, r1);
+        max = p1.vetDim[0] + instanciaG.vetItens[item1].getDimRotacionada(0, r1);
         if(!doubleEqual(p0.vetDim[0], max, DifDistColision))
             return 0.0;
-\
-        // Collision in y
-        collisionDI = collision1D(p0.vetDim[1], p0.vetDim[1]+instanciaG.vetItens[item0].getDimRotacionada(1, r0),
-                                  p1.vetDim[1], p1.vetDim[1]+instanciaG.vetItens[item1].getDimRotacionada(1, r1));
-        // Collision in z
-        collisionDJ = collision1D(p0.vetDim[2], p0.vetDim[2]+instanciaG.vetItens[item0].getDimRotacionada(2, r0),
-                                  p1.vetDim[2], p1.vetDim[2]+instanciaG.vetItens[item1].getDimRotacionada(2, r1));
-        //std::printf("%.1f\n", collisionDI*collisionDJ);
-        return collisionDI*collisionDJ;
 
+        // Collision in y
+        collisionDI = collision1D(
+            p0.vetDim[1],
+            p0.vetDim[1] + instanciaG.vetItens[item0].getDimRotacionada(1, r0),
+            p1.vetDim[1],
+            p1.vetDim[1] + instanciaG.vetItens[item1].getDimRotacionada(1, r1));
+        // Collision in z
+        collisionDJ = collision1D(
+            p0.vetDim[2],
+            p0.vetDim[2] + instanciaG.vetItens[item0].getDimRotacionada(2, r0),
+            p1.vetDim[2],
+            p1.vetDim[2] + instanciaG.vetItens[item1].getDimRotacionada(2, r1));
+        // std::printf("%.1f\n", collisionDI*collisionDJ);
+        return collisionDI * collisionDJ;
     }
     else if(f0 == Front)
     {
         std::printf("FIX");
         EXIT_PRINT();
 
-        assertm(f1!=Back, "f1 shuld be Left");
+        assertm(f1 != Back, "f1 shuld be Left");
 
-        max = p1.vetDim[1]+instanciaG.vetItens[item1].getDimRotacionada(1, r1);
+        max = p1.vetDim[1] + instanciaG.vetItens[item1].getDimRotacionada(1, r1);
         if(!doubleEqual(p0.vetDim[1], max, DifDistColision))
             return 0.0;
 
         // Collision in x
-        collisionDI = collision1D(p0.vetDim[0], p0.vetDim[0]+instanciaG.vetItens[item0].getDimRotacionada(0, r0),
-                                  p1.vetDim[0], p1.vetDim[0]+instanciaG.vetItens[item1].getDimRotacionada(0, r1));
+        collisionDI = collision1D(
+            p0.vetDim[0],
+            p0.vetDim[0] + instanciaG.vetItens[item0].getDimRotacionada(0, r0),
+            p1.vetDim[0],
+            p1.vetDim[0] + instanciaG.vetItens[item1].getDimRotacionada(0, r1));
 
         // Collision in z
-        collisionDJ = collision1D(p0.vetDim[2], p0.vetDim[2]+instanciaG.vetItens[item0].getDimRotacionada(2, r0),
-                                  p1.vetDim[2], p1.vetDim[2]+instanciaG.vetItens[item1].getDimRotacionada(2, r1));
+        collisionDJ = collision1D(
+            p0.vetDim[2],
+            p0.vetDim[2] + instanciaG.vetItens[item0].getDimRotacionada(2, r0),
+            p1.vetDim[2],
+            p1.vetDim[2] + instanciaG.vetItens[item1].getDimRotacionada(2, r1));
 
-        return collisionDI*collisionDJ;
+        return collisionDI * collisionDJ;
     }
     else
     {
         std::printf("ERROR, f0 = %d isnt implementd!\n", f0);
         PRINT_THROW();
     }
-
 }

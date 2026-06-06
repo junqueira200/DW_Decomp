@@ -16,15 +16,14 @@
 namespace LowerBoundNS
 {
 
+bool getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost &vetMatResCost,
+                       Eigen::VectorXd                          &vetDist,
+                       int                                       dest,
+                       LabelingAlgorithmNS::LabelingData        *lDataPtr);
 
+void copyDistMat(const LabelingAlgorithmNS::Vet3D_ResCost &vetMatResCost,
+                 Eigen::MatrixXd                          &distMat);
 
-    bool getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost& vetMatResCost,
-                           Eigen::VectorXd&                          vetDist,
-                           int                                       dest,
-                           LabelingAlgorithmNS::LabelingData*        lDataPtr);
+} // namespace LowerBoundNS
 
-    void copyDistMat(const LabelingAlgorithmNS::Vet3D_ResCost& vetMatResCost, Eigen::MatrixXd& distMat);
-
-}
-
-#endif //DW_LOWERBOUND_H
+#endif // DW_LOWERBOUND_H

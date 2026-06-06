@@ -14,15 +14,14 @@
 
 namespace IgNs
 {
-    bool metaheuristicaIg(SolucaoNS::Solucao &solucao);
+bool metaheuristicaIg(SolucaoNS::Solucao &solucao);
 
-    inline __attribute__((always_inline))
-    void rmRota(SolucaoNS::Solucao &sol, int r)
-    {
-        sol.distTotal -= sol.vetRota[r].distTotal;
-        sol.vetRota[r].reset();
-        sol.vetBin[r].reset();
-    }
+inline __attribute__((always_inline)) void rmRota(SolucaoNS::Solucao &sol, int r)
+{
+    sol.distTotal -= sol.vetRota[r].distTotal;
+    sol.vetRota[r].reset();
+    sol.vetBin[r].reset();
 }
+} // namespace IgNs
 
-#endif //INC_2L_SDVRP_IG_H
+#endif // INC_2L_SDVRP_IG_H

@@ -5,22 +5,21 @@
  * ****************************************
  * ****************************************/
 
+#include "AuxT.h"
+#include "BinPackingCP.h"
+#include "Construtivo.h"
+#include "ConstrutivoBin.h"
+#include "IBM_CpOptimizer.h"
+#include "Ig.h"
 #include "InputOutput.h"
 #include "Instancia.h"
-#include "ConstrutivoBin.h"
-#include "Construtivo.h"
-#include "AuxT.h"
-#include "rand.h"
-#include "Ig.h"
-#include "BinPackingCP.h"
-#include "TesteOroloc3D.h"
 #include "MILP.h"
-#include "IBM_CpOptimizer.h"
+#include "TesteOroloc3D.h"
+#include "rand.h"
 
-#include "ProblemParameters.h"
 #include "BCRoutingParams.h"
 #include "LoadingChecker.h"
-
+#include "ProblemParameters.h"
 
 using namespace InstanceNS;
 using namespace ConstrutivoBinNS;
@@ -37,19 +36,18 @@ using namespace VehicleRouting;
 using namespace VehicleRouting::Algorithms;
 using namespace MILP_NS;
 
-
-int main(int argc, const char* argv[])
+int main(int argc, const char *argv[])
 {
-    //std::cout<<"main\n";
-    //Item item(1, 2, 3, 1);
+    // std::cout<<"main\n";
+    // Item item(1, 2, 3, 1);
 
-    //std::cout<<"Rot1: "<<getDim(item, Rot0)<<"\n";
-    //return 0;
+    // std::cout<<"Rot1: "<<getDim(item, Rot0)<<"\n";
+    // return 0;
 
     ParseInputNS::parseInput(argc, argv);
     output.setup();
-    std::cout << "INST: " << input.strInst << " SEMENTE: " << RandNs::estado_ << " " << output.data << "";
-
+    std::cout << "INST: " << input.strInst << " SEMENTE: " << RandNs::estado_ << " "
+              << output.data << "";
 
     if(input.instOroloc3D_2)
         InstanceNS::readOroloc3D2(input.strInstCompleto);
@@ -61,8 +59,6 @@ int main(int argc, const char* argv[])
         InstanceNS::read3dInstance(input.strInstCompleto);
 
     startConstGlobalVaribles();
-
-
 
     /*
     instanciaG.vetItens[0].set(2380.0, 1414.0, 934.0);   // 133
@@ -91,14 +87,13 @@ int main(int argc, const char* argv[])
         std::printf("75 dont tochs the right side\n\n");
     */
 
-    //EXIT_PRINT();
-
+    // EXIT_PRINT();
 
     testeOroloc3D_2();
-    //IBM_CpOptimizerNS::testSCIP();
+    // IBM_CpOptimizerNS::testSCIP();
     return 0;
 
-    GRBEnv env;
+    GRBEnv   env;
     GRBModel model(env);
     model.set(GRB_IntParam_Threads, 4);
     model.set(GRB_IntParam_SolutionLimit, 1);
@@ -107,12 +102,12 @@ int main(int argc, const char* argv[])
 
     int numItems = generateRandomListOfItems(20, vetItems);
 
-    std::cout<<vetItems<<"\n";
-    for(int i=0; i < numItems; ++i)
-        std::cout<<instanciaG.vetItens[vetItems[i]].print()<<"\n";
+    std::cout << vetItems << "\n";
+    for(int i = 0; i < numItems; ++i)
+        std::cout << instanciaG.vetItens[vetItems[i]].print() << "\n";
 
     Variables variables(model, vetItems, numItems);
-    Bin bin;
+    Bin       bin;
 
     bin.numItens = numItems;
     bin.vetItemId = vetItems;
@@ -121,45 +116,39 @@ int main(int argc, const char* argv[])
     model.optimize();
 
     variables.vetPosX.setVetDoubleAttr_X(model, false);
-    for(int i=0; i < numItems; ++i)
+    for(int i = 0; i < numItems; ++i)
         std::printf("posX[%d] = %.1f\n", i, variables.vetPosX.getX_value(i));
 
     std::printf("\n\n");
     variables.vetPosY.setVetDoubleAttr_X(model, false);
-    for(int i=0; i < numItems; ++i)
+    for(int i = 0; i < numItems; ++i)
         std::printf("posY[%d] = %.1f\n", i, variables.vetPosY.getX_value(i));
-
 
     std::printf("\n\n");
     variables.vetPosZ.setVetDoubleAttr_X(model, false);
-    for(int i=0; i < numItems; ++i)
+    for(int i = 0; i < numItems; ++i)
         std::printf("posZ[%d] = %.1f\n", i, variables.vetPosZ.getX_value(i));
-
 
     std::printf("\n\n");
     variables.vetDX.setVetDoubleAttr_X(model, false);
-    for(int i=0; i < numItems; ++i)
+    for(int i = 0; i < numItems; ++i)
         std::printf("DX[%d] = %.1f\n", i, variables.vetDX.getX_value(i));
 
     variables.matRot.setVetDoubleAttr_X(model, false);
-    for(int i=0; i < numItems; ++i)
+    for(int i = 0; i < numItems; ++i)
     {
-        for(auto r:vetRot)
+        for(auto r : vetRot)
         {
-            std::printf("r[%i, %i] = %.0f\n", i, (int)r, variables.matRot.getX_value(i, (int)r));
+            std::printf(
+                "r[%i, %i] = %.0f\n", i, (int)r, variables.matRot.getX_value(i, (int)r));
         }
     }
 
-
-
     if(model.get(GRB_IntAttr_Status) != GRB_INFEASIBLE)
     {
-        std::cout<<"\nFound a solution!\n";
+        std::cout << "\nFound a solution!\n";
     }
 
-
-    //testeOroloc3D();
+    // testeOroloc3D();
     return 0;
-
-
 }

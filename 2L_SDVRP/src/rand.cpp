@@ -18,14 +18,15 @@ unsigned int RandNs::startEngine(unsigned int rd_, bool validoRd)
             unsigned int rd = std::random_device{}();
             estado_ = rd;
             engine_ = std::mt19937_64(rd);
-            //engine_ = std::ranlux24(rd);
+            // engine_ = std::ranlux24(rd);
             start_ = true;
             return rd;
-        } else
+        }
+        else
         {
             estado_ = rd_;
             engine_ = std::mt19937_64(rd_);
-            //engine_ = std::ranlux24(rd_);
+            // engine_ = std::ranlux24(rd_);
             start_ = true;
             return rd_;
         }

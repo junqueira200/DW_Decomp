@@ -17,33 +17,33 @@ namespace Algorithms
 class ContainerLoadingCP
 {
   public:
-    [[nodiscard]] std::tuple<ORIntVars1D, ORIntVars1D> GetIntVars(DimensionType dimension) const;
+    [[nodiscard]] std::tuple<ORIntVars1D, ORIntVars1D>
+    GetIntVars(DimensionType dimension) const;
 
-    void WriteProtoModel(const operations_research::sat::CpModelProto& protoModel) const;
-    void PrintSolution(std::vector<Array<int, 4>>& vetPos);
-    void ExtractPacking(std::vector<Cuboid>& items) const;
+    void WriteProtoModel(const operations_research::sat::CpModelProto &protoModel) const;
+    void PrintSolution(std::vector<Array<int, 4>> &vetPos);
+    void ExtractPacking(std::vector<Cuboid> &items) const;
     [[nodiscard]] std::vector<int> ExtractSequence() const;
 
     [[nodiscard]] LoadingStatus Solve();
-    [[nodiscard]] double GetRuntime() const { return mResponse.wall_time(); };
+    [[nodiscard]] double        GetRuntime() const { return mResponse.wall_time(); };
 
-    ContainerLoadingCP(const CPSolverParams& params,
-                       const Container& container,
-                       const std::vector<Cuboid>& items,
-                       const size_t numberCustomers,
-                       const LoadingFlag loadingMask,
-                       const double supportArea,
-                       const double maxRuntime)
-    : mParams(params),
-      mContainer(container),
-      mItems(items),
-      mNumberCustomers(numberCustomers),
-      mEnableFragility(IsSet(loadingMask, LoadingFlag::Fragility)),
-      mEnableLifo(IsSet(loadingMask, LoadingFlag::Lifo)),
-      mFixedSequence(IsSet(loadingMask, LoadingFlag::Sequence)),
-      mEnableSupport(IsSet(loadingMask, LoadingFlag::Support)),
-      mSupportArea(supportArea),
-      mMaxRuntime(maxRuntime)
+    ContainerLoadingCP(const CPSolverParams      &params,
+                       const Container           &container,
+                       const std::vector<Cuboid> &items,
+                       const size_t               numberCustomers,
+                       const LoadingFlag          loadingMask,
+                       const double               supportArea,
+                       const double               maxRuntime,
+                       const double 			  supportAreaLeft)
+        : mParams(params), mContainer(container), mItems(items),
+          mNumberCustomers(numberCustomers),
+          mEnableFragility(IsSet(loadingMask, LoadingFlag::Fragility)),
+          mEnableLifo(IsSet(loadingMask, LoadingFlag::Lifo)),
+          mFixedSequence(IsSet(loadingMask, LoadingFlag::Sequence)),
+          mEnableSupport(IsSet(loadingMask, LoadingFlag::Support)),
+          mSupportArea(supportArea), mMaxRuntime(maxRuntime),
+          msupportAreaLeft(supportAreaLeft)
     {
         auto [placementPatternTypeX, placementPatternTypeY, placementPatternTypeZ] =
             PlacementPointGenerator::SelectMinimalFeasiblePatternType(loadingMask);
@@ -53,10 +53,10 @@ class ContainerLoadingCP
     }
 
   private:
-    const CPSolverParams& mParams;
-    const Container& mContainer;
-    const std::vector<Cuboid>& mItems;
-    size_t mNumberCustomers;
+    const CPSolverParams      &mParams;
+    const Container           &mContainer;
+    const std::vector<Cuboid> &mItems;
+    size_t                     mNumberCustomers;
 
     const bool mEnableFragility;
     const bool mEnableLifo;
@@ -64,6 +64,7 @@ class ContainerLoadingCP
     const bool mEnableSupport;
 
     const double mSupportArea;
+    const double msupportAreaLeft;
 
     const int mMaxReachability = 30;
 
@@ -78,10 +79,12 @@ class ContainerLoadingCP
 
     operations_research::sat::CpSolverResponse mResponse;
 
-    std::vector<Dimension> mDimensions = {{AxisY, RightY, LeftY}, {AxisX, InFrontX, BehindX}, {AxisZ, AboveZ, BelowZ}};
-    std::vector<Orientation> mItemOrientations = std::vector{NoRotation};//, RotationZ, RotationX};
+    std::vector<Dimension>   mDimensions = {{AxisY, RightY, LeftY},
+                                            {AxisX, InFrontX, BehindX},
+                                            {AxisZ, AboveZ, BelowZ}};
+    std::vector<Orientation> mItemOrientations =
+        std::vector{NoRotation, RotationZ}; //, RotationZ, RotationX};
     operations_research::sat::CpModelBuilder mModelCP;
-
     ORIntVars1D mStartPositionsX;
     ORIntVars1D mEndPositionsX;
     ORIntVars1D mStartPositionsY;
@@ -93,34 +96,50 @@ class ContainerLoadingCP
     ORIntervalVars mIntervalsY;
     ORIntervalVars mIntervalsZ;
 
-    ORBoolVars3D mRelativeDirections; // mRelativeDirections[i][j][direction], bool, 1 if item i is placed relatively to
-                                      // item j in direction
+    ORBoolVars3D
+        mRelativeDirections; // mRelativeDirections[i][j][direction], bool, 1 if
+                             // item i is placed relatively to item j in direction
 
-    ORBoolVars2D mItemsOverlapsXY; // mItemsOverlapsXY[i][j], bool, items i and j intersect in xy-plane
-    ORBoolVars2D mSupportXY; // mSupportXY[i][j], bool, 1, if item i is supported by item j xy-plane ? -> items
-                             // intersect AND item j is directly below item i
-    ORIntVars2D
-        mOverlapAreasXY; // mOverlapAreasXY[i][j], integer, size of intersection area in xy-plane of items i and j
+    ORIntVars1D  mTopSum;    // mTopInt[i] = sum(t \in Items) mSupportXY[t][i]
+    ORBoolVars1D mTopBool;   // mTopBool[i] = 1 if mTopInt[i] > 0
+
+    ORBoolVars2D mItemsOverlapsXY; // mItemsOverlapsXY[i][j], bool, items i and j
+                                   // intersect in xy-plane
+    ORBoolVars2D mSupportXY;// mSupportXY[i][j], bool, 1, if item i is supported by item j
+                    // xy-plane ? -> items intersect AND item j is directly below item i
+    ORIntVars2D mOverlapAreasXY; // mOverlapAreasXY[i][j], integer, size of intersection
+                                 // area in xy-plane of items i and j
+
+    ORBoolVars2D mItemsOverlapsYZ; // mItemsOverlapsYZ[i][j], bool, items i and j
+                                   // intersect in yz-plane
+    ORBoolVars2D mLeftYZ;// mLeftYZ[i][j], bool, 1, if item i is Left supported by item j
+                         // yz-plane ? -> items intersect AND item j is directly at left
+                         // of item i
+    ORIntVars2D mOverlapAreasYZ; // mOverlapAreasYZ[i][j], integer, size of intersection
+                                 // area in yz-plane of items i and j
 
     // Dx, Dy, Dz
     ORIntVars1D mWidths;
     ORIntVars1D mLengths;
     ORIntVars1D mHeights;
 
-    ORIntVars1D mR;         // Distance between to the trailer axle
-    //ORIntVars1D mItemsForce;
+    ORIntVars1D mR; // Distance between to the trailer axle
+    // ORIntVars1D mItemsForce;
 
-    operations_research::sat::IntVar forceK, forceRA, forceTA, forceFA, sumRightBalancedLoading, sumLeftBalancedLoading;
-
+    operations_research::sat::IntVar forceK, forceRA, forceTA, forceFA,
+        sumRightBalancedLoading, sumLeftBalancedLoading;
 
     ORBoolVars1D mPlacedOnFloor;
+    ORBoolVars1D mPlacedOnLeft;
     ORBoolVars2D mOrientation;
 
-    ORIntVars1D mCustomerPosition; // mCustomerPosition[i], integer, position of customer i in route, smaller values
-                                   // visited earlier
-    ORBoolVars2D mSuccessionMatrix; // suceeds[i][j], bool, 1, if customer i succeeds customer j in route
+    ORIntVars1D mCustomerPosition;  // mCustomerPosition[i], integer, position of customer
+                                    // i in route, smaller values visited earlier
+    ORBoolVars2D mSuccessionMatrix; // suceeds[i][j], bool, 1, if customer i succeeds
+                                    // customer j in route
 
     operations_research::sat::IntVar mMaxLength;
+    operations_research::sat::IntVar mMinX;
 
     void BuildModel();
     void AddConstraints();
@@ -140,8 +159,15 @@ class ContainerLoadingCP
     void AddObjective();
     void CreateVariables();
 
-    void SetParameters(operations_research::sat::SatParameters& parameters) const;
+    void CreateTopItem();
+    void CreateCompactnessItem();
+    void CreateOnLeftConstraints();
+    void CreateCompactnessArea();
+    void CreateYZIntersectionBool();
+    void CreateYZIntersectionArea();
+
+    void SetParameters(operations_research::sat::SatParameters &parameters) const;
 };
 
-}
-}
+} // namespace Algorithms
+} // namespace ContainerLoading

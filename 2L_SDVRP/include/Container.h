@@ -1,10 +1,10 @@
 #pragma once
 
 #include <cstddef>
+#include <functional>
 #include <limits>
 #include <stdexcept>
 #include <tuple>
-#include <functional>
 
 namespace ContainerLoading
 {
@@ -19,12 +19,12 @@ enum DimensionType
 
 enum RelativeDirection
 {
-    RightY = 0,  // y
-    LeftY,       // y
-    InFrontX,    // x
-    BehindX,     // x
-    AboveZ,      // z
-    BelowZ       // z
+    RightY = 0, // y
+    LeftY,      // y
+    InFrontX,   // x
+    BehindX,    // x
+    AboveZ,     // z
+    BelowZ      // z
 };
 
 enum Orientation
@@ -39,7 +39,7 @@ enum Orientation
 
 struct Dimension
 {
-    DimensionType Type;
+    DimensionType     Type;
     RelativeDirection FirstDirection;
     RelativeDirection SecondDirection;
 };
@@ -86,23 +86,23 @@ struct IDimension
 
     Model::Rotation Rotated = Model::Rotation::None;
 
-    void SetOrientation(int dx, int dy, int dz, Model::Rotation rotation = Model::Rotation::None);
+    void SetOrientation(int             dx,
+                        int             dy,
+                        int             dz,
+                        Model::Rotation rotation = Model::Rotation::None);
 
   protected:
     IDimension() = default;
 
     // Caution, overflowing ony 32 bit systems because frequently volume > int::max()
     IDimension(int dx, int dy, int dz)
-    : Dx(dx), Dy(dy), Dz(dz), Area((double)dx * (double)dy), Volume((double)dx * (double)dy * (double)dz)
+        : Dx(dx), Dy(dy), Dz(dz), Area((double)dx * (double)dy),
+          Volume((double)dx * (double)dy * (double)dz)
     {
     }
     IDimension(int dx, int dy, int dz, Model::Rotation rotation)
-    : Dx(dx),
-      Dy(dy),
-      Dz(dz),
-      Area((double)dx * (double)dy),
-      Volume((double)dx * (double)dy * (double)dz),
-      Rotated(rotation)
+        : Dx(dx), Dy(dy), Dz(dz), Area((double)dx * (double)dy),
+          Volume((double)dx * (double)dy * (double)dz), Rotated(rotation)
     {
     }
 };
@@ -110,15 +110,18 @@ struct IDimension
 struct ICuboid : public ICoordinate, public IDimension
 {
   public:
-    [[nodiscard]] bool Contains(const ICoordinate& other) const;
+    [[nodiscard]] bool Contains(const ICoordinate &other) const;
 
     [[nodiscard]] virtual int MinimumRotatableDimension(Axis axis) const = 0;
 
   protected:
     ICuboid() = default;
-    ICuboid(int x, int y, int z, int dx, int dy, int dz) : ICoordinate(x, y, z), IDimension(dx, dy, dz) {}
+    ICuboid(int x, int y, int z, int dx, int dy, int dz)
+        : ICoordinate(x, y, z), IDimension(dx, dy, dz)
+    {
+    }
     ICuboid(int x, int y, int z, int dx, int dy, int dz, Model::Rotation rotation)
-    : ICoordinate(x, y, z), IDimension(dx, dy, dz, rotation)
+        : ICoordinate(x, y, z), IDimension(dx, dy, dz, rotation)
     {
     }
 };
@@ -127,8 +130,8 @@ enum class Fragility
 {
     None = 0,
 
-    /// Fragile items can be stacked onto other fragile or non-fragile item. But non-fragile items must not touch
-    /// fragile items from above.
+    /// Fragile items can be stacked onto other fragile or non-fragile item. But
+    /// non-fragile items must not touch fragile items from above.
     Fragile,
 };
 
@@ -139,7 +142,7 @@ class Cuboid : public ICuboid
     size_t InternId = 0;
     size_t ExternId = 0;
     size_t GroupId = 0;
-    int    pos     = -1;
+    int    pos = -1;
     double Weight = 0.0;
 
     bool EnableHorizontalRotation = true;
@@ -148,47 +151,44 @@ class Cuboid : public ICuboid
     Model::Fragility Fragility = Model::Fragility::None;
 
     Cuboid() = default;
-    Cuboid(const Cuboid& cuboid) = default;
+    Cuboid(const Cuboid &cuboid) = default;
 
     Cuboid(int x, int y, int z, int dx, int dy, int dz) : ICuboid(x, y, z, dx, dy, dz) {}
 
-    Cuboid(int x,
-           int y,
-           int z,
-           int dx,
-           int dy,
-           int dz,
-           Model::Rotation rotation,
+    Cuboid(int              x,
+           int              y,
+           int              z,
+           int              dx,
+           int              dy,
+           int              dz,
+           Model::Rotation  rotation,
            Model::Fragility fragility = Fragility::None)
-    : ICuboid(x, y, z, dx, dy, dz, rotation), Fragility(fragility)
+        : ICuboid(x, y, z, dx, dy, dz, rotation), Fragility(fragility)
     {
     }
 
     Cuboid(int dx, int dy, int dz) : ICuboid(0, 0, 0, dx, dy, dz) {}
-    Cuboid(size_t internId,
-           size_t externId,
-           int dx,
-           int dy,
-           int dz,
-           bool enableHorizontalRotation,
+    Cuboid(size_t           internId,
+           size_t           externId,
+           int              dx,
+           int              dy,
+           int              dz,
+           bool             enableHorizontalRotation,
            Model::Fragility fragility,
-           size_t groupId,
-           double weight,
-           int pos_=-1)
-    : ICuboid(0, 0, 0, dx, dy, dz),
-      InternId(internId),
-      ExternId(externId),
-      GroupId(groupId),
-      Weight(weight),
-      EnableHorizontalRotation(enableHorizontalRotation),
-      Fragility(fragility),
-      pos(pos_)
+           size_t           groupId,
+           double           weight,
+           int              pos_ = -1)
+        : ICuboid(0, 0, 0, dx, dy, dz), InternId(internId), ExternId(externId),
+          GroupId(groupId), Weight(weight),
+          EnableHorizontalRotation(enableHorizontalRotation), Fragility(fragility),
+          pos(pos_)
     {
     }
 
     virtual ~Cuboid() = default;
 
-    [[nodiscard]] std::tuple<int, int, int> DetermineDimensions(Orientation orientation) const;
+    [[nodiscard]] std::tuple<int, int, int>
+    DetermineDimensions(Orientation orientation) const;
 
     [[nodiscard]] int MinimumRotatableDimension(Axis axis) const override;
 };
@@ -199,12 +199,15 @@ class Container : public ICuboid
     double WeightLimit = std::numeric_limits<double>::max();
 
     Container() = default;
-    Container(const Container&) = default;
+    Container(const Container &) = default;
     Container(int x, int y, int z, int dx, int dy, int dz, double weightLimit)
-    : ICuboid(x, y, z, dx, dy, dz), WeightLimit(weightLimit)
+        : ICuboid(x, y, z, dx, dy, dz), WeightLimit(weightLimit)
     {
     }
-    Container(int dx, int dy, int dz, double weightLimit) : ICuboid(0, 0, 0, dx, dy, dz), WeightLimit(weightLimit) {}
+    Container(int dx, int dy, int dz, double weightLimit)
+        : ICuboid(0, 0, 0, dx, dy, dz), WeightLimit(weightLimit)
+    {
+    }
 
     virtual ~Container() = default;
 
@@ -218,7 +221,7 @@ class Container : public ICuboid
 /// https://stackoverflow.com/a/9729747/5587903
 struct HomogeneityHash
 {
-    std::size_t operator()(const Cuboid& cuboid) const
+    std::size_t operator()(const Cuboid &cuboid) const
     {
         int dx = cuboid.Rotated == Rotation::Yaw ? cuboid.Dy : cuboid.Dx;
         int dy = cuboid.Rotated == Rotation::Yaw ? cuboid.Dx : cuboid.Dy;
@@ -239,7 +242,7 @@ struct HomogeneityHash
         return hash;
     }
 
-    bool operator()(const Cuboid& lhs, const Cuboid& rhs) const
+    bool operator()(const Cuboid &lhs, const Cuboid &rhs) const
     {
         int lhsDx = lhs.Rotated == Rotation::Yaw ? lhs.Dy : lhs.Dx;
         int lhsDy = lhs.Rotated == Rotation::Yaw ? lhs.Dx : lhs.Dy;
@@ -260,5 +263,5 @@ struct HomogeneityHash
     }
 };
 
-}
-}
+} // namespace Model
+} // namespace ContainerLoading

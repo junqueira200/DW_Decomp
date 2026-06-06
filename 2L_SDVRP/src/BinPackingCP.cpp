@@ -8,11 +8,10 @@
  * ****************************************/
 
 #include "BinPackingCP.h"
-#include "Instancia.h"
-#include "rand.h"
 #include "ConstrutivoBin.h"
 #include "InputOutput.h"
-
+#include "Instancia.h"
+#include "rand.h"
 
 using namespace SolucaoNS;
 using namespace InstanceNS;
@@ -21,20 +20,23 @@ using namespace BinPackingCP_NS;
 using namespace ConstrutivoBinNS;
 using namespace ParseInputNS;
 
-bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetItens, int tamVet)
+bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult,
+                                      VectorI        &vetItens,
+                                      int             tamVet)
 {
     if(!input.cpSat)
-    {   std::cout<<"DONT RUN CP-SAT\n";
+    {
+        std::cout << "DONT RUN CP-SAT\n";
         return false;
     }
 
     binResult.reset();
 
     CpModelBuilder model;
-    SatParameters params;
+    SatParameters  params;
     params.set_num_workers(4);
     params.set_stop_after_first_solution(true);
-    //params.set_max_time_in_seconds(5);
+    // params.set_max_time_in_seconds(5);
 
     if(input.cpSatTime > 0.0)
         params.set_max_time_in_seconds(input.cpSatTime);
@@ -43,24 +45,22 @@ bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetIte
     static Vector<IntVar> vetX(instanciaG.numItens);
     static Vector<IntVar> vetY(instanciaG.numItens);
 
-    //Width and length for with item
+    // Width and length for with item
     static Vector<IntVar> vetDx(instanciaG.numItens);
     static Vector<IntVar> vetDy(instanciaG.numItens);
 
     // Indicates if the item is rotated or not
     static Vector<IntVar> vetR(instanciaG.numItens);
 
-
     // Create the variables of the model
-    for(int i=0; i < tamVet; ++i)
+    for(int i = 0; i < tamVet; ++i)
     {
         const Item item = instanciaG.vetItens[vetItens[i]];
-        Domain domainX(0, ((int)instanciaG.vetDimVeiculo[0]));
-        Domain domainY(0, ((int)instanciaG.vetDimVeiculo[1]));
+        Domain     domainX(0, ((int)instanciaG.vetDimVeiculo[0]));
+        Domain     domainY(0, ((int)instanciaG.vetDimVeiculo[1]));
 
         IntVar x = model.NewIntVar(domainX).WithName("x_" + std::to_string(i));
         vetX[i] = x;
-
 
         IntVar y = model.NewIntVar(domainY).WithName("y_" + std::to_string(i));
         vetY[i] = y;
@@ -70,19 +70,18 @@ bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetIte
 
         Domain domainDxDy(min, max);
 
-        IntVar dx = model.NewIntVar(domainDxDy).WithName("dx_"+std::to_string(i));
+        IntVar dx = model.NewIntVar(domainDxDy).WithName("dx_" + std::to_string(i));
         vetDx[i] = dx;
 
-
-        IntVar dy = model.NewIntVar(domainDxDy).WithName("dy_"+std::to_string(i));
+        IntVar dy = model.NewIntVar(domainDxDy).WithName("dy_" + std::to_string(i));
         vetDy[i] = dy;
 
         Domain domainRot(0, 1);
-        IntVar r = model.NewIntVar(domainRot).WithName("r_"+std::to_string(i));
+        IntVar r = model.NewIntVar(domainRot).WithName("r_" + std::to_string(i));
         vetR[i] = r;
 
-        model.AddLessOrEqual(x+dx, (int)instanciaG.vetDimVeiculo[0]);
-        model.AddLessOrEqual(y+dy, (int)instanciaG.vetDimVeiculo[1]);
+        model.AddLessOrEqual(x + dx, (int)instanciaG.vetDimVeiculo[0]);
+        model.AddLessOrEqual(y + dy, (int)instanciaG.vetDimVeiculo[1]);
 
         // If r == 0 => dx <- item.vetDim[0]; If r == 1 => dx <- item.vetDim[0]
         model.AddElement(r, {(int)item.vetDim[0], (int)item.vetDim[1]}, dx);
@@ -92,25 +91,27 @@ bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetIte
 
         if((int)item.vetDim[0] == (int)item.vetDim[1])
             model.AddEquality(r, 0);
-
     }
 
     // Create the no overlap constraits
-    for(int i=0; i < tamVet; ++i)
+    for(int i = 0; i < tamVet; ++i)
     {
-        for(int j=i+1; j < tamVet; ++j)
+        for(int j = i + 1; j < tamVet; ++j)
         {
             BoolVar no_overlap_x1 = model.NewBoolVar();
             BoolVar no_overlap_x2 = model.NewBoolVar();
             BoolVar no_overlap_y1 = model.NewBoolVar();
             BoolVar no_overlap_y2 = model.NewBoolVar();
 
-            model.AddLessOrEqual(vetX[i] + vetDx[i], vetX[j]).OnlyEnforceIf(no_overlap_x1);
-            model.AddLessOrEqual(vetX[j] + vetDx[j], vetX[i]).OnlyEnforceIf(no_overlap_x2);
+            model.AddLessOrEqual(vetX[i] + vetDx[i], vetX[j])
+                .OnlyEnforceIf(no_overlap_x1);
+            model.AddLessOrEqual(vetX[j] + vetDx[j], vetX[i])
+                .OnlyEnforceIf(no_overlap_x2);
 
-
-            model.AddLessOrEqual(vetY[i] + vetDy[i], vetY[j]).OnlyEnforceIf(no_overlap_y1);
-            model.AddLessOrEqual(vetY[j] + vetDy[j], vetY[i]).OnlyEnforceIf(no_overlap_y2);
+            model.AddLessOrEqual(vetY[i] + vetDy[i], vetY[j])
+                .OnlyEnforceIf(no_overlap_y1);
+            model.AddLessOrEqual(vetY[j] + vetDy[j], vetY[i])
+                .OnlyEnforceIf(no_overlap_y2);
 
             model.AddBoolOr({no_overlap_x1, no_overlap_x2, no_overlap_y1, no_overlap_y2});
         }
@@ -124,86 +125,88 @@ bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetIte
         {
             Item item = instanciaG.vetItens[vetItens[i]];
 
-            int x  = SolutionIntegerValue(response, vetX[i]);
-            int y  = SolutionIntegerValue(response, vetY[i]);
-            int r  = SolutionIntegerValue(response, vetR[i]);
+            int x = SolutionIntegerValue(response, vetX[i]);
+            int y = SolutionIntegerValue(response, vetY[i]);
+            int r = SolutionIntegerValue(response, vetR[i]);
 
             int dx = SolutionIntegerValue(response, vetDx[i]);
             int dy = SolutionIntegerValue(response, vetDy[i]);
 
-            //bin.addItem(vetItens[i], )
+            // bin.addItem(vetItens[i], )
             binResult.vetItemId[i] = vetItens[i];
             binResult.vetItens[vetItens[i]] = 1;
             binResult.vetPosItem[i] = Ponto(x, y, 0);
             binResult.vetRotacao[i] = Rotation(r);
             binResult.volumeOcupado += instanciaG.vetItens[vetItens[i]].volume;
-            binResult.demandaTotal  += instanciaG.vetItens[vetItens[i]].weight;
+            binResult.demandaTotal += instanciaG.vetItens[vetItens[i]].weight;
             binResult.numItens += 1;
 
-            //std::cout<<x<<" "<<y<<"; "<<dx<<" "<<dy<<"\n";
-            //std::cout<<instanciaG.vetItens[vetItens[i]].vetDim<<"\n\n";
+            // std::cout<<x<<" "<<y<<"; "<<dx<<" "<<dy<<"\n";
+            // std::cout<<instanciaG.vetItens[vetItens[i]].vetDim<<"\n\n";
         }
 
         if(!binResult.checkFeasibility())
         {
 
-            std::cout<<"CP-SAT Encontrou Solucao Viavel!\n";
+            std::cout << "CP-SAT Encontrou Solucao Viavel!\n";
             std::cout << "ERROR, Bin NAO eh Viavel!\n";
             PRINT_DEBUGG("", "");
             exit(-1);
         }
 
         criaEPs(binResult);
-        //std::cout<<"CORRETO!\n";
+        // std::cout<<"CORRETO!\n";
         return true;
     }
-    //std::cout<<"INCORRETO!\n";
+    // std::cout<<"INCORRETO!\n";
     return false;
-
 }
 
-bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult, VectorI &vetItens, int tamVet)
+bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult,
+                                       VectorI        &vetItens,
+                                       int             tamVet)
 {
     if(!input.cpSat)
-    {   std::cout<<"cp-sat igual a false\n";
+    {
+        std::cout << "cp-sat igual a false\n";
         return false;
     }
 
     binResult.reset();
 
     CpModelBuilder model;
-    SatParameters params;
+    SatParameters  params;
     params.set_num_workers(4);
     params.set_stop_after_first_solution(true);
-    //params.set_max_time_in_seconds(10);
+    // params.set_max_time_in_seconds(10);
 
     if(input.cpSatTime > 0.0)
         params.set_max_time_in_seconds(input.cpSatTime);
 
-    static VectorI         vetItens2(instanciaG.numItens*2);
-    static Vector<IntVar>  vetX(instanciaG.numItens*2);
-    static Vector<IntVar>  vetY(instanciaG.numItens*2);
-    static Vector<BoolVar> vetUsado(instanciaG.numItens*2);
-    static Vector<int>     vetDx(instanciaG.numItens*2);
-    static Vector<int>     vetDy(instanciaG.numItens*2);
+    static VectorI         vetItens2(instanciaG.numItens * 2);
+    static Vector<IntVar>  vetX(instanciaG.numItens * 2);
+    static Vector<IntVar>  vetY(instanciaG.numItens * 2);
+    static Vector<BoolVar> vetUsado(instanciaG.numItens * 2);
+    static Vector<int>     vetDx(instanciaG.numItens * 2);
+    static Vector<int>     vetDy(instanciaG.numItens * 2);
 
-    for(int i=0; i < tamVet; ++i)
+    for(int i = 0; i < tamVet; ++i)
     {
-        vetItens2[i]        = vetItens[i];
-        vetItens2[i+tamVet] = vetItens[i];
+        vetItens2[i] = vetItens[i];
+        vetItens2[i + tamVet] = vetItens[i];
 
-        Item& item = instanciaG.vetItens[vetItens[i]];
+        Item &item = instanciaG.vetItens[vetItens[i]];
 
         vetDx[i] = item.vetDim[0];
         vetDy[i] = item.vetDim[1];
 
-        vetDx[i+tamVet] = item.vetDim[1];
-        vetDy[i+tamVet] = item.vetDim[0];
+        vetDx[i + tamVet] = item.vetDim[1];
+        vetDy[i + tamVet] = item.vetDim[0];
     }
 
-    int tamVet2 = 2*tamVet;
+    int tamVet2 = 2 * tamVet;
 
-    //static Vector<IntVar> vetR(instanciaG.numItens);
+    // static Vector<IntVar> vetR(instanciaG.numItens);
 
     /*
     Domain domainX(0, ((int)instanciaG.vetDimVeiculo[0]));
@@ -219,8 +222,7 @@ bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult, VectorI &vetIt
     model.AddMultiplicationEquality(Z, {X,Y});
     */
 
-
-    for(int i=0; i < tamVet2; ++i)
+    for(int i = 0; i < tamVet2; ++i)
     {
         Domain domainX(0, ((int)instanciaG.vetDimVeiculo[0]));
         Domain domainY(0, ((int)instanciaG.vetDimVeiculo[1]));
@@ -231,38 +233,43 @@ bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult, VectorI &vetIt
         vetX[i] = x;
         vetY[i] = y;
 
+        vetUsado[i] = model.NewBoolVar().WithName("u_" + std::to_string(i));
 
-        vetUsado[i] = model.NewBoolVar().WithName("u_"+std::to_string(i));
-
-
-        model.AddLessOrEqual(vetX[i]+vetDx[i], (int)instanciaG.vetDimVeiculo[0]).OnlyEnforceIf(vetUsado[i]);
-        model.AddLessOrEqual(vetY[i]+vetDy[i], (int)instanciaG.vetDimVeiculo[1]).OnlyEnforceIf(vetUsado[i]);
+        model.AddLessOrEqual(vetX[i] + vetDx[i], (int)instanciaG.vetDimVeiculo[0])
+            .OnlyEnforceIf(vetUsado[i]);
+        model.AddLessOrEqual(vetY[i] + vetDy[i], (int)instanciaG.vetDimVeiculo[1])
+            .OnlyEnforceIf(vetUsado[i]);
 
         if(i > tamVet)
-            model.AddEquality(vetUsado[i] + vetUsado[i-tamVet], 1);
+            model.AddEquality(vetUsado[i] + vetUsado[i - tamVet], 1);
     }
 
-    for(int i=0; i < tamVet2; ++i)
+    for(int i = 0; i < tamVet2; ++i)
     {
-        for(int j=i+1; j < tamVet2; ++j)
+        for(int j = i + 1; j < tamVet2; ++j)
         {
-            if(j == (i+tamVet) || i == (j+tamVet))
+            if(j == (i + tamVet) || i == (j + tamVet))
                 continue;
 
             BoolVar no_overlap_x1 = model.NewBoolVar();
             BoolVar no_overlap_x2 = model.NewBoolVar();
             BoolVar no_overlap_y1 = model.NewBoolVar();
             BoolVar no_overlap_y2 = model.NewBoolVar();
-            //BoolVar and_ = model.NewBoolVar();
+            // BoolVar and_ = model.NewBoolVar();
 
-            //model.AddMultiplicationEquality(and_, vetUsado[i], vetUsado[j]);
+            // model.AddMultiplicationEquality(and_, vetUsado[i], vetUsado[j]);
 
             model.AddNoOverlap2D();
-            model.AddLessOrEqual(vetX[i] + vetDx[i], vetX[j]).OnlyEnforceIf(no_overlap_x1);
-            model.AddLessOrEqual(vetX[j] + vetDx[j], vetX[i]).OnlyEnforceIf(no_overlap_x2);
-            model.AddLessOrEqual(vetY[i] + vetDy[i], vetY[j]).OnlyEnforceIf(no_overlap_y1);
-            model.AddLessOrEqual(vetY[j] + vetDy[j], vetY[i]).OnlyEnforceIf(no_overlap_y2);
-            model.AddBoolOr({no_overlap_x1, no_overlap_x2, no_overlap_y1, no_overlap_y2}).OnlyEnforceIf({vetUsado[i], vetUsado[j]});
+            model.AddLessOrEqual(vetX[i] + vetDx[i], vetX[j])
+                .OnlyEnforceIf(no_overlap_x1);
+            model.AddLessOrEqual(vetX[j] + vetDx[j], vetX[i])
+                .OnlyEnforceIf(no_overlap_x2);
+            model.AddLessOrEqual(vetY[i] + vetDy[i], vetY[j])
+                .OnlyEnforceIf(no_overlap_y1);
+            model.AddLessOrEqual(vetY[j] + vetDy[j], vetY[i])
+                .OnlyEnforceIf(no_overlap_y2);
+            model.AddBoolOr({no_overlap_x1, no_overlap_x2, no_overlap_y1, no_overlap_y2})
+                .OnlyEnforceIf({vetUsado[i], vetUsado[j]});
 
             // x[i] < x[j] OR x[i] > x[j]+w[j] OR y[i] < y[j]
             //
@@ -274,10 +281,11 @@ bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult, VectorI &vetIt
                 BoolVar filo1 = model.NewBoolVar();
                 BoolVar filo2 = model.NewBoolVar();
 
-                model.AddLessOrEqual(vetX[i]+vetDx[i], vetX[j]).OnlyEnforceIf(filo0);
-                model.AddLessOrEqual(vetX[j]+vetDx[j], vetX[i]).OnlyEnforceIf(filo1);
+                model.AddLessOrEqual(vetX[i] + vetDx[i], vetX[j]).OnlyEnforceIf(filo0);
+                model.AddLessOrEqual(vetX[j] + vetDx[j], vetX[i]).OnlyEnforceIf(filo1);
                 model.AddLessThan(vetY[i], vetY[j]).OnlyEnforceIf(filo2);
-                model.AddBoolOr({filo0, filo1, filo2}).OnlyEnforceIf({vetUsado[i], vetUsado[j]});
+                model.AddBoolOr({filo0, filo1, filo2})
+                    .OnlyEnforceIf({vetUsado[i], vetUsado[j]});
             }
         }
     }
@@ -292,42 +300,41 @@ bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult, VectorI &vetIt
 
             Item item = instanciaG.vetItens[vetItens2[i]];
 
-            int x       = SolutionIntegerValue(response, vetX[i]);
-            int y       = SolutionIntegerValue(response, vetY[i]);
-            bool usado  = SolutionBooleanValue(response, vetUsado[i]);
+            int  x = SolutionIntegerValue(response, vetX[i]);
+            int  y = SolutionIntegerValue(response, vetY[i]);
+            bool usado = SolutionBooleanValue(response, vetUsado[i]);
 
             if(!usado)
                 continue;
 
-            //bin.addItem(vetItens[i], )
+            // bin.addItem(vetItens[i], )
             binResult.vetItemId[numItens] = vetItens2[i];
             binResult.vetItens[vetItens2[i]] = 1;
             binResult.vetPosItem[numItens] = Ponto(x, y, 0);
             binResult.vetRotacao[numItens] = Rotation(int(i > tamVet));
             binResult.volumeOcupado += instanciaG.vetItens[vetItens2[i]].volume;
-            binResult.demandaTotal  += instanciaG.vetItens[vetItens2[i]].weight;
+            binResult.demandaTotal += instanciaG.vetItens[vetItens2[i]].weight;
             binResult.numItens += 1;
             numItens += 1;
-            //std::cout<<x<<" "<<y<<"; "<<dx<<" "<<dy<<"\n";
-            //std::cout<<instanciaG.vetItens[vetItens[i]].vetDim<<"\n\n";
+            // std::cout<<x<<" "<<y<<"; "<<dx<<" "<<dy<<"\n";
+            // std::cout<<instanciaG.vetItens[vetItens[i]].vetDim<<"\n\n";
         }
 
         if(!binResult.checkFeasibility())
         {
 
-            std::cout<<"CP-SAT Encontrou Solucao Viavel!\n";
+            std::cout << "CP-SAT Encontrou Solucao Viavel!\n";
             std::cout << "ERROR, Bin NAO eh Viavel!\n";
             PRINT_DEBUGG("", "");
             exit(-1);
         }
 
         criaEPs(binResult);
-        //std::cout<<"CORRETO!\n";
+        // std::cout<<"CORRETO!\n";
         return true;
     }
-    //std::cout<<"INCORRETO!\n";
+    // std::cout<<"INCORRETO!\n";
     return false;
-
 }
 
 Resultado BinPackingCP_NS::testaCpSatBinPacking(int numItens)
@@ -340,21 +347,21 @@ Resultado BinPackingCP_NS::testaCpSatBinPacking(int numItens)
 
     double volumeOcupado = 0.0;
     double volumeVeiculo = 1.0;
-    double demanda       = 0.0;
+    double demanda = 0.0;
 
-    for(int i=0; i < instanciaG.numDim; ++i)
+    for(int i = 0; i < instanciaG.numDim; ++i)
         volumeVeiculo *= instanciaG.vetDimVeiculo[i];
 
-
-    for(int t=0; t < numItens; ++t)
+    for(int t = 0; t < numItens; ++t)
     {
-        int itemId = getRandInt(0, instanciaG.numItens-1);
+        int       itemId = getRandInt(0, instanciaG.numItens - 1);
         const int itemIdIni = itemId;
         while(vetItensSelecionados[itemId] == (int8_t)1 ||
-             (volumeOcupado+instanciaG.vetItens[itemId].volume) > volumeVeiculo/2.0 ||
-             demanda + instanciaG.vetItens[itemId].weight > instanciaG.maxPayload)
+              (volumeOcupado + instanciaG.vetItens[itemId].volume) >
+                  volumeVeiculo / 2.0 ||
+              demanda + instanciaG.vetItens[itemId].weight > instanciaG.maxPayload)
         {
-            itemId = (itemId+1)%instanciaG.numItens;
+            itemId = (itemId + 1) % instanciaG.numItens;
 
             if(itemId == itemIdIni)
             {
@@ -371,26 +378,22 @@ Resultado BinPackingCP_NS::testaCpSatBinPacking(int numItens)
 
         vetItensSelecionados[itemId] = (int8_t)1;
         volumeOcupado += instanciaG.vetItens[itemId].volume;
-        demanda       += instanciaG.vetItens[itemId].weight;
+        demanda += instanciaG.vetItens[itemId].weight;
         vetItens[t] = itemId;
-
     }
 
-    //std::cout<<"\nNum itens: "<<numItens<<"\n\n";
+    // std::cout<<"\nNum itens: "<<numItens<<"\n\n";
 
     Bin binHeu;
     binHeu.reset();
-    //binHeu.addEp(PontoZero);
-    //binHeu.numEps = 1;
+    // binHeu.addEp(PontoZero);
+    // binHeu.numEps = 1;
 
-    //std::sort(vetItens.begin(), vetItens.begin()+numItens);
-    //std::cout<<vetItens<<"\n\n";
+    // std::sort(vetItens.begin(), vetItens.begin()+numItens);
+    // std::cout<<vetItens<<"\n\n";
 
-    //if(verificaInviabilidadePares(vetItens, numItens))
+    // if(verificaInviabilidadePares(vetItens, numItens))
     {
-
-
-
 
         if(construtivoBinPacking(binHeu, vetItens, numItens, input.aphaBin, 10))
         {
@@ -401,11 +404,11 @@ Resultado BinPackingCP_NS::testaCpSatBinPacking(int numItens)
             for(int i=0; i < binHeu.numItens; ++i)
                 std::cout<<binHeu.vetPosItem[i].print()<<"\n";
             */
-            //std::cout<<binHeu.vetEp.printN(binHeu.numItens)<<"\n";
-            //std::cout << "Construtivo Encontrou Solucao Viavel!\n";
+            // std::cout<<binHeu.vetEp.printN(binHeu.numItens)<<"\n";
+            // std::cout << "Construtivo Encontrou Solucao Viavel!\n";
             if(!binHeu.checkFeasibility())
             {
-                //std::cout<<"Bin NAO eh Viavel\n";
+                // std::cout<<"Bin NAO eh Viavel\n";
                 PRINT_DEBUGG("", "");
                 exit(-1);
             }
@@ -416,7 +419,7 @@ Resultado BinPackingCP_NS::testaCpSatBinPacking(int numItens)
             return INVIAVEL;
 
         /*
-        else        
+        else
         {
             //return INVIAVEL;
 
@@ -435,30 +438,28 @@ Resultado BinPackingCP_NS::testaCpSatBinPacking(int numItens)
         }
         */
     }
-
-
 }
 
 void BinPackingCP_NS::criaEPs(SolucaoNS::Bin &bin)
 {
 
-    for(int i=0; i < bin.numItens; ++i)
+    for(int i = 0; i < bin.numItens; ++i)
     {
-        Ponto p    = bin.vetPosItem[i];
-        Item& item = instanciaG.vetItens[bin.vetItemId[i]];
+        Ponto p = bin.vetPosItem[i];
+        Item &item = instanciaG.vetItens[bin.vetItemId[i]];
 
         Array<double, 3> vetD;
 
-        for(int d=0; d < instanciaG.numDim; ++d)
+        for(int d = 0; d < instanciaG.numDim; ++d)
             vetD[d] = item.getDimRotacionada(d, bin.vetRotacao[i]);
 
-        for(int d=0; d < instanciaG.numDim; ++d)
+        for(int d = 0; d < instanciaG.numDim; ++d)
         {
             Ponto ep(p);
             ep.vetDim[d] += vetD[d];
             bool colisao = false;
 
-            for(int t=0; t < bin.numItens; ++t)
+            for(int t = 0; t < bin.numItens; ++t)
             {
                 if(epColideItem(ep, bin.vetPosItem[t], bin.vetItemId[t]))
                 {
@@ -470,45 +471,42 @@ void BinPackingCP_NS::criaEPs(SolucaoNS::Bin &bin)
             if(!colisao)
                 bin.addEp(ep);
         }
-
     }
-
 }
 
-bool BinPackingCP_NS::verificaInviabilidadePares(VectorI& vetItens, int tamVet)
+bool BinPackingCP_NS::verificaInviabilidadePares(VectorI &vetItens, int tamVet)
 {
 
-    for(int i=0; i < tamVet; ++i)
+    for(int i = 0; i < tamVet; ++i)
     {
-        Item& itemI = instanciaG.vetItens[i];
+        Item &itemI = instanciaG.vetItens[i];
 
-        for(int j=(i+1); j < tamVet; ++j)
+        for(int j = (i + 1); j < tamVet; ++j)
         {
-            Item& itemJ = instanciaG.vetItens[i];
-            bool empacotavel = false;
+            Item &itemJ = instanciaG.vetItens[i];
+            bool  empacotavel = false;
 
-            for(int r0=0; r0 <= 1; ++r0)
+            for(int r0 = 0; r0 <= 1; ++r0)
             {
                 double dim0ItemI = itemI.getDimRotacionada(0, (Rotation)r0);
                 double dim1ItemI = itemI.getDimRotacionada(1, (Rotation)r0);
 
-                for(int r1=0; r1 <= 1; ++r1)
+                for(int r1 = 0; r1 <= 1; ++r1)
                 {
                     double dim0ItemJ = itemI.getDimRotacionada(0, (Rotation)r0);
                     double dim1ItemJ = itemI.getDimRotacionada(1, (Rotation)r0);
 
-                    if((dim0ItemI+dim0ItemJ) <= instanciaG.vetDimVeiculo[0])
+                    if((dim0ItemI + dim0ItemJ) <= instanciaG.vetDimVeiculo[0])
                     {
                         empacotavel = true;
                         break;
                     }
 
-                    if((dim1ItemI+dim1ItemJ) <= instanciaG.vetDimVeiculo[1])
+                    if((dim1ItemI + dim1ItemJ) <= instanciaG.vetDimVeiculo[1])
                     {
                         empacotavel = true;
                         break;
                     }
-
                 }
 
                 if(empacotavel)
@@ -518,14 +516,12 @@ bool BinPackingCP_NS::verificaInviabilidadePares(VectorI& vetItens, int tamVet)
             if(!empacotavel)
                 return false;
         }
-
     }
 
     return true;
-
 }
 
-bool  BinPackingCP_NS::binPacking(VectorI &vetItens, int tamVet)
+bool BinPackingCP_NS::binPacking(VectorI &vetItens, int tamVet)
 {
 
     /*
@@ -539,26 +535,23 @@ bool  BinPackingCP_NS::binPacking(VectorI &vetItens, int tamVet)
     static Bin bin;
     bin.reset();
     if(input.lifo)
-        std::reverse(vetItens.begin(), vetItens.begin()+tamVet);
+        std::reverse(vetItens.begin(), vetItens.begin() + tamVet);
 
     if(construtivoBinPacking(bin, vetItens, tamVet, input.aphaBin, 10))
     {
-            //std::cout << "Construtivo Encontrou Solucao Viavel!\n";
+        // std::cout << "Construtivo Encontrou Solucao Viavel!\n";
         if(!bin.checkFeasibility())
         {
-                //std::cout<<"Bin NAO eh Viavel\n";
+            // std::cout<<"Bin NAO eh Viavel\n";
             PRINT_DEBUGG("", "");
             exit(-1);
         }
 
-            return true;
+        return true;
     }
     else
-    {//std::cout<<"Construtivo NAO Encontrou Solucao Viavel!\n";
+    { // std::cout<<"Construtivo NAO Encontrou Solucao Viavel!\n";
         bin.reset();
         return cpSatBinPacking2(bin, vetItens, tamVet);
     }
-
-
 }
-

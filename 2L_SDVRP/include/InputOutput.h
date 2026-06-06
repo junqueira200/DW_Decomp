@@ -8,97 +8,97 @@
 #ifndef INC_2L_SDVRP_INPUTOUTPUT_H
 #define INC_2L_SDVRP_INPUTOUTPUT_H
 
+#include "Commit.h"
+#include "Solucao.h"
+#include "rand.h"
 #include "string"
 #include <chrono>
-#include "rand.h"
 #include <iostream>
-#include "Solucao.h"
-#include "Commit.h"
 
 namespace ParseInputNS
 {
-    class File
+class File
+{
+  public:
+    std::string fileSol;      // X
+    std::string fileNum;      // X
+    std::string fileResulCSV; // X
+    std::string fileSolPrint;
+    std::string fileSeed; // X
+};
+
+class Input
+{
+  public:
+    std::string strInstCompleto;
+    std::string strInst;
+    bool        splitInstancia = false;
+    bool        splitVrp = false;
+    double      aphaBin = 0.15;
+    double      aphaBinEscolhaEp = 0.05;
+    double      alphaVrp = 0.3;
+    int         numItIG = 2000;
+    double      gapIgReset = 0.20;
+    bool        comprimentoAlturaIguais1 = false;
+    bool        cpSat = true;
+    double      cpSatTime = -1.0;
+    // 0 Forward, 1 Backard, 2 Bidirectional
+    int         labelingType = 0;
+    bool        lifo = false;
+    bool        mlifo = true;
+    bool        removeFromShortSide = false;
+    bool        inst2d = false;
+    bool        instOroloc3D = false;
+    bool        instOroloc3D_2 = false;
+    std::string strSolOroloc3D_2;
+    std::string strSolOroloc3D_output;
+    double      minSupportArea = 0.75;
+    double      minLeftSupportArea = 0.2;
+    bool        axleWights = true;
+    int         supportLimit = 0;
+    double      balancedLoadingD = 0.7;
+    // bool		inst3d                   = true;
+
+    File file;
+    // std::string commit = "54f84fa9027eeb1a17566368b19204f726b1e4d0";
+};
+
+class Output
+{
+  public:
+    std::string  strMsg = "CP MODEL WITHOUT ROTATION!";
+    std::string  data;
+    std::string  fileSaida;
+    unsigned int semente;
+    double       tempoCpu = 0.0;
+    double       tempoRelogio = 0.0;
+
+    void setup()
     {
-    public:
+        semente = RandNs::estado_;
+        std::time_t result = duration_cast<std::chrono::seconds>(
+                                 std::chrono::system_clock::now().time_since_epoch())
+                                 .count();
+        data = std::string(std::asctime(std::localtime(&result)));
+    }
+};
 
-        std::string fileSol;            // X
-        std::string fileNum;            // X
-        std::string fileResulCSV;       // X
-        std::string fileSolPrint;
-        std::string fileSeed;           // X
-    };
+inline Input  input;
+inline Output output;
 
-    class Input
-    {
-    public:
+void parseInput(int argc, const char *argv[]);
 
-        std::string strInstCompleto;
-        std::string strInst;
-        bool        splitInstancia           = false;
-        bool        splitVrp                 = false;
-        double      aphaBin                  = 0.15;
-        double      aphaBinEscolhaEp         = 0.05;
-        double      alphaVrp                 = 0.3;
-        int         numItIG                  = 2000;
-        double      gapIgReset               = 0.20;
-        bool        comprimentoAlturaIguais1 = false;
-        bool        cpSat                    = true;
-        double      cpSatTime                = -1.0;
-        // 0 Forward, 1 Backard, 2 Bidirectional
-        int         labelingType             = 0;
-        bool        lifo                     = false;
-        bool        mlifo                    = true;
-        bool        removeFromShortSide      = false;
-        bool 		inst2d                   = false;
-        bool 		instOroloc3D             = false;
-        bool        instOroloc3D_2           = false;
-        std::string strSolOroloc3D_2;
-        std::string strSolOroloc3D_output;
-        double      minSupportArea           = 0.75;
-        bool        axleWights               = true;
-        int         supportLimit             = 0;
-        double 		balancedLoadingD         = 0.7;
-        //bool		inst3d                   = true;
+void escreveFileNum(const std::string &fileNum);
+void escreveFileResulCsv(const SolucaoNS::Solucao &sol,
+                         const std::string        &fileResulCSV,
+                         double                    tempoCpu);
+void escreveFileSeed(const std::string &fileSeed);
+void escreveFileSol(const SolucaoNS::Solucao &sol, const std::string &fileSol);
+void escreveFileSolPrint(const SolucaoNS::Solucao &sol, const std::string &fileSol);
+void escreveSaidas(const SolucaoNS::Solucao &best, double tempoCpu);
 
-        File file;
-        //std::string commit = "54f84fa9027eeb1a17566368b19204f726b1e4d0";
+std::string getNomeInstancia(std::string str);
 
+} // namespace ParseInputNS
 
-    };
-
-    class Output
-    {
-    public:
-        std::string strMsg = "CP MODEL WITHOUT ROTATION!";
-        std::string  data;
-        std::string  fileSaida;
-        unsigned int semente;
-        double       tempoCpu = 0.0;
-        double       tempoRelogio = 0.0;
-
-        void setup()
-        {
-            semente = RandNs::estado_;
-            std::time_t result = duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-            data = std::string(std::asctime(std::localtime(&result)));
-        }
-    };
-
-    inline Input input;
-    inline Output output;
-
-    void parseInput(int argc, const char* argv[]);
-
-    void escreveFileNum(const std::string &fileNum);
-    void escreveFileResulCsv(const SolucaoNS::Solucao &sol, const std::string &fileResulCSV, double tempoCpu);
-    void escreveFileSeed(const std::string &fileSeed);
-    void escreveFileSol(const SolucaoNS::Solucao &sol, const std::string &fileSol);
-    void escreveFileSolPrint(const SolucaoNS::Solucao &sol, const std::string &fileSol);
-    void escreveSaidas(const SolucaoNS::Solucao &best, double tempoCpu);
-
-
-    std::string getNomeInstancia(std::string str);
-
-}
-
-#endif //INC_2L_SDVRP_INPUTOUTPUT_H
+#endif // INC_2L_SDVRP_INPUTOUTPUT_H

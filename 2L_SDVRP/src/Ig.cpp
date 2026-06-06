@@ -8,11 +8,11 @@
  * ****************************************/
 
 #include "Ig.h"
-#include "Construtivo.h"
-#include "Instancia.h"
-#include "InputOutput.h"
-#include "rand.h"
 #include "BuscaLocal.h"
+#include "Construtivo.h"
+#include "InputOutput.h"
+#include "Instancia.h"
+#include "rand.h"
 
 using namespace SolucaoNS;
 using namespace ConstrutivoNS;
@@ -25,17 +25,17 @@ bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
 {
 
     std::string strError;
-    Solucao sol(instanciaG);
-    int ultimaA = 0;
+    Solucao     sol(instanciaG);
+    int         ultimaA = 0;
 
-    for(int i=0; i < 500; ++i)
+    for(int i = 0; i < 500; ++i)
     {
         sol.reset();
         if(construtivoVrp(sol, input.alphaVrp, input.aphaBin))
         {
             if(!sol.verificaSol(strError))
             {
-                std::cout<<"ERROR\n"<<strError<<"\n";
+                std::cout << "ERROR\n" << strError << "\n";
                 throw "ERROR";
             }
 
@@ -44,39 +44,37 @@ bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
         }
     }
 
-/*    bool ret = best.verificaSol(strError);
-    if(!ret)
-    {
-        std::cout<<strError<<"\n\n";
-        return false;
-    }
+    /*    bool ret = best.verificaSol(strError);
+        if(!ret)
+        {
+            std::cout<<strError<<"\n\n";
+            return false;
+        }
 
-    return true;*/
-
+        return true;*/
 
     if(!best.verificaSol(strError))
     {
-        std::cout<<strError<<"\n\n";
+        std::cout << strError << "\n\n";
         return false;
     }
 
-    for(int i=0; i < input.numItIG; ++i)
+    for(int i = 0; i < input.numItIG; ++i)
     {
-        for(int k=0; k < 2; ++k)
+        for(int k = 0; k < 2; ++k)
         {
-            int r = getRandInt(0, instanciaG.numVeiculos-1);
+            int r = getRandInt(0, instanciaG.numVeiculos - 1);
             while(sol.vetRota[r].numPos == 2)
-                r = (r+1)%instanciaG.numVeiculos;
+                r = (r + 1) % instanciaG.numVeiculos;
 
             rmRota(sol, r);
         }
-
 
         if(!construtivoVrp(sol, input.alphaVrp, input.aphaBin))
             sol.copiaSolucao(best);
         else
         {
-            //std::cout<<"Viavel!\n";
+            // std::cout<<"Viavel!\n";
             rvnd(sol);
 
             if(sol.distTotal < best.distTotal)
@@ -87,19 +85,19 @@ bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
 
             else if(sol.distTotal > best.distTotal)
             {
-                double gap = ((sol.distTotal-best.distTotal)/best.distTotal);
+                double gap = ((sol.distTotal - best.distTotal) / best.distTotal);
                 if(gap > input.gapIgReset)
                     sol.copiaSolucao(best);
             }
 
-            //std::cout<<"\t"<<sol.distTotal<<"\n\n";
+            // std::cout<<"\t"<<sol.distTotal<<"\n\n";
         }
 
-        //if((i%1000) == 0)
-        //    std::cout<<"MELHOR SOL: "<<best.distTotal<<"\n\n";
+        // if((i%1000) == 0)
+        //     std::cout<<"MELHOR SOL: "<<best.distTotal<<"\n\n";
     }
 
-    //std::cout<<sol<<"\n\n";
+    // std::cout<<sol<<"\n\n";
 
     /*
     std::cout<<sol<<"\n\n";
@@ -137,6 +135,6 @@ bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
         }
     }*/
 
-    //std::cout<<"MELHOR SOL: "<<best.distTotal<<"\n\n";
+    // std::cout<<"MELHOR SOL: "<<best.distTotal<<"\n\n";
     return sol.verificaSol(strError);
 }

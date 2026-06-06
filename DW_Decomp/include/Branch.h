@@ -15,33 +15,35 @@
 
 namespace BranchNS
 {
-    class BranchInter
-    {
-    public:
+class BranchInter
+{
+  public:
+    ~BranchInter() = default;
+    virtual int operator()(const DW_DecompNS::DW_DecompNode *const node,
+                           DW_DecompNS::AuxData                   &auxVet) = 0;
+};
 
-        ~BranchInter()=default;
-        virtual int operator()(const DW_DecompNS::DW_DecompNode* const node, DW_DecompNS::AuxData &auxVet)=0;
-    };
+class StrongBranch : public BranchInter
+{
+  public:
+    ~StrongBranch() = default;
+    int operator()(const DW_DecompNS::DW_DecompNode *const node,
+                   DW_DecompNS::AuxData                   &auxVet) override;
+};
 
-    class StrongBranch : public BranchInter
-    {
-    public:
-        ~StrongBranch()=default;
-        int operator()(const DW_DecompNS::DW_DecompNode* const node, DW_DecompNS::AuxData &auxVet) override;
-    };
+class SimpleStrongBranch : public BranchInter
+{
+  public:
+    ~SimpleStrongBranch() = default;
+    int operator()(const DW_DecompNS::DW_DecompNode *const node,
+                   DW_DecompNS::AuxData                   &auxVet) override;
+};
 
-    class SimpleStrongBranch : public BranchInter
-    {
-    public:
-        ~SimpleStrongBranch()=default;
-        int operator()(const DW_DecompNS::DW_DecompNode* const node, DW_DecompNS::AuxData &auxVet) override;
-    };
+struct BranchVar
+{
+    int    varId = -1;
+    double minLB = -std::numeric_limits<double>::infinity();
+};
+} // namespace BranchNS
 
-    struct BranchVar
-    {
-        int varId    = -1;
-        double minLB = -std::numeric_limits<double>::infinity();
-    };
-}
-
-#endif //DW_BRANCH_H
+#endif // DW_BRANCH_H

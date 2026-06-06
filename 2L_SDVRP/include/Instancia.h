@@ -8,122 +8,122 @@
 #ifndef INC_2L_SDVRP_INSTANCIA_H
 #define INC_2L_SDVRP_INSTANCIA_H
 
-#include <iostream>
-#include <string>
-#include <map>
-#include "safe_vector.h"
-#include "safe_matrix.h"
-#include "sefe_array.h"
 #include "Constants.h"
+#include "safe_matrix.h"
+#include "safe_vector.h"
+#include "sefe_array.h"
 #include "string"
+#include <iostream>
+#include <map>
+#include <string>
 
 namespace InstanceNS
-{   // 0->0
-    // 2 -> 1
-    // 2 -> 2
-    enum Rotation
-    {
-        Rot0 = 0,  // LWH
-        Rot1,      // WLH
-        Rot2,      // LHW
-        Rot3,      // WHL
-        Rot4,      // HLW
-        Rot5       // HWL
-    };
+{ // 0->0
+// 2 -> 1
+// 2 -> 2
+enum Rotation
+{
+    Rot0 = 0, // LWH
+    Rot1,     // WLH
+    Rot2,     // LHW
+    Rot3,     // WHL
+    Rot4,     // HLW
+    Rot5      // HWL
+};
 
-    class Item
-    {
-    public:
+class Item
+{
+  public:
+    Array<double, 3> vetDim; // Length, width, height
+    double           volume = 0.0;
+    double           weight = 0.0;
+    double           weightForce = 0.0;
+    bool             fragility = false;
+    int              customer = -1;
+    int              oroloc3D_item_id = -1;
 
-        Array<double,3> vetDim;    // Length, width, height
-        double volume        = 0.0;
-        double weight        = 0.0;
-        double weightForce = 0.0;
-        bool fragility       = false;
-        int customer         = -1;
-        int oroloc3D_item_id = -1;
+    Item() = default;
+    Item(double x, double y, double z, double peso_);
+    void        set(double x, double y, double z);
+    std::string print(bool printVol = false);
+    double      getDimRotacionada(int d, Rotation r);
+};
 
-        Item()=default;
-        Item(double x, double y, double z, double peso_);
-        void set(double x, double y, double z);
-        std::string print(bool printVol=false);
-        double getDimRotacionada(int d, Rotation r);
+struct TW
+{
+    double ini = 0.0, fim = INF_Double;
+};
 
-    };
+class Instance
+{
+  public:
+    std::string nome;
+    int         numClientes = 0;
+    int         numItens = 0;
+    Vector<int> vetNumItensPorCli;
+    int         numVeiculos = 0;
+    int         numDim = 2;
+    int         numRotation = 6;
+    double      maxPayload = 0;
+    double      minSupport = 0.75;
+    double      minLR_Support = 0.12;
 
-    struct TW
-    {
-        double ini=0.0, fim=INF_Double;
-    };
+    Array<double, 3> vetDimVeiculo;
+    // double veicAltura = 0.0;
+    // double veicLargura = 0.0;
 
-    class Instance
-    {
-    public:
+    bool split = false;
+    bool packing = true;
 
-        std::string nome;
-        int numClientes = 0;
-        int numItens    = 0;
-        Vector<int> vetNumItensPorCli;
-        int numVeiculos = 0;
-        int numDim = 2;
-        int numRotation = 6;
-        double maxPayload = 0;
-        double minSupport = 0.75;
-        double minLR_Support = 0.12;
+    Matrix<double> matDist;
+    Matrix<double> matTempo;
+    Vector<TW>     vetTw;
 
-        Array<double,3> vetDimVeiculo;
-        //double veicAltura = 0.0;
-        //double veicLargura = 0.0;
+    Vector<Item> vetItens;
+    VectorD      vetPesoItens;
+    VectorD      vetMinDimItens;
 
-        bool split      = false;
-        bool packing    = true;
+    int maxNumItensPorClie = 0;
 
-        Matrix<double> matDist;
-        Matrix<double> matTempo;
-        Vector<TW> vetTw;
+    // Vector<double> vetItemAltura;
+    // Vector<double> vetItemLargura;
+    // Vector<double> vetItemArea;
 
-        Vector<Item> vetItens;
-        VectorD vetPesoItens;
-        VectorD vetMinDimItens;
+    Vector<double> vetDemandaCliente;
 
-        int maxNumItensPorClie = 0;
+    Vector<int> vetItemCliente;    // Indica o cliente dado um item; mat[itemId] = cliente
+    Matrix<int> matCliItensIniFim; // Indica o id Inicial e id Final do primeiro e ultimo
+                                   // item de um cliente; mat[clienteId,0] = iten0;
+                                   // mat[clienteId,1] = itenFim
+    Vector<int>                vetOrderId;     // Indicates for every item, its orderId
+    std::map<int, Vector<int>> mapOrderIdItem; // Maps orderId to its items
+    std::map<int, int>         mapOrderIdCust;
+    std::map<int, int> mapItem_IdItem; // Maps original item id to itemId of the instance
+    std::map<int, int> mapCustomer_idToCustomer; // Maps the original customer_id to the
+                                                 // customer of the instance
+    std::map<int, int> mapCustomerToCustomer_id; // Maps the  customer of the instance to
+                                                 // the original customer_id
 
+    Instance();
+    Instance(int numClientes_, int numItens_, int numVeiculos_);
+    void atualizaVetMinDimItens();
+};
 
-        //Vector<double> vetItemAltura;
-        //Vector<double> vetItemLargura;
-        //Vector<double> vetItemArea;
+void   read2dInstance(const std::string &strFile);
+void   read3dInstance(const std::string &strFile);
+void   readOroloc3D(const std::string &strFile);
+void   readOroloc3D2(const std::string &strFile);
+int    copiaItensCliente(int cliente, VectorI &vetItens);
+int    copiaItensClientes(VectorI &vetClientes,
+                          int      tam,
+                          VectorI &vetItens,
+                          bool     push = false);
+double calculaDistancia(VectorI &vet, int tam);
+int    generateRandomListOfItems(int numItens, VectorI &vetItems);
 
-        Vector<double> vetDemandaCliente;
+inline Instance                                    instanciaG;
+inline static const Array<InstanceNS::Rotation, 2> vetRot = {Rot0, Rot1}; //, Rot2};
+// std::string printItem(int itemId);
+} // namespace InstanceNS
 
-        Vector<int> vetItemCliente;      // Indica o cliente dado um item; mat[itemId] = cliente
-        Matrix<int> matCliItensIniFim;   // Indica o id Inicial e id Final do primeiro e ultimo item de um cliente; mat[clienteId,0] = iten0; mat[clienteId,1] = itenFim
-        Vector<int> vetOrderId;                     // Indicates for every item, its orderId
-        std::map<int, Vector<int>> mapOrderIdItem;  // Maps orderId to its items
-        std::map<int,int> mapOrderIdCust;
-        std::map<int, int> mapItem_IdItem;              // Maps original item id to itemId of the instance
-        std::map<int, int> mapCustomer_idToCustomer; // Maps the original customer_id to the customer of the instance
-        std::map<int, int> mapCustomerToCustomer_id; // Maps the  customer of the instance to the original customer_id
-
-        Instance();
-        Instance(int numClientes_, int numItens_, int numVeiculos_);
-        void atualizaVetMinDimItens();
-
-    };
-
-    void read2dInstance(const std::string &strFile);
-    void read3dInstance(const std::string &strFile);
-    void readOroloc3D(const std::string &strFile);
-    void readOroloc3D2(const std::string &strFile);
-    int copiaItensCliente(int cliente, VectorI& vetItens);
-    int copiaItensClientes(VectorI& vetClientes, int tam, VectorI& vetItens, bool push=false);
-    double calculaDistancia(VectorI& vet, int tam);
-    int generateRandomListOfItems(int numItens, VectorI& vetItems);
-
-
-
-    inline Instance instanciaG;
-    inline static const Array<InstanceNS::Rotation, 2> vetRot = {Rot0, Rot1};//, Rot2};
-    //std::string printItem(int itemId);
-}
-
-#endif //INC_2L_SDVRP_INSTANCIA_H
+#endif // INC_2L_SDVRP_INSTANCIA_H

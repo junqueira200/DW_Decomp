@@ -14,23 +14,24 @@
 using namespace DW_DecompNS;
 using namespace BranchAndPriceNS;
 
-int BranchNS::StrongBranch::operator()(const DW_DecompNS::DW_DecompNode *const node, DW_DecompNS::AuxData &auxVet)
+int BranchNS::StrongBranch::operator()(const DW_DecompNS::DW_DecompNode *const node,
+                                       DW_DecompNS::AuxData                   &auxVet)
 {
-    std::cout<<"StrongBranch\n";
+    std::cout << "StrongBranch\n";
 
     Eigen::VectorXd vetSol = node->vetSolX;
-    BranchVar best;
+    BranchVar       best;
 
     const int numCandC = std::min((int)vetSol.size(), NumCandidatesBranch);
 
-    for(int i=0; i < numCandC; ++i)
+    for(int i = 0; i < numCandC; ++i)
     {
         BranchVar bVar;
 
         int id = getMostFractionVariable(vetSol);
         if(id == -1)
         {
-            std::cout<<"Solution should not be integer!\n";
+            std::cout << "Solution should not be integer!\n";
             throw "ERROR";
         }
 
@@ -41,8 +42,8 @@ int BranchNS::StrongBranch::operator()(const DW_DecompNS::DW_DecompNode *const n
         cut.vetX.coeffRef(id) = 1;
 
         cut.sense = '>';
-        cut.rhs   = std::ceil(vetSol[id]);
-        DW_DecompNode* nodeAux = new DW_DecompNode(*node);
+        cut.rhs = std::ceil(vetSol[id]);
+        DW_DecompNode *nodeAux = new DW_DecompNode(*node);
         addMasterCut(cut, *nodeAux, -1, true);
         auxVet.updateSizes(*nodeAux);
 
@@ -57,7 +58,7 @@ int BranchNS::StrongBranch::operator()(const DW_DecompNS::DW_DecompNode *const n
         nodeAux = new DW_DecompNode(*node);
 
         cut.sense = '<';
-        cut.rhs   = std::floor(vetSol[id]);
+        cut.rhs = std::floor(vetSol[id]);
 
         addMasterCut(cut, *nodeAux, -1, true);
         status = nodeAux->columnGeneration(auxVet);
@@ -75,15 +76,14 @@ int BranchNS::StrongBranch::operator()(const DW_DecompNS::DW_DecompNode *const n
         delete nodeAux;
     }
 
-    std::cout<<"Var("<<best.varId<<") LB("<<best.minLB<<")\n\n";
+    std::cout << "Var(" << best.varId << ") LB(" << best.minLB << ")\n\n";
 
     return best.varId;
-
 }
 
-int BranchNS::SimpleStrongBranch::operator()(const DW_DecompNS::DW_DecompNode *const node, AuxData &auxVet)
+int BranchNS::SimpleStrongBranch::operator()(const DW_DecompNS::DW_DecompNode *const node,
+                                             AuxData &auxVet)
 {
 
     return getMostFractionVariable(node->vetSolX);
-
 }

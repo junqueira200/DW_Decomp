@@ -8,38 +8,52 @@
 #ifndef DW_DECOMP_AUX_H
 #define DW_DECOMP_AUX_H
 
-#include <cstring>
-#include <numeric>
-#include <algorithm>
 #include "safe_vector.h"
 #include "sefe_array.h"
-#include <tuple>
+#include <algorithm>
 #include <cmath>
+#include <cstring>
+#include <numeric>
 #include <sstream>
-//#include <Eigen/Eigen>
+#include <tuple>
+// #include <Eigen/Eigen>
 
 #define __PRETTYFILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-#define PRINT_DEBUGG(inicio, texto) std::cout<<inicio<<"DEBUG: "<<texto<<"  FILE: "<<__PRETTYFILE__<<"  FUNC: "<<__PRETTY_FUNCTION__<<"  LINHA: "<<__LINE__<<"\n";
+#define PRINT_DEBUGG(inicio, texto)                                                      \
+    std::cout << inicio << "DEBUG: " << texto << "  FILE: " << __PRETTYFILE__            \
+              << "  FUNC: " << __PRETTY_FUNCTION__ << "  LINHA: " << __LINE__ << "\n";
 
-#define EXIT_PRINT() PRINT_DEBUGG("",""); exit(-1);
-#define PRINT_THROW() PRINT_DEBUGG("",""); throw "ERROR";
+#define EXIT_PRINT()                                                                     \
+    PRINT_DEBUGG("", "");                                                                \
+    exit(-1);
+#define PRINT_THROW()                                                                    \
+    PRINT_DEBUGG("", "");                                                                \
+    throw "ERROR";
 
-#define assertm(exp, msg) if(exp){std::cout<<msg<<"\n\nLINE: "<<__LINE__<<"\nFILE: "<<__PRETTYFILE__<<"\nFUNC: "<<__PRETTY_FUNCTION__<<"\n\n"; throw "ERROR";}
+#define assertm(exp, msg)                                                                \
+    if(exp)                                                                              \
+    {                                                                                    \
+        std::cout << msg << "\n\nLINE: " << __LINE__ << "\nFILE: " << __PRETTYFILE__     \
+                  << "\nFUNC: " << __PRETTY_FUNCTION__ << "\n\n";                        \
+        throw "ERROR";                                                                   \
+    }
 
 #define INLINE inline __attribute__((always_inline))
 
-template<typename T>
-void applyPermutation(Vector<T> &vet, const std::vector<int> &permutation, const size_t tam)
+template <typename T>
+void applyPermutation(Vector<T>              &vet,
+                      const std::vector<int> &permutation,
+                      const size_t            tam)
 {
 
     static std::vector<bool> vetDone(vet.size());
     if(vetDone.size() < tam)
         vetDone.resize(tam);
 
-    for(size_t i=0; i < tam; ++i)
+    for(size_t i = 0; i < tam; ++i)
         vetDone[i] = false;
 
-    for(size_t i=0; i < tam; ++i)
+    for(size_t i = 0; i < tam; ++i)
     {
         if(vetDone[i])
             continue;
@@ -56,38 +70,39 @@ void applyPermutation(Vector<T> &vet, const std::vector<int> &permutation, const
             j = permutation[j];
         }
     }
-
 }
-
 
 /**
  * Sort vet1 utilizando valores de vet0
  */
-template<typename T>
+template <typename T>
 void sortDoisVets(Vector<T> &vet0, VectorI &vet1, const size_t tam, const bool decresente)
 {
     static std::vector<int> indices(vet0.size());
     if(indices.size() < tam)
         indices.resize(tam);
 
-
-    std::iota(indices.begin(), indices.begin()+tam, 0);
+    std::iota(indices.begin(), indices.begin() + tam, 0);
 
     if(decresente)
-        std::sort(indices.begin(), indices.begin()+tam, [&](size_t a, size_t b)->bool{return vet0[a] > vet0[b];});
+        std::sort(indices.begin(),
+                  indices.begin() + tam,
+                  [&](size_t a, size_t b) -> bool { return vet0[a] > vet0[b]; });
     else
-        std::sort(indices.begin(), indices.begin()+tam, [&](size_t a, size_t b)->bool{return vet0[a] < vet0[b];});
+        std::sort(indices.begin(),
+                  indices.begin() + tam,
+                  [&](size_t a, size_t b) -> bool { return vet0[a] < vet0[b]; });
 
     applyPermutation(vet0, indices, tam);
     applyPermutation(vet1, indices, tam);
 }
 
-template<typename T, size_t TAM>
-std::tuple<int,double> getMinArray(const Array<T,TAM> &vet, int tam)
+template <typename T, size_t TAM>
+std::tuple<int, double> getMinArray(const Array<T, TAM> &vet, int tam)
 {
     auto tuple = std::make_tuple(0, vet[0]);
 
-    for(int i=1; i < tam; ++i)
+    for(int i = 1; i < tam; ++i)
     {
         if(vet[i] < get<1>(tuple))
         {
@@ -99,23 +114,22 @@ std::tuple<int,double> getMinArray(const Array<T,TAM> &vet, int tam)
     return std::move(tuple);
 }
 
-
-inline __attribute__((always_inline))
-bool doubleEqual(double a, double b, double ep=std::numeric_limits<double>::epsilon())
+inline __attribute__((always_inline)) bool
+doubleEqual(double a, double b, double ep = std::numeric_limits<double>::epsilon())
 {
-    return std::fabs(a-b) < ep;
+    return std::fabs(a - b) < ep;
 }
 
-inline __attribute__((always_inline))
-bool doubleLess(double a, double b, double ep=1E-3)
+inline __attribute__((always_inline)) bool
+doubleLess(double a, double b, double ep = 1E-3)
 {
-    return (a-b) <-ep;
+    return (a - b) < -ep;
 }
 
-inline __attribute__((always_inline))
-bool doubleGreater(double a, double b, double ep=std::numeric_limits<double>::epsilon())
+inline __attribute__((always_inline)) bool
+doubleGreater(double a, double b, double ep = std::numeric_limits<double>::epsilon())
 {
-    return (a-b) > ep;
+    return (a - b) > ep;
 }
 
 /*
@@ -159,24 +173,21 @@ std::ostream & operator << (std::ostream & s, const TempSpVetPrint<T,option> &te
 }
 */
 
-template<typename T>
-std::string printVet(const Vector<T> &vet, int tam)
+template <typename T> std::string printVet(const Vector<T> &vet, int tam)
 {
     std::string str;
-    for(int i=0; i < tam; ++i)
+    for(int i = 0; i < tam; ++i)
         str += std::to_string(vet[i]) + " ";
 
     return str;
 }
 
-template<typename T>
-std::string getStrFromObj(T& obj)
+template <typename T> std::string getStrFromObj(T &obj)
 {
 
     std::ostringstream os;
-    os<<obj;
+    os << obj;
     return os.str();
 }
 
-
-#endif //DW_DECOMP_AUX_H
+#endif // DW_DECOMP_AUX_H

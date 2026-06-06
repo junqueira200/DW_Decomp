@@ -6,8 +6,8 @@ namespace Algorithms
 {
 struct CPSolverParams
 {
-    int Threads = 4;
-    int Seed = 0;
+    int  Threads = 4;
+    int  Seed = 0;
     bool LogFlag = false;
     bool Presolve = true;
 
@@ -15,5 +15,5 @@ struct CPSolverParams
     bool EnableNoOverlap2DFloor = false;
 };
 
-}
-}
+} // namespace Algorithms
+} // namespace ContainerLoading

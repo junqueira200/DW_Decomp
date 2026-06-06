@@ -12,23 +12,21 @@
 
 using namespace DW_DecompNS;
 
-
 DW_DecompNS::DW_DecompNode *SearchStrategyNS::DepthFirst::pop()
 {
     if(nodeList.empty())
         return nullptr;
 
-    DW_DecompNode* node = nodeList.back();
+    DW_DecompNode *node = nodeList.back();
     nodeList.pop_back();
     return node;
 }
-
 
 double SearchStrategyNS::DepthFirst::getMin()
 {
     double min = std::numeric_limits<double>::infinity();
 
-    for(DW_DecompNode* node:nodeList)
+    for(DW_DecompNode *node : nodeList)
     {
         if(node->funcObj < min)
             min = node->funcObj;
@@ -42,7 +40,7 @@ double SearchStrategyNS::DepthFirst::getMax()
 
     double max = -std::numeric_limits<double>::infinity();
 
-    for(DW_DecompNode* node:nodeList)
+    for(DW_DecompNode *node : nodeList)
     {
         if(node->funcObj > max)
             max = node->funcObj;
@@ -53,7 +51,7 @@ double SearchStrategyNS::DepthFirst::getMax()
 
 SearchStrategyNS::DepthFirst::~DepthFirst()
 {
-    for(DW_DecompNode* node:nodeList)
+    for(DW_DecompNode *node : nodeList)
         delete node;
 }
 
@@ -62,7 +60,7 @@ DW_DecompNS::DW_DecompNode *SearchStrategyNS::BreadthFirst::pop()
     if(nodeList.empty())
         return nullptr;
 
-    DW_DecompNode* node = nodeList.front();
+    DW_DecompNode *node = nodeList.front();
     nodeList.pop_front();
 
     return node;
@@ -72,7 +70,7 @@ double SearchStrategyNS::BreadthFirst::getMin()
 {
     double min = std::numeric_limits<double>::infinity();
 
-    for(DW_DecompNode* node:nodeList)
+    for(DW_DecompNode *node : nodeList)
     {
         if(node->funcObj < min)
             min = node->funcObj;
@@ -86,7 +84,7 @@ double SearchStrategyNS::BreadthFirst::getMax()
 
     double max = -std::numeric_limits<double>::infinity();
 
-    for(DW_DecompNode* node:nodeList)
+    for(DW_DecompNode *node : nodeList)
     {
         if(node->funcObj > max)
             max = node->funcObj;
@@ -98,16 +96,16 @@ double SearchStrategyNS::BreadthFirst::getMax()
 SearchStrategyNS::BreadthFirst::~BreadthFirst()
 {
 
-    for(DW_DecompNode* node:nodeList)
+    for(DW_DecompNode *node : nodeList)
         delete node;
 }
 
 DW_DecompNS::DW_DecompNode *SearchStrategyNS::MinFuncObj::pop()
 {
-   if(setDecompNode.empty())
-       return nullptr;
+    if(setDecompNode.empty())
+        return nullptr;
 
-    DW_DecompNode* node = (*setDecompNode.begin());
+    DW_DecompNode *node = (*setDecompNode.begin());
     setDecompNode.erase(node);
     return node;
 }
@@ -140,6 +138,6 @@ double SearchStrategyNS::MinFuncObj::getMax()
 SearchStrategyNS::MinFuncObj::~MinFuncObj()
 {
 
-    for(DW_DecompNode* node:setDecompNode)
+    for(DW_DecompNode *node : setDecompNode)
         delete node;
 }

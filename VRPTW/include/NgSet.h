@@ -5,49 +5,42 @@
 #include "LabelingConstants.h"
 #include <bitset>
 
-
 typedef std::vector<std::bitset<LabelingAlgorithmNS::NumMaxCust>> VetBitSet;
 
 namespace LabelingAlgorithmNS
 {
 
-    class NgSet
+class NgSet
+{
+  public:
+    // Eigen::VectorX<std::bitset<NumMaxCust>>
+    VetBitSet vetNgSet;
+    int       numCust = NumMaxCust;
+    int       ngSetSize = NgSetSize;
+    bool      active = true;
+
+    NgSet();
+    NgSet(int numCust, int ngSetSize);
+
+    inline __attribute__((always_inline)) bool contain(int i, int j) const
     {
-    public:
-
-        //Eigen::VectorX<std::bitset<NumMaxCust>>
-        VetBitSet vetNgSet;
-        int numCust   = NumMaxCust;
-        int ngSetSize = NgSetSize;
-        bool active   = true;
-
-        NgSet();
-        NgSet(int numCust, int ngSetSize);
-
-        inline __attribute__((always_inline))
-        bool contain(int i, int j) const
-        {
-            //return false;
-            if(!active)
-                return true;
-            return (bool)vetNgSet[i][j];
-        };
-
-        void setNgSets(const EigenMatrixRowD &matDist);
+        // return false;
+        if(!active)
+            return true;
+        return (bool)vetNgSet[i][j];
     };
 
-    struct Node
-    {
-        int       i;
-        FloatType dist;
+    void setNgSets(const EigenMatrixRowD &matDist);
+};
 
-        bool operator<(const Node &node) const
-        {
-            return dist < node.dist;
-        }
-    };
+struct Node
+{
+    int       i;
+    FloatType dist;
 
+    bool operator<(const Node &node) const { return dist < node.dist; }
+};
 
-}
+} // namespace LabelingAlgorithmNS
 
 #endif // NGSET_H

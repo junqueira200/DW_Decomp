@@ -4,20 +4,18 @@
 #ifndef DW_ALARM_H
 #define DW_ALARM_H
 
-#include <unistd.h>
 #include <csignal>
+#include <iostream>
+#include <unistd.h>
 
 inline bool alarm_stopG = false;
-//inline unsigned int alarmPeriodG = 5*60; // 5 min
-
+// inline unsigned int alarmPeriodG = 5*60; // 5 min
 
 void on_alarm(int signal)
 {
     alarm_stopG = true;
-    std::cout<<"TIME OUT!\n\n";
+    std::cout << "TIME OUT!\n\n";
 }
-
-
 
 void setAlarm(unsigned int alarmPeriod)
 {
@@ -31,4 +29,4 @@ void setAlarm(unsigned int alarmPeriod)
     }
 }
 
-#endif //DW_ALARM_H
+#endif // DW_ALARM_H

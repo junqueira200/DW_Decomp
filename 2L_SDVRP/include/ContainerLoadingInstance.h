@@ -22,25 +22,20 @@ class Group
     std::vector<Cuboid> Items;
 
     Group() = default;
-    Group(size_t internId,
-          size_t externId,
-          double xPos,
-          double yPos,
-          double totalWeight,
-          double totalVolume,
-          double totalArea,
+    Group(size_t              internId,
+          size_t              externId,
+          double              xPos,
+          double              yPos,
+          double              totalWeight,
+          double              totalVolume,
+          double              totalArea,
           std::vector<Cuboid> items)
-    : InternId(internId),
-      ExternId(externId),
-      PositionX(xPos),
-      PositionY(yPos),
-      TotalWeight(totalWeight),
-      TotalVolume(totalVolume),
-      TotalArea(totalArea),
-      Items(items)
+        : InternId(internId), ExternId(externId), PositionX(xPos), PositionY(yPos),
+          TotalWeight(totalWeight), TotalVolume(totalVolume), TotalArea(totalArea),
+          Items(items)
     {
     }
 };
 
-}
-}
+} // namespace Model
+} // namespace ContainerLoading

@@ -42,14 +42,14 @@ enum class CutType
 struct MIPSolverParams
 {
   public:
-    int Threads = 8;
+    int    Threads = 8;
     double Seed = 100;
-    int EnableLazyConstraints = 1;
-    int DisablePreCrush = 1;
-    int CutGeneration = -1;
-    int NumericFocus = 0;
+    int    EnableLazyConstraints = 1;
+    int    DisablePreCrush = 1;
+    int    CutGeneration = -1;
+    int    NumericFocus = 0;
     double TimeLimit = 12.0 * 3600.0;
-    int MaxSolutions = std::numeric_limits<int>::max();
+    int    MaxSolutions = std::numeric_limits<int>::max();
 
     MIPSolverParams() = default;
 };
@@ -124,14 +124,14 @@ struct BranchAndCutParams
     unsigned int CutSeparationMaxNodes = std::numeric_limits<unsigned int>::max();
     unsigned int CutSeparationThreshold = 100;
 
-    bool EnableMinVehicleLifting = true;
+    bool   EnableMinVehicleLifting = true;
     double MinVehicleLiftingThreshold = 0.5;
 
-    bool ActivateIntraRouteImprovement = false;
+    bool         ActivateIntraRouteImprovement = false;
     unsigned int IntraRouteFullEnumThreshold = 0;
 
-    bool ActivateSetPartitioningHeuristic = true;
-    unsigned int SetPartitioningHeuristicThreshold = 20;
+    bool              ActivateSetPartitioningHeuristic = true;
+    unsigned int      SetPartitioningHeuristicThreshold = 20;
     StartSolutionType StartSolution = StartSolutionType::None;
 
     std::unordered_map<CallType, double> TimeLimits = {
@@ -152,15 +152,16 @@ struct BranchAndCutParams
 class InputParameters
 {
   public:
-    MIPSolverParams MIPSolver;
-    BranchAndCutParams BranchAndCut;
-    UserCutParams UserCut;
+    MIPSolverParams        MIPSolver;
+    BranchAndCutParams     BranchAndCut;
+    UserCutParams          UserCut;
     ContainerLoadingParams ContainerLoading;
 
     void SetLoadingFlags() { ContainerLoading.LoadingProblem.SetFlags(); };
 
-    [[nodiscard]] double DetermineMaxRuntime(BranchAndCutParams::CallType callType,
-                                             double residualTime = std::numeric_limits<double>::max()) const
+    [[nodiscard]] double
+    DetermineMaxRuntime(BranchAndCutParams::CallType callType,
+                        double residualTime = std::numeric_limits<double>::max()) const
     {
         return std::min(BranchAndCut.TimeLimits.at(callType), residualTime);
     }
@@ -171,7 +172,7 @@ class InputParameters
     }
 };
 
-}
-}
+} // namespace Algorithms
+} // namespace VehicleRouting
 
 // NOLINTEND(readability-magic-numbers)
