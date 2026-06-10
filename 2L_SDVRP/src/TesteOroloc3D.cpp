@@ -506,7 +506,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         double ompStart = omp_get_wtime();
         // TODO remove comment!
         bool feasibleSolConst = construtivoBinPacking(bin2, vetItems, bin.numItens,
-                                input.aphaBin, 2500, &solCp.vetRota[veic]);
+                                input.aphaBin, std::numeric_limits<int>::max(), &solCp.vetRota[veic]);
         if(!feasibleSolConst)
             bin2.reset();
 

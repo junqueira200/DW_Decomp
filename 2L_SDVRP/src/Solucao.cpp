@@ -766,7 +766,7 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp)
 
         if(support < instanciaG.minSupport)
         {
-            std::cout << "support: " << support << "\n";
+            //std::cout << "support: " << support << "\n";
             return false;
         }
 
@@ -779,11 +779,13 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp)
         sumRightTemp += right;
     }
 
+    /*
     for(int i = 0; i < numItens; ++i)
     {
         if(vetTop[i])
             std::printf("%d is a top item\n", vetItemId[i]);
     }
+    */
 
     bool feasible = true;
 
@@ -800,7 +802,7 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp)
         double limit = input.balancedLoadingD * this->demandaTotal;
         if(sumLeftBalancedLoading > limit || sumRightBalancedLoading > limit)
         {
-            std::printf("Balanced Loading Limit\n");
+            //std::printf("Balanced Loading Limit\n");
             feasible = fromCp;
         }
     }
@@ -808,10 +810,13 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp)
     if(input.axleWights)
     {
         bool axleWeights = semiTrailer.checkAxleWeights(*this);
+
+        /*
         if(!axleWeights)
         {
             std::printf("Axle Weights fails\n");
         }
+        */
 
         feasible = axleWeights * feasible;
     }
@@ -831,10 +836,13 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp)
     std::string error;
 
     bool compactness = checkCompactness(*this, vetTop, &error);
+
+    /*
     if(!compactness)
     {
         std::printf("compactness fails: %s\n", error.c_str());
     }
+    */
 
     feasible = feasible * compactness;
 

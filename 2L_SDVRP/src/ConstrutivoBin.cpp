@@ -14,6 +14,7 @@
 #include "InputOutput.h"
 #include "rand.h"
 #include "sefe_array.h"
+#include "Alarm.h"
 
 using namespace InstanceNS;
 using namespace SolucaoNS;
@@ -237,7 +238,7 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
             std::cout << "tamTemp: " << tamTemp
                       << "; ((vetItensTam-k)): " << vetItensTam - k << "\n";
         int i = k;
-        if(tamTemp > 1 && !input.lifo)
+        if(tamTemp > 1 && !input.mlifo)
             i = getRandInt(k, (k + tamTemp - 1));
 
         const int itemId = vetItens[i];
@@ -347,11 +348,11 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
                     {
                         vetIdEpRot[numEps].epId = ep;
                         vetIdEpRot[numEps].r = rotacao;
-                        vetIdEpRot[numEps].atributo = bin.vetEp[ep].vetDim[2];
+                        vetIdEpRot[numEps].point = bin.vetEp[ep];
                         // get<1>(getMinArray(bin.vetEp[ep].vetDim, instanciaG.numDim));
 
                         numEps += 1;
-                        break;
+                        //break;
                     }
                 }
             }
@@ -462,8 +463,17 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin  &bin,
     static Vector<SolucaoNS::Bin> binVet(1);
     static VectorI                vetItensAux(instanciaG.numItens);
 
+    if(input.maxTimePackingHeuristic > 0.0)
+    {
+        setOffAlarm();
+        setAlarm(input.maxTimePackingHeuristic);
+    }
+
     for(int i = 0; i < numRepeticoes; ++i)
     {
+        if(alarm_stopG)
+            return false;
+
         copiaBin(bin, binVet[0]);
         copyVet(vetItens, vetItensAux, vetItensTam);
 
@@ -472,14 +482,27 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin  &bin,
         int numItensAlo =
             construtivoBinPacking(binVet, 1, vetItensAux, vetItensTam, alpha);
 
+
+
         // std::cout<<"numItensAlo: "<<numItensAlo<<"\n\n";
         if(numItensAlo == vetItensTam)
         {
             bool feasible = true;
             if(!input.comprimentoAlturaIguais1)
-                return binVet[0].checkFeasibility(rota);
+            {
+                //copiaBin(binVet[0], bin);
+                if(binVet[0].checkFeasibility(rota))
+                {
+                    copiaBin(binVet[0], bin);
+                    return true;
+                }
+            }
+            else
+                return true;
         }
     }
+
+    setOffAlarm();
 
     /*
     if(input.cpSat)

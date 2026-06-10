@@ -20,11 +20,24 @@ struct EpRot
 {
     int                  epId = 0;
     InstanceNS::Rotation r = InstanceNS::Rot0;
-    double               atributo = 0.0;
+    //double               atributo = 0.0;
+    SolucaoNS::Ponto     point;
 
     EpRot() = default;
 
-    bool operator<(const EpRot &outro) const { return atributo < outro.atributo; }
+    bool operator<(const EpRot &outro) const
+    {
+        if(doubleEqual(point.vetDim[2], outro.point.vetDim[2], 1E-5))
+        {
+            if(doubleEqual(point.vetDim[0], outro.point.vetDim[0], 1E-5))
+                return (point.vetDim[1] < outro.point.vetDim[1]);
+            else
+                return point.vetDim[0] < outro.point.vetDim[0];
+        }
+        else
+            return point.vetDim[2] < outro.point.vetDim[2];
+
+    }
 };
 
 bool canInsert(const SolucaoNS::Ponto &ep,
