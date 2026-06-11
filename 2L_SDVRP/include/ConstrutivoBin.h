@@ -18,21 +18,25 @@ namespace ConstrutivoBinNS
 
 struct EpRot
 {
-    int                  epId = 0;
-    InstanceNS::Rotation r = InstanceNS::Rot0;
-    //double               atributo = 0.0;
+    int                  epId   = 0;
+    InstanceNS::Rotation r      = InstanceNS::Rot0;
     SolucaoNS::Ponto     point;
+    double               maxDif = 0.0;
 
     EpRot() = default;
 
+    INLINE
     bool operator<(const EpRot &outro) const
     {
         if(doubleEqual(point.vetDim[2], outro.point.vetDim[2], 1E-5))
         {
+            /*
             if(doubleEqual(point.vetDim[0], outro.point.vetDim[0], 1E-5))
                 return (point.vetDim[1] < outro.point.vetDim[1]);
             else
                 return point.vetDim[0] < outro.point.vetDim[0];
+            */
+            return maxDif < outro.maxDif;
         }
         else
             return point.vetDim[2] < outro.point.vetDim[2];
@@ -40,10 +44,24 @@ struct EpRot
     }
 };
 
+struct ItemRandom
+{
+    int itemId    = -1;
+    int randomKey =  0;
+
+    //ItemRandom(int itemId_, int randomKey_):itemId(itemId_), randomKey(randomKey_){}
+
+    INLINE
+    bool operator<(const ItemRandom& other)const{return randomKey < other.randomKey;}
+};
+
 bool canInsert(const SolucaoNS::Ponto &ep,
                const int               itemId,
                const SolucaoNS::Bin   &bin,
-               InstanceNS::Rotation    r);
+               InstanceNS::Rotation    r,
+               double                 &maxDif,
+               double				   wightLimit);
+
 bool epColideItem(const SolucaoNS::Ponto &ep,
                   const SolucaoNS::Ponto &ponto,
                   const int               itemId);
@@ -67,6 +85,8 @@ double computeXY_Overlap(InstanceNS::Item       &item0,
                          InstanceNS::Item       &item1,
                          InstanceNS::Rotation    r1,
                          const SolucaoNS::Ponto &p1);
+
+void sortVetItemsByCustomer(VectorI& vetItems, int size);
 
 } // namespace ConstrutivoBinNS
 

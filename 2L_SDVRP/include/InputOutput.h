@@ -35,8 +35,8 @@ class Input
     bool        splitInstancia 				= false;
     bool        splitVrp 					= false;
     double      aphaBin 					= 0.15;
-    double      aphaBinEscolhaEp 			= 0.05;
-    double      alphaVrp 					= 0.3;
+    double      aphaBinEscolhaEp 			= 0.6;
+    double      alphaVrp 					= 0.45;
     int         numItIG 					= 2000;
     double      gapIgReset 					= 0.20;
     bool        comprimentoAlturaIguais1 	= false;
@@ -57,7 +57,7 @@ class Input
     bool        axleWights 					= true;
     int         supportLimit 				= 0;
     double      balancedLoadingD 			= 0.7;
-    double 		maxTimePackingHeuristic 	= 60.0;
+    double 		maxTimePackingHeuristic 	= 5.0;
     // bool		inst3d                   = true;
 
     File file;

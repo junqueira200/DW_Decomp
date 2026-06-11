@@ -26,7 +26,9 @@ using namespace AxleWeightsNS;
 bool ConstrutivoBinNS::canInsert(const Ponto &ep,
                                  const int    itemId,
                                  const Bin   &bin,
-                                 Rotation     r)
+                                 Rotation     r,
+                                 double      &maxDif,
+                                 double		  wightLimit)
 {
     // Verifica se o item cabe no bin
     for(int d = 0; d < instanciaG.numDim; ++d)
@@ -53,13 +55,15 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep,
 
     double right = instanciaG.vetItens[itemId].weight - left;
 
-    double sumLeft = left + bin.sumLeftBalancedLoading;
+    double sumLeft = left   + bin.sumLeftBalancedLoading;
     double sumRight = right + bin.sumRightBalancedLoading;
 
-    static const double limit = input.balancedLoadingD * instanciaG.maxPayload;
+    //static const double limit = input.balancedLoadingD * instanciaG.maxPayload;
 
-    if(sumRight > limit || sumLeft > limit)
+    if(sumRight > wightLimit || sumLeft > wightLimit)
         return false;
+
+    maxDif = std::fabs(sumLeft-sumRight);
 
     if(input.inst2d || ep.vetDim[2] == 0.0)
     {
@@ -199,8 +203,21 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
                                             const double   alpha)
 {
 
+    double totalWight = 0.0;
+    for(int i=0; i < vetItensTam; ++i)
+        totalWight += instanciaG.vetItens[vetItensC[i]].weight;
+
+    if(vetBin.size() > 1)
+        totalWight = instanciaG.maxPayload;
+
+    double wightLimit = input.balancedLoadingD * totalWight;
+
+
+
     static VectorI vetItens(instanciaG.numItens);
     copyVet(vetItensC, vetItens, vetItensTam);
+
+    sortVetItemsByCustomer(vetItens, vetItensTam);
 
     if(PrintConst)
     {
@@ -344,11 +361,13 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
 
                 for(Rotation rotacao : vetRot)
                 {
-                    if(canInsert(bin.vetEp[ep], itemId, bin, rotacao))
+                    double maxDif = 0.0;
+                    if(canInsert(bin.vetEp[ep], itemId, bin, rotacao, maxDif, wightLimit))
                     {
-                        vetIdEpRot[numEps].epId = ep;
-                        vetIdEpRot[numEps].r = rotacao;
-                        vetIdEpRot[numEps].point = bin.vetEp[ep];
+                        vetIdEpRot[numEps].epId   = ep;
+                        vetIdEpRot[numEps].r      = rotacao;
+                        vetIdEpRot[numEps].point  = bin.vetEp[ep];
+                        vetIdEpRot[numEps].maxDif = maxDif;
                         // get<1>(getMinArray(bin.vetEp[ep].vetDim, instanciaG.numDim));
 
                         numEps += 1;
@@ -524,4 +543,81 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin  &bin,
     */
     // std::printf("Utilizacao %.2f%%\n", binVet[0].getPorcentagemUtilizacao());
     return false;
+}
+
+void ConstrutivoBinNS::sortVetItemsByCustomer(VectorI &vetItems, int size)
+{
+
+    static Vector<ItemRandom> vetItemRand(instanciaG.maxNumItensPorClie);
+    static VectorI vetItemsCopy(instanciaG.numItens);
+
+    copyVet(vetItems, vetItemsCopy, size);
+
+    std::set<int> setItems;
+
+    for(auto &item:vetItemRand)
+    {
+        item.itemId    = -1;
+        item.randomKey = -1;
+    }
+
+    int posStart = 0;
+
+    while(posStart < size)
+    {
+        int posEnd = posStart;
+        int cust   = instanciaG.vetItens[posStart].customer;
+
+        while (cust == instanciaG.vetItens[posEnd].customer)
+        {
+            posEnd += 1;
+
+            if(posEnd >= size)
+                break;
+        }
+
+        posEnd -= 1;
+        int k = 0;
+        for(int i=posStart; i <= posEnd; ++i)
+        {
+            vetItemRand[k].itemId    = vetItems[i];
+            vetItemRand[k].randomKey = RandNs::getRandInt(0, 100);
+
+            if(setItems.count(vetItems[i]) != 0)
+            {
+                std::printf("Error, item(%d) is already \n", vetItems[i]);
+                PRINT_THROW();
+            }
+
+            setItems.insert(vetItems[i]);
+
+            k += 1;
+        }
+
+
+        std::sort(vetItemRand.begin(), vetItemRand.begin()+posEnd-posStart+1);
+
+        //std::printf("INI\n");
+
+        k=0;
+        for(int i=posStart; i <= posEnd; ++i)
+        {
+            vetItems[i] = vetItemRand[k].itemId;
+            k += 1;
+        }
+
+        posStart = posEnd + 1;
+
+        //std::printf("END\n");
+    }
+
+    for(int i=0; i < size; ++i)
+    {
+        if(setItems.count(vetItemsCopy[i]) == 0)
+        {
+            std::printf("Error, item(%d) is not included\n", vetItems[i]);
+            PRINT_THROW();
+        }
+    }
+
 }
