@@ -20,7 +20,7 @@ namespace Algorithms
 {
 void ContainerLoadingCP::BuildModel()
 {
-    GravityMM = 1;
+    GravityMM = 2.2;
 
     CreateVariables();
 
@@ -47,7 +47,7 @@ LoadingStatus ContainerLoadingCP::Solve()
 
     ////LOG(INFO) << operations_research::sat::CpSolverResponseStats(mResponse);
 
-    GravityMM = GravityMM_const;
+    //GravityMM = GravityMM_const;
 
     ////PrintSolution(Items, mResponse);
     switch(mResponse.status())
@@ -173,11 +173,11 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos)
 
     int sumLeft =
         operations_research::sat::SolutionIntegerValue(mResponse, sumLeftBalancedLoading);
-    std::printf("sumLeft: %f\n", sumLeft / (double)scaleBalancedLoading);
+    //std::printf("sumLeft: %f\n", sumLeft / (double)scaleBalancedLoading);
 
     int sumRight = operations_research::sat::SolutionIntegerValue(
         mResponse, sumRightBalancedLoading);
-    std::printf("sumRight: %f\n", sumRight / (double)scaleBalancedLoading);
+    //std::printf("sumRight: %f\n", sumRight / (double)scaleBalancedLoading);
 
     static std::map<Orientation, int> mapOritentationRotation = {
         {NoRotation, 0}, {RotationZ, 1}, {RotationX, 2}};
@@ -188,14 +188,14 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos)
         int fFA = operations_research::sat::SolutionIntegerValue(mResponse, forceFA);
         int fRA = operations_research::sat::SolutionIntegerValue(mResponse, forceRA);
         int fTA = operations_research::sat::SolutionIntegerValue(mResponse, forceTA);
-        std::printf("fK: %d; fFA: %d; fRA: %d; fTA: %d\n", fK, fFA, fRA, fTA);
+        std::printf("FROM CP: fK: %d; fFA: %d; fRA: %d; fTA: %d\n", fK, fFA, fRA, fTA);
     }
 
     for(size_t i = 0; i < mItems.size(); ++i)
     {
         bool top = operations_research::sat::SolutionBooleanValue(mResponse, mTopBool[i]);
-        if(top)
-            std::printf("Item(%d) is topItem\n", (int)mItems[i].ExternId);
+        //if(top)
+        //    std::printf("Item(%d) is topItem\n", (int)mItems[i].ExternId);
 
         // if (input.axleWights) {
         //     std::cout<<"item: "<<i<<"\n";
@@ -276,8 +276,8 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos)
         */
     }
 
-    std::printf("mMinX: %d",
-                (int)operations_research::sat::SolutionIntegerValue(mResponse, mMinX));
+    //std::printf("mMinX: %d",
+    //            (int)operations_research::sat::SolutionIntegerValue(mResponse, mMinX));
 
     /*
     size_t numberOfItems = mItems.size();
@@ -386,20 +386,26 @@ std::vector<int> ContainerLoadingCP::ExtractSequence() const
 void ContainerLoadingCP::CreateVariables()
 {
     size_t numberOfItems = mItems.size();
+    std::printf("CreateVariables: GravityMM: %f\n", GravityMM);
 
     if(input.axleWights)
     {
         // cleaned this up, shouldnt make a difference
         int maxK = semiTrailer.maxMassRearAxle + semiTrailer.maxMassFrontAxle;
         forceK =
-            mModelCP.NewIntVar({-scale * GravityMM * maxK, scale * GravityMM * maxK});
-        forceRA = mModelCP.NewIntVar({-scale * GravityMM * semiTrailer.maxMassRearAxle,
-                                      scale * GravityMM * semiTrailer.maxMassRearAxle});
-        forceFA = mModelCP.NewIntVar({-scale * GravityMM * semiTrailer.maxMassFrontAxle,
-                                      scale * GravityMM * semiTrailer.maxMassFrontAxle});
+            mModelCP.NewIntVar({-scale * (int)(GravityMM * maxK), scale * (int)(GravityMM * maxK)});
+        forceRA = mModelCP.NewIntVar({-scale * (int)(GravityMM * semiTrailer.maxMassRearAxle),
+                                      scale * (int)(GravityMM * semiTrailer.maxMassRearAxle)});
+        forceFA = mModelCP.NewIntVar({-scale * (int)(GravityMM * semiTrailer.maxMassFrontAxle),
+                                      scale * (int)(GravityMM * semiTrailer.maxMassFrontAxle)});
         forceTA =
-            mModelCP.NewIntVar({-scale * GravityMM * semiTrailer.maxMassTrailerAxle,
-                                scale * GravityMM * semiTrailer.maxMassTrailerAxle});
+            mModelCP.NewIntVar({-scale * (int)(GravityMM * semiTrailer.maxMassTrailerAxle),
+                                scale * (int)(GravityMM * semiTrailer.maxMassTrailerAxle)});
+
+        int max0 = std::max(scale * GravityMM * maxK, scale*GravityMM * semiTrailer.maxMassFrontAxle);
+        int max = std::max(max0, (int)(scale*GravityMM * semiTrailer.maxMassTrailerAxle));
+
+        std::printf("Max force: %d\n", max);
 
         // std::printf("max FK: %d\nmax FRA: %d\nmax FA: %d\nmax FTA: %d", (int)maxFK,
         // GravityMM*semiTrailer.maxMassRearAxle,
@@ -761,7 +767,7 @@ void ContainerLoadingCP::CreateAxleWeights()
         mModelCP
             .AddLessThan(2 * mR[i],
                          2 * semiTrailer.distanceCargoSpaceTrailerAxle -
-                             2 * mStartPositionsX[i] - mLengths[i] + 2)
+                             2 * mStartPositionsX[i] - mLengths[i] +2)
             .WithName("R1");
 
         int itemF = mItems[i].Weight * GravityMM;
@@ -849,6 +855,11 @@ void ContainerLoadingCP::CreateBalancedLoading()
     const int w = InstanceNS::instanciaG.vetDimVeiculo[1];
     const int wDiv2 = InstanceNS::instanciaG.vetDimVeiculo[1] / 2;
 
+    int totalMass = 0;
+    for(int i = 0; i < mItems.size(); ++i)
+        totalMass += mItems[i].Weight;
+
+
     for(int i = 0; i < mItems.size(); ++i)
     {
         {
@@ -895,11 +906,11 @@ void ContainerLoadingCP::CreateBalancedLoading()
     mModelCP.AddLessOrEqual(
         exp0,
         (int)(scaleBalancedLoading *
-              (input.balancedLoadingD * InstanceNS::instanciaG.maxPayload - 10)));
+              (input.balancedLoadingD * totalMass)));
     mModelCP.AddLessOrEqual(
         exp1,
         (int)(scaleBalancedLoading *
-              (input.balancedLoadingD * InstanceNS::instanciaG.maxPayload - 10)));
+              (input.balancedLoadingD * totalMass)));
 
     mModelCP.AddEquality(sumRightBalancedLoading, exp1);
     mModelCP.AddEquality(sumLeftBalancedLoading, exp0);

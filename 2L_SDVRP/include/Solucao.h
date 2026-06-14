@@ -146,7 +146,7 @@ struct Bin
 
     void reset();
     int  getEpComMenorCoord(const VectorI &vetIdEp, int tam);
-    bool checkFeasibility(Rota *rota = nullptr, bool fromCp = false);
+    bool checkFeasibility(Rota *rota = nullptr, bool fromCp = false, bool print=false);
 
     void rmItens(const VectorI &vetItensRm, const int tam);
 

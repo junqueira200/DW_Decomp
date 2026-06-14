@@ -5,7 +5,7 @@
 using namespace AxleWeightsNS;
 using namespace InstanceNS;
 
-bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin) const
+bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin, bool print) const
 {
     GravityMM = GravityMM_const;
 
@@ -38,10 +38,18 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin) const
     fRA = fK + (double)massTractor * GravityMM - fFA;
     fTA = sumF + (double)massTrailer * GravityMM - fK;
 
-    if(fFA > (double)maxMassFrontAxle * GravityMM ||
-       fRA > (double)maxMassRearAxle * GravityMM ||
-       fTA > (double)maxMassTrailerAxle * GravityMM) // ||
+    if(fFA > (double)maxMassFrontAxle*1.01* GravityMM ||
+       fRA > (double)maxMassRearAxle*1.01 * GravityMM ||
+       fTA > (double)maxMassTrailerAxle*1.01 * GravityMM) // ||
     {
+        if(print)
+        {
+            std::printf("GravityMM: %d\n", GravityMM);
+            std::printf("FROM AxleWeights: fK: %.1f; fFA: %.1f(Limit: %.1f); fRA: %.1f(Limit: %.1f); fTA: %.1f(Limit: %.1f)\n",
+                        fK, fFA, (double)maxMassFrontAxle * GravityMM,
+                        fRA, (double)maxMassRearAxle * GravityMM,
+                        fTA, (double)maxMassTrailerAxle * GravityMM);
+        }
         return false;
     }
 

@@ -666,7 +666,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                 // std::cout<<binCp.printPlot()<<"\n**********\n\n";
 
                 // binCp.numItens = numItems;
-                if(binCp.checkFeasibility(&rota, true))
+                if(binCp.checkFeasibility(&rota, false, true))
                 {
                     output += "FEASIBLE; ";
                     /*
@@ -702,8 +702,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                 {
                     std::printf("CP INFEASIBLE\n");
 
-                    std::cout << binCp.printPlot()
-                              << "\n***********************\n***********************\n\n";
+                    //std::cout << binCp.printPlot()
+                    //          << "\n***********************\n***********************\n\n";
 
                     output += "INFEASIBLE*; ";
                 }

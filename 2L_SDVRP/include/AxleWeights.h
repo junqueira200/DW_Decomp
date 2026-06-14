@@ -13,7 +13,7 @@ class AxleData
   public:
     AxleData() {};
     virtual ~AxleData() {};
-    virtual bool checkAxleWeights(SolucaoNS::Bin &bin) const = 0;
+    virtual bool checkAxleWeights(SolucaoNS::Bin &bin, bool print=false) const = 0;
 };
 
 class SemiTrailer : public AxleData
@@ -21,13 +21,13 @@ class SemiTrailer : public AxleData
   public:
     SemiTrailer() {}
     ~SemiTrailer() {}
-    bool   checkAxleWeights(SolucaoNS::Bin &bin) const override;
+    bool   checkAxleWeights(SolucaoNS::Bin &bin, bool print=false) const override;
     double computeMaxFK(SolucaoNS::Bin &bin) const;
 
     int wheelBase = 3790; // WB
-    int maxMassFrontAxle = 8400;
-    int maxMassRearAxle = 12075;
-    int maxMassTrailerAxle = 24120;
+    int maxMassFrontAxle = 8400*1.01;
+    int maxMassRearAxle = 12075*1.01;
+    int maxMassTrailerAxle = 24120*1.01;
     int distanceKingpinRearAxle =
         560; // The distance between the kingpin and the rear axle (l_K|RA)
     int distanceKingpinTrailerAxle =

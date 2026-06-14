@@ -660,7 +660,7 @@ bool SolucaoNS::verificaColisaoDoisItens(const int                  item0,
     return (numInterc == instanciaG.numDim);
 }
 
-bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp)
+bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
 {
 
     if(vazio() || input.comprimentoAlturaIguais1)
@@ -698,19 +698,22 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp)
 
             if(a || b)
             {
-                std::cout << "EP i: " << vetPosItem[i].print()
-                          << "\nEP j: " << vetPosItem[j].print() << "\n";
-                std::cout << "Rot i: " << vetRotacao[i] << "\nRot j: " << vetRotacao[j]
-                          << "\n\n";
-                std::cout << "ItemId i: " << vetItemId[i]
-                          << "\nItemId j: " << vetItemId[j] << "\n";
-                std::cout << "Item i: " << instanciaG.vetItens[vetItemId[i]].vetDim
-                          << "\n";
-                std::cout << "Item j: " << instanciaG.vetItens[vetItemId[j]].vetDim
-                          << "\n";
+                if(print)
+                {
+                    std::cout << "EP i: " << vetPosItem[i].print()
+                    << "\nEP j: " << vetPosItem[j].print() << "\n";
+                    std::cout << "Rot i: " << vetRotacao[i] << "\nRot j: " << vetRotacao[j]
+                              << "\n\n";
+                    std::cout << "ItemId i: " << vetItemId[i]
+                              << "\nItemId j: " << vetItemId[j] << "\n";
+                    std::cout << "Item i: " << instanciaG.vetItens[vetItemId[i]].vetDim
+                              << "\n";
+                    std::cout << "Item j: " << instanciaG.vetItens[vetItemId[j]].vetDim
+                              << "\n";
 
-                if(a != b)
-                    std::cout << "a!=b\n";
+                    if(a != b)
+                        std::cout << "a!=b\n";
+                }
 
                 return false;
             }
@@ -802,21 +805,22 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp)
         double limit = input.balancedLoadingD * this->demandaTotal;
         if(sumLeftBalancedLoading > limit || sumRightBalancedLoading > limit)
         {
-            //std::printf("Balanced Loading Limit\n");
+            if(print)
+                std::printf("Balanced Loading Limit\n");
             feasible = fromCp;
         }
     }
 
     if(input.axleWights)
     {
-        bool axleWeights = semiTrailer.checkAxleWeights(*this);
+        bool axleWeights = semiTrailer.checkAxleWeights(*this, print);
 
-        /*
-        if(!axleWeights)
+
+        if(!axleWeights && print)
         {
             std::printf("Axle Weights fails\n");
         }
-        */
+
 
         feasible = axleWeights * feasible;
     }
@@ -828,7 +832,7 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp)
     else if(!input.comprimentoAlturaIguais1)
         std::printf("Unloading Sequence diden't run, route=null\n");
 
-    if(!unloadingSequence)
+    if(!unloadingSequence && print)
         std::printf("Unloading Sequence is not feasible\n");
 
     feasible = feasible * unloadingSequence;
@@ -837,12 +841,12 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp)
 
     bool compactness = checkCompactness(*this, vetTop, &error);
 
-    /*
-    if(!compactness)
+
+    if(!compactness && print)
     {
         std::printf("compactness fails: %s\n", error.c_str());
     }
-    */
+
 
     feasible = feasible * compactness;
 
