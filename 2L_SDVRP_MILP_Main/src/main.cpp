@@ -17,6 +17,7 @@
 #include "TesteOroloc3D.h"
 #include "rand.h"
 
+#include "AuxT.h"
 #include "BCRoutingParams.h"
 #include "LoadingChecker.h"
 #include "ProblemParameters.h"

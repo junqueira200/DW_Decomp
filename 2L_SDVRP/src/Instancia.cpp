@@ -728,6 +728,9 @@ int InstanceNS::copiaItensClientes(VectorI &vetClientes,
     for(int i = 0; i < tam; ++i)
     {
         int       cliente = vetClientes[i];
+        if(cliente == 0)
+            continue;
+
         const int ini = instanciaG.matCliItensIniFim(cliente, 0);
         const int fim = instanciaG.matCliItensIniFim(cliente, 1);
 
@@ -809,7 +812,7 @@ int InstanceNS::generateRandomListOfItems(int numItens, VectorI &vetItems)
 
 void InstanceNS::readOroloc3D2(const std::string &strFile)
 {
-    std::printf("FILE: %s\n", strFile.c_str());
+    //std::printf("FILE: %s\n", strFile.c_str());
 
     int              numClientes = 0, numVeiculos = 0, numItens = 0, numArcs = 0;
     double           maxPayload = 0.0;

@@ -165,7 +165,7 @@ class Rota
 {
   public:
     Rota();
-    Rota(const Rota &rota) = delete;
+    Rota(const Rota &rota);
     void        reset();
     std::string printRota();
     void        computeDistance();
@@ -178,6 +178,58 @@ class Rota
     // double  demTotal        = 0.0;
     double distTotal = 0.0;
     Bin   *binPtr = nullptr;
+    size_t hashVal = 0;
+
+    INLINE
+    bool operator==(const Rota& r) const
+    {
+        if(hashVal != r.hashVal)
+            return false;
+
+        if(numPos != r.hashVal)
+            return false;
+
+        for(int i=0; i < numPos; ++i)
+        {
+            if(vetRota[i] != r.vetRota[i])
+                return false;
+        }
+
+        return true;
+    }
+
+};
+#define __PRETTYFILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+class HashRoute
+{
+  public:
+    INLINE
+    std::size_t operator()(const Rota& r) const
+    {
+        //std::cout<<"FILE: " << __PRETTYFILE__            \
+        //    << "  FUNC: " << __PRETTY_FUNCTION__ << "  LINHA: " << __LINE__ << "\n";
+
+        //std::printf("numPos: %d\n", r.numPos);
+        //https://cseweb.ucsd.edu/~kube/cls/100/Lectures/lec16/lec16-16.html
+        // ELF Hash algorithms
+        size_t valHash = 0;
+        for(int i=0; i < r.numPos; ++i)
+        {   //         valHash * 16
+            valHash = (valHash<<4) + r.vetRota[i];
+            uint64_t g = valHash & 0xF0000000L;
+
+            if(g != 0)
+                valHash ^= g >> 24;
+            valHash &= ~g;
+        }
+
+        void* ptr = (void*)&r.hashVal;
+
+        size_t* size_tPtr = (size_t*)ptr;
+        *size_tPtr = valHash;
+
+        return valHash;
+    }
 };
 
 class Solucao

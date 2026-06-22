@@ -483,10 +483,10 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     for(int veic = 0; veic < sol.vetBin.size(); ++veic)
     {
-         //if(veic != 10)
+         //if(veic != 4)
          //    continue;
 
-        std::string output = std::format("{}; {}; ", input.strInst, veic);
+        std::string output = std::format("{}; {}; {}; ", input.strInst, veic, sol.vetBin[veic].numItens);
 
         Bin  &bin = sol.vetBin[veic];
         Bin  &binCp = solCp.vetBin[veic];
@@ -610,7 +610,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
             std::vector<Array<int, 4>> vetArray;
             // std::cout<<"n: "<<n<<"\n";
             auto status = loadingChecker.ConstraintProgrammingSolver(
-                type, container, stopIds, vetCuboids, 60, vetArray);
+                type, container, stopIds, vetCuboids, input.cpSatTime, vetArray);
             // std::cout<<"ret\n";
             double ompEnd = omp_get_wtime();
 
@@ -722,8 +722,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         }
 
         input.axleWights = inputAxleWights;
-        if(n == 0)
-            output += "NO_RUN; Inf; ";
+        //if(n == 0)
+        //    output += "NO_RUN; Inf; ";
 
         /*
         switch (lastType)

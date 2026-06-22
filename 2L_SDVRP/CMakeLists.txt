@@ -48,6 +48,8 @@ message("set solution_borrow_checker=1")
 
 add_library(${PROJECT_NAME} SHARED
     include/Commit.h
+    include/c_api.h
+    src/c_api.cpp
 )
 
 target_sources(${PROJECT_NAME}

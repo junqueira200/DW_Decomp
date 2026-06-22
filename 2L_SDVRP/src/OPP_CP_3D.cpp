@@ -664,8 +664,9 @@ void ContainerLoadingCP::CreateTopItem()
 
             linExpr += mSupportXY[t][i];
         }
-
+        // s_i^{sum}
         mModelCP.AddEquality(mTopSum[i], linExpr);
+        // t_i
         mModelCP.AddGreaterOrEqual(mTopSum[i], 1).OnlyEnforceIf(mTopBool[i].Not());
         mModelCP.AddLessOrEqual(mTopSum[i], 0).OnlyEnforceIf(mTopBool[i]);
     }

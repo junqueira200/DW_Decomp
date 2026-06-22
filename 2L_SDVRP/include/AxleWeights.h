@@ -25,9 +25,9 @@ class SemiTrailer : public AxleData
     double computeMaxFK(SolucaoNS::Bin &bin) const;
 
     int wheelBase = 3790; // WB
-    int maxMassFrontAxle = 8400*1.01;
-    int maxMassRearAxle = 12075*1.01;
-    int maxMassTrailerAxle = 24120*1.01;
+    int maxMassFrontAxle = 8400;
+    int maxMassRearAxle = 12075;
+    int maxMassTrailerAxle = 24120;
     int distanceKingpinRearAxle =
         560; // The distance between the kingpin and the rear axle (l_K|RA)
     int distanceKingpinTrailerAxle =

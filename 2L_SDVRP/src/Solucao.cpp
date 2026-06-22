@@ -581,6 +581,7 @@ void SolucaoNS::copiaRota(const Rota &rotaFonte, Rota &rota)
     copyVet(rotaFonte.vetRota, rota.vetRota, rota.numPos);
     copyVet(rotaFonte.vetTempoSaida, rota.vetTempoSaida, rota.numPos);
     copyVet(rotaFonte.vetDemClie, rota.vetDemClie, rota.vetDemClie.size());
+    rota.hashVal = rotaFonte.hashVal;
 }
 
 std::string SolucaoNS::printBinEps(const Bin &bin)
@@ -978,6 +979,19 @@ SolucaoNS::Rota::Rota()
     vetRota.setAll(0);
     vetTempoSaida.setAll(0.0);
     vetDemClie.setAll(0.0);
+}
+
+SolucaoNS::Rota::Rota(const Rota &rota)
+{
+    vetRota = VectorI(TamRota);
+    vetTempoSaida = VectorD(TamRota);
+    vetDemClie = VectorD(instanciaG.numClientes);
+
+    vetRota.setAll(0);
+    vetTempoSaida.setAll(0.0);
+    vetDemClie.setAll(0.0);
+
+    copiaRota(rota, *this);
 }
 
 void SolucaoNS::Rota::reset()
