@@ -734,8 +734,6 @@ int InstanceNS::copiaItensClientes(VectorI &vetClientes,
         const int ini = instanciaG.matCliItensIniFim(cliente, 0);
         const int fim = instanciaG.matCliItensIniFim(cliente, 1);
 
-        // std::printf("Ini: %d, Fim: %d\n", ini, fim);
-
         for(int j = ini; j <= fim; ++j)
         {
             if(!push)
@@ -954,7 +952,7 @@ void InstanceNS::readOroloc3D2(const std::string &strFile)
 
             for(int k = 0; k < quantity; ++k)
             {
-                instanciaG.matCliItensIniFim.get(k, 1) = nextItem;
+                instanciaG.matCliItensIniFim.get(i, 1) = nextItem;
 
                 Item item; // = instanciaG.vetItens[nextItem];
                 // std::cout<<arrayDimMass<<"\n";

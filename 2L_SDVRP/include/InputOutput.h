@@ -41,7 +41,7 @@ class Input
     double      gapIgReset 					= 0.20;
     bool        comprimentoAlturaIguais1 	= false;
     bool        cpSat 						= true;
-    double      cpSatTime 					= 60.0*5;
+    double      cpSatTime 					= 60.0*60*2;
     // 0 Forward, 1 Backard, 2 Bidirectional
     int         labelingType 				= 0;
     bool        lifo 						= false;
@@ -52,12 +52,15 @@ class Input
     bool        instOroloc3D_2 				= true;
     std::string strSolOroloc3D_2;
     std::string strSolOroloc3D_output;
+    bool        support                     = true;
     double      minSupportArea 				= 0.75;
+    bool        compactness					= true;
     double      minLeftSupportArea 			= 0.2;
     bool        axleWights 					= true;
     int         supportLimit 				= 0;
     double      balancedLoadingD 			= 0.74;
-    double 		maxTimePackingHeuristic 	= 60.0*2;
+    bool        balancedLoading             = true;
+    double 		maxTimePackingHeuristic 	= 10.0;
     // bool		inst3d                   = true;
 
     File file;

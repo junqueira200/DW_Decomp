@@ -48,6 +48,7 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep,
             return false;
     }
 
+
     double left =
         computeLeftBalancedLoading(ep.vetDim[1],
                                    instanciaG.vetItens[itemId].getDimRotacionada(1, r),
@@ -60,8 +61,11 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep,
 
     //static const double limit = input.balancedLoadingD * instanciaG.maxPayload;
 
-    if(sumRight > wightLimit || sumLeft > wightLimit)
-        return false;
+    if(input.balancedLoading)
+    {
+        if(sumRight > wightLimit || sumLeft > wightLimit)
+            return false;
+    }
 
     maxDif = std::fabs(sumLeft-sumRight);
 
@@ -70,6 +74,9 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep,
         // std::cout<<"z = 0\n";
         return true;
     }
+
+    if(!input.support)
+        return true;
 
     double areaSuport = 0.0;
 
@@ -472,9 +479,14 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin  &bin,
         demanda += instanciaG.vetItens[vetItens[i]].weight;
     }
 
-    if(volume > bin.volumeTotal || demanda > instanciaG.maxPayload)
+    static double totalVolVeich = instanciaG.vetDimVeiculo[0]*instanciaG.vetDimVeiculo[1]*
+                                  instanciaG.vetDimVeiculo[2];
+
+    if(volume > totalVolVeich || (int)demanda > (int)instanciaG.maxPayload)
     {
         std::cout << "Vol ou demanda acima da capacidade!\n";
+        std::printf("volume(%f), totalVolVeich(%f)\n", volume, totalVolVeich);
+        std::printf("demanda(%f), maxPayload(%f)\n", demanda, instanciaG.maxPayload);
         return false;
     }
     // std::cout<<"construtivoBinPacking\n";

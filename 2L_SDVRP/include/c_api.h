@@ -9,9 +9,16 @@ using namespace ParseInputNS;
 
 extern "C"
 {
-    void ini_3D_Packing(char* strInst_c);
-    bool testRoute(int* vet_c, int vetSize);
+    void ini_3D_Packing(char* strInst_c, int oroloc3D);
+    int testRoute(int* vet_c, int vetSize);
 
+    int getNumberOfCustoms();
+    int getNumberOfTrucks();
+    int getDemandFromCustomr(int i);
+    double getVolumeFromCustomr(int i);
+    double getDistance(int i, int j);
+    int getVehicleCapacity();
+    double getVehicleVolume();
 
 }
 

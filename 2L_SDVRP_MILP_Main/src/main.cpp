@@ -16,6 +16,7 @@
 #include "MILP.h"
 #include "TesteOroloc3D.h"
 #include "rand.h"
+#include "c_api.h"
 
 #include "AuxT.h"
 #include "BCRoutingParams.h"
@@ -50,6 +51,7 @@ int main(int argc, const char *argv[])
     std::cout << "INST: " << input.strInst << " SEMENTE: " << RandNs::estado_ << " "
               << output.data << "";
 
+
     if(input.instOroloc3D_2)
         InstanceNS::readOroloc3D2(input.strInstCompleto);
     else if(input.instOroloc3D)
@@ -59,7 +61,33 @@ int main(int argc, const char *argv[])
     else
         InstanceNS::read3dInstance(input.strInstCompleto);
 
+    /*
+    if(input.mlifo && !input.lifo)
+    {
+        std::printf("Error!, mlifo(1), and lifo(0)\n\n");
+        PRINT_THROW();
+    }
+    */
+
+    /*
+    int route[] = {0, 2, 12, 10, 0};
+
+    input.instOroloc3D_2  		= false;
+    input.axleWights      		= false;
+    input.balancedLoading 		= false;
+    input.compactness     		= false;
+    input.lifo			  		= true;
+    input.mlifo			  		= false;
+    input.removeFromShortSide	= true;
+
+    int result = testRoute(route, 5);
+    std::printf("result: %d\n", result);
+
+    PRINT_THROW();
+    */
+
     startConstGlobalVaribles();
+
 
     /*
     instanciaG.vetItens[0].set(2380.0, 1414.0, 934.0);   // 133

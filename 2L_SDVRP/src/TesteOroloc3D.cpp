@@ -654,7 +654,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                         binCp.vetPosItem[item].set(array[0], array[1], array[2]);
                         binCp.vetRotacao[item] = (InstanceNS::Rotation)array[3];
 
-                        std::cout << array[1] << "\n";
+                        //std::cout << array[1] << "\n";
                         item += 1;
                     }
 
@@ -663,11 +663,12 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                     // std::printf("\n\n");
                 }
 
-                // std::cout<<binCp.printPlot()<<"\n**********\n\n";
+                //std::cout<<binCp.printPlot()<<"\n**********\n\n";
 
                 // binCp.numItens = numItems;
                 if(binCp.checkFeasibility(&rota, false, true))
                 {
+                    std::cout<<binCp.printPlot()<<"\n**********\n\n";
                     output += "FEASIBLE; ";
                     /*
                     if(checkUnloadingSequence(binCp, rota))

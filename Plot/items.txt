@@ -1,6 +1,72 @@
-1
-itemId(90)
-Pos: (0.0,0.0,0.0)
-Largura: 1204
-Comprimento: 1000
-Altura: 710
+12
+itemId(4)
+Pos: (7682.0,0.0,1035.0)
+Largura: 1440
+Comprimento: 2310
+Altura: 1070
+
+itemId(5)
+Pos: (3932.0,0.0,905.0)
+Largura: 2310
+Comprimento: 1440
+Altura: 1070
+
+itemId(6)
+Pos: (9123.0,0.0,1435.0)
+Largura: 1440
+Comprimento: 2310
+Altura: 1070
+
+itemId(9)
+Pos: (225.0,0.0,905.0)
+Largura: 3130
+Comprimento: 1770
+Altura: 400
+
+itemId(10)
+Pos: (9122.0,577.0,1035.0)
+Largura: 3130
+Comprimento: 1770
+Altura: 400
+
+itemId(7)
+Pos: (10563.0,0.0,1435.0)
+Largura: 1440
+Comprimento: 2310
+Altura: 1070
+
+itemId(8)
+Pos: (6242.0,0.0,425.0)
+Largura: 1440
+Comprimento: 2310
+Altura: 934
+
+itemId(0)
+Pos: (6580.0,0.0,0.0)
+Largura: 6580
+Comprimento: 2280
+Altura: 425
+
+itemId(1)
+Pos: (0.0,170.0,0.0)
+Largura: 6580
+Comprimento: 2280
+Altura: 425
+
+itemId(2)
+Pos: (0.0,63.0,425.0)
+Largura: 5745
+Comprimento: 2240
+Altura: 480
+
+itemId(3)
+Pos: (7682.0,0.0,425.0)
+Largura: 5745
+Comprimento: 2240
+Altura: 610
+
+itemId(93)
+Pos: (6581.0,0.0,1359.0)
+Largura: 1100
+Comprimento: 1950
+Altura: 430

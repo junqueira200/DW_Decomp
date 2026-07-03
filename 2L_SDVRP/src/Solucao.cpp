@@ -78,7 +78,8 @@ void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
         vetRotacao.push_back(Rot0);
     }
 
-    if(ParseInputNS::input.comprimentoAlturaIguais1 == false)
+    if(ParseInputNS::input.comprimentoAlturaIguais1 == false &&
+       input.balancedLoading)
     {
         double y = vetEp[idEp].vetDim[1];
         double left = computeLeftBalancedLoading(
@@ -768,7 +769,7 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
 
         double support = areaSuport / area;
 
-        if(support < instanciaG.minSupport)
+        if(input.support && support < instanciaG.minSupport)
         {
             //std::cout << "support: " << support << "\n";
             return false;
@@ -793,7 +794,7 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
 
     bool feasible = true;
 
-    //if(!fromCp)
+    if(input.balancedLoading)
     {
         /*
         if(!doubleEqual(sumLeftTemp, sumLeftBalancedLoading, 1E-5) ||
@@ -840,7 +841,10 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
 
     std::string error;
 
-    bool compactness = checkCompactness(*this, vetTop, &error);
+    bool compactness = true;
+
+    if(input.compactness)
+        compactness = checkCompactness(*this, vetTop, &error);
 
 
     if(!compactness && print)
