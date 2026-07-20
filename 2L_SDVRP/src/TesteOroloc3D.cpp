@@ -416,6 +416,10 @@ void TesteOroloc3D_NS::convertVectorOfItensToVectorOfCuboids(
         Item   &item = instanciaG.vetItens[vetItens[i]];
         int     pos = findPos(rota, vetItens[i]);
 
+        Model::Fragility fragility = Model::Fragility::None;
+        if(input.fragility && item.fragility)
+            fragility = Model::Fragility::Fragile;
+
         // std::cout<<pos<<" ";
         // std::printf("(%d, %d) ", vetItens[i], pos);
         cuboid = Cuboid((size_t)i,
@@ -424,7 +428,7 @@ void TesteOroloc3D_NS::convertVectorOfItensToVectorOfCuboids(
                         item.vetDim[1],
                         item.vetDim[2],
                         true,
-                        Fragility::None,
+                        fragility,
                         pos,
                         item.weight,
                         pos);
@@ -481,16 +485,20 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     std::cout << "Veic: " << instanciaG.vetDimVeiculo << "\n";
 
+    Solucao solCpSat(instanciaG);
+
     for(int veic = 0; veic < sol.vetBin.size(); ++veic)
     {
          //if(veic != 4)
          //    continue;
 
-        std::string output = std::format("{}; {}; {}; ", input.strInst, veic, sol.vetBin[veic].numItens);
+        std::string output =
+             std::format("{}; {}; {}; {}; ", input.strInst,
+                          RandNs::estado_, veic, sol.vetBin[veic].numItens);
 
         Bin  &bin = sol.vetBin[veic];
         Bin  &binCp = solCp.vetBin[veic];
-        Bin  &binCp2 = solCp2.vetBin[veic];
+        //Bin  &binCp2 = solCp2.vetBin[veic];
         Bin  &bin2 = solHeur.vetBin[veic];
         Rota &rota = solCp.vetRota[veic];
         bin2.reset();
@@ -505,8 +513,12 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
         double ompStart = omp_get_wtime();
         // TODO remove comment!
-        bool feasibleSolConst = construtivoBinPacking(bin2, vetItems, bin.numItens,
-                                input.aphaBin, std::numeric_limits<int>::max(), &solCp.vetRota[veic]);
+        bool feasibleSolConst = construtivoBinPacking(bin2,
+                                                      vetItems,
+                                                      bin.numItens,
+                                                      input.aphaBin,
+                                                      std::numeric_limits<int>::max(),
+                                                      &solCp.vetRota[veic]);
         if(!feasibleSolConst)
             bin2.reset();
 
@@ -653,6 +665,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                     {
                         binCp.vetPosItem[item].set(array[0], array[1], array[2]);
                         binCp.vetRotacao[item] = (InstanceNS::Rotation)array[3];
+                        binCp.vetItens[item]   = vetItems[item];
 
                         //std::cout << array[1] << "\n";
                         item += 1;
@@ -746,13 +759,20 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         if(feasibleSolConst)
             output += std::format("FEASIBLE; {:.4f}", timeConst);
         else
-            output += std::format("INFEASIBLE; {:.4f}", timeConst);
+            output += std::format("TIME_LIMIT; {:.4f}", timeConst);
 
         std::cout << output << "\n";
         appendToFile("../oroloc3D.csv", output);
 
         std::printf("\n\n*************************************\n\n");
+
+//PRINT_THROW();
+
     }
+
+    //std::cout<<solHeur.printSol()<<"\n\n";
+    writeToFile(solHeur.printSol(), "../Oroloc3D_Sol/Heuristic/"+input.strInst+".txt");
+    writeToFile(solCp.printSol(), "../Oroloc3D_Sol/Model/"+input.strInst+".txt");
 
     //printSol(solCp);
 }
@@ -916,4 +936,25 @@ void TesteOroloc3D_NS::printSol(SolucaoNS::Solucao &sol)
     }
 
     file.close();
+}
+
+void writeSoltionOroloc2(const SolucaoNS::Bin &bin, const SolucaoNS::Rota &route)
+{
+
+
+
+}
+
+void TesteOroloc3D_NS::writeToFile(const std::string &str, const std::string &strFile)
+{
+    std::ofstream file(strFile);
+    if(!file.is_open())
+    {
+        std::printf("Cant open file: %s\n", strFile.c_str());
+        PRINT_THROW();
+    }
+
+    file<<str;
+    file.close();
+
 }

@@ -48,7 +48,7 @@ int main(int argc, const char *argv[])
 
     ParseInputNS::parseInput(argc, argv);
     output.setup();
-    std::cout << "INST: " << input.strInst << " SEMENTE: " << RandNs::estado_ << " "
+    std::cout << "INST: " << input.strInst << " SEED: " << RandNs::estado_ << " "
               << output.data << "";
 
 
@@ -61,13 +61,22 @@ int main(int argc, const char *argv[])
     else
         InstanceNS::read3dInstance(input.strInstCompleto);
 
-    /*
+
+    for(int i=0; i < instanciaG.numItens; ++i)
+    {
+        if(i != instanciaG.vetItens[i].itemId)
+        {
+            std::printf("Error, i(%d) != itemId(%d)\n", i, instanciaG.vetItens[i].itemId);
+            PRINT_THROW();
+        }
+    }
+
     if(input.mlifo && !input.lifo)
     {
         std::printf("Error!, mlifo(1), and lifo(0)\n\n");
         PRINT_THROW();
     }
-    */
+
 
     /*
     int route[] = {0, 2, 12, 10, 0};
@@ -88,6 +97,59 @@ int main(int argc, const char *argv[])
 
     startConstGlobalVaribles();
 
+    if(!input.instOroloc3D_2)
+    {
+        setClassical3DPackingProblem();
+
+
+        Solucao sol(instanciaG);
+        Solucao best(instanciaG);
+
+        if(metaheuristicaIg(best))
+        {
+            std::printf("Did find a feasible solution");
+            std::printf("Dist; %.1f\nSol:\n\n%s\n\n", best.distTotal, best.printSol().c_str());
+        }
+        else
+        {
+            std::printf("Didnt find a solution\n\n");
+        }
+
+        return 0;
+
+        best.distTotal = INF_Double;
+
+        bool heuristicSol;
+        bool updateBest = false;
+
+        for(int i=0; i < 5000; ++i)
+        {
+
+            sol.reset();
+            heuristicSol = construtivoVrp(sol, input.alphaVrp, input.aphaBin);
+            if(heuristicSol && sol.distTotal < best.distTotal)
+            {
+                best.reset();
+                best.copiaSolucao(sol);
+                updateBest = true;
+                std::printf("Dist; %.1f\n", best.distTotal);
+            }
+        }
+
+        if(updateBest)
+        {
+            std::printf("Did find a feasible solution");
+            std::printf("Dist; %.1f\nSol:\n\n%s\n\n", best.distTotal, best.printSol().c_str());
+
+
+        }
+        else
+        {
+            std::printf("Didnt find a solution\n\n");
+        }
+
+        return 0;
+    }
 
     /*
     instanciaG.vetItens[0].set(2380.0, 1414.0, 934.0);   // 133

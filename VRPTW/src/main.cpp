@@ -420,7 +420,7 @@ void convertInstance(const InstanceVRPTW &instanceVrptw, Instance &instancia)
             instancia.matCliItensIniFim.get(i, 0) = i - 1;
             instancia.matCliItensIniFim.get(i, 1) = i - 1;
 
-            instancia.vetItens[i - 1].set(1.0, 1.0, 1.0);
+            instancia.vetItens[i - 1].set(1.0, 1.0, 1.0, -1);
             instancia.vetItens[i - 1].weight = instanceVrptw.vetClieDem[i];
             instancia.vetPesoItens[i - 1] = instanceVrptw.vetClieDem[i];
             instancia.vetItens[i - 1].volume = 1.0;

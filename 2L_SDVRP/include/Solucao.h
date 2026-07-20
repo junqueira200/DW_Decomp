@@ -14,6 +14,7 @@
 #include "Instancia.h"
 #include "safe_matrix.h"
 #include "safe_vector.h"
+#include <Eigen/Eigen>
 // #include "InputOutput.h"
 
 namespace SolucaoNS
@@ -167,7 +168,7 @@ class Rota
     Rota();
     Rota(const Rota &rota);
     void        reset();
-    std::string printRota();
+    std::string printRota(bool printDist=true);
     void        computeDistance();
 
     VectorI        vetRota;
@@ -186,7 +187,7 @@ class Rota
         if(hashVal != r.hashVal)
             return false;
 
-        if(numPos != r.hashVal)
+        if(numPos != r.numPos)
             return false;
 
         for(int i=0; i < numPos; ++i)
@@ -249,6 +250,7 @@ class Solucao
     double getUtilizacaoMediaBins() const;
     double getUtilizacaoMedianaBins() const;
     double getTamMedianaRota() const;
+    std::string printSol();
 };
 
 void          copiaRota(const Rota &rotaFonte, Rota &rota);
@@ -283,7 +285,9 @@ inline __attribute__((always_inline)) bool pontosIguais(const Ponto &p0, const P
     return true;
 }
 
-bool checkUnloadingSequence(Bin &bin, Rota &rota);
+bool checkUnloadingSequence(Bin 										&bin,
+                            Rota 										&rota,
+                            Eigen::Matrix<int, -1, -1, Eigen::RowMajor> &matSupportItems);
 
 inline __attribute__((always_inline)) int findPos(Rota &rota, int itemId)
 {
@@ -336,14 +340,16 @@ inline __attribute__((always_inline)) bool isBelow(InstanceNS::Item    &item0,
            p1.vetDim[0] < maxX0;
 }
 
-inline __attribute__((always_inline)) bool lifo(InstanceNS::Item    &item0,
-                                                Ponto                p0,
-                                                InstanceNS::Rotation r0,
-                                                InstanceNS::Item    &item1,
-                                                Ponto                p1,
-                                                InstanceNS::Rotation r1,
-                                                bool                 mlifo,
-                                                bool                 removeFromShortSide)
+inline __attribute__((always_inline))
+bool lifo(InstanceNS::Item    							&item0,
+          Ponto                							p0,
+          InstanceNS::Rotation 							r0,
+          InstanceNS::Item    							&item1,
+          Ponto                							p1,
+          InstanceNS::Rotation 							r1,
+          bool                 						   	mlifo,
+          bool						                   	removeFromShortSide,
+          Eigen::Matrix<int, -1, -1, Eigen::RowMajor> 	&matSupportItems)
 {
     // Item0 is delevery first
 
@@ -355,40 +361,64 @@ inline __attribute__((always_inline)) bool lifo(InstanceNS::Item    &item0,
     double maxY1 = p1.vetDim[1] + item1.getDimRotacionada(1, r1);
     double maxZ1 = p1.vetDim[2] + item1.getDimRotacionada(2, r1);
 
-    if(removeFromShortSide &&
-       ((maxX1 <= p0.vetDim[0]) || // The end of j is less then the begining of i. It's
-                                   // correct for LIFO
-        (maxY0 <=
-         p1.vetDim[1]) || // Item i is complete at left of item j. It's correct for LIFO
-        (maxY1 <=
-         p0.vetDim[1]) || // Item i is complete at right of item j. It's correct for LIFO
-        (maxZ1 <= p0.vetDim[2]) || // Item i is above item j. It's correct for LIFO
-        (mlifo &&
-         (maxZ0 < p1.vetDim[2])))) // Item i is below item j. It's correct for LIFO
+    bool overlapX = !(maxX0 <= p1.vetDim[0] || maxX1 <= p0.vetDim[0]);
+    bool overlapY = !(maxY0 <= p1.vetDim[1] || maxY1 <= p0.vetDim[1]);
+
+           // matSupportItems[i][j] = 1 → j supports i
+    bool item1_supports_item0 = matSupportItems(item1.itemId, item0.itemId);
+    bool item0_supports_item1 = matSupportItems(item0.itemId, item1.itemId);
+
+    if(mlifo && !removeFromShortSide)
+    {
+        if (overlapX)
+        {
+            bool in_front_block = (maxY1 < p0.vetDim[1]);
+            bool vertical_block = item1_supports_item0;
+            return !(in_front_block && vertical_block);
+        }
+
         return true;
+    }
+    else if (!mlifo && removeFromShortSide)
+    {
+        if (overlapY)
+        {
+            // <=
+            bool infront = (maxX1 <= p0.vetDim[0]);
+            bool above  =  (maxZ1 <= p0.vetDim[2]);
+            return infront || above;
+        }
 
-    if(!removeFromShortSide &&
-       ((maxY1 <= p0.vetDim[1]) || // The end of j is less then the begining of i. It's
-                                   // correct for LIFO
-        (maxX0 <=
-         p1.vetDim[0]) || // Item i is complete at left of item j. It's correct for LIFO
-        (maxX1 <=
-         p0.vetDim[0]) || // Item i is complete at right of item j. It's correct for LIFO
-        (maxZ1 <= p0.vetDim[2]) || // Item i is above item j. It's correct for LIFO
-        mlifo &&
-            (maxY0 <= p1.vetDim[1]))) // Item i is below item j. It's correct for LIFO
         return true;
+    }
+    else if(!mlifo && !removeFromShortSide)
+    {
+        if (overlapX)
+        {
+            bool left  =  (maxY1 <= p0.vetDim[1]);
+            bool below = (maxZ1 <= p0.vetDim[2]);
+            return left || below;
+        }
 
-    // std::printf("maxX1(%.1f); minX0(%.1f)\n", maxX1, p0.vetDim[0]);
-    // std::printf("maxY0(%.1f); minY0(%.1f)\n", maxY0, p1.vetDim[1]);
-    /*
-    printf("maxX1=%f p0.x=%f -> %d\n", maxX1, p0.vetDim[0], (maxX1 <= p0.vetDim[0]));
-    printf("maxY0=%f p1.y=%f -> %d\n", maxY0, p1.vetDim[1], (maxY0 <= p1.vetDim[1]));
-    printf("maxY1=%f p0.y=%f -> %d\n", maxY1, p0.vetDim[1], (maxY1 <= p0.vetDim[1]));
-    printf("maxZ1=%f p0.z=%f -> %d\n\n", maxZ1, p0.vetDim[2], (maxZ1 <= p0.vetDim[2]));
-    */
+        return true;
+    }
+    else if(mlifo && removeFromShortSide)
+    {
+        if (overlapY)
+        {
+            bool behind_block = (maxX1 < p0.vetDim[0]);
+            bool vertical_block = item1_supports_item0;
+            return !(behind_block && vertical_block);
+        }
+        return true;
+    }
+    else
+    {
+        std::printf("ERROR in LIFO or removeFromShortSide parameters!\n");
+        PRINT_THROW();
+    }
 
-    return false;
+
 }
 
 inline const Ponto PontoZero(0.0, 0.0, 0.0);

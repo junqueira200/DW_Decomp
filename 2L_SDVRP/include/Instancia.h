@@ -35,17 +35,19 @@ class Item
 {
   public:
     Array<double, 3> vetDim; // Length, width, height
-    double           volume = 0.0;
-    double           weight = 0.0;
-    double           weightForce = 0.0;
-    bool             fragility = false;
-    int              customer = -1;
+    double           volume           = 0.0;
+    double           weight           = 0.0;
+    double           weightForce      = 0.0;
+    bool             fragility        = false;
+    int              customer 		  = -1;
     int              oroloc3D_item_id = -1;
+    int              itemId           = -1;
+    std::string      oroloc3D_item_id_str;
 
     Item() = default;
-    Item(double x, double y, double z, double peso_);
-    void        set(double x, double y, double z);
-    std::string print(bool printVol = false);
+    Item(double x, double y, double z, double peso_, int itemId_);
+    void        set(double x, double y, double z, int itemId_);
+    std::string print(Rotation r=Rot0, bool printVol = false);
     double      getDimRotacionada(int d, Rotation r);
 };
 

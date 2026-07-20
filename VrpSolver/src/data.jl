@@ -139,10 +139,26 @@ function createInstance(instt, oroloc3D)
 
     #println("numberOfTrucks: ", numberOfTrucks)
 
+    sumDemand = 0
+    sumVol    = 0.0
+
     for i in 0:numberOfCustoms-1
         demand[i] = getDemandFromCustomr(i)
         volume[i] = getVolumeFromCustomr(i)
+
+        sumDemand += demand[i]
+        sumVol    += volume[i]
     end
+    
+    minNumberOfTrucksDemand = Int(round(Float64(sumDemand)/Float64(vehicleCapacity)))
+    minNumberOfTrucksVolume = Int(round(sumVol/Float64(vehicleVolume)))
+
+    minNumberOfTrucksAux = max(minNumberOfTrucksDemand, minNumberOfTrucksVolume)
+    #numberOfTrucks       = min(numberOfTrucks, minNumberOfTrucksAux)
+
+    print("\nMin number of trucks (demand): ", minNumberOfTrucksDemand)
+    print("Min number of trucks (volume): ", minNumberOfTrucksVolume, "\n\n")
+    print("numberOfTrucks: ", numberOfTrucks, "\n\n")
 
     for i in 0:numberOfCustoms-1
         for j in 0:numberOfCustoms-1
@@ -181,7 +197,7 @@ function createInstance(instt, oroloc3D)
 
     #println(vetVertex)
     #println(vetEdges)
-    return DataArcVRP(numberOfCustoms-1, InputGraph(vetVertex, vetEdges, dist), vehicleCapacity, numberOfTrucks, vehicleVolume)
+    DataArcVRP(numberOfCustoms-1, InputGraph(vetVertex, vetEdges, dist), vehicleCapacity, numberOfTrucks, vehicleVolume)
 
 end
 
@@ -200,7 +216,14 @@ veh_volume(data::DataArcVRP) = data.Vol
 vol(data::DataArcVRP, i) = data.G′.V′[i+1].volume
 
 function lowerBoundNbVehicles(data::DataArcVRP) 
-   return 1
+    sumVol = 0.0
+    sumDemand = 0
+    for it in data.G′.V′
+        sumVol += it.volume
+        sumDemand += it.demand
+    end
+
+    return Int(max(round(sumVol/veh_volume(data)), round(sumDemand/veh_capacity(data))))
 end
 
 function upperBoundNbVehicles(data::DataArcVRP) 

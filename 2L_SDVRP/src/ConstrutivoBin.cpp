@@ -98,6 +98,15 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep,
                                            instanciaG.vetItens[itemIdOutro],
                                            bin.vetRotacao[i],
                                            bin.vetPosItem[i]);
+
+            if(input.fragility && doubleGreater(sup, (double)0.0))
+            {
+                if(instanciaG.vetItens[itemIdOutro].fragility &&
+                   !instanciaG.vetItens[itemId].fragility)
+                    return false;
+
+            }
+
             // std::cout<<"sup: "<<sup<<"\n";
             areaSuport += sup;
         }
@@ -484,9 +493,9 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin  &bin,
 
     if(volume > totalVolVeich || (int)demanda > (int)instanciaG.maxPayload)
     {
-        std::cout << "Vol ou demanda acima da capacidade!\n";
-        std::printf("volume(%f), totalVolVeich(%f)\n", volume, totalVolVeich);
-        std::printf("demanda(%f), maxPayload(%f)\n", demanda, instanciaG.maxPayload);
+        //std::cout << "Vol ou demanda acima da capacidade!\n";
+        //std::printf("volume(%f), totalVolVeich(%f)\n", volume, totalVolVeich);
+        //std::printf("demanda(%f), maxPayload(%f)\n", demanda, instanciaG.maxPayload);
         return false;
     }
     // std::cout<<"construtivoBinPacking\n";
@@ -518,6 +527,8 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin  &bin,
         // std::cout<<"numItensAlo: "<<numItensAlo<<"\n\n";
         if(numItensAlo == vetItensTam)
         {
+            setOffAlarm();
+
             bool feasible = true;
             if(!input.comprimentoAlturaIguais1)
             {

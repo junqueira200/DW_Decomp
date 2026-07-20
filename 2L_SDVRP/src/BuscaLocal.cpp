@@ -12,6 +12,7 @@
 #include "ConstrutivoBin.h"
 #include "InputOutput.h"
 #include "rand.h"
+#include "c_api.h"
 
 using namespace SolucaoNS;
 using namespace RandNs;
@@ -30,6 +31,7 @@ bool BuscaLocalNS::intraRotaShift(SolucaoNS::Solucao &sol, int rotaR, int pos0, 
         return false;
 
     Rota &rota = sol.vetRota[rotaR];
+    static Rota rotaTemp;
 
     // std::cout<<"\t"<<rota.printRota()<<"\n";
 
@@ -49,7 +51,7 @@ bool BuscaLocalNS::intraRotaShift(SolucaoNS::Solucao &sol, int rotaR, int pos0, 
     novaDist -= instanciaG.matDist(rota.vetRota[pos0], rota.vetRota[pos0 + 1]);
     novaDist += instanciaG.matDist(rota.vetRota[pos0], clientePos1);
     novaDist += instanciaG.matDist(clientePos1, rota.vetRota[pos0 + 1]);
-    novaDist += instanciaG.matDist(rota.vetRota[pos1 - 1], rota.vetRota[pos1 + 1]);
+    novaDist += instanciaG.matDist(rota.vetRota[pos1-1], rota.vetRota[pos1 + 1]);
 
     // std::cout<<"\tNova Dist: "<<novaDist<<"\n";
 
@@ -61,32 +63,46 @@ bool BuscaLocalNS::intraRotaShift(SolucaoNS::Solucao &sol, int rotaR, int pos0, 
         Dist: "<<novaDist<<"\n"; std::cout<<"\tMenor\n";
         */
 
-        sol.distTotal += -rota.distTotal + novaDist;
-        rota.distTotal = novaDist;
+        // sol.distTotal += -rota.distTotal + novaDist;
+        // rota.distTotal = novaDist;
+        rotaTemp.reset();
+        copiaRota(rota, rotaTemp);
 
         // Shifit rota
         if(pos0 < pos1)
         {
             // std::cout<<"\tpos0<pos1\n";
             for(int i = pos1; i > pos0; --i)
-                rota.vetRota[i] = rota.vetRota[i - 1];
+                rotaTemp.vetRota[i] = rotaTemp.vetRota[i-1];
 
-            rota.vetRota[pos0 + 1] = clientePos1;
+            rotaTemp.vetRota[pos0+1] = clientePos1;
         }
         else
         {
             // std::cout<<"\tpos1<pos0\n";
             for(int i = pos1; i < pos0; ++i)
             {
-                rota.vetRota[i] = rota.vetRota[i + 1];
+                rotaTemp.vetRota[i] = rotaTemp.vetRota[i+1];
             }
 
-            rota.vetRota[pos0] = clientePos1;
+            rotaTemp.vetRota[pos0] = clientePos1;
         }
+
+        if(testRoute(&rotaTemp.vetRota[0], rotaTemp.numPos, 1))
+        {
+
+            sol.distTotal += -rota.distTotal + novaDist;
+
+            copiaRota(rotaTemp, rota);
+            rota.distTotal = novaDist;
+
+            return true;
+        }
+
+
 
         // std::cout<<"\t"<<rota.printRota()<<"\n\n";
 
-        return true;
     }
 
     return false;
@@ -99,6 +115,8 @@ bool BuscaLocalNS::mvIntraRotaSwap(SolucaoNS::Solucao &sol, int rotaR, int pos0,
         return false;
 
     Rota &rota = sol.vetRota[rotaR];
+
+    static Rota rotaTemp;
 
     if(pos0 <= 0 || pos1 <= 0)
         return false;
@@ -135,6 +153,8 @@ bool BuscaLocalNS::mvIntraRotaSwap(SolucaoNS::Solucao &sol, int rotaR, int pos0,
     if(doubleLess(novaDist, rota.distTotal))
     {
 
+        rotaTemp.reset();
+        copiaRota(rota, rotaTemp);
         /*
         std::cout<<"MvIntraRotaSwap pos0("<<pos0<<"); pos1("<<pos1<<");
         rotaR("<<rotaR<<")\n"; std::cout<<"\tDiff1: "<<diff1<<"\n";
@@ -143,14 +163,20 @@ bool BuscaLocalNS::mvIntraRotaSwap(SolucaoNS::Solucao &sol, int rotaR, int pos0,
         std::cout<<"\tMenor\n";
         */
 
-        std::swap(rota.vetRota[pos0], rota.vetRota[pos1]);
-        sol.distTotal -= rota.distTotal;
-        rota.distTotal = novaDist;
-        sol.distTotal += novaDist;
+        std::swap(rotaTemp.vetRota[pos0], rotaTemp.vetRota[pos1]);
+
+        if(testRoute(&rotaTemp.vetRota[0], rotaTemp.numPos, 1))
+        {
+            std::swap(rota.vetRota[pos0], rota.vetRota[pos1]);
+            sol.distTotal -= rota.distTotal;
+            rota.distTotal = novaDist;
+            sol.distTotal += novaDist;
+
+            return true;
+        }
 
         // std::cout<<"\t"<<rota.printRota()<<"\n\n";
 
-        return true;
     }
 
     return false;
@@ -163,6 +189,7 @@ bool BuscaLocalNS::mvIntraRota2opt(SolucaoNS::Solucao &sol, int rotaR, int pos0,
         return false;
 
     Rota &rota = sol.vetRota[rotaR];
+    static Rota rotaTemp;
 
     if(pos0 >= (rota.numPos - 1) || pos1 >= (rota.numPos - 1))
         return false;
@@ -187,11 +214,20 @@ bool BuscaLocalNS::mvIntraRota2opt(SolucaoNS::Solucao &sol, int rotaR, int pos0,
         std::cout<<"\tpos0("<<pos0<<"); pos1("<<pos1<<")\n";
         std::cout<<"\t"<<rota.printRota()<<"\n";
          */
+        rotaTemp.reset();
+        copiaRota(rota, rotaTemp);
 
-        std::reverse((rota.vetRota.begin() + pos0), (rota.vetRota.begin() + pos1 + 1));
-        sol.distTotal -= rota.distTotal;
-        sol.distTotal += novaDist;
-        rota.distTotal = novaDist;
+        std::reverse((rotaTemp.vetRota.begin() + pos0),
+                     (rotaTemp.vetRota.begin() + pos1 + 1));
+
+        if(testRoute(&rotaTemp.vetRota[0], rotaTemp.numPos, 1))
+        {
+            copiaRota(rotaTemp, rota);
+
+            sol.distTotal -= rota.distTotal;
+            sol.distTotal += novaDist;
+            rota.distTotal = novaDist;
+        }
 
         // std::cout<<"\t"<<rota.printRota()<<"\n\n";
 
@@ -210,13 +246,11 @@ bool BuscaLocalNS::mvInterRotasShift(SolucaoNS::Solucao &sol,
 {
     // std::cout<<"rota0: "<<idRota0<<"; rota1: "<<idRota1<<"\n";
     // std::cout<<"pos0: "<<pos0<<"; pos1: "<<pos1<<"\n\n";
-
-    static Vector<Bin> binAux(1);
-    static VectorI     vetItens(instanciaG.maxNumItensPorClie);
-    vetItens.setAll(-1);
-
     Rota &rota0 = sol.vetRota[idRota0];
     Rota &rota1 = sol.vetRota[idRota1];
+
+    static Rota rotaAux0;
+    static Rota rotaAux1;
 
     // std::cout<<"Rota0: "<<rota0.printRota()<<"\n";
     // std::cout<<"Rota1: "<<rota1.printRota()<<"\n\n";
@@ -230,25 +264,6 @@ bool BuscaLocalNS::mvInterRotasShift(SolucaoNS::Solucao &sol,
 
     if(pos1 <= 0 || pos1 >= (rota1.numPos - 1))
         return false;
-
-    copiaBin(sol.vetBin[idRota0], binAux[0]);
-
-    if(!rota0.binPtr->checkFeasibility() || !rota1.binPtr->checkFeasibility())
-    {
-        std::cout << "ERRO\n";
-        throw "ERROR";
-    }
-
-    const int iniItem = instanciaG.matCliItensIniFim(clie, 0);
-    const int fimItem = instanciaG.matCliItensIniFim(clie, 1);
-
-    int tam = 0;
-
-    for(int itemId = iniItem; itemId <= fimItem; ++itemId)
-    {
-        vetItens[tam] = itemId;
-        tam += 1;
-    }
 
     double novaDistRota0 = rota0.distTotal;
     double novaDistRota1 = rota1.distTotal;
@@ -266,18 +281,37 @@ bool BuscaLocalNS::mvInterRotasShift(SolucaoNS::Solucao &sol,
     if(!doubleLess((novaDistRota0 + novaDistRota1), (rota0.distTotal + rota1.distTotal)))
         return false;
 
-    // Tenta inserir os itens de clie no bin da rota0
-    int resul = construtivoBinPacking(binAux, 1, vetItens, tam, alphaBin);
 
-    if(resul != tam)
+    copiaRota(rota0, rotaAux0);
+    copiaRota(rota1, rotaAux1);
+
+    // Atualiza Rotas
+    // Rota0
+
+    for(int i = (rotaAux0.numPos - 1); i > pos0; --i)
+        rotaAux0.vetRota[i + 1] = rotaAux0.vetRota[i];
+
+    rotaAux0.vetRota[pos0 + 1] = clie;
+    rotaAux0.numPos += 1;
+
+    // Rota1
+    for(int i = pos1; i < (rota1.numPos - 1); ++i)
+        rotaAux1.vetRota[i] = rotaAux1.vetRota[i + 1];
+
+    rotaAux1.numPos -= 1;
+
+    std::swap(rotaAux0.vetDemClie[clie], rotaAux1.vetDemClie[clie]);
+
+    bool feasible = testRoute(&rotaAux0.vetRota[0], rotaAux0.numPos, 1);
+    if(!feasible)
         return false;
 
-    // MV eh viavel
+    feasible = testRoute(&rotaAux1.vetRota[0], rotaAux1.numPos, 1);
+    if(!feasible)
+        return false;
 
-    copiaBin(binAux[0], sol.vetBin[idRota0]);
-
-    // Rm itens do clie da rota1
-    sol.vetBin[idRota1].rmItens(vetItens, tam);
+    copiaRota(rotaAux0, rota0);
+    copiaRota(rotaAux1, rota1);
 
     // Atualiza distancias
     sol.distTotal += -(rota0.distTotal + rota1.distTotal);
@@ -285,23 +319,6 @@ bool BuscaLocalNS::mvInterRotasShift(SolucaoNS::Solucao &sol,
 
     rota0.distTotal = novaDistRota0;
     rota1.distTotal = novaDistRota1;
-
-    // Atualiza Rotas
-    // Rota0
-
-    for(int i = (rota0.numPos - 1); i > pos0; --i)
-        rota0.vetRota[i + 1] = rota0.vetRota[i];
-
-    rota0.vetRota[pos0 + 1] = clie;
-    rota0.numPos += 1;
-
-    // Rota1
-    for(int i = pos1; i < (rota1.numPos - 1); ++i)
-        rota1.vetRota[i] = rota1.vetRota[i + 1];
-
-    rota1.numPos -= 1;
-
-    std::swap(rota0.vetDemClie[clie], rota1.vetDemClie[clie]);
 
     // std::cout<<"Rota0: "<<rota0.printRota()<<"\n";
     // std::cout<<"Rota1: "<<rota1.printRota()<<"\n\n";
@@ -319,13 +336,16 @@ bool BuscaLocalNS::mvInterRotasSwap(SolucaoNS::Solucao &sol,
                                     int                 pos1)
 {
 
-    static Vector<Bin> bin1(1);
-    static Vector<Bin> bin0(1);
-    static VectorI     vetItens0(instanciaG.maxNumItensPorClie);
-    static VectorI     vetItens1(instanciaG.maxNumItensPorClie);
+    //static Vector<Bin> bin1(1);
+    //static Vector<Bin> bin0(1);
+    //static VectorI     vetItens0(instanciaG.maxNumItensPorClie);
+    //static VectorI     vetItens1(instanciaG.maxNumItensPorClie);
 
     Rota &rota0 = sol.vetRota[idRota0];
     Rota &rota1 = sol.vetRota[idRota1];
+
+    static Rota rotaAux0;
+    static Rota rotaAux1;
 
     if(pos0 <= 0 || pos1 <= 0)
         return false;
@@ -359,38 +379,28 @@ bool BuscaLocalNS::mvInterRotasSwap(SolucaoNS::Solucao &sol,
     if(!doubleLess((novaDist0 + novaDist1), (rota0.distTotal + rota1.distTotal)))
         return false;
 
-    // Checa o empacotamento
-    copiaBin(*rota0.binPtr, bin0[0]);
+    copiaRota(rota0, rotaAux0);
+    copiaRota(rota1, rotaAux1);
 
-    // Exclui os itens do cliente0
-    int numItens0 = copiaItensCliente(cliente0, vetItens0);
-    int numItens1 = copiaItensCliente(cliente1, vetItens1);
-
-    bin0[0].rmItens(vetItens0, numItens0);
-    int resul = construtivoBinPacking(bin0, 1, vetItens1, numItens1, alphaBin);
-
-    if(resul != numItens1)
-        return false;
-
-    copiaBin(*rota1.binPtr, bin1[0]);
-
-    bin1[0].rmItens(vetItens1, numItens1);
-    resul = construtivoBinPacking(bin1, 1, vetItens0, numItens0, alphaBin);
-
-    if(resul != numItens0)
-        return false;
-
-    copiaBin(bin0[0], *rota0.binPtr);
-    copiaBin(bin1[0], *rota1.binPtr);
-
-    std::swap(rota0.vetRota[pos0], rota1.vetRota[pos1]);
+    std::swap(rotaAux0.vetRota[pos0], rotaAux1.vetRota[pos1]);
 
     // demandas
-    rota1.vetDemClie[cliente0] = instanciaG.vetDemandaCliente[cliente0];
-    rota1.vetDemClie[cliente1] = 0.0;
+    rotaAux1.vetDemClie[cliente0] = instanciaG.vetDemandaCliente[cliente0];
+    rotaAux1.vetDemClie[cliente1] = 0.0;
 
-    rota0.vetDemClie[cliente1] = instanciaG.vetDemandaCliente[cliente1];
-    rota0.vetDemClie[cliente0] = 0.0;
+    rotaAux0.vetDemClie[cliente1] = instanciaG.vetDemandaCliente[cliente1];
+    rotaAux0.vetDemClie[cliente0] = 0.0;
+
+    bool feasible = testRoute(&rotaAux0.vetRota[0], rotaAux0.numPos, 1);
+    if(!feasible)
+        return false;
+
+    feasible = testRoute(&rotaAux1.vetRota[0], rotaAux1.numPos, 1);
+    if(!feasible)
+        return false;
+
+    copiaRota(rotaAux0, rota0);
+    copiaRota(rotaAux1, rota1);
 
     sol.distTotal += -(rota0.distTotal + rota1.distTotal);
     sol.distTotal += (novaDist0 + novaDist1);
@@ -413,19 +423,22 @@ bool BuscaLocalNS::mvInterRotasCross(SolucaoNS::Solucao &sol,
 
     static VectorI vetClientesRota0(TamRota);
     static VectorI vetClientesRota1(TamRota);
-    static VectorI vetItensRota0(NumItensPorBin);
-    static VectorI vetItensRota1(NumItensPorBin);
+    //static VectorI vetItensRota0(NumItensPorBin);
+    //static VectorI vetItensRota1(NumItensPorBin);
 
-    static Vector<Bin> bin0(1);
-    static Vector<Bin> bin1(1);
+    static Rota rotaAux0;
+    static Rota rotaAux1;
+
+    //static Vector<Bin> bin0(1);
+    //static Vector<Bin> bin1(1);
 
     int tamVetC_Rota0 = 0;
     int tamVetC_Rota1 = 0;
     int numItensRota0 = 0;
     int numItensRota1 = 0;
 
-    double distSubRota0 = 0.0;
-    double distSubRota1 = 0.0;
+    double distSubRota0  = 0.0;
+    double distSubRota1  = 0.0;
     double novaDistRota0 = 0.0;
     double novaDistRota1 = 0.0;
 
@@ -456,7 +469,7 @@ bool BuscaLocalNS::mvInterRotasCross(SolucaoNS::Solucao &sol,
 
     // Pega todos os clientes da rota0 apos pos0 e seus itens
     getClientes(rota0, vetClientesRota0, tamVetC_Rota0, pos0 + 1);
-    numItensRota0 = copiaItensClientes(vetClientesRota0, tamVetC_Rota0, vetItensRota0);
+    //numItensRota0 = copiaItensClientes(vetClientesRota0, tamVetC_Rota0, vetItensRota0);
     vetClientesRota0[tamVetC_Rota0] = 0;
     tamVetC_Rota0 += 1;
     distSubRota0 = calculaDistancia(vetClientesRota0, tamVetC_Rota0);
@@ -467,13 +480,10 @@ bool BuscaLocalNS::mvInterRotasCross(SolucaoNS::Solucao &sol,
 
     // Pega todos os clientes da rota1 apos pos1 e seus itens
     getClientes(rota1, vetClientesRota1, tamVetC_Rota1, pos1 + 1);
-    numItensRota1 = copiaItensClientes(vetClientesRota1, tamVetC_Rota1, vetItensRota1);
+    //numItensRota1 = copiaItensClientes(vetClientesRota1, tamVetC_Rota1, vetItensRota1);
     vetClientesRota1[tamVetC_Rota1] = 0;
     tamVetC_Rota1 += 1;
     distSubRota1 = calculaDistancia(vetClientesRota1, tamVetC_Rota1);
-
-    if(numItensRota1 == 0 && numItensRota0 == 0)
-        return false;
 
     // std::cout<<"Clientes Rota1: "<<printVet(vetClientesRota1, tamVetC_Rota1)<<"\nItens:
     // "<<printVet(vetItensRota1, numItensRota1)<<"\n\n";
@@ -513,56 +523,54 @@ bool BuscaLocalNS::mvInterRotasCross(SolucaoNS::Solucao &sol,
     if(!doubleLess((novaDistRota0 + novaDistRota1), (rota0.distTotal + rota1.distTotal)))
         return false;
 
-    // Tenta inserir os itens da subRota1 no bin da rota0
-    copiaBin(*rota0.binPtr, bin0[0]);
-    bin0[0].rmItens(vetItensRota0, numItensRota0);
-    int tam = construtivoBinPacking(bin0, 1, vetItensRota1, numItensRota1, alphaBin);
 
-    if(tam != numItensRota1)
-        return false;
-
-    // Tenta inserir os itens da subRota0 no bin da rota1
-    copiaBin(*rota1.binPtr, bin1[0]);
-    bin1[0].rmItens(vetItensRota1, numItensRota1);
-    tam = construtivoBinPacking(bin1, 1, vetItensRota0, numItensRota0, alphaBin);
-    if(tam != numItensRota0)
-        return false;
-
-    // Solucao Viavel
+    copiaRota(rota0, rotaAux0);
+    copiaRota(rota1, rotaAux1);
 
     // Copia subRota1 para rota0
     int pos = pos0 + 1;
     for(int i = 0; i < tamVetC_Rota1; ++i)
     {
         int cliente = vetClientesRota1[i];
-        rota0.vetRota[pos] = cliente;
+        rotaAux0.vetRota[pos] = cliente;
         pos += 1;
-        rota0.vetDemClie[cliente] = instanciaG.vetDemandaCliente[cliente];
+        rotaAux0.vetDemClie[cliente] = instanciaG.vetDemandaCliente[cliente];
     }
 
-    rota0.numPos = pos;
+    rotaAux0.numPos = pos;
     // rota0.vetRota[rota0.numPos-1] = 0;
 
     // Remove demanda da subRota0 da rota0
     for(int i = 0; i < tamVetC_Rota0; ++i)
-        rota0.vetDemClie[vetClientesRota0[i]] = 0;
+        rotaAux0.vetDemClie[vetClientesRota0[i]] = 0;
 
     // Copia subRota1 para rota0
     pos = pos1 + 1;
     for(int i = 0; i < tamVetC_Rota0; ++i)
     {
         int cliente = vetClientesRota0[i];
-        rota1.vetRota[pos] = cliente;
+        rotaAux1.vetRota[pos] = cliente;
         pos += 1;
-        rota1.vetDemClie[cliente] = instanciaG.vetDemandaCliente[cliente];
+        rotaAux1.vetDemClie[cliente] = instanciaG.vetDemandaCliente[cliente];
     }
 
-    rota1.numPos = pos;
+    rotaAux1.numPos = pos;
     // rota1.vetRota[rota1.numPos-1] = 0;
 
     // Remove demanda da subRota0 da rota0
     for(int i = 0; i < tamVetC_Rota1; ++i)
-        rota1.vetDemClie[vetClientesRota1[i]] = 0;
+        rotaAux1.vetDemClie[vetClientesRota1[i]] = 0;
+
+    bool feasible = testRoute(&rotaAux0.vetRota[0], rotaAux0.numPos, 1);
+    if(!feasible)
+        return false;
+
+    feasible = testRoute(&rotaAux1.vetRota[0], rotaAux1.numPos, 1);
+    if(!feasible)
+        return false;
+
+    copiaRota(rotaAux0, rota0);
+    copiaRota(rotaAux1, rota1);
 
     // Corrige distancias
     sol.distTotal += -(rota0.distTotal + rota1.distTotal);
@@ -570,9 +578,6 @@ bool BuscaLocalNS::mvInterRotasCross(SolucaoNS::Solucao &sol,
 
     rota0.distTotal = novaDistRota0;
     rota1.distTotal = novaDistRota1;
-
-    copiaBin(bin0[0], *rota0.binPtr);
-    copiaBin(bin1[0], *rota1.binPtr);
 
     /*
     std::cout<<"*Itens BIN0: "<<printVet(rota0.binPtr->vetItemId,
@@ -586,8 +591,11 @@ bool BuscaLocalNS::mvInterRotasCross(SolucaoNS::Solucao &sol,
 
 void BuscaLocalNS::rvnd(SolucaoNS::Solucao &sol)
 {
+    //NumMv
     static Array<MV, NumMv> arrayMv;
     // arrayMv[0] = MvInterRotasCross;
+
+
 
     for(int i = 0; i < NumMv; ++i)
     {
@@ -605,13 +613,15 @@ void BuscaLocalNS::rvnd(SolucaoNS::Solucao &sol)
 
         do
         {
-
-            arrayMv[i] = static_cast<MV>(getRandInt(0, (NumMv - 1)));
-        } while(!checkFuncm());
+            arrayMv[i] = static_cast<MV>(getRandInt(0, (NumMv-1)));
+        }
+        while(!checkFuncm());
     }
+
 
     bool improve = true;
     int  k = 0;
+
 
     while(k < NumMv)
     {

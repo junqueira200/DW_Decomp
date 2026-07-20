@@ -11,6 +11,7 @@
 #include "ConstrutivoBin.h"
 #include "Instancia.h"
 #include "rand.h"
+#include "c_api.h"
 
 using namespace InstanceNS;
 using namespace SolucaoNS;
@@ -57,6 +58,9 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao,
     }
 
     int numIt = 0;
+
+    //std::cout<<"vetClieAtend: "<<vetClieAtend<<"\n\n";
+    //std::cout<<"vetClieCarga: "<<vetClieCarga<<"\n\n";
 
     do
     {
@@ -124,6 +128,8 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao,
 
         if(!insereCandidato(solucao, *chosenPtr, alphaBin))
         {
+            //PRINT_THROW();
+
             listaCand.erase(chosenPtr->it);
             matEstado.get(chosenPtr->rotaId, chosenPtr->cliente) = nullptr;
             continue;
@@ -141,6 +147,9 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao,
         {
             if(matEstado(i, cliente))
             {
+                Estado* ptr = matEstado(i, cliente);
+                //std::printf("cliente: %d\n", ptr->cliente);
+
                 listaCand.erase(matEstado(i, cliente)->it);
                 matEstado.get(i, cliente) = nullptr;
             }
@@ -159,9 +168,17 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao,
             }
         }
 
-    } while(!todosClieAtendidos(vetClieCarga));
+    }
+    while(!todosClieAtendidos(vetClieCarga));
 
-    return todosClieAtendidos(vetClieCarga);
+    if(todosClieAtendidos(vetClieCarga))
+    {
+        //std::cout<<"vetClieAtend: "<<vetClieAtend<<"\n\n";
+        //std::cout<<"vetClieCarga: "<<vetClieCarga<<"\n\n";
+        return true;
+    }
+
+    return false;
 }
 
 void ConstrutivoNS::melhorInsercao(SolucaoNS::Rota &rota,
@@ -174,21 +191,38 @@ void ConstrutivoNS::melhorInsercao(SolucaoNS::Rota &rota,
     pos = -1;
     inc = INF_Double;
 
-    if(!verificaInsercaoItensNoBin(*rota.binPtr, clie, alphaBin))
-    {
-        return;
-    }
+    static Rota rotaAux;
+    //if(!verificaInsercaoItensNoBin(*rota.binPtr, clie, alphaBin))
+    //{
+    //    return;
+    //}
+
+    //std::printf("Route: %s\n\n", rota.printRota().c_str());
 
     for(int i = 0; i < (rota.numPos - 1); ++i)
     {
-        double incI = -instanciaG.matDist(rota.vetRota[i], rota.vetRota[i + 1]);
+        double incI = -instanciaG.matDist(rota.vetRota[i], rota.vetRota[i+1]);
         incI += instanciaG.matDist(rota.vetRota[i], clie);
-        incI += instanciaG.matDist(clie, rota.vetRota[i + 1]);
+        incI += instanciaG.matDist(clie, rota.vetRota[i+1]);
 
         if(incI < inc)
         {
-            inc = incI;
-            pos = i;
+            copiaRota(rota, rotaAux);
+            rotaAux.numPos += 1;
+
+            for(int t=rota.numPos-1; t > i; --t)
+                rotaAux.vetRota[t+1] = rotaAux.vetRota[t];
+
+            rotaAux.vetRota[i+1] = clie;
+
+            //std::printf("\tpos: %d\n\tNova Rota: %s\n\n\n", i, rotaAux.printRota(false).c_str());
+
+            if(testRoute(&rotaAux.vetRota[0], rotaAux.numPos, true))
+            {
+                //std::printf("\tpos: %d\n\tNova Rota: %s\n\n\n", i, rotaAux.printRota(false).c_str());
+                inc = incI;
+                pos = i;
+            }
         }
     }
 }
@@ -239,8 +273,13 @@ bool ConstrutivoNS::insereCandidato(SolucaoNS::Solucao &solucao,
                                     double              alphaBin)
 {
 
-    static VectorI vetItens(instanciaG.maxNumItensPorClie);
+    static VectorI vetItens(instanciaG.numItens);
+    static Bin binAux;
+    static Rota rotaAux;
+
     vetItens.setAll(-1);
+    binAux.reset();
+    rotaAux.reset();
 
     // Verifica a demanda
     Rota  &rota = solucao.vetRota[estado.rotaId];
@@ -268,7 +307,7 @@ bool ConstrutivoNS::insereCandidato(SolucaoNS::Solucao &solucao,
         throw "ERROR";
     }
 
-    // Escreve itens do cliente em vetItens
+    /*
     const int iniItem = instanciaG.matCliItensIniFim(estado.cliente, 0);
     const int fimItem = instanciaG.matCliItensIniFim(estado.cliente, 1);
 
@@ -279,26 +318,37 @@ bool ConstrutivoNS::insereCandidato(SolucaoNS::Solucao &solucao,
         vetItens[tam] = itemId;
         tam += 1;
     }
+    */
 
-    // Tenta construir um empacotamento em ate 10 tentativas
-    if(!construtivoBinPacking(*rota.binPtr, vetItens, tam, alphaBin, 10))
-    {
-        return false;
-    }
+    copiaRota(rota, rotaAux);
 
     // Shifit rota
     for(int i = (rota.numPos - 1); i > estado.pos; --i)
     {
-        rota.vetRota[i + 1] = rota.vetRota[i];
+        rotaAux.vetRota[i + 1] = rotaAux.vetRota[i];
     }
 
-    // Atualiza paramentros
-    rota.vetRota[estado.pos + 1] = estado.cliente;
-    rota.numPos += 1;
-    // rota.demTotal     += instanciaG.vetDemandaCliente[estado.cliente];
-    rota.distTotal += estado.incDist;
-    solucao.distTotal += estado.incDist;
-    rota.vetDemClie[estado.cliente] = instanciaG.vetDemandaCliente[estado.cliente];
+    rotaAux.vetRota[estado.pos + 1] = estado.cliente;
+    rotaAux.numPos += 1;
+    rotaAux.distTotal += estado.incDist;
+    rotaAux.vetDemClie[estado.cliente] = instanciaG.vetDemandaCliente[estado.cliente];
 
+    // Tenta construir um empacotamento em ate 10 tentativas
+    //if(!construtivoBinPacking(*rota.binPtr, vetItens, tam, alphaBin, 10))
+    if(!testRoute(&rotaAux.vetRota[0], rotaAux.numPos, true))
+    {
+        std::printf("ERROR? It shuld be feasible!");
+
+        std::printf("Rota: %s;\npos: %d\nCliente:%d\n\n", rota.printRota(false).c_str(), estado.pos, estado.cliente);
+        std::printf("New route: %s\n\n", rotaAux.printRota(false).c_str());
+        PRINT_THROW();
+        return false;
+    }
+
+
+    // Atualiza paramentros
+    // rota.demTotal     += instanciaG.vetDemandaCliente[estado.cliente];
+    solucao.distTotal += estado.incDist;
+    copiaRota(rotaAux, rota);
     return true;
 }

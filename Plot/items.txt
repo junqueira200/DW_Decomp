@@ -1,72 +1,84 @@
 12
+itemId(11)
+orolocId 
+Pos: (24.0,1.0,0.0)
+Width 28
+Length 14
+Height 10
+
 itemId(4)
-Pos: (7682.0,0.0,1035.0)
-Largura: 1440
-Comprimento: 2310
-Altura: 1070
-
-itemId(5)
-Pos: (3932.0,0.0,905.0)
-Largura: 2310
-Comprimento: 1440
-Altura: 1070
-
-itemId(6)
-Pos: (9123.0,0.0,1435.0)
-Largura: 1440
-Comprimento: 2310
-Altura: 1070
-
-itemId(9)
-Pos: (225.0,0.0,905.0)
-Largura: 3130
-Comprimento: 1770
-Altura: 400
-
-itemId(10)
-Pos: (9122.0,577.0,1035.0)
-Largura: 3130
-Comprimento: 1770
-Altura: 400
-
-itemId(7)
-Pos: (10563.0,0.0,1435.0)
-Largura: 1440
-Comprimento: 2310
-Altura: 1070
-
-itemId(8)
-Pos: (6242.0,0.0,425.0)
-Largura: 1440
-Comprimento: 2310
-Altura: 934
-
-itemId(0)
-Pos: (6580.0,0.0,0.0)
-Largura: 6580
-Comprimento: 2280
-Altura: 425
-
-itemId(1)
-Pos: (0.0,170.0,0.0)
-Largura: 6580
-Comprimento: 2280
-Altura: 425
-
-itemId(2)
-Pos: (0.0,63.0,425.0)
-Largura: 5745
-Comprimento: 2240
-Altura: 480
+orolocId 
+Pos: (0.0,0.0,13.0)
+Width 10
+Length 20
+Height 10
 
 itemId(3)
-Pos: (7682.0,0.0,425.0)
-Largura: 5745
-Comprimento: 2240
-Altura: 610
+orolocId 
+Pos: (52.0,0.0,0.0)
+Width 8
+Length 24
+Height 8
 
-itemId(93)
-Pos: (6581.0,0.0,1359.0)
-Largura: 1100
-Comprimento: 1950
-Altura: 430
+itemId(2)
+orolocId 
+Pos: (10.0,1.0,13.0)
+Width 12
+Length 24
+Height 6
+
+itemId(1)
+orolocId 
+Pos: (0.0,0.0,0.0)
+Width 11
+Length 22
+Height 13
+
+itemId(0)
+orolocId 
+Pos: (15.0,1.0,19.0)
+Width 32
+Length 13
+Height 8
+
+itemId(5)
+orolocId 
+Pos: (22.0,0.0,10.0)
+Width 25
+Length 10
+Height 9
+
+itemId(6)
+orolocId 
+Pos: (25.0,15.0,0.0)
+Width 26
+Length 10
+Height 17
+
+itemId(10)
+orolocId 
+Pos: (10.0,15.0,19.0)
+Width 15
+Length 10
+Height 9
+
+itemId(20)
+orolocId 
+Pos: (25.0,10.0,10.0)
+Width 35
+Length 5
+Height 7
+
+itemId(19)
+orolocId 
+Pos: (25.0,15.0,17.0)
+Width 34
+Length 6
+Height 11
+
+itemId(18)
+orolocId 
+Pos: (11.0,0.0,0.0)
+Width 11
+Length 21
+Height 13

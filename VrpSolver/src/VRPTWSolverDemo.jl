@@ -52,6 +52,7 @@ function parse_commandline(args_array::Array{String,1}, appfolder::String)
 end
 
 function run_vrptw(app::Dict{String,Any})
+    usePacking = true
     println("Application parameters:")
     for (arg, val) in app
         println("  $arg  =>  $(repr(val))")
@@ -93,22 +94,47 @@ function run_vrptw(app::Dict{String,Any})
                 for route in sol.routes
                     #println(route)
                     vet = Vector{Int32}()
-                    push!(vet, 0)
 
+                    push!(vet, 0)
+                    totalDemand = 0
                     for i in route
                         push!(vet, i)
+                        totalDemand += d(data, i)
                     end
-                    
+                    println("totalDemand: ", totalDemand)
+                    if(totalDemand > veh_capacity(data))
+                        println("Error: totalDemand: ", totalDemand, "\nveh_capacity: ", veh_capacity)
+                        exit(-1)
+                    end
                     push!(vet, 0)
                     result = testRoute(vet)
                     if(result == 0)
+
+                        vetArcs = []
+                        vetMult = []
+
                         for i in 1:(length(vet)-1)
-                            arc = (vet[i], vet[i+1])
-                            println("\t", arc)
+                            for j in 1:(length(vet)-1)
+                                if i != j
+                                    arc = (vet[i], vet[j])
+                                    push!(vetArcs, x[arc])
+                                    push!(vetMult, 1.0)
+
+                                end
+                            end
+                            #arc = (vet[i], vet[i+1])
+                            #push!(vetArcs, x[arc])
+                            #push!(vetMult, 1.0)
+
+                            
                         end
                         println("Cut route")
+                        println("\t", vetArcs, "\n\t", vetMult, "\n\n\trhs: ", length(vet)-1-1)
                         
-                        exit(-1)
+                        
+                        add_dynamic_constr!(optimizer, vetArcs, vetMult, <=, length(vet)-1-1, "mycallback")
+                        #break
+                        #exit(-1)
                     end
                     #println(vet)
 
@@ -119,10 +145,11 @@ function run_vrptw(app::Dict{String,Any})
             end
 
         end 
+        if usePacking
+            add_cut_callback!(model, mycallback, "mycallback")
+        end
 
-        add_cut_callback!(model, mycallback, "mycallback")
-
-
+        println("Calling optimize!")
         (status, solution_found) = optimize!(optimizer)
         if solution_found
             sol = getsolution(data, x, get_objective_value(optimizer), optimizer)

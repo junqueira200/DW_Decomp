@@ -16,6 +16,9 @@ using namespace Model;
 using namespace ParseInputNS;
 using namespace AxleWeightsNS;
 
+using operations_research::sat::BoolVar;
+using operations_research::sat::IntVar;
+
 namespace Algorithms
 {
 void ContainerLoadingCP::BuildModel()
@@ -167,6 +170,7 @@ mOverlapAreasXY[i][j]); LOG(INFO) << vars.str();
 
 void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos)
 {
+
     vetPos = std::vector<Array<int, 4>>();
     vetPos.reserve(mItems.size());
 
@@ -196,6 +200,7 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos)
 
     for(size_t i = 0; i < mItems.size(); ++i)
     {
+
 
         //bool top = operations_research::sat::SolutionBooleanValue(mResponse, mTopBool[i]);
         //if(top)
@@ -279,6 +284,7 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos)
         std::cout<<"\n";
         */
     }
+
 
     //std::printf("mMinX: %d",
     //            (int)operations_research::sat::SolutionIntegerValue(mResponse, mMinX));
@@ -741,10 +747,12 @@ void ContainerLoadingCP::AddConstraints()
         CreateSupportItem();
     }
 
-    if(mEnableFragility)
+
+    if(input.fragility)
     {
         CreateFragility();
     }
+
 
     CreateOnFloorConstraints();
 
@@ -754,9 +762,10 @@ void ContainerLoadingCP::AddConstraints()
         CreateSupportArea();
     }
 
-    CreateLifoSequence();
+    if(input.lifo)
+        CreateLifoSequence();
 
-    if(ParseInputNS::input.axleWights)
+    if(input.axleWights)
         CreateAxleWeights();
 
     if(input.balancedLoading)
@@ -993,7 +1002,7 @@ void ContainerLoadingCP::CreateNoOverlap()
     {
         for (size_t j = i+1; j < numberOfItems; ++j)
         {
-            std::vector<operations_research::sat::BoolVar> dirs;
+            std::vector<BoolVar> dirs;
 
             for (size_t d = 0; d < mDimensions.size(); ++d)
             {
@@ -1234,7 +1243,7 @@ void ContainerLoadingCP::CreateSupportItem()
                 continue;
             }
 
-            operations_research::sat::BoolVar isVerticallyAdjacent =
+            BoolVar isVerticallyAdjacent =
                 mModelCP.NewBoolVar();
             mModelCP.AddEquality(mEndPositionsZ[j], mStartPositionsZ[i])
                 .OnlyEnforceIf(isVerticallyAdjacent);
@@ -1270,13 +1279,17 @@ void ContainerLoadingCP::CreateSupportItem()
 /// LIFO unloading with given customer sequence
 void ContainerLoadingCP::CreateLifoSequence()
 {
+//std::printf("pos 3: %d\n", mItems[3].pos);
+//std::printf("pos 4: %d\n\n", mItems[4].pos);
+
     size_t numberOfItems = mItems.size();
 
     for(size_t i = 0; i < numberOfItems; ++i)
     {
         for(size_t j = 0; j < numberOfItems; ++j)
         {
-            if(i != j && mItems[i].pos < mItems[j].pos)
+            // <
+            if(mItems[i].pos < mItems[j].pos)
             {
 
                 // i is delevered first
@@ -1305,36 +1318,41 @@ void ContainerLoadingCP::CreateLifoSequence()
                 mRelativeDirections[i][j][AboveZ], mRelativeDirections[i][j][LeftY]});
                 }
                 else*/
-                if(input.mlifo) // input.removeFromShortSide)
+                if(input.mlifo && !input.removeFromShortSide)
                 {
-                    operations_research::sat::BoolVar varStarEndEq =
-                        mModelCP.NewBoolVar();
-                    operations_research::sat::BoolVar var = mModelCP.NewBoolVar();
-
-                    mModelCP.AddEquality(mStartPositionsZ[j], mEndPositionsZ[i])
-                        .OnlyEnforceIf(varStarEndEq.Not());
-                    mModelCP.AddNotEqual(mStartPositionsZ[j], mEndPositionsZ[i])
-                        .OnlyEnforceIf(varStarEndEq);
-
-                    mModelCP.AddEquality(var, 1).OnlyEnforceIf(
-                        {varStarEndEq.Not(), mRelativeDirections[i][j][BelowZ]});
-
-                    // var = mRelativeDirections[i][j][BelowZ] ^ (mStartPositionZ[j] !=
-                    // mEndPositionZ[i])
-                    // mModelCP.
-
-                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][RightY],
-                                            mRelativeDirections[i][j][LeftY],
-                                            mRelativeDirections[i][j][InFrontX],
+                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][LeftY],
                                             mRelativeDirections[i][j][AboveZ],
-                                            var});
+                                            mSupportXY[j][i].Not()}).
+                        OnlyEnforceIf({mRelativeDirections[i][j][InFrontX].Not(),
+                                       mRelativeDirections[i][j][BehindX].Not()});
+                }
+                else if (!input.mlifo && input.removeFromShortSide)
+                {
+                    // InFrontX, AboveZ
+                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][InFrontX],
+                                            mRelativeDirections[i][j][AboveZ]})
+                    .OnlyEnforceIf({mRelativeDirections[i][j][LeftY].Not(),
+                                    mRelativeDirections[i][j][RightY].Not()});
+                }
+                else if(!input.mlifo && !input.removeFromShortSide)
+                {
+                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][LeftY],
+                                            mRelativeDirections[i][j][BelowZ]}).
+                        OnlyEnforceIf({mRelativeDirections[i][j][InFrontX].Not(),
+                                       mRelativeDirections[i][j][BehindX].Not()});
+                }
+                else if(input.mlifo && input.removeFromShortSide)
+                {
+                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][BehindX],
+                                            mRelativeDirections[i][j][AboveZ],
+                                            mSupportXY[j][i].Not()})
+                    .OnlyEnforceIf({mRelativeDirections[i][j][LeftY].Not(),
+                                    mRelativeDirections[i][j][RightY].Not()});
                 }
                 else
                 {
-                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][InFrontX],
-                                            mRelativeDirections[i][j][BehindX],
-                                            mRelativeDirections[i][j][RightY],
-                                            mRelativeDirections[i][j][AboveZ]});
+                    std::printf("ERROR in LIFO or removeFromShortSide parameters!\n");
+                    PRINT_THROW();
                 }
             }
         }
@@ -1438,7 +1456,7 @@ void ContainerLoadingCP::CreateCompactnessItem()
                 continue;
             }
 
-            operations_research::sat::BoolVar isAdjacent = mModelCP.NewBoolVar();
+            BoolVar isAdjacent = mModelCP.NewBoolVar();
             mModelCP.AddEquality(mEndPositionsX[j], mStartPositionsX[i])
                 .OnlyEnforceIf(isAdjacent);
             mModelCP.AddNotEqual(mEndPositionsX[j], mStartPositionsX[i])

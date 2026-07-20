@@ -192,6 +192,7 @@ void InstanceNS::read2dInstance(const std::string &strFile)
     num = numClientes;
     if(input.splitInstancia)
         num -= 1;
+    int itemId_ = 0;
     for(int i = 0; i < num; ++i)
     {
         int node, numItensPorClie;
@@ -241,7 +242,9 @@ void InstanceNS::read2dInstance(const std::string &strFile)
                 Item(vetVetItens[i][j],
                      vetVetItens[i][j + 1],
                      0.0,
-                     instanciaG.vetDemandaCliente[node] / numItensPorClie));
+                     instanciaG.vetDemandaCliente[node] / numItensPorClie,
+                     itemId_));
+            itemId_ += 1;
         }
     }
 
@@ -606,7 +609,7 @@ void InstanceNS::read3dInstance(const std::string &strFile)
             instanciaG.vetItemCliente[nextItem] = node;
 
             instanciaG.matCliItensIniFim.get(node, 1) = nextItem;
-            instanciaG.vetItens.push_back(Item(largura, comprimento, altura, wight));
+            instanciaG.vetItens.push_back(Item(largura, comprimento, altura, wight, nextItem));
             instanciaG.vetItens[instanciaG.vetItens.size() - 1].fragility = fragility;
             instanciaG.vetItens[instanciaG.vetItens.size() - 1].customer = node;
             nextItem += 1;
@@ -617,6 +620,14 @@ void InstanceNS::read3dInstance(const std::string &strFile)
 
     instanciaG.maxNumItensPorClie = maxNumItensPorCli;
     instanciaG.atualizaVetMinDimItens();
+
+    int totalDemand = 0;
+    for(int i=0; i < numItens; ++i)
+        totalDemand += instanciaG.vetItens[i].weight;
+
+    //instanciaG.numVeiculos = std::min((int)(std::round((double)totalDemand/(double)instanciaG.maxPayload)), instanciaG.numVeiculos);
+
+    std::printf("instanciaG.numVeiculos: %d\n\n", instanciaG.numVeiculos);
 
     file.close();
 }
@@ -632,12 +643,12 @@ void InstanceNS::Instance::atualizaVetMinDimItens()
     // std::cout<<"vetMinDimItens: "<<vetMinDimItens<<"\n\n";
 }
 
-std::string InstanceNS::Item::print(bool printVol)
+std::string InstanceNS::Item::print(Rotation r, bool printVol)
 {
     std::string str = "(";
     for(int i = 0; i < instanciaG.numDim; ++i)
     {
-        str += std::format("{:.1f}", vetDim[i]);
+        str += std::format("{:.1f}", getDimRotacionada(i, r));
         if(i < (instanciaG.numDim - 1))
             str += ",";
     }
@@ -657,7 +668,7 @@ std::string InstanceNS::Item::print(bool printVol)
 std::to_string(instanciaG.vetItemLargura[itemId])+","+std::to_string(instanciaG.vetItemAltura[itemId]);
 }*/
 
-InstanceNS::Item::Item(double x, double y, double z, double peso_)
+InstanceNS::Item::Item(double x, double y, double z, double peso_, int itemId_)
 {
     vetDim[0] = x;
     vetDim[1] = y;
@@ -665,6 +676,7 @@ InstanceNS::Item::Item(double x, double y, double z, double peso_)
     weight = peso_;
     weightForce = weight * Gravity;
     volume = 1.0;
+    itemId = itemId_;
 
     for(int d = 0; d < 3; ++d)
     {
@@ -674,13 +686,14 @@ InstanceNS::Item::Item(double x, double y, double z, double peso_)
     }
 }
 
-void InstanceNS::Item::set(double x, double y, double z)
+void InstanceNS::Item::set(double x, double y, double z, int itemId_)
 {
     vetDim[0] = x;
     vetDim[1] = y;
     vetDim[2] = z;
 
     volume = 1.0;
+    itemId = itemId_;
 
     for(int d = 0; d < instanciaG.numDim; ++d)
     {
@@ -957,9 +970,11 @@ void InstanceNS::readOroloc3D2(const std::string &strFile)
                 Item item; // = instanciaG.vetItens[nextItem];
                 // std::cout<<arrayDimMass<<"\n";
                 item.oroloc3D_item_id = id;
+                item.oroloc3D_item_id_str = type;
                 item.set((double)arrayDimMass[0],
                          (double)arrayDimMass[1],
-                         (double)arrayDimMass[2]);
+                         (double)arrayDimMass[2],
+                         nextItem);
                 item.weight = arrayDimMass[3];
                 // std::cout<<item.weight<<"\n";
                 item.weightForce = item.weight * Gravity;

@@ -13,6 +13,7 @@
 #include "InputOutput.h"
 #include "Instancia.h"
 #include "rand.h"
+#include "c_api.h"
 
 using namespace SolucaoNS;
 using namespace ConstrutivoNS;
@@ -59,9 +60,14 @@ bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
         return false;
     }
 
+    std::printf("Dist; %.1f\n\n", best.distTotal);
+
     for(int i = 0; i < input.numItIG; ++i)
     {
-        for(int k = 0; k < 2; ++k)
+        if(i%100 == 0 && i > 0)
+            std::printf("IT: %d\n", i);
+
+        for(int k = 0; k < 3; ++k)
         {
             int r = getRandInt(0, instanciaG.numVeiculos - 1);
             while(sol.vetRota[r].numPos == 2)
@@ -81,6 +87,8 @@ bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
             {
                 best.copiaSolucao(sol);
                 ultimaA = i;
+
+                std::printf("Dist: %.1f; i: %d\n", best.distTotal, i);
             }
 
             else if(sol.distTotal > best.distTotal)
@@ -134,6 +142,20 @@ bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
                 break;
         }
     }*/
+
+    for(int i=0; i < best.vetRota.size(); ++i)
+    {
+        Rota& rota = best.vetRota[i];
+        if(rota.numPos <= 2)
+            continue;
+
+        if(testRoute(&rota.vetRota[0], rota.numPos, 1) == 0)
+        {
+            std::printf("Error, packing for route: %s not found\n",
+                        rota.printRota(false).c_str());
+            PRINT_THROW();
+        }
+    }
 
     // std::cout<<"MELHOR SOL: "<<best.distTotal<<"\n\n";
     return sol.verificaSol(strError);

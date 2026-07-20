@@ -5,6 +5,10 @@ function build_model(data::DataArcVRP, app)
    Q = veh_capacity(data)
    Vol_veic = veh_volume(data)
 
+   useVolume  = true
+
+   println("Q: ", Q)
+
    # Formulation
    vrptw = VrpModel()
    @variable(vrptw.formulation, x[a in A], Int)
@@ -20,28 +24,35 @@ function build_model(data::DataArcVRP, app)
       V1 = [i for i in 0:n(data)]
 
       L, U = lowerBoundNbVehicles(data), upperBoundNbVehicles(data) # multiplicity
-
+      print("lowerBoundNbVehicles: ", lowerBoundNbVehicles(data))
       G = VrpGraph(vrptw, V1, v_source, v_sink, (L, U))
 
       #if app["enable_cap_res"]
       cap_res_id = add_resource!(G, main = true)
-      vol_res_id = add_resource!(G, main=true)
+      if useVolume
+         vol_res_id = add_resource!(G, main=true)
+      end
       #end
-      #time_res_id = add_resource!(G, main = true)
+      
 
       for v in V1
          #if app["enable_cap_res"]
          set_resource_bounds!(G, v, cap_res_id, 0, Q)
-         set_resource_bounds!(G, v, vol_res_id, 0, Vol_veic)
+         if useVolume
+            set_resource_bounds!(G, v, vol_res_id, 0, Vol_veic)
+         end
          #end
-         #set_resource_bounds!(G, v, time_res_id, l(data, v), u(data, v))
+         
       end
 
       for (i,j) in A
          arc_id = add_arc!(G, i, j)
          add_arc_var_mapping!(G, arc_id, x[(i,j)])         
          set_arc_consumption!(G, arc_id, cap_res_id, d(data, j))
-         set_arc_consumption!(G, arc_id, vol_res_id, vol(data, j))         
+
+         if useVolume
+            set_arc_consumption!(G, arc_id, vol_res_id, vol(data, j))
+         end
       end
 
       return G
