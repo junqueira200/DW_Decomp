@@ -69,6 +69,8 @@ int main(int argc, const char *argv[])
             std::printf("Error, i(%d) != itemId(%d)\n", i, instanciaG.vetItens[i].itemId);
             PRINT_THROW();
         }
+
+        std::printf("%d: %s\n", i, instanciaG.vetItens[i].print(InstanceNS::Rot0, true).c_str());
     }
 
     if(input.mlifo && !input.lifo)
@@ -96,6 +98,7 @@ int main(int argc, const char *argv[])
     */
 
     startConstGlobalVaribles();
+    std::printf("input.instOroloc3D_2: %d\n", input.instOroloc3D_2);
 
     if(!input.instOroloc3D_2)
     {

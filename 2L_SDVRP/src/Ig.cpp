@@ -1,9 +1,9 @@
 /* ****************************************
  * ****************************************
  *  Data:    11/12/24
- *  Arquivo: IG.cpp
- *  Autor:   Igor de Andrade Junqueira
- *  Projeto: 2L-SDVRP
+ *  File:    IG.cpp
+ *  Author:  Igor de Andrade Junqueira
+ *  Project: 2L-SDVRP
  * ****************************************
  * ****************************************/
 
@@ -14,6 +14,7 @@
 #include "Instancia.h"
 #include "rand.h"
 #include "c_api.h"
+#include "SetPartition.h"
 
 using namespace SolucaoNS;
 using namespace ConstrutivoNS;
@@ -21,6 +22,7 @@ using namespace InstanceNS;
 using namespace ParseInputNS;
 using namespace RandNs;
 using namespace BuscaLocalNS;
+using namespace SetPartitionNS;
 
 bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
 {
@@ -45,15 +47,6 @@ bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
         }
     }
 
-    /*    bool ret = best.verificaSol(strError);
-        if(!ret)
-        {
-            std::cout<<strError<<"\n\n";
-            return false;
-        }
-
-        return true;*/
-
     if(!best.verificaSol(strError))
     {
         std::cout << strError << "\n\n";
@@ -61,13 +54,15 @@ bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
     }
 
     std::printf("Dist; %.1f\n\n", best.distTotal);
+    static int numRm = 0.2*instanciaG.numVeiculos+1;
+    std::printf("Number of veich to remove: %d\n\n", numRm);
 
     for(int i = 0; i < input.numItIG; ++i)
     {
         if(i%100 == 0 && i > 0)
-            std::printf("IT: %d\n", i);
+            std::printf("IT: %d; Number of Routes: %ld\n", i, routeData.routeSetFeasible.size());
 
-        for(int k = 0; k < 3; ++k)
+        for(int k = 0; k < numRm; ++k)
         {
             int r = getRandInt(0, instanciaG.numVeiculos - 1);
             while(sol.vetRota[r].numPos == 2)
@@ -83,7 +78,7 @@ bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
             // std::cout<<"Viavel!\n";
             rvnd(sol);
 
-            if(sol.distTotal < best.distTotal)
+            if(doubleLess(sol.distTotal, best.distTotal))
             {
                 best.copiaSolucao(sol);
                 ultimaA = i;
@@ -101,47 +96,7 @@ bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
             // std::cout<<"\t"<<sol.distTotal<<"\n\n";
         }
 
-        // if((i%1000) == 0)
-        //     std::cout<<"MELHOR SOL: "<<best.distTotal<<"\n\n";
     }
-
-    // std::cout<<sol<<"\n\n";
-
-    /*
-    std::cout<<sol<<"\n\n";
-
-    for(int i=1; i < instanciaG.numClientes; ++i)
-    {
-        Bin bin;
-        bin.reset();
-
-
-        #pragma GCC uroll 3
-        for(int d=0; d < 3; ++d)
-        {
-            bin.binDim[d] = instanciaG.vetDimVeiculo[d];
-        }
-
-        bin.volumeTotal = 1;
-
-        #pragma GCC uroll 3
-        for(int d=0; d < 3; ++d)
-        {
-            bin.volumeTotal *= bin.binDim[d];
-
-            if((d+1) == instanciaG.numDim)
-                break;
-        }
-
-        for(int j=0; j < 1000; ++j)
-        {
-            bin.addEp(PontoZero);
-            bool result = verificaInsercaoItensNoBin(bin, i, input.aphaBin);
-            std::cout << "\tCliente(" << i << "): " << result << "\n";
-            if(result)
-                break;
-        }
-    }*/
 
     for(int i=0; i < best.vetRota.size(); ++i)
     {
@@ -156,6 +111,9 @@ bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
             PRINT_THROW();
         }
     }
+
+    Solucao setPartitionSol(instanciaG);
+    SetPartitionNS::setPatition(best, setPartitionSol);
 
     // std::cout<<"MELHOR SOL: "<<best.distTotal<<"\n\n";
     return sol.verificaSol(strError);

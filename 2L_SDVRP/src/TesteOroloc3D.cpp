@@ -8,6 +8,7 @@
 #include "Solucao.h"
 #include <fstream>
 #include <omp.h>
+#include "c_api.h"
 
 using namespace TesteOroloc3D_NS;
 using namespace InstanceNS;
@@ -391,7 +392,6 @@ void TesteOroloc3D_NS::testeOroloc3D()
         }
 
         truckId += 1;
-        //        break;
     }
 
     std::printf("numCompleteFeasible: %d\n", numCompleteFeasible);
@@ -409,12 +409,14 @@ void TesteOroloc3D_NS::convertVectorOfItensToVectorOfCuboids(
     vetCuboids = std::vector<Cuboid>(numItems);
 
     // int pos = numItems;
-
+std::printf("Items, solver: \n\n");
     for(int i = 0; i < numItems; ++i)
     {
         Cuboid &cuboid = vetCuboids[i];
         Item   &item = instanciaG.vetItens[vetItens[i]];
         int     pos = findPos(rota, vetItens[i]);
+
+std::printf("%d: %s\n", item.itemId, item.print(InstanceNS::Rot0, true).c_str());
 
         Model::Fragility fragility = Model::Fragility::None;
         if(input.fragility && item.fragility)
@@ -434,7 +436,7 @@ void TesteOroloc3D_NS::convertVectorOfItensToVectorOfCuboids(
                         pos);
     }
 
-    // std::printf("\n");
+    std::printf("\n");
 
     // std::cout<<"\n";
 }
@@ -458,6 +460,10 @@ void TesteOroloc3D_NS::appendToFile(const std::string &fileName,
 
 void TesteOroloc3D_NS::testeOroloc3D_2()
 {
+    //setClassical3DPackingProblem();
+    setOroloc3DProblem();
+
+    std::printf("testeOroloc3D_2\n");
     int numItems = 2;
 
     Solucao sol, solCp, solCp2, solHeur;
@@ -492,9 +498,6 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
          //if(veic != 4)
          //    continue;
 
-        std::string output =
-             std::format("{}; {}; {}; {}; ", input.strInst,
-                          RandNs::estado_, veic, sol.vetBin[veic].numItens);
 
         Bin  &bin = sol.vetBin[veic];
         Bin  &binCp = solCp.vetBin[veic];
@@ -503,12 +506,27 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         Rota &rota = solCp.vetRota[veic];
         bin2.reset();
 
-        if(bin.vazio())
+        if(bin.vazio() && sol.vetRota[veic].numPos <= 2)
         {
             continue;
         }
 
-        VectorI vetItems = bin.vetItemId;
+        VectorI vetItems;
+        if(!bin.vazio())
+        {
+            vetItems = bin.vetItemId;
+            //continue;					// for(int veic = 0)
+        }
+        else
+        {
+            //std::printf("Route: %s\n", sol.vetRota[veic].printRota(false).c_str());
+            copiaItensCliente(sol.vetRota[veic].vetRota[1], vetItems);
+        }
+
+        std::string output =
+            std::format("{}; {}; {}; {}; ", input.strInst,
+                        RandNs::estado_, veic, vetItems.size());
+
         std::reverse(vetItems.begin(), vetItems.begin() + bin.numItens);
 
         double ompStart = omp_get_wtime();
@@ -546,8 +564,20 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         std::vector<Cuboid>   vetCuboids;
         Collections::IdVector stopIds;
 
-        convertVectorOfItensToVectorOfCuboids(
-            bin.vetItemId, vetCuboids, bin.numItens, sol.vetRota[veic]);
+        if(!bin.vazio())
+        {
+            convertVectorOfItensToVectorOfCuboids(bin.vetItemId,
+                                                  vetCuboids,
+                                                  bin.numItens,
+                                                  sol.vetRota[veic]);
+        }
+        else
+        {
+            convertVectorOfItensToVectorOfCuboids(vetItems,
+                                                  vetCuboids,
+                                                  vetItems.size(),
+                                                  sol.vetRota[veic]);
+        }
         // int lastCustomerId =
         // instanciaG.vetItens[bin.vetItens[bin.numItens-1]].customer;
 
@@ -649,6 +679,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                     statusOroc3D = TIME_LIMIT;
                     output += "TIME_LIMIT; ";
                 }
+
+                binCp.reset();
             }
             else
             {
@@ -720,6 +752,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                     //          << "\n***********************\n***********************\n\n";
 
                     output += "INFEASIBLE*; ";
+                    binCp.reset();
                 }
             }
 
@@ -766,13 +799,20 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
         std::printf("\n\n*************************************\n\n");
 
+PRINT_DEBUGG("", "");
+break;
+
 //PRINT_THROW();
 
     }
 
+    writeSoltionOroloc2(solCp, "model");
+    writeSoltionOroloc2(solHeur, "heuri");
+
+
     //std::cout<<solHeur.printSol()<<"\n\n";
     writeToFile(solHeur.printSol(), "../Oroloc3D_Sol/Heuristic/"+input.strInst+".txt");
-    writeToFile(solCp.printSol(), "../Oroloc3D_Sol/Model/"+input.strInst+".txt");
+    writeToFile(solCp.printSol(), "../Oroloc3D_Sol/Model/"+input.strInst+"dd.txt");
 
     //printSol(solCp);
 }
@@ -938,11 +978,65 @@ void TesteOroloc3D_NS::printSol(SolucaoNS::Solucao &sol)
     file.close();
 }
 
-void writeSoltionOroloc2(const SolucaoNS::Bin &bin, const SolucaoNS::Rota &route)
+void TesteOroloc3D_NS::writeSoltionOroloc2(const SolucaoNS::Solucao& solution,
+                                           const std::string& out)
 {
 
+    std::ofstream file("../Solution/"+input.strInst+"_"+out+".csv");
+    file<<"item_id; truck_id; unload; px; py; pz; dx; dy; dz\n";
+
+    for(int i=0; i < solution.vetRota.size(); ++i)
+    {
+        const Rota& route = solution.vetRota[i];
+        const Bin&  bin   = solution.vetBin[i];
+
+        if(bin.vazio() || route.numPos <= 2)
+            continue;
+        //VectorI vetItems;
+        //Vector<Array<double, 8>> vetPos;
+        //VectorI vetUnload;
+
+        //vetItems.reserve(10);
+        //vetPos.reserve(10);
 
 
+        for(int j=(route.numPos-1); j >= 0; --j)
+        {
+            // Get all the items from customer in position j
+            int customer = route.vetRota[j];
+
+            for(int t=0; t < bin.numItens; ++t)
+            {
+                int itemId = bin.vetItemId[t];
+                std::string& orolocId = instanciaG.vetItens[itemId].oroloc3D_item_id_str;
+                if(instanciaG.vetItens[itemId].customer == customer)
+                {
+                    double px = bin.vetPosItem[t].vetDim[0];
+                    double py = bin.vetPosItem[t].vetDim[1];
+                    double pz = bin.vetPosItem[t].vetDim[2];
+
+                    double dx = instanciaG.vetItens[itemId].
+                                getDimRotacionada(0, bin.vetRotacao[t]);
+                    double dy = instanciaG.vetItens[itemId].
+                                getDimRotacionada(1, bin.vetRotacao[t]);
+                    double dz = instanciaG.vetItens[itemId].
+                                getDimRotacionada(2, bin.vetRotacao[t]);
+
+                    file<<std::format("{}; {}; {}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}; {:.2f}\n",
+                                        orolocId, (i+1), j, px, py, pz, dx, dy, dz);
+
+                    /*
+                    vetPos.push_back({px, py, pz, dx, dy, dz});
+                    vetItems.push_back(itemId);
+                    vetUnload.push_back(t);
+                    */
+
+                }
+            }
+        }
+    }
+
+    file.close();
 }
 
 void TesteOroloc3D_NS::writeToFile(const std::string &str, const std::string &strFile)

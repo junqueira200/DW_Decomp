@@ -233,12 +233,15 @@ class HashRoute
     }
 };
 
+inline HashRoute hashRoute;
+
 class Solucao
 {
   public:
     Vector<Bin>  vetBin;
     Vector<Rota> vetRota;
     double       distTotal = 0.0;
+    size_t		 hashVal   = 0;
 
     Solucao();
     explicit Solucao(const InstanceNS::Instance &instancia);
@@ -340,7 +343,7 @@ inline __attribute__((always_inline)) bool isBelow(InstanceNS::Item    &item0,
            p1.vetDim[0] < maxX0;
 }
 
-inline __attribute__((always_inline))
+INLINE
 bool lifo(InstanceNS::Item    							&item0,
           Ponto                							p0,
           InstanceNS::Rotation 							r0,
@@ -373,8 +376,11 @@ bool lifo(InstanceNS::Item    							&item0,
         if (overlapX)
         {
             bool in_front_block = (maxY1 < p0.vetDim[1]);
-            bool vertical_block = item1_supports_item0;
-            return !(in_front_block && vertical_block);
+            bool above = p0.vetDim[2] >= maxZ1;
+            bool below = p1.vetDim[2] >= maxZ0;
+            bool left  = p0.vetDim[1] <= maxY1;
+
+            return left || above || (below && !item0_supports_item1);
         }
 
         return true;

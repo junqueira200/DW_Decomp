@@ -2,6 +2,6 @@
 #define COMMIT_H
 
 #include <iostream>
-const std::string Commit = "19f6e87b848d537abec2813e3e0fad464f27c0ba" ;
+const std::string Commit = "1045f352ffb73d3823e8d857cfd0fe8b7543dc35" ;
 
 #endif // COMMIT_H

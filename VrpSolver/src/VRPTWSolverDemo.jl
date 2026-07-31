@@ -1,6 +1,7 @@
 __precompile__(false)
 module VRPTWSolverDemo
 using VrpSolver, JuMP, ArgParse
+using Base.StackTraces
 
 
 include("data.jl")
@@ -76,6 +77,10 @@ function run_vrptw(app::Dict{String,Any})
 
         E = data.G′.A
         function mycallback()
+            
+            #for frame in stacktrace()
+            #    println(frame.func, " at ", frame.file, ":", frame.line)
+            #end
 
             println("From mycallback")
             integer = true
@@ -133,7 +138,7 @@ function run_vrptw(app::Dict{String,Any})
                         
                         
                         add_dynamic_constr!(optimizer, vetArcs, vetMult, <=, length(vet)-1-1, "mycallback")
-                        #break
+                        break
                         #exit(-1)
                     end
                     #println(vet)

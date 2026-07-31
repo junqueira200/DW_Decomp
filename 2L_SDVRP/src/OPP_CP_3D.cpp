@@ -396,6 +396,7 @@ std::vector<int> ContainerLoadingCP::ExtractSequence() const
 void ContainerLoadingCP::CreateVariables()
 {
     size_t numberOfItems = mItems.size();
+//    std::printf("numberOfItems: %ld\n", numberOfItems);
     //std::printf("CreateVariables: GravityMM: %f\n", GravityMM);
 
     if(input.axleWights)
@@ -483,6 +484,7 @@ void ContainerLoadingCP::CreateVariables()
     mLengths.reserve(numberOfItems);
     mWidths.reserve(numberOfItems);
     mHeights.reserve(numberOfItems);
+
 
     for(size_t i = 0; i < numberOfItems; i++)
     {
@@ -602,7 +604,6 @@ void ContainerLoadingCP::CreateVariables()
         }
     }
 
-
     mOverlapAreasXY.reserve(numberOfItems);
     mItemsOverlapsXY.reserve(numberOfItems);
 
@@ -624,7 +625,6 @@ void ContainerLoadingCP::CreateVariables()
     for(size_t i = 0; i < numberOfItems - 1; i++)
     {
         const Cuboid &itemI = mItems[i];
-
         mItemsOverlapsXY.emplace_back();
         mItemsOverlapsXY.reserve(numberOfItems - i);
 
@@ -640,13 +640,11 @@ void ContainerLoadingCP::CreateVariables()
             mOverlapAreasXY.emplace_back();
             mOverlapAreasXY.reserve(numberOfItems - i);
         }
-
         if(input.compactness)
         {
             mOverlapAreasYZ.emplace_back();
             mOverlapAreasYZ.reserve(numberOfItems-i);
         }
-
         for(size_t j = i + 1; j < numberOfItems; j++)
         {
             const Cuboid &itemJ = mItems[j];
@@ -693,7 +691,7 @@ void ContainerLoadingCP::CreateVariables()
     mMaxLength = mModelCP.NewIntVar({0, mContainer.Dx});
 
     if(input.compactness)
-        mMinX      = mModelCP.NewIntVar({0, mContainer.Dx});
+        mMinX = mModelCP.NewIntVar({0, mContainer.Dx});
 }
 
 void ContainerLoadingCP::CreateTopItem()
@@ -1320,9 +1318,13 @@ void ContainerLoadingCP::CreateLifoSequence()
                 else*/
                 if(input.mlifo && !input.removeFromShortSide)
                 {
+                    BoolVar belowAndNotSupport = mModelCP.NewBoolVar();
+                    mModelCP.AddMultiplicationEquality(belowAndNotSupport,
+                             {mSupportXY[j][i].Not(), mRelativeDirections[i][j][BelowZ]});
+
                     mModelCP.AddAtLeastOne({mRelativeDirections[i][j][LeftY],
                                             mRelativeDirections[i][j][AboveZ],
-                                            mSupportXY[j][i].Not()}).
+                                            belowAndNotSupport}).
                         OnlyEnforceIf({mRelativeDirections[i][j][InFrontX].Not(),
                                        mRelativeDirections[i][j][BehindX].Not()});
                 }

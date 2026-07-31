@@ -115,6 +115,7 @@ void   read2dInstance(const std::string &strFile);
 void   read3dInstance(const std::string &strFile);
 void   readOroloc3D(const std::string &strFile);
 void   readOroloc3D2(const std::string &strFile);
+void   convertInstanceToCm(Instance& instance);
 int    copiaItensCliente(int cliente, VectorI &vetItens);
 int    copiaItensClientes(VectorI &vetClientes,
                           int      tam,

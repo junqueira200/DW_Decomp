@@ -47,14 +47,15 @@ void ini_3D_Packing(char *strInst_c, int oroloc3D)
 
 int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
 {
+    //onlyHeuristic = false;
     //std::printf("onlyHeuristic: %d\n", onlyHeuristic);
 
-    static std::unordered_set<SolucaoNS::Rota, SolucaoNS::HashRoute> routeSetFeasible;
-    static std::unordered_set<SolucaoNS::Rota, SolucaoNS::HashRoute> routeSetInfeasible;
-    SolucaoNS::Rota 					   							 route;
-    SolucaoNS::Rota					   								 routeInverse;
-    SolucaoNS::Bin  					   							 bin;
-    VectorI									   vetItems(instanciaG.numItens);
+    HASH_ROUTE& 	routeSetFeasible   = routeData.routeSetFeasible;
+    HASH_ROUTE& 	routeSetInfeasible = routeData.routeSetInfeasible;
+    SolucaoNS::Rota route;
+    SolucaoNS::Rota	routeInverse;
+    SolucaoNS::Bin  bin;
+    VectorI			vetItems(instanciaG.numItens);
 
     route.binPtr = &bin;
 
@@ -144,11 +145,13 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
     //    std::printf("%d ", vetItems[i]);
 
 
+    /*
     if(onlyHeuristic == 0)
     {
         std::printf("\n\n*****************************************\n");
         std::printf("**************INI CONSTRUTIVO************\n\n");
     }
+    */
 
     bool feasible = false;
 
@@ -156,11 +159,15 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
     {
         feasible =
         ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
-                                                50, &route);
+                                                25, &route);
         if(feasible)
             routeSetFeasible.insert(route);
-
+        //if(feasible)
+        //    return true;
         return feasible;
+
+        //input.cpSatTime = 0.000001;
+        //onlyHeuristic = 0;
     }
     else
     {
@@ -169,10 +176,10 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
                                                 std::numeric_limits<int>::max()-1, &route);
     }
 
-    std::printf("Construtivo: %d\n", feasible);
+    //std::printf("Construtivo: %d\n", feasible);
 
-    std::printf("**************END CONSTRUTIVO************\n");
-    std::printf("*****************************************\n\n");
+    //std::printf("**************END CONSTRUTIVO************\n");
+    //std::printf("*****************************************\n\n");
 
     if(feasible)
     {
@@ -189,8 +196,8 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
         }
     }
 
-    if(onlyHeuristic >= 1)
-        return 0;
+    //if(onlyHeuristic >= 1)
+    //    return 0;
 
 
     std::vector<Cuboid>   vetCuboids;
@@ -214,7 +221,7 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
     inputParam.SetLoadingFlags();
 
     static LoadingChecker loadingChecker(inputParam.ContainerLoading);
-    static Container      container((int)instanciaG.vetDimVeiculo[0],
+    static Container    container((int)instanciaG.vetDimVeiculo[0],
                         (int)instanciaG.vetDimVeiculo[1],
                         (int)instanciaG.vetDimVeiculo[2],
                         (int)instanciaG.maxPayload);
@@ -225,8 +232,8 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
     double         tempoCpu;
     int totalTry = 0;
 
-    std::printf("\n\n************************************\n");
-    std::printf(    "**************INI CP-Sat************\n\n");
+    //std::printf("\n\n************************************\n");
+    //std::printf(    "**************INI CP-Sat************\n\n");
 
     for(int i=0; i < 1; ++i)
     {
@@ -240,8 +247,8 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
         // std::cout<<"ret\n";
         double ompEnd = omp_get_wtime();
 
-        std::printf("************************************\n");
-        std::printf("**************END CP-Sat************\n\n");
+        //std::printf("************************************\n");
+        //std::printf("**************END CP-Sat************\n\n");
 
         if(status == LoadingStatus::Infeasible)
         {
@@ -273,7 +280,8 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
         }
         else if(status == LoadingStatus::Unknown)
         {
-            std::printf("Status: Unknown, Time Limit?");
+            //std::printf("Status: Unknown, Time Limit?");
+            return 0;
             PRINT_THROW();
             continue;
         }
@@ -317,8 +325,8 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
 
     }
 
-    std::printf("ERROR, STATUS FROM OR TOOLS IS TIME LIMIT\n");
-    PRINT_THROW();
+    //std::printf("ERROR, STATUS FROM OR TOOLS IS TIME LIMIT\n");
+    //PRINT_THROW();
 
     return false;
 }

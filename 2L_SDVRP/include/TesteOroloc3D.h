@@ -31,7 +31,7 @@ namespace TesteOroloc3D_NS
     void printSol(SolucaoNS::Solucao &sol);
     void writeToFile(const std::string& str, const std::string& strFile);
 
-    void writeSoltionOroloc2(const SolucaoNS::Bin& bin, const SolucaoNS::Rota& route);
+    void writeSoltionOroloc2(const SolucaoNS::Solucao& solution, const std::string& out);
 
 
 } // namespace TesteOroloc3D_NS

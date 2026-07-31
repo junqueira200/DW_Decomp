@@ -48,8 +48,7 @@ message("set solution_borrow_checker=1")
 
 add_library(${PROJECT_NAME} SHARED
     include/Commit.h
-    include/c_api.h
-    src/c_api.cpp
+    directions.txt
 )
 
 target_sources(${PROJECT_NAME}
@@ -73,6 +72,8 @@ target_sources(${PROJECT_NAME}
         src/IBM_CpOptimizer.cpp
         #src/SCIP.cpp
         src/Constants.cpp
+        src/c_api.cpp
+        src/SetPartition.cpp
 )
 
 
@@ -146,6 +147,8 @@ set(public_headers
     include/IBM_CpOptimizer.h
     include/SCIP.h
     include/AuxGeometry.h
+    include/SetPartition.h
+    include/c_api.h
 )
 
 # where to find our CMake modules

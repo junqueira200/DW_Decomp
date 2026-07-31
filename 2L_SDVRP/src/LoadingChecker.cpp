@@ -73,7 +73,7 @@ LoadingChecker::ConstraintProgrammingSolver(PackingType                  packing
     if(status == LoadingStatus::FeasOpt)
     {
 
-        std::cout<<"FeasOpt\n";
+        //std::cout<<"FeasOpt\n";
         containerLoadingCP.PrintSolution(vetPos);
     }
 

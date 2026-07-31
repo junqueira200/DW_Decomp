@@ -59,7 +59,7 @@ template <typename T, typename M = M_Linha> class Matrix : public std::vector<T>
     Matrix(size_t n_, size_t m_, const T &value)
         : std::vector<T>(n_ * m_, value), n(n_), m(m_)
     {
-        if(std::is_same_v<M, M_TrianngInf>() || std::is_same_v<M, M_TrianngSup>())
+        if(std::is_same<M, M_TrianngInf>() || std::is_same<M, M_TrianngSup>())
         {
             std::cout << "Erro, M nao pode ser M_TrianngInf ou M_TrianngSup\n";
             exit(-1);

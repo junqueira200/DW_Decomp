@@ -1,0 +1,6 @@
+Y:
+    RightY[i][j]: EndY[j] <= startY[i]
+    LeftY[i][j]:  EndY[i] <= startY[j]
+
+r_{ijx}∧{-}: behind
+r_{ijz}∧{-}: below

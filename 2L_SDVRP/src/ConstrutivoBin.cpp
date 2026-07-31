@@ -506,12 +506,15 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin  &bin,
     if(input.maxTimePackingHeuristic > 0.0)
     {
         setOffAlarm();
+        //std::printf("Seting alarm\n");
         setAlarm(input.maxTimePackingHeuristic);
     }
 
     for(int i = 0; i < numRepeticoes; ++i)
     {
-        if(alarm_stopG)
+        //if(i > 0 &(i%100000) == 0)
+        //    std::printf("%d\n", i);
+        if(alarm_stopG == 1)
             return false;
 
         copiaBin(bin, binVet[0]);
@@ -527,7 +530,7 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin  &bin,
         // std::cout<<"numItensAlo: "<<numItensAlo<<"\n\n";
         if(numItensAlo == vetItensTam)
         {
-            setOffAlarm();
+            //setOffAlarm();
 
             bool feasible = true;
             if(!input.comprimentoAlturaIguais1)
@@ -544,7 +547,7 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin  &bin,
         }
     }
 
-    setOffAlarm();
+    //setOffAlarm();
 
     /*
     if(input.cpSat)

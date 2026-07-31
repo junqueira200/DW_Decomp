@@ -654,7 +654,7 @@ std::string InstanceNS::Item::print(Rotation r, bool printVol)
     }
 
     if(printVol)
-        str += "; " + std::to_string(volume);
+        str += "; " + std::format("{:.1f}", volume);
 
     str += "; " + std::format("{:.1f}", weight);
 
@@ -725,7 +725,11 @@ int InstanceNS::copiaItensCliente(int cliente, VectorI &vetItens)
         i <= instanciaG.matCliItensIniFim(cliente, 1);
         ++i)
     {
-        vetItens[numItens] = i;
+        if((numItens+1) > vetItens.size())
+            vetItens.push_back(i);
+        else
+            vetItens[numItens] = i;
+
         numItens += 1;
     }
 
@@ -997,5 +1001,23 @@ void InstanceNS::readOroloc3D2(const std::string &strFile)
     instanciaG.maxNumItensPorClie = maxItemsPerCust;
 
     file.close();
+
+    convertInstanceToCm(instanciaG);
     // EXIT_PRINT();
+}
+
+void InstanceNS::convertInstanceToCm(Instance &instance)
+{
+    for(Item& item:instance.vetItens)
+    {
+        for(int i=0; i < 3; ++i)
+            item.vetDim[i] = (int)((item.vetDim[i]*0.1)+0.5);
+
+        item.volume = item.vetDim[0]*item.vetDim[1]*item.vetDim[2];
+    }
+
+    for(int i=0; i < 3; ++i)
+        instance.vetDimVeiculo[i] = (int)(instance.vetDimVeiculo[i]*0.1);
+
+    std::printf("Instance converted to cm\n");
 }
