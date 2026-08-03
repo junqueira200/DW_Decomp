@@ -23,7 +23,7 @@ namespace Algorithms
 {
 void ContainerLoadingCP::BuildModel()
 {
-    GravityMM = 2.2;
+    //GravityCm = 2.2;
 
     CreateVariables();
     AddConstraints();
@@ -402,19 +402,20 @@ void ContainerLoadingCP::CreateVariables()
     if(input.axleWights)
     {
         // cleaned this up, shouldnt make a difference
+        // TODO: CHECK,
         int maxK = semiTrailer.maxMassRearAxle + semiTrailer.maxMassFrontAxle;
         forceK =
-            mModelCP.NewIntVar({-scale * (int)(GravityMM * maxK), scale * (int)(GravityMM * maxK)});
-        forceRA = mModelCP.NewIntVar({-scale * (int)(GravityMM * semiTrailer.maxMassRearAxle),
-                                      scale * (int)(GravityMM * semiTrailer.maxMassRearAxle)});
-        forceFA = mModelCP.NewIntVar({-scale * (int)(GravityMM * semiTrailer.maxMassFrontAxle),
-                                      scale * (int)(GravityMM * semiTrailer.maxMassFrontAxle)});
+            mModelCP.NewIntVar({-scale * (int)(GravityCm * maxK), scale * (int)(GravityCm * maxK)});
+        forceRA = mModelCP.NewIntVar({-scale * (int)(GravityCm * semiTrailer.maxMassRearAxle),
+                                      scale * (int)(GravityCm * semiTrailer.maxMassRearAxle)});
+        forceFA = mModelCP.NewIntVar({-scale * (int)(GravityCm * semiTrailer.maxMassFrontAxle),
+                                      scale * (int)(GravityCm * semiTrailer.maxMassFrontAxle)});
         forceTA =
-            mModelCP.NewIntVar({-scale * (int)(GravityMM * semiTrailer.maxMassTrailerAxle),
-                                scale * (int)(GravityMM * semiTrailer.maxMassTrailerAxle)});
+            mModelCP.NewIntVar({-scale * (int)(GravityCm * semiTrailer.maxMassTrailerAxle),
+                                scale * (int)(GravityCm * semiTrailer.maxMassTrailerAxle)});
 
-        int max0 = std::max(scale * GravityMM * maxK, scale*GravityMM * semiTrailer.maxMassFrontAxle);
-        int max = std::max(max0, (int)(scale*GravityMM * semiTrailer.maxMassTrailerAxle));
+        int max0 = std::max(scale * GravityCm * maxK, scale*GravityCm * semiTrailer.maxMassFrontAxle);
+        int max = std::max(max0, (int)(scale*GravityCm * semiTrailer.maxMassTrailerAxle));
 
         //std::printf("Max force: %d\n", max);
 
@@ -808,7 +809,7 @@ void ContainerLoadingCP::CreateAxleWeights()
                              2 * mStartPositionsX[i] - mLengths[i] +2)
             .WithName("R1");
 
-        int itemF = mItems[i].Weight * GravityMM;
+        int itemF = mItems[i].Weight * GravityCm;
         sumMoments += itemF * mR[i];
         sumForces += itemF;
 
@@ -826,13 +827,13 @@ void ContainerLoadingCP::CreateAxleWeights()
     mModelCP
         .AddGreaterOrEqual(
             semiTrailer.distanceKingpinTrailerAxle * forceK,
-            scale * sumMoments + scale * semiTrailer.massTrailer * GravityMM *
+            scale * sumMoments + scale * semiTrailer.massTrailer * GravityCm *
                                      semiTrailer.distanceMassTrailerTrailerAxle)
         .WithName("EQ10_0");
     mModelCP
         .AddLessThan(semiTrailer.distanceKingpinTrailerAxle * forceK,
                      scale * sumMoments +
-                         scale * semiTrailer.massTrailer * GravityMM *
+                         scale * semiTrailer.massTrailer * GravityCm *
                              semiTrailer.distanceMassTrailerTrailerAxle +
                          semiTrailer.distanceKingpinTrailerAxle)
         .WithName("EQ10_1");
@@ -847,13 +848,13 @@ void ContainerLoadingCP::CreateAxleWeights()
     mModelCP
         .AddGreaterOrEqual(semiTrailer.wheelBase * forceFA,
                            semiTrailer.distanceKingpinRearAxle * forceK +
-                               scale * semiTrailer.massTractor * GravityMM *
+                               scale * semiTrailer.massTractor * GravityCm *
                                    semiTrailer.distanceMassTractorRearAxle)
         .WithName("EQ12_0");
     mModelCP
         .AddLessThan(semiTrailer.wheelBase * forceFA,
                      semiTrailer.distanceKingpinRearAxle * forceK +
-                         scale * semiTrailer.massTractor * GravityMM *
+                         scale * semiTrailer.massTractor * GravityCm *
                              semiTrailer.distanceMassTractorRearAxle +
                          semiTrailer.wheelBase)
         .WithName("EQ12_1");
@@ -873,7 +874,7 @@ void ContainerLoadingCP::CreateAxleWeights()
     // scale*semiTrailer.massTrailer*GravityMM*semiTrailer.distanceMassTrailerTrailerAxle);
     // EQ: 11 - can use this as there are no divisions
     mModelCP.AddEquality(
-        forceFA + forceRA - forceK - scale * semiTrailer.massTractor * GravityMM, 0);
+        forceFA + forceRA - forceK - scale * semiTrailer.massTractor * GravityCm, 0);
     // EQ: 12
     // mModelCP.AddEquality(semiTrailer.wheelBase*forceFA,
     // semiTrailer.distanceKingpinRearAxle*forceK +
@@ -881,7 +882,7 @@ void ContainerLoadingCP::CreateAxleWeights()
     // EQ: 9 - can use this as there are no divisions
     mModelCP.AddEquality(
         forceTA,
-        scale * sumForces + scale * semiTrailer.massTrailer * GravityMM - forceK);
+        scale * sumForces + scale * semiTrailer.massTrailer * GravityCm - forceK);
 }
 
 void ContainerLoadingCP::CreateBalancedLoading()

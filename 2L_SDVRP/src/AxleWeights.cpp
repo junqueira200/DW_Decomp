@@ -4,10 +4,20 @@
 
 using namespace AxleWeightsNS;
 using namespace InstanceNS;
+/*
+ * fFA: 6343672.8 fRA: 7727029.6(Limit: 11845575.0); fTA: 23665424.6(Limit: 23661720.0)
+ *      8240400.0
+ *
+ * fRA:   7727029.6
+ *Limit: 11845575.0
+ *
+ * fTA:   23662139.0(Limit: 23661720.0)
+ * Limit: 23661720.0
+ */
 
 bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin, bool print) const
 {
-    GravityMM = GravityMM_const;
+    GravityCm = GravityCmConst;
 
     double fK = 0.0;
     double fFA = 0.0;
@@ -20,7 +30,7 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin, bool prin
     for(int i = 0; i < bin.numItens; ++i)
     {
 
-        double f = instanciaG.vetItens[bin.vetItemId[i]].weight * GravityMM;
+        double f = instanciaG.vetItens[bin.vetItemId[i]].weight * GravityCm;
         sumF += f;
         double r = (double)distanceCargoSpaceTrailerAxle - bin.vetPosItem[i].vetDim[0] -
                    instanciaG.vetItens[bin.vetItemId[i]].getDimRotacionada(
@@ -31,24 +41,25 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin, bool prin
     }
 
     fK = (1.0 / (double)distanceKingpinTrailerAxle) *
-         (sumM + (double)massTrailer * GravityMM * distanceMassTrailerTrailerAxle);
+         (sumM + (double)massTrailer * GravityCm * distanceMassTrailerTrailerAxle);
     fFA = (1.0 / (double)wheelBase) *
           (fK * (double)distanceKingpinRearAxle +
-           (double)massTractor * GravityMM * distanceMassTractorRearAxle);
-    fRA = fK + (double)massTractor * GravityMM - fFA;
-    fTA = sumF + (double)massTrailer * GravityMM - fK;
+           (double)massTractor * GravityCm * distanceMassTractorRearAxle);
+    fRA = fK + (double)massTractor * GravityCm - fFA;
+    fTA = sumF + (double)massTrailer * GravityCm - fK;
 
-    if(fFA > (double)maxMassFrontAxle*1.01* GravityMM ||
-       fRA > (double)maxMassRearAxle*1.01 * GravityMM ||
-       fTA > (double)maxMassTrailerAxle*1.01 * GravityMM) // ||
+    // 1.01
+    if(fFA > (double)maxMassFrontAxle* GravityCm ||
+       fRA > (double)maxMassRearAxle * GravityCm ||
+       fTA > (double)maxMassTrailerAxle * GravityCm) // ||
     {
         if(print)
         {
-            std::printf("GravityMM: %d\n", GravityMM);
+            std::printf("GravityMM: %.1f\n", GravityCm);
             std::printf("FROM AxleWeights: fK: %.1f; fFA: %.1f(Limit: %.1f); fRA: %.1f(Limit: %.1f); fTA: %.1f(Limit: %.1f)\n",
-                        fK, fFA, (double)maxMassFrontAxle * GravityMM,
-                        fRA, (double)maxMassRearAxle * GravityMM,
-                        fTA, (double)maxMassTrailerAxle * GravityMM);
+                        fK, fFA, (double)maxMassFrontAxle * GravityCm,
+                        fRA, (double)maxMassRearAxle * GravityCm,
+                        fTA, (double)maxMassTrailerAxle * GravityCm);
         }
         return false;
     }

@@ -856,7 +856,7 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
             feasible = false;
         }
         */
-        double limit = input.balancedLoadingD * this->demandaTotal * 1.05;
+        double limit = input.balancedLoadingD * this->demandaTotal; //* 1.05;
         if(sumLeftBalancedLoading > limit || sumRightBalancedLoading > limit)
         {
             if(print)
@@ -971,7 +971,7 @@ void SolucaoNS::Bin::computeLoadingBalancing()
     for(int i=0; i < numItens; ++i)
         demandaTotal += instanciaG.vetItens[vetItemId[i]].weight;
 
-    double limit = input.balancedLoadingD * this->demandaTotal * 1.05;
+    double limit = input.balancedLoadingD * this->demandaTotal; // * 1.05;
 
     if(input.balancedLoading &&
        (sumLeftBalancedLoading > limit || sumRightBalancedLoading > limit))

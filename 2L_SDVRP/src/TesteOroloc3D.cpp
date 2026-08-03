@@ -512,28 +512,37 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         }
 
         VectorI vetItems;
+        int numItems = 0;
         if(!bin.vazio())
         {
             vetItems = bin.vetItemId;
+            numItems = bin.numItens;
+            std::printf("numItems: %d\n", numItems);
+            for(int i=0; i < numItems; ++i)
+                std::printf("%d ", vetItems[i]);
+            std::printf("\n:");
             //continue;					// for(int veic = 0)
         }
         else
         {
             //std::printf("Route: %s\n", sol.vetRota[veic].printRota(false).c_str());
-            copiaItensCliente(sol.vetRota[veic].vetRota[1], vetItems);
+            numItems = copiaItensCliente(sol.vetRota[veic].vetRota[1], vetItems);
+            std::printf("Cliente unico\n");
         }
+
+        //std::cout<<"Items: "<<vetItems<<"\n\n";
 
         std::string output =
             std::format("{}; {}; {}; {}; ", input.strInst,
-                        RandNs::estado_, veic, vetItems.size());
+                        RandNs::estado_, veic, numItems);
 
-        std::reverse(vetItems.begin(), vetItems.begin() + bin.numItens);
+        std::reverse(vetItems.begin(), vetItems.begin() + numItems);
 
         double ompStart = omp_get_wtime();
         // TODO remove comment!
         bool feasibleSolConst = construtivoBinPacking(bin2,
                                                       vetItems,
-                                                      bin.numItens,
+                                                      numItems,
                                                       input.aphaBin,
                                                       std::numeric_limits<int>::max(),
                                                       &solCp.vetRota[veic]);
@@ -568,14 +577,14 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         {
             convertVectorOfItensToVectorOfCuboids(bin.vetItemId,
                                                   vetCuboids,
-                                                  bin.numItens,
+                                                  numItems,
                                                   sol.vetRota[veic]);
         }
         else
         {
             convertVectorOfItensToVectorOfCuboids(vetItems,
                                                   vetCuboids,
-                                                  vetItems.size(),
+                                                  numItems,
                                                   sol.vetRota[veic]);
         }
         // int lastCustomerId =
@@ -798,9 +807,6 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         appendToFile("../oroloc3D.csv", output);
 
         std::printf("\n\n*************************************\n\n");
-
-PRINT_DEBUGG("", "");
-break;
 
 //PRINT_THROW();
 
