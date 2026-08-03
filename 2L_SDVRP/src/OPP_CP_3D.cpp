@@ -195,7 +195,7 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos)
         int fFA = operations_research::sat::SolutionIntegerValue(mResponse, forceFA);
         int fRA = operations_research::sat::SolutionIntegerValue(mResponse, forceRA);
         int fTA = operations_research::sat::SolutionIntegerValue(mResponse, forceTA);
-        //std::printf("FROM CP: fK: %d; fFA: %d; fRA: %d; fTA: %d\n", fK, fFA, fRA, fTA);
+        std::printf("FROM CP: fK: %d; fFA: %d; fRA: %d; fTA: %d\n", fK, fFA, fRA, fTA);
     }
 
     for(size_t i = 0; i < mItems.size(); ++i)
@@ -798,15 +798,15 @@ void ContainerLoadingCP::CreateAxleWeights()
         // mModelCP.AddEquality(2*mR[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle
         // -2*mStartPositionsX[i] - mLengths[i]);
         mModelCP
-            .AddGreaterOrEqual(2 * mR[i],
-                               2 * semiTrailer.distanceCargoSpaceTrailerAxle -
-                                   2 * mStartPositionsX[i] - mLengths[i])
+            .AddGreaterOrEqual(2 * mR[i]*scale,
+                               2 * semiTrailer.distanceCargoSpaceTrailerAxle*scale -
+                                   2 * mStartPositionsX[i]*scale - mLengths[i]*scale)
             .WithName("R0");
 
         mModelCP
-            .AddLessThan(2 * mR[i],
-                         2 * semiTrailer.distanceCargoSpaceTrailerAxle -
-                             2 * mStartPositionsX[i] - mLengths[i] +2)
+            .AddLessThan(2 * mR[i]*scale,
+                         2 * semiTrailer.distanceCargoSpaceTrailerAxle*scale -
+                             2 * mStartPositionsX[i] *scale - mLengths[i]*scale +2*scale)
             .WithName("R1");
 
         int itemF = mItems[i].Weight * GravityCm;
@@ -826,16 +826,16 @@ void ContainerLoadingCP::CreateAxleWeights()
     // EQ: 10
     mModelCP
         .AddGreaterOrEqual(
-            semiTrailer.distanceKingpinTrailerAxle * forceK,
+            semiTrailer.distanceKingpinTrailerAxle * forceK * scale,
             scale * sumMoments + scale * semiTrailer.massTrailer * GravityCm *
                                      semiTrailer.distanceMassTrailerTrailerAxle)
         .WithName("EQ10_0");
     mModelCP
-        .AddLessThan(semiTrailer.distanceKingpinTrailerAxle * forceK,
+        .AddLessThan(semiTrailer.distanceKingpinTrailerAxle * forceK * scale,
                      scale * sumMoments +
                          scale * semiTrailer.massTrailer * GravityCm *
-                             semiTrailer.distanceMassTrailerTrailerAxle +
-                         semiTrailer.distanceKingpinTrailerAxle)
+                             semiTrailer.distanceMassTrailerTrailerAxle * scale +
+                         semiTrailer.distanceKingpinTrailerAxle * scale)
         .WithName("EQ10_1");
 
     // EQ: 11
@@ -846,17 +846,17 @@ void ContainerLoadingCP::CreateAxleWeights()
 
     // EQ: 12
     mModelCP
-        .AddGreaterOrEqual(semiTrailer.wheelBase * forceFA,
-                           semiTrailer.distanceKingpinRearAxle * forceK +
+        .AddGreaterOrEqual(semiTrailer.wheelBase * forceFA * scale,
+                           semiTrailer.distanceKingpinRearAxle * forceK * scale +
                                scale * semiTrailer.massTractor * GravityCm *
                                    semiTrailer.distanceMassTractorRearAxle)
         .WithName("EQ12_0");
     mModelCP
-        .AddLessThan(semiTrailer.wheelBase * forceFA,
-                     semiTrailer.distanceKingpinRearAxle * forceK +
+        .AddLessThan(semiTrailer.wheelBase * forceFA * scale,
+                     semiTrailer.distanceKingpinRearAxle * forceK *scale +
                          scale * semiTrailer.massTractor * GravityCm *
                              semiTrailer.distanceMassTractorRearAxle +
-                         semiTrailer.wheelBase)
+                         semiTrailer.wheelBase * scale)
         .WithName("EQ12_1");
 
     // EQ: 9
@@ -874,15 +874,15 @@ void ContainerLoadingCP::CreateAxleWeights()
     // scale*semiTrailer.massTrailer*GravityMM*semiTrailer.distanceMassTrailerTrailerAxle);
     // EQ: 11 - can use this as there are no divisions
     mModelCP.AddEquality(
-        forceFA + forceRA - forceK - scale * semiTrailer.massTractor * GravityCm, 0);
+        scale*forceFA + scale*forceRA - scale*forceK - scale * semiTrailer.massTractor * GravityCm, 0);
     // EQ: 12
     // mModelCP.AddEquality(semiTrailer.wheelBase*forceFA,
     // semiTrailer.distanceKingpinRearAxle*forceK +
     // scale*semiTrailer.massTractor*GravityMM*semiTrailer.distanceMassTractorRearAxle);
     // EQ: 9 - can use this as there are no divisions
     mModelCP.AddEquality(
-        forceTA,
-        scale * sumForces + scale * semiTrailer.massTrailer * GravityCm - forceK);
+        forceTA*scale,
+        scale * sumForces + scale * semiTrailer.massTrailer * GravityCm - forceK*scale);
 }
 
 void ContainerLoadingCP::CreateBalancedLoading()
