@@ -21,7 +21,12 @@ class ContainerLoadingCP
     GetIntVars(DimensionType dimension) const;
 
     void WriteProtoModel(const operations_research::sat::CpModelProto &protoModel) const;
-    void PrintSolution(std::vector<Array<int, 4>> &vetPos);
+    void PrintSolution(std::vector<Array<int, 4>> &vetPos,
+                                                 int& fk,
+                                                 int& fFA,
+                                                 int& fRA,
+                                                 int& fTA);
+
     void ExtractPacking(std::vector<Cuboid> &items) const;
     [[nodiscard]] std::vector<int> ExtractSequence() const;
 

@@ -56,7 +56,11 @@ class LoadingChecker
                                 const Collections::IdVector &stopIds,
                                 const std::vector<Cuboid>   &items,
                                 double                       maxRuntimeSec,
-                                std::vector<Array<int, 4>>  &vetPos);
+                                std::vector<Array<int, 4>>  &vetPos,
+                                int& fk,
+                                int& fFA,
+                                int& fRA,
+                                int& fTA);
     // bool isCallTypeExact,
     // double maxRuntime = std::numeric_limits<double>::max());
 

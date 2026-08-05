@@ -22,6 +22,7 @@
 #include "BCRoutingParams.h"
 #include "LoadingChecker.h"
 #include "ProblemParameters.h"
+#include "ortools/base/version.h"
 
 using namespace InstanceNS;
 using namespace ConstrutivoBinNS;
@@ -40,6 +41,11 @@ using namespace MILP_NS;
 
 int main(int argc, const char *argv[])
 {
+    std::cout << "OR-Tools version: "
+              //<< operations_research::OrToolsMajorVersion()
+              << operations_research::OrToolsVersionString()
+              << std::endl;
+
     // std::cout<<"main\n";
     // Item item(1, 2, 3, 1);
 
@@ -70,7 +76,7 @@ int main(int argc, const char *argv[])
             PRINT_THROW();
         }
 
-        std::printf("%d: %s\n", i, instanciaG.vetItens[i].print(InstanceNS::Rot0, true).c_str());
+        //std::printf("%d: %s\n", i, instanciaG.vetItens[i].print(InstanceNS::Rot0, true).c_str());
     }
 
     if(input.mlifo && !input.lifo)

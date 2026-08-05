@@ -47,7 +47,11 @@ LoadingChecker::ConstraintProgrammingSolver(PackingType                  packing
                                             const Collections::IdVector &stopIds,
                                             const std::vector<Cuboid>   &items,
                                             double                       maxRuntimeSec,
-                                            std::vector<Array<int, 4>>  &vetPos)
+                                            std::vector<Array<int, 4>>  &vetPos,
+                                            int& fk,
+                                            int& fFA,
+                                            int& fRA,
+                                            int& fTA)
 // bool isCallTypeExact,
 // double maxRuntime)
 {
@@ -74,7 +78,7 @@ LoadingChecker::ConstraintProgrammingSolver(PackingType                  packing
     {
 
         //std::cout<<"FeasOpt\n";
-        containerLoadingCP.PrintSolution(vetPos);
+        containerLoadingCP.PrintSolution(vetPos, fk, fFA, fRA, fTA);
     }
 
     // containerLoadingCP.PrintSolution();

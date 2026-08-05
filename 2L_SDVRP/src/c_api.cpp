@@ -235,6 +235,8 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
     //std::printf("\n\n************************************\n");
     //std::printf(    "**************INI CP-Sat************\n\n");
 
+    int int_fk, int_fFA, int_fRA, int_fTA;
+
     for(int i=0; i < 1; ++i)
     {
         bin.reset();
@@ -243,7 +245,8 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
         // std::cout<<"n: "<<n<<"\n";
         double ompStart = omp_get_wtime();
         auto status = loadingChecker.ConstraintProgrammingSolver(
-        PackingType::Complete, container, stopIds, vetCuboids, input.cpSatTime, vetArray);
+        PackingType::Complete, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
+            int_fk, int_fFA, int_fRA, int_fTA);
         // std::cout<<"ret\n";
         double ompEnd = omp_get_wtime();
 

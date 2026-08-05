@@ -17,7 +17,7 @@ namespace TesteOroloc3D_NS
         FEASIBLE = 2
     };
 
-    void testeOroloc3D();
+    //void testeOroloc3D();
     void testeOroloc3D_2();
 
     void convertVectorOfItensToVectorOfCuboids(
