@@ -50,7 +50,7 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin,
                        0, bin.vetRotacao[i]) /
                        2.0;
 
-        r = std::round(r);
+        //r = std::round(r);
 
         if(print)
             std::printf("%d: %.1f; ", bin.vetItemId[i], r);

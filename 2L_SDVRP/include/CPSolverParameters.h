@@ -8,7 +8,7 @@ struct CPSolverParams
 {
     int  Threads = 1;
     int  Seed = 0;
-    bool LogFlag = false;
+    bool LogFlag = true;
     bool Presolve = true;
 
     bool EnableCumulativeDimensions = false;

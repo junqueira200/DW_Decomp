@@ -472,7 +472,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
             std::format("{}; {}; {}; {}; ", input.strInst,
                         RandNs::estado_, veic, numItems);
 
-        std::reverse(vetItems.begin(), vetItems.begin() + numItems);
+        //std::reverse(vetItems.begin(), vetItems.begin() + numItems);
 
         double ompStart = omp_get_wtime();
         // TODO remove comment!
@@ -535,7 +535,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
         bool inputAxleWights = input.axleWights;
 
-        int int_fk, int_fFA, int_fRA, int_fTA;
+        double int_fk, int_fFA, int_fRA, int_fTA;
 
         int n = 0;
         for(PackingType type : vetPackingType)
@@ -616,25 +616,25 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
                 if(abs(int_fk-fk) >= tol)
                 {
-                    std::printf("Error in FK, computed: %.1f, model: %d\n", fk, int_fk);
+                    std::printf("Error in FK, computed: %.1f, model: %.1f\n", fk, int_fk);
                     error = true;
                 }
 
                 if(abs(int_fFA-fFA) >= tol)
                 {
-                    std::printf("Error in FA, computed: %.1f, model: %d\n", fFA, int_fFA);
+                    std::printf("Error in FA, computed: %.1f, model: %.1f\n", fFA, int_fFA);
                     error = true;
                 }
 
                 if(abs(int_fRA-fRA) >= tol)
                 {
-                    std::printf("Error in FRA, computed: %.1f, model: %d\n", fRA, int_fRA);
+                    std::printf("Error in FRA, computed: %.1f, model: %.1f\n", fRA, int_fRA);
                     error = true;
                 }
 
                 if(abs(int_fTA-fTA) >= tol)
                 {
-                    std::printf("Error in FTA, computed: %.1f, model: %d\n", fTA, int_fTA);
+                    std::printf("Error in FTA, computed: %.1f, model: %.1f\n", fTA, int_fTA);
                     error = true;
                 }
 

@@ -22,10 +22,10 @@ class ContainerLoadingCP
 
     void WriteProtoModel(const operations_research::sat::CpModelProto &protoModel) const;
     void PrintSolution(std::vector<Array<int, 4>> &vetPos,
-                                                 int& fk,
-                                                 int& fFA,
-                                                 int& fRA,
-                                                 int& fTA);
+                                                 double& fk,
+                                                 double& fFA,
+                                                 double& fRA,
+                                                 double& fTA);
 
     void ExtractPacking(std::vector<Cuboid> &items) const;
     [[nodiscard]] std::vector<int> ExtractSequence() const;
@@ -75,8 +75,8 @@ class ContainerLoadingCP
 
     const double mMaxRuntime;
 
-    const int scale = 1;			// Dont work
-    const int scaleBalancedLoading = 100;
+    const int scale = 10;			// Dont work
+    const int scaleBalancedLoading = 10;
 
     PlacementPattern mPlacementPatternTypeX = PlacementPattern::None;
     PlacementPattern mPlacementPatternTypeY = PlacementPattern::None;

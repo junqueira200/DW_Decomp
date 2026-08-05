@@ -1008,8 +1008,14 @@ void InstanceNS::readOroloc3D2(const std::string &strFile)
 
 void InstanceNS::convertInstanceToCm(Instance &instance)
 {
-    std::printf("Instance not converted to cm\n");
-    return;
+    if(!input.useCm)
+    {
+        std::printf("Instance not converted to cm\n");
+        return;
+    }
+
+    //std::printf("Instance not converted to cm\n");
+    //return;
     for(Item& item:instance.vetItens)
     {
         for(int i=0; i < 3; ++i)

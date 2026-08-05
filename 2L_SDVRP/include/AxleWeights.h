@@ -4,6 +4,7 @@
 
 #include "Instancia.h"
 #include "Solucao.h"
+#include "InputOutput.h"
 
 namespace AxleWeightsNS
 {
@@ -24,7 +25,21 @@ class AxleData
 class SemiTrailer : public AxleData
 {
   public:
-    SemiTrailer() {}
+    SemiTrailer()
+    {
+        if(ParseInputNS::input.useCm)
+            return;
+
+        wheelBase                      *= 10;
+        distanceKingpinRearAxle        *= 10;
+        distanceKingpinTrailerAxle     *= 10;
+        distanceCargoSpaceTrailerAxle  *= 10;
+        distanceMassTractorRearAxle    *= 10;
+        distanceMassTrailerTrailerAxle *= 10;
+
+
+
+    }
     ~SemiTrailer() {}
     bool   checkAxleWeights(SolucaoNS::Bin &bin,
                             bool            print    = false,
@@ -35,18 +50,18 @@ class SemiTrailer : public AxleData
 
     double computeMaxFK(SolucaoNS::Bin &bin) const;
 
-    int wheelBase = 3790; // WB in mm
+    int wheelBase = 379; // WB in cm
     int maxMassFrontAxle = 8400;
     int maxMassRearAxle = 12075;
     int maxMassTrailerAxle = 24120;
     int distanceKingpinRearAxle =
-        560; // The distance between the kingpin and the rear axle (l_K|RA) in mm
+        56; // The distance between the kingpin and the rear axle (l_K|RA) in cm
     int distanceKingpinTrailerAxle =
-        8160; // The distance between the kingpin and the resultant trailer axle (l_K|TA)mm
+        816; // The distance between the kingpin and the resultant trailer axle (l_K|TA)cm
     int distanceCargoSpaceTrailerAxle =
-        9550; // The distance between the cargo area to the resultant trailer axle (l_TA)mm
-    int distanceMassTractorRearAxle = 2570;    // ? in mm
-    int distanceMassTrailerTrailerAxle = 1630; // ? in mm
+        955; // The distance between the cargo area to the resultant trailer axle (l_TA)cm
+    int distanceMassTractorRearAxle = 257;    // ? in cm
+    int distanceMassTrailerTrailerAxle = 163; // ? in cm
     int massTractor = 8197;
     int massTrailer = 6472;
 };

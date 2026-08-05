@@ -62,6 +62,7 @@ class Input
     bool        balancedLoading             = true;
     double 		maxTimePackingHeuristic 	= 10.0;
     bool        fragility				    = true;
+    bool        useCm						= true;
     // bool		inst3d                   = true;
 
     File file;

@@ -48,10 +48,10 @@ LoadingChecker::ConstraintProgrammingSolver(PackingType                  packing
                                             const std::vector<Cuboid>   &items,
                                             double                       maxRuntimeSec,
                                             std::vector<Array<int, 4>>  &vetPos,
-                                            int& fk,
-                                            int& fFA,
-                                            int& fRA,
-                                            int& fTA)
+                                            double& fk,
+                                            double& fFA,
+                                            double& fRA,
+                                            double& fTA)
 // bool isCallTypeExact,
 // double maxRuntime)
 {
