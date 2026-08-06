@@ -123,7 +123,7 @@ class ContainerLoadingCP
     ORIntVars2D mOverlapAreasYZ; // mOverlapAreasYZ[i][j], integer, size of intersection
                                  // area in yz-plane of items i and j
 
-    // Dx, Dy, Dz
+    // Dy, Dx, Dz
     ORIntVars1D mWidths;
     ORIntVars1D mLengths;
     ORIntVars1D mHeights;

@@ -40,7 +40,7 @@ find_package(OpenMP REQUIRED)
 find_package(CPLEX REQUIRED)
 link_directories(${CPLEX_CP_LIBRARY})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -fPIC")# -Wall -Wextra -fPIC")# -fsanitize=address")# -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -fPIC -fsanitize=undefined")# -Wall -Wextra -fPIC")# -fsanitize=address")# -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D __FILENAME__='\"$$(subst  ${CMAKE_SOURCE_DIR}/,,$$(abspath $$<))\"'")
 
 add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
