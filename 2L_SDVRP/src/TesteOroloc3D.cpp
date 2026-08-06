@@ -710,9 +710,9 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
         std::printf("\n\n*************************************\n\n");
 
-        PRINT_DEBUGG("", "");
+        //PRINT_DEBUGG("", "");
 
-        break;
+        //break;
 //PRINT_THROW();
 
     }

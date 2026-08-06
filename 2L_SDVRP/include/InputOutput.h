@@ -41,7 +41,7 @@ class Input
     double      gapIgReset 					= 0.2; // 0.2
     bool        comprimentoAlturaIguais1 	= false;
     bool        cpSat 						= true;
-    double      cpSatTime 					= 60.0*20.0;
+    double      cpSatTime 					= 600.0;
     // 0 Forward, 1 Backard, 2 Bidirectional
     int         labelingType 				= 0;
     bool        lifo 						= true;

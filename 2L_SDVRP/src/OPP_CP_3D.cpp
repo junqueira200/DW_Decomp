@@ -929,38 +929,44 @@ void ContainerLoadingCP::CreateAxleWeights()
     // (fK * (double)distanceKingpinRearAxle +
     //  (double)massTractor * GravityCm * distanceMassTractorRearAxle);
 
-    //mModelCP
-    //    .AddGreaterOrEqual(semiTrailer.wheelBase * forceFA,
-    //                       semiTrailer.distanceKingpinRearAxle * forceK +
-    //                            scale*semiTrailer.massTractor * GravityCmConst *
-    //                               semiTrailer.distanceMassTractorRearAxle - scale)
-    //    .WithName("EQ12_0");
-    //mModelCP
-    //    .AddLessOrEqual(semiTrailer.wheelBase * forceFA,
-    //                 semiTrailer.distanceKingpinRearAxle * forceK +
-    //                      scale*semiTrailer.massTractor * GravityCmConst *
-    //                         semiTrailer.distanceMassTractorRearAxle + scale)
-    //    .WithName("EQ12_1");
+    mModelCP
+        .AddGreaterOrEqual(semiTrailer.wheelBase * forceFA,
+                           semiTrailer.distanceKingpinRearAxle * forceK +
+                           (int64_t)scale*(int64_t)semiTrailer.massTractor *
+                           (int64_t)GravityCmConst *
+                           (int64_t)semiTrailer.distanceMassTractorRearAxle - scale)
+        .WithName("EQ12_0");
+    mModelCP
+        .AddLessOrEqual(semiTrailer.wheelBase * forceFA,
+                     semiTrailer.distanceKingpinRearAxle * forceK +
+                          (int64_t)scale*(int64_t)semiTrailer.massTractor *
+                          (int64_t)GravityCmConst *
+                          (int64_t)semiTrailer.distanceMassTractorRearAxle + scale)
+        .WithName("EQ12_1");
 
 
     // EQ: 10
     //     fRA = fK + (double)massTractor * GravityCm - fFA;
 
 
-    //mModelCP.AddGreaterOrEqual(
-    //    forceRA, forceK + scale*semiTrailer.massTractor * GravityCmConst - forceFA - scale);
+    mModelCP.AddGreaterOrEqual(forceRA, forceK + (int64_t)scale*
+                              (int64_t)semiTrailer.massTractor * (int64_t)GravityCmConst -
+                              forceFA - scale);
 
-    //mModelCP.AddLessOrEqual(
-    //    forceRA, forceK + scale*semiTrailer.massTractor * GravityCmConst - forceFA + scale);
+    mModelCP.AddLessOrEqual(forceRA, forceK + (int64_t)scale*
+                           (int64_t)semiTrailer.massTractor *
+                           (int64_t)GravityCmConst - forceFA + scale);
 
 
 
     //     fTA = sumF + (double)massTrailer * GravityCm - fK;
-    //mModelCP.AddGreaterOrEqual(forceTA,
-    //    scale * sumForces + scale*semiTrailer.massTrailer * GravityCmConst - forceK - scale);
+    mModelCP.AddGreaterOrEqual(forceTA, (int64_t)scale * sumForces +
+                              (int64_t)scale*(int64_t)semiTrailer.massTrailer *
+                              (int64_t)GravityCmConst - forceK - scale);
 
-    //mModelCP.AddLessOrEqual(forceTA,
-    //    scale * sumForces + scale*semiTrailer.massTrailer * GravityCmConst - forceK + scale);
+    mModelCP.AddLessOrEqual(forceTA, scale * sumForces +
+                            (int64_t)scale* (int64_t)semiTrailer.massTrailer *
+                            (int64_t)GravityCmConst - forceK + scale);
 
 }
 
