@@ -33,6 +33,11 @@ extern "C"
     int 	getVehicleCapacity();
     double 	getVehicleVolume();
 
+    void setDualFeasibleFunction(double ep0, double ep2);
+    double getDualVolume(int cust);
+    double getDualVolumeTotal();
+
+
     // TODO: Criar uma estrutura para as rotas;
     // TODO: Criar uma funcao para recuperar as solucoes do binpacking
 }

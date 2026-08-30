@@ -23,7 +23,8 @@ InstanceNS::Instance::Instance(int numClientes_, int numItens_, int numVeiculos_
       vetPesoItens(numItens_),
       // vetItemLargura(numItens_),
       vetDemandaCliente(numClientes_), vetItemCliente(numItens_), matCliItensIniFim(0, 0),
-      vetNumItensPorCli(numClientes_), vetMinDimItens(numItens_), vetTw(numClientes_)
+      vetNumItensPorCli(numClientes_), vetMinDimItens(numItens_), vetTw(numClientes_),
+      vetVolNormDualCust(numClientes_, 0.0)
 
 {
 
@@ -509,6 +510,21 @@ void InstanceNS::read3dInstance(const std::string &strFile)
     file >> instanciaG.maxPayload >> instanciaG.vetDimVeiculo[2] >>
         instanciaG.vetDimVeiculo[1] >> instanciaG.vetDimVeiculo[0];
 
+    const double volVeich = instanciaG.vetDimVeiculo[0]*instanciaG.vetDimVeiculo[1]*
+                            instanciaG.vetDimVeiculo[2];
+
+    const double maxDim = std::cbrt(volVeich);
+
+    const double term0 = std::max(instanciaG.vetDimVeiculo[0],
+                                  instanciaG.vetDimVeiculo[1]);
+
+    const double term2 = instanciaG.vetDimVeiculo[2];
+
+    instanciaG.volNormal = (instanciaG.vetDimVeiculo[0]/maxDim) *
+                           (instanciaG.vetDimVeiculo[1]/maxDim) *
+                           (instanciaG.vetDimVeiculo[2]/maxDim);
+
+
     std::cout << "veicCap: " << instanciaG.maxPayload
               << "; veicComprimento: " << instanciaG.vetDimVeiculo << "\n\n";
 
@@ -610,6 +626,7 @@ void InstanceNS::read3dInstance(const std::string &strFile)
 
             instanciaG.matCliItensIniFim.get(node, 1) = nextItem;
             instanciaG.vetItens.push_back(Item(largura, comprimento, altura, wight, nextItem));
+            instanciaG.vetItens[instanciaG.vetItens.size() - 1].setNorm(maxDim, maxDim);
             instanciaG.vetItens[instanciaG.vetItens.size() - 1].fragility = fragility;
             instanciaG.vetItens[instanciaG.vetItens.size() - 1].customer = node;
             nextItem += 1;

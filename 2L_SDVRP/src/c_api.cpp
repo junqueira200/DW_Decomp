@@ -4,6 +4,7 @@
 #include "TesteOroloc3D.h"
 #include <unordered_set>
 #include <omp.h>
+#include "DualFeasibleFunctions.h"
 
 using namespace ConstrutivoBinNS;
 using namespace InstanceNS;
@@ -11,6 +12,7 @@ using namespace ContainerLoading;
 using namespace VehicleRouting;
 using namespace VehicleRouting::Algorithms;
 using namespace TesteOroloc3D_NS;
+using namespace DualFeasibleFunctionsNS;
 
 void ini_3D_Packing(char *strInst_c, int oroloc3D)
 {
@@ -109,7 +111,8 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
     int totalDemand    = 0;
     for(int i=0; i < numItems; ++i)
     {
-        totalVolume += instanciaG.vetItens[i].volume;
+        Item& item = instanciaG.vetItens[vetItems[i]];
+        totalVolume += item.vetDim[0]*item.vetDim[1]*item.vetDim[2];
         //totalDemand += instanciaG.vetItens[i].weight;
     }
 
@@ -119,7 +122,9 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
     static double volumeOfVeicule = getVehicleVolume();
     if(totalVolume > volumeOfVeicule)
     {
-        //std::printf("maxPayload\n");
+        //std::printf("max Vol; totalVolume: %.2f; volumeOfVeicule: %.2f\n\n", totalVolume,
+        //             volumeOfVeicule);
+        //PRINT_THROW();
         return 0;
     }
 
@@ -232,8 +237,8 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
     double         tempoCpu;
     int totalTry = 0;
 
-    //std::printf("\n\n************************************\n");
-    //std::printf(    "**************INI CP-Sat************\n\n");
+    std::printf("\n\n************************************\n");
+    std::printf(    "**************INI CP-Sat************\n\n");
 
     double int_fk, int_fFA, int_fRA, int_fTA;
 
@@ -250,8 +255,8 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
         // std::cout<<"ret\n";
         double ompEnd = omp_get_wtime();
 
-        //std::printf("************************************\n");
-        //std::printf("**************END CP-Sat************\n\n");
+        std::printf("************************************\n");
+        std::printf("**************END CP-Sat************\n\n");
 
         if(status == LoadingStatus::Infeasible)
         {
@@ -379,7 +384,7 @@ double getVolumeFromCustomr(int cust)
         for(int i=ini; i <= end; ++i)
         {
             const Item& item = instanciaG.vetItens[i];
-            vol += (item.vetDim[0]*0.001)*(item.vetDim[1]*0.001)*(item.vetDim[2]*0.001);
+            vol += (item.vetDim[0])*(item.vetDim[1])*(item.vetDim[2]);
             //std::printf("Item: %d; volume: %f\n", i, instanciaG.vetItens[i].volume);
         }
     }
@@ -434,4 +439,38 @@ void setOroloc3DProblem()
     input.lifo			  		= false;
     input.mlifo			  		= true;
     input.removeFromShortSide	= false;
+}
+
+void setDualFeasibleFunction(double ep0, double ep2)
+{
+    instanciaG.vetVolNormDualCust.setAll(0.0);
+
+    for(int i=0; i < instanciaG.numItens; ++i)
+    {
+        Item& item = instanciaG.vetItens[i];
+        double d0 = funcionU(ep0, item.vetDimNor[0]);
+        double d1 = funcionU(ep0, item.vetDimNor[1]);
+        double d2 = funcionU(ep2, item.vetDimNor[2]);
+        item.volNormDual = d0*d1*d2;
+
+        instanciaG.vetVolNormDualCust[item.customer] += item.volNormDual;
+    }
+
+    for(int i=0; i < instanciaG.numClientes; ++i)
+    {
+        std::printf("%d: %.2f\n", i, instanciaG.vetVolNormDualCust[i]);
+    }
+
+    std::printf("\n\n");
+}
+
+double getDualVolume(int cust)
+{
+    return instanciaG.vetVolNormDualCust[cust];
+}
+
+double getDualVolumeTotal()
+{
+
+    return instanciaG.volNormal;
 }

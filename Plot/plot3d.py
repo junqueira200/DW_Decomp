@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 # Truck dimensions
-TRUCK_WIDTH = 60  # 13500
-TRUCK_LENGTH = 25  # 2450
-TRUCK_HEIGHT = 30  # 2700
+TRUCK_WIDTH = 1350 # 60
+TRUCK_LENGTH = 245 # 25
+TRUCK_HEIGHT = 270 # 30
 
 
 def read_items(filename):

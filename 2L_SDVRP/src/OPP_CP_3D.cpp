@@ -9,6 +9,7 @@
 #include <ranges>
 #include <stdexcept>
 #include <string>
+#include "Solucao.h"
 
 namespace ContainerLoading
 {
@@ -18,6 +19,7 @@ using namespace AxleWeightsNS;
 
 using operations_research::sat::BoolVar;
 using operations_research::sat::IntVar;
+using operations_research::sat::SolutionIntegerValue;
 
 namespace Algorithms
 {
@@ -180,7 +182,9 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
 
     Array<int, 4> array;
 
-    int64_t fk_int = operations_research::sat::SolutionIntegerValue(mResponse, forceK);
+    int64_t fk_int;
+    if(input.axleWights)
+        fk_int = operations_research::sat::SolutionIntegerValue(mResponse, forceK);
 
     //int sumLeft =
     //    operations_research::sat::SolutionIntegerValue(mResponse, sumLeftBalancedLoading);
@@ -200,7 +204,7 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
         fRA = operations_research::sat::SolutionIntegerValue(mResponse, forceRA)/(double)scale;;
         fTA = operations_research::sat::SolutionIntegerValue(mResponse, forceTA)/(double)scale;;
 
-        std::printf("FROM CP: fK: %.f; fFA: %.f; fRA: %.f; fTA: %.f\n", fk, fFA, fRA, fTA);
+        //std::printf("FROM CP: fK: %.f; fFA: %.f; fRA: %.f; fTA: %.f\n", fk, fFA, fRA, fTA);
     }
 
     double fK_ = 0.0;
@@ -212,19 +216,26 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
     double sumM = 0.0;
     int64_t sumM_int = 0;
 
-    std::printf("\nR: ");
+    //std::printf("\nR: ");
+
+    double leftBalancedLoading  = 0.0;
+    double rightBalancedLoading = 0.0;
+
     for(size_t i = 0; i < mItems.size(); ++i)
     {
-        int64_t r_int = operations_research::sat::SolutionIntegerValue(mResponse, mR[i]);
-        double r = operations_research::sat::SolutionIntegerValue(mResponse, mR[i])/(double)scale;
-        std::printf("%ld: %.1f; ", mItems[i].ExternId, r);
 
-        double f = mItems[i].Weight*GravityCmConst;
-        sumF += f;
-        sumM += f*r;
+        if(input.axleWights)
+        {
+            int64_t r_int = operations_research::sat::SolutionIntegerValue(mResponse, mR[i]);
+            double r = operations_research::sat::SolutionIntegerValue(mResponse, mR[i])/(double)scale;
+            //std::printf("%ld: %.1f; ", mItems[i].ExternId, r);
 
-        sumM_int += r_int*((int64_t)mItems[i].Weight*GravityCmConst);
+            double f = mItems[i].Weight*GravityCmConst;
+            sumF += f;
+            sumM += f*r;
 
+            sumM_int += r_int*((int64_t)mItems[i].Weight*GravityCmConst);
+        }
         //bool top = operations_research::sat::SolutionBooleanValue(mResponse, mTopBool[i]);
         //if(top)
         //    std::printf("Item(%d) is topItem\n", (int)mItems[i].ExternId);
@@ -294,6 +305,15 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
 
         vetPos.push_back(array);
 
+        if(input.balancedLoading)
+        {
+            double left = SolucaoNS::computeLeftBalancedLoading(array[1], dy, mItems[i].Weight);
+            double right = mItems[i].Weight - left;
+
+            leftBalancedLoading  += left;
+            rightBalancedLoading += right;
+        }
+
         /*
         for(int j=0; j < mItems.size(); ++j)
         {
@@ -308,6 +328,40 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
         */
     }
 
+    if(input.balancedLoading)
+    {
+        int tolBalance = 5;
+
+        double rightBalancedLoading_ =
+            SolutionIntegerValue(mResponse, sumRightBalancedLoading)/(double)scaleBalancedLoading2;
+
+        double leftBalancedLoading_  =
+            SolutionIntegerValue(mResponse, sumLeftBalancedLoading)/(double)scaleBalancedLoading2;
+
+        if(std::abs(rightBalancedLoading_ - rightBalancedLoading) >= tolBalance)
+        {
+            std::printf("Error in rightBalancedLoading\nComputed: \t %.2f\nModel: \t %.2f\n\n",
+                        rightBalancedLoading, rightBalancedLoading_);
+            PRINT_THROW();
+        }
+
+        if(std::abs(leftBalancedLoading_ - leftBalancedLoading) >= tolBalance)
+        {
+            std::printf("Error in leftBalancedLoading\nComputed: \t %.2f\nModel: \t %.2f\n\n",
+                        leftBalancedLoading, leftBalancedLoading_);
+            PRINT_THROW();
+        }
+
+        std::printf("rightBalancedLoading\nComputed: \t %.2f\nModel: \t %.2f\n\n",
+                    rightBalancedLoading, rightBalancedLoading_);
+
+    }
+
+
+
+    if(!input.axleWights)
+        return;
+
     //     mModelCP
     //.AddGreaterOrEqual(semiTrailer.distanceKingpinTrailerAxle * forceK,
     //                   sumMoments +  scale * semiTrailer.massTrailer * GravityCmConst *
@@ -317,6 +371,7 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
     int64_t rhs = sumM_int + scale * semiTrailer.massTrailer * GravityCmConst *
                             semiTrailer.distanceMassTrailerTrailerAxle;
 
+    /*
     std::printf("\n\nlhs: \t %lld\nrhs: \t %lld\n\n", lhs, rhs);
 
     printf("************\n\nforceK CP = %lld\n", fk_int);
@@ -332,6 +387,7 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
                (int64_t)semiTrailer.massTrailer *
                (int64_t)GravityCmConst *
                (int64_t)semiTrailer.distanceMassTrailerTrailerAxle);
+    */
 
     int64_t trailerMoment =
         (int64_t)scale *
@@ -344,11 +400,13 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
 
     rhs = sumM_int + trailerMoment;
 
+    /*
     printf("############\n\nlhs          = %lld\n", lhs);
     printf("sumM_int     = %lld\n", sumM_int);
     printf("trailer      = %lld\n", trailerMoment);
     printf("rhs          = %lld\n", rhs);
     printf("difference   = %lld\n\n#############\n", lhs-rhs);
+    */
 
     fK_ = (1.0 / (double)semiTrailer.distanceKingpinTrailerAxle) *
          (sumM + (double)semiTrailer.massTrailer * GravityCm *
@@ -363,11 +421,37 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
 
     fTA_ = sumF + (double)semiTrailer.massTrailer * GravityCm - fK_;
 
-    std::printf("\n\n");
+    //std::printf("\n\n");
 
-    std::printf(
-        "Computed with r from model: \n\nfk_: \t %.1f\nfFA_ \t %.1f\nfRA_: \t %.1f\nfTA_: \t %.1f\n\n",
-                fK_, fFA_, fRA_, fTA_);
+    //std::printf(
+    //    "Computed with r from model: \n\nfk_: \t %.1f\nfFA_ \t %.1f\nfRA_: \t %.1f\nfTA_: \t %.1f\n\n",
+    //            fK_, fFA_, fRA_, fTA_);
+
+    const int tolF = 5;
+
+    if(std::abs(fk - fK_) >= tolF)
+    {
+        std::printf("Error, \n\tFK_int: \t%.2f\n\tFK: \t%.2f", fk, fK_);
+        PRINT_THROW();
+    }
+
+    if(std::abs(fFA - fFA_) >= tolF)
+    {
+        std::printf("Error, \n\tfFA_int: \t%.2f\n\tfFA: \t%.2f", fFA, fFA_);
+        PRINT_THROW();
+    }
+
+    if(std::abs(fRA - fRA_) >= tolF)
+    {
+        std::printf("Error, \n\tfRA_int: \t%.2f\n\tfRA: \t%.2f", fRA, fRA_);
+        PRINT_THROW();
+    }
+
+    if(std::abs(fTA - fTA_) >= tolF)
+    {
+        std::printf("Error, \n\tfRA_int: \t%.2f\n\tfRA: \t%.2f", fTA, fTA_);
+        PRINT_THROW();
+    }
 
     //std::printf("mMinX: %d",
     //            (int)operations_research::sat::SolutionIntegerValue(mResponse, mMinX));
@@ -870,7 +954,7 @@ void ContainerLoadingCP::CreateAxleWeights()
 
     operations_research::sat::LinearExpr sumMoments;
     int                                  sumForces = 0;
-    std::printf("Force: ");
+    //std::printf("Force: ");
     for(int i = 0; i < mItems.size(); ++i)
     {
         // x = y
@@ -894,18 +978,18 @@ void ContainerLoadingCP::CreateAxleWeights()
 
 
         int itemF = mItems[i].Weight * GravityCmConst;
-        std::printf("%ld: %d; ", mItems[i].ExternId, itemF);
+        //std::printf("%ld: %d; ", mItems[i].ExternId, itemF);
         //std::printf("%ld: %.1f; ", mItems[i].ExternId, mItems[i].Weight);
         sumMoments += itemF * mR[i];
         sumForces += itemF;
     }
 
-    std::printf("\n\nsumForces: %d\n\n", sumForces);
+    //std::printf("\n\nsumForces: %d\n\n", sumForces);
     // EQ: 10 Fk:
     int temp = scale * semiTrailer.massTrailer * GravityCmConst *
                semiTrailer.distanceMassTrailerTrailerAxle;
 
-    std::printf("Constant: %d\n", temp);
+    //std::printf("Constant: %d\n", temp);
 
     // distanceKingpinTrailerAxle*fK = sumM + (double)massTrailer * GravityCm * distanceMassTrailerTrailerAxle
     //     fK = (1.0 / (double)distanceKingpinTrailerAxle) *
@@ -976,65 +1060,67 @@ void ContainerLoadingCP::CreateBalancedLoading()
     operations_research::sat::LinearExpr exp0;
     operations_research::sat::LinearExpr exp1;
 
-    const int w = InstanceNS::instanciaG.vetDimVeiculo[1];
-    const int wDiv2 = InstanceNS::instanciaG.vetDimVeiculo[1] / 2;
+    const int64_t w     = (InstanceNS::instanciaG.vetDimVeiculo[1])*scaleBalancedLoading;
+    const int64_t wDiv2 = (InstanceNS::instanciaG.vetDimVeiculo[1] / 2.0)*scaleBalancedLoading;
 
-    int totalMass = 0;
+    int64_t totalMass = 0;
     for(int i = 0; i < mItems.size(); ++i)
-        totalMass += mItems[i].Weight;
+        totalMass += mItems[i].Weight*scaleBalancedLoading2;
 
 
     for(int i = 0; i < mItems.size(); ++i)
     {
         {
-            auto tempLeftf0 = mModelCP.NewIntVar({0, 10 * w});
-            mModelCP.AddMaxEquality(tempLeftf0, {wDiv2 - mStartPositionsY[i], 0});
+            auto tempLeftf0 = mModelCP.NewIntVar({0, 100 * w});
+            mModelCP.AddMaxEquality(tempLeftf0, {wDiv2 -
+                                            mStartPositionsY[i]*scaleBalancedLoading, 0});
 
-            auto tempLeftf1 = mModelCP.NewIntVar({0, 10 * w});
+            auto tempLeftf1 = mModelCP.NewIntVar({0, 100 * w});
             mModelCP.AddMaxEquality(
-                tempLeftf1, {wDiv2 - (mStartPositionsY[i] + mWidths[i]), 0});
+                tempLeftf1, {wDiv2 - (mStartPositionsY[i]*scaleBalancedLoading +
+                                      mWidths[i]*scaleBalancedLoading), 0});
 
-            const int m = mItems[i].Weight;
-            int       ub = m * scaleBalancedLoading * 10 * w;
+            const int m = mItems[i].Weight*scaleBalancedLoading2;
+            int       ub = 2*m*scaleBalancedLoading;
 
             auto resLeft = mModelCP.NewIntVar({-ub, ub});
 
             mModelCP.AddDivisionEquality(
                 resLeft,
-                scaleBalancedLoading * m * (tempLeftf0 - tempLeftf1),
-                mWidths[i]);
+                m * (tempLeftf0 - tempLeftf1),
+                mWidths[i]*scaleBalancedLoading);
             exp0 += resLeft;
         }
 
         {
-            auto tempRight0 = mModelCP.NewIntVar({0, 10 * w});
+            auto tempRight0 = mModelCP.NewIntVar({0, 100 * w});
             mModelCP.AddMaxEquality(
-                tempRight0, {((mStartPositionsY[i] + mWidths[1]) - wDiv2), 0});
+                tempRight0, {((mStartPositionsY[i] + mWidths[i])*scaleBalancedLoading
+                              - wDiv2), 0});
 
-            auto tempRight1 = mModelCP.NewIntVar({0, 10 * w});
-            mModelCP.AddMaxEquality(tempRight1, {(mStartPositionsY[i] - wDiv2), 0});
+            auto tempRight1 = mModelCP.NewIntVar({0, 100 * w});
+            mModelCP.AddMaxEquality(
+                tempRight1, {(mStartPositionsY[i]*scaleBalancedLoading - wDiv2), 0});
 
-            const int m = mItems[i].Weight;
-            int       ub = m * scaleBalancedLoading * 10 * w;
+            const int m = mItems[i].Weight*scaleBalancedLoading2;
+            int       ub = m * scaleBalancedLoading* w;
 
             auto resRight = mModelCP.NewIntVar({-ub, ub});
 
             mModelCP.AddDivisionEquality(
                 resRight,
-                scaleBalancedLoading * m * (tempRight0 - tempRight1),
-                mWidths[i]);
+                m * (tempRight0 - tempRight1),
+                mWidths[i]*scaleBalancedLoading);
             exp1 += resRight;
         }
     }
 
     mModelCP.AddLessOrEqual(
         exp0,
-        (int)(scaleBalancedLoading *
-              (input.balancedLoadingD * totalMass)));
+        (int64_t) (input.balancedLoadingD * totalMass*scaleBalancedLoading2));
     mModelCP.AddLessOrEqual(
         exp1,
-        (int)(scaleBalancedLoading *
-              (input.balancedLoadingD * totalMass)));
+        (int64_t)(input.balancedLoadingD * totalMass*scaleBalancedLoading2));
 
     mModelCP.AddEquality(sumRightBalancedLoading, exp1);
     mModelCP.AddEquality(sumLeftBalancedLoading, exp0);

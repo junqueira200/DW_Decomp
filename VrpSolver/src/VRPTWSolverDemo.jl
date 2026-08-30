@@ -102,15 +102,24 @@ function run_vrptw(app::Dict{String,Any})
 
                     push!(vet, 0)
                     totalDemand = 0
+                    totalVol    = 0.0
+
                     for i in route
                         push!(vet, i)
                         totalDemand += d(data, i)
+                        totalVol    += vol(data, i)
                     end
                     println("totalDemand: ", totalDemand)
                     if(totalDemand > veh_capacity(data))
-                        println("Error: totalDemand: ", totalDemand, "\nveh_capacity: ", veh_capacity)
+                        println("Error: totalDemand: ", totalDemand, "\nveh_capacity: ", veh_capacity(data))
                         exit(-1)
                     end
+
+                    if totalVol > veh_volume(data)
+                        println("Error: totalVol: ", totalVol, "\ntotalVol: ", veh_volume(data))
+                        exit(-1)
+                    end
+                    #println("totalVol: ", totalVol)
                     push!(vet, 0)
                     result = testRoute(vet)
                     if(result == 0)
@@ -119,14 +128,15 @@ function run_vrptw(app::Dict{String,Any})
                         vetMult = []
 
                         for i in 1:(length(vet)-1)
-                            for j in 1:(length(vet)-1)
-                                if i != j
-                                    arc = (vet[i], vet[j])
-                                    push!(vetArcs, x[arc])
-                                    push!(vetMult, 1.0)
+                            #for j in 1:(length(vet)-1)
+                            j = i + 1
+                            if i != j
+                                arc = (vet[i], vet[j])
+                                push!(vetArcs, x[arc])
+                                push!(vetMult, 1.0)
 
-                                end
                             end
+                            #end
                             #arc = (vet[i], vet[i+1])
                             #push!(vetArcs, x[arc])
                             #push!(vetMult, 1.0)
@@ -138,6 +148,9 @@ function run_vrptw(app::Dict{String,Any})
                         
                         
                         add_dynamic_constr!(optimizer, vetArcs, vetMult, <=, length(vet)-1-1, "mycallback")
+
+ 
+
                         break
                         #exit(-1)
                     end
@@ -155,7 +168,17 @@ function run_vrptw(app::Dict{String,Any})
         end
 
         println("Calling optimize!")
+        startTime = omp_get_wtime()
+
         (status, solution_found) = optimize!(optimizer)
+
+        endTime = omp_get_wtime()
+
+        totalTime = endTime - startTime
+
+        println("Total Time: ", totalTime/60.0, " min\n")
+        println("stats: ", optimizer.stats)
+
         if solution_found
             sol = getsolution(data, x, get_objective_value(optimizer), optimizer)
         end

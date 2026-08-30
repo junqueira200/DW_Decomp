@@ -13,6 +13,7 @@
 #include "safe_vector.h"
 #include "sefe_array.h"
 #include "string"
+#include "AuxT.h"
 #include <iostream>
 #include <map>
 #include <string>
@@ -35,6 +36,7 @@ class Item
 {
   public:
     Array<double, 3> vetDim; // Length, width, height
+    Array<double, 3> vetDimNor;
     double           volume           = 0.0;
     double           weight           = 0.0;
     double           weightForce      = 0.0;
@@ -42,6 +44,7 @@ class Item
     int              customer 		  = -1;
     int              oroloc3D_item_id = -1;
     int              itemId           = -1;
+    double			 volNormDual      = 0;
     std::string      oroloc3D_item_id_str;
 
     Item() = default;
@@ -49,6 +52,14 @@ class Item
     void        set(double x, double y, double z, int itemId_);
     std::string print(Rotation r=Rot0, bool printVol = false);
     double      getDimRotacionada(int d, Rotation r);
+    INLINE
+    void setNorm(double term0, double term2)
+    {
+        //for(int d=0; d < 3; ++d)
+        vetDimNor[0] = vetDim[0]/term0;
+        vetDimNor[1] = vetDim[1]/term0;
+        vetDimNor[2] = vetDim[2]/term2;
+    }
 };
 
 struct TW
@@ -84,8 +95,10 @@ class Instance
     Vector<Item> vetItens;
     VectorD      vetPesoItens;
     VectorD      vetMinDimItens;
+    VectorD 	 vetVolNormDualCust;
 
     int maxNumItensPorClie = 0;
+    double volNormal       = 0.0;
 
     // Vector<double> vetItemAltura;
     // Vector<double> vetItemLargura;

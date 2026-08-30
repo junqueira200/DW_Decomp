@@ -17,6 +17,7 @@
 #include "TesteOroloc3D.h"
 #include "rand.h"
 #include "c_api.h"
+#include "DualFeasibleFunctions.h"
 
 #include "AuxT.h"
 #include "BCRoutingParams.h"
@@ -33,11 +34,113 @@ using namespace ConstrutivoNS;
 using namespace IgNs;
 using namespace BinPackingCP_NS;
 using namespace TesteOroloc3D_NS;
+using namespace DualFeasibleFunctionsNS;
 
 using namespace ContainerLoading;
 using namespace VehicleRouting;
 using namespace VehicleRouting::Algorithms;
 using namespace MILP_NS;
+
+
+void testMLIFO()
+{
+    std::printf("*****************************************\n");
+    std::printf("**************TESTING MLIFO**************\n\n");
+    PRINT_THROW();
+
+    static Eigen::Matrix<int, -1, -1, Eigen::RowMajor>
+        matSupportItems(instanciaG.numItens, instanciaG.numItens);
+    matSupportItems.setConstant(0);
+
+    int index0 = instanciaG.matCliItensIniFim(1, 0);
+    int index1 = instanciaG.matCliItensIniFim(2, 0);
+    const Item item0 = instanciaG.vetItens[index0];
+    const Item item1 = instanciaG.vetItens[index1];
+
+    double d0 = 73.25;
+    double d1 = 55.75;
+    double d2 = 61.0;
+
+    instanciaG.vetItens[index0].set(d0, d1, d2, instanciaG.vetItens[index0].itemId);
+    instanciaG.vetItens[index1].set(d0, d1, d2, instanciaG.vetItens[index1].itemId);
+
+    Bin bin;
+    bin.vetItemId[0] = index0;
+    bin.vetItemId[1] = index1;
+
+    bin.vetRotacao[0] = InstanceNS::Rot0;
+    bin.vetRotacao[1] = InstanceNS::Rot0;
+    bin.numItens = 2;
+
+    Rota rota;
+    rota.vetRota[1] = 1;
+    rota.vetRota[2] = 2;
+    rota.vetRota[3] = 0;
+    rota.numPos = 4;
+
+    bin.vetPosItem[0].set(326.75, 75.0, 0.0);
+    bin.vetPosItem[1].set(400.0, 75.0, 0.0);
+    if(SolucaoNS::checkUnloadingSequence(bin, rota, matSupportItems))
+        std::printf("Pass\n");
+    else
+        std::printf("Not Pass\n");
+
+    bin.vetPosItem[0].set(400.0, 75.0, 0.0);
+    bin.vetPosItem[1].set(326.75, 75.0, 0.0);
+    if(SolucaoNS::checkUnloadingSequence(bin, rota, matSupportItems))
+        std::printf("Pass\n");
+    else
+        std::printf("Not Pass\n");
+
+
+    bin.vetPosItem[0].set(400.0, 130.75, 0.0);
+    bin.vetPosItem[1].set(400.0, 75.0, 0.0);
+    if(SolucaoNS::checkUnloadingSequence(bin, rota, matSupportItems))
+        std::printf("Pass\n");
+    else
+        std::printf("Not Pass\n");
+
+    bin.vetPosItem[0].set(400.0, 75.0, 0.0);
+    bin.vetPosItem[1].set(400.0, 130.75, 0.0);
+    if(SolucaoNS::checkUnloadingSequence(bin, rota, matSupportItems))
+        std::printf("Not Pass\n");
+    else
+        std::printf("Pass\n");
+
+
+    bin.vetPosItem[0].set(400.0, 75.0, 61.0);
+    bin.vetPosItem[1].set(400.0, 75.0, 0.0);
+    if(SolucaoNS::checkUnloadingSequence(bin, rota, matSupportItems))
+        std::printf("Pass\n");
+    else
+        std::printf("Not Pass\n");
+
+
+    bin.vetPosItem[0].set(400.0, 75.0, 0.0);
+    bin.vetPosItem[1].set(400.0, 75.0, 61.0);
+
+    matSupportItems(index0, index1) = true;
+
+    if(SolucaoNS::checkUnloadingSequence(bin, rota, matSupportItems))
+        std::printf("Not Pass\n");
+    else
+        std::printf("Pass\n");
+
+    bin.vetPosItem[0].set(400.0, 75.0, 0.0);
+    bin.vetPosItem[1].set(400.0, 75.0, 61.0);
+
+    matSupportItems(index0, index1) = false;
+
+    if(SolucaoNS::checkUnloadingSequence(bin, rota, matSupportItems))
+        std::printf("Pass\n");
+    else
+        std::printf("Not Pass\n");
+
+
+
+
+    PRINT_THROW();
+}
 
 int main(int argc, const char *argv[])
 {
@@ -67,9 +170,15 @@ int main(int argc, const char *argv[])
     else
         InstanceNS::read3dInstance(input.strInstCompleto);
 
+    //testMLIFO();
 
     for(int i=0; i < instanciaG.numItens; ++i)
     {
+        //Item &item = instanciaG.vetItens[i];
+        //for(int d=0; d < 3; ++d)
+        //    maxDim = std::max(maxDim, item.vetDim[d]);
+
+
         if(i != instanciaG.vetItens[i].itemId)
         {
             std::printf("Error, i(%d) != itemId(%d)\n", i, instanciaG.vetItens[i].itemId);
@@ -78,6 +187,58 @@ int main(int argc, const char *argv[])
 
         //std::printf("%d: %s\n", i, instanciaG.vetItens[i].print(InstanceNS::Rot0, true).c_str());
     }
+
+    double vol = 0.0;
+    double volNormal = 0.0;
+    const double volVeich = instanciaG.vetDimVeiculo[0]*instanciaG.vetDimVeiculo[1]*
+                            instanciaG.vetDimVeiculo[2];
+
+    const double maxDim = std::cbrt(volVeich);
+
+    double m0 = 3;
+    double m1 = 4;
+    double m2 = 1;
+
+    const double volVeichNor = (instanciaG.vetDimVeiculo[0]/maxDim)*(instanciaG.vetDimVeiculo[1]/maxDim)*
+                               (instanciaG.vetDimVeiculo[2]/maxDim);
+
+    std::printf("Max dim: %.1f\n", maxDim);
+    std::printf("volVeichNor: %.1f\n\n", volVeichNor);
+
+
+    VectorI vetItems2;
+
+    for(int i=0; i < instanciaG.numItens; ++i)
+    {
+        vetItems2.push_back(i);
+        Item &item = instanciaG.vetItens[i];
+
+        double dim0 = item.vetDim[0]/maxDim;
+        double dim1 = item.vetDim[1]/maxDim;
+        double dim2 = item.vetDim[2]/maxDim;
+
+        vol += item.vetDim[0]*item.vetDim[1]*item.vetDim[2];
+        volNormal += funcionU((1.0/8), dim0) * funcionU((1.0/7), dim1) *
+                     funcionU((1.0/9), dim2);
+        bool doBreak = false;
+
+        if(vol > volVeich)
+        {
+            std::printf("VOL MAIOR\n");
+            doBreak = true;
+        }
+
+        if(volNormal > 1.0)
+        {
+            std::printf("VOL NORMAL MAIOR\n\n");
+            doBreak = true;
+        }
+
+        if(doBreak)
+            break;
+    }
+
+    std::printf("volNormal: %f\n", volNormal);
 
     if(input.mlifo && !input.lifo)
     {
@@ -109,6 +270,11 @@ int main(int argc, const char *argv[])
     if(!input.instOroloc3D_2)
     {
         setClassical3DPackingProblem();
+
+        //bool result = testRoute(&vetItems2[0], vetItems2.size(), 0);
+        //std::printf("Resultado: %d\n", (int)result);
+
+        //exit(0);
 
 
         Solucao sol(instanciaG);

@@ -375,10 +375,25 @@ bool lifo(InstanceNS::Item    							&item0,
     {
         if (overlapX)
         {
+//std::printf("\toverlapX\n");
             bool in_front_block = (maxY1 < p0.vetDim[1]);
             bool above = p0.vetDim[2] >= maxZ1;
             bool below = p1.vetDim[2] >= maxZ0;
-            bool left  = p0.vetDim[1] <= maxY1;
+            bool left  = p0.vetDim[1] >= maxY1;
+
+            /*
+            if(left)
+                std::printf("\tleft\n");
+
+            if(above)
+                std::printf("\tabove\n");
+
+            if(below)
+                std::printf("\tbelow\n");
+
+            if(!item0_supports_item1)
+                std::printf("!item0_supports_item1\n");
+            */
 
             return left || above || (below && !item0_supports_item1);
         }
@@ -432,8 +447,9 @@ inline const Ponto PontoZero(0.0, 0.0, 0.0);
 INLINE
 double computeLeftBalancedLoading(double y, double width, int mass)
 {
-    double center = (InstanceNS::instanciaG.vetDimVeiculo[1] / 2.0);
+    static const double center = (InstanceNS::instanciaG.vetDimVeiculo[1] / 2.0);
     // center -
+    std::printf("m(%d)/w(%.2f): %.2f\n", mass, width, (mass / width));
     return (mass / width) *
            (std::max(0.0, center - y) - std::max(0.0, center - (y + width)));
 }
@@ -441,7 +457,7 @@ double computeLeftBalancedLoading(double y, double width, int mass)
 INLINE
 double computeRightBalancedLoading(double y, double width, int mass)
 {
-    double center = (InstanceNS::instanciaG.vetDimVeiculo[1] / 2.0);
+    static const double center = (InstanceNS::instanciaG.vetDimVeiculo[1] / 2.0);
     return (mass / width) *
            (std::max(0.0, (y + width) - center) - std::max(0.0, y - center));
 }

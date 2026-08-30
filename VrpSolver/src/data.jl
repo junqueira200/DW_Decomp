@@ -1,4 +1,4 @@
-const LIB = "/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/build/2L_SDVRP/lib2L_SDVRP.dylib"
+const LIB = "/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/build2/2L_SDVRP/lib2L_SDVRP.dylib"
 
 #const inst = "/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/2L_SDVRP/Instances/Oroloc3D_2/instances/S10_240T.txt"
 

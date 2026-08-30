@@ -160,4 +160,16 @@ function drawsolution(tikzpath, data, solution)
     end
 end
 
+function computeDistance(sol::Solution)
+    dist = 0.0
+    for route in sol.routes
+        for i in 1:(length(route)-1)
+            dist += getDistance(route[i], route[i+1])
+        end
+    end
+    
+    sol.cost = dist
+
+end
+
 

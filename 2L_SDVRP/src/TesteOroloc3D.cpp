@@ -608,7 +608,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                 //std::cout<<binCp.printPlot()<<"\n**********\n\n";
 
                 double fk, fFA, fRA, fTA;
-                semiTrailer.checkAxleWeights(binCp, true, &fk, &fFA, &fRA, &fTA);
+                semiTrailer.checkAxleWeights(binCp, false, &fk, &fFA, &fRA, &fTA);
 
                 double tol = 2;
 
@@ -646,7 +646,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
 
                 // binCp.numItens = numItems;
-                if(binCp.checkFeasibility(&rota, false, true))
+                if(binCp.checkFeasibility(&rota, false, false))
                 {
                     //semiTrailer.checkAxleWeights(binCp, true);
 

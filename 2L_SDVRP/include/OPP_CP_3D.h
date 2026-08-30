@@ -75,8 +75,9 @@ class ContainerLoadingCP
 
     const double mMaxRuntime;
 
-    const int scale = 10;			// Dont work
-    const int scaleBalancedLoading = 10;
+    const int scale = 10;
+    const int64_t scaleBalancedLoading = 10;
+    const int64_t scaleBalancedLoading2 = 10;
 
     PlacementPattern mPlacementPatternTypeX = PlacementPattern::None;
     PlacementPattern mPlacementPatternTypeY = PlacementPattern::None;

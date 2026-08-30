@@ -836,6 +836,10 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
         sumRightTemp += right;
     }
 
+    std::printf("\nsumLeftTemp: %.2f\n", sumLeftTemp);
+    std::printf("sumRightTemp: %.2f\n\n", sumRightTemp);
+    std::printf("limit: %.2f\n\n", input.balancedLoadingD * this->demandaTotal);
+PRINT_THROW();
     /*
     for(int i = 0; i < numItens; ++i)
     {
@@ -1150,8 +1154,8 @@ bool SolucaoNS::
             if(posItemI < posItemJ)
             {
 //std::cout<<"\tClienteJ: "<<itemJ.customer<<"\n";
-                // std::cout<<"ItemI: "<<itemI.oroloc3D_item_id<<"\n";
-                // std::cout<<"ItemJ: "<<itemJ.oroloc3D_item_id<<"\n";
+                //std::cout<<"ItemI: "<<itemI.customer<<"\n";
+                //std::cout<<"ItemJ: "<<itemJ.customer<<"\n\n";
 
                 if(!lifo(itemI,
                          bin.vetPosItem[i],
