@@ -6,7 +6,7 @@ namespace Algorithms
 {
 struct CPSolverParams
 {
-    int  Threads = 4;
+    int  Threads = 1;
     int  Seed = 0;
     bool LogFlag = false;
     bool Presolve = true;

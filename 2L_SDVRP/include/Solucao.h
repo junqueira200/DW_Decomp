@@ -449,7 +449,7 @@ double computeLeftBalancedLoading(double y, double width, int mass)
 {
     static const double center = (InstanceNS::instanciaG.vetDimVeiculo[1] / 2.0);
     // center -
-    std::printf("m(%d)/w(%.2f): %.2f\n", mass, width, (mass / width));
+    //std::printf("m(%d)/w(%.2f): %.2f\n", mass, width, (mass / width));
     return (mass / width) *
            (std::max(0.0, center - y) - std::max(0.0, center - (y + width)));
 }
@@ -483,13 +483,13 @@ bool tochRightSideOfTruck(int item, Ponto p, InstanceNS::Rotation r)
 INLINE
 bool tochLeftSideOfTruck(int item, Ponto p, InstanceNS::Rotation r)
 {
-    return doubleEqual(0.0, p.vetDim[1], DifDistColision);
+    return p.vetDim[0] <= DifDistColision;
 }
 
 INLINE
 bool tochBackSideOfTruck(int item, Ponto p, InstanceNS::Rotation r)
 {
-    return doubleEqual(0.0, p.vetDim[0], DifDistColision);
+    return doubleEqual(0.0, p.vetDim[1], DifDistColision);
 }
 
 INLINE

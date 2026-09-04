@@ -55,7 +55,7 @@ class Input
     bool        support                     = true;
     double      minSupportArea 				= 0.75;
     bool        compactness					= true;
-    double      minLeftSupportArea 			= 0.4;
+    double      minLeftSupportArea 			= 0.45;
     bool        axleWights 					= true;
     int         supportLimit 				= 0;
     double      balancedLoadingD 			= 0.6;

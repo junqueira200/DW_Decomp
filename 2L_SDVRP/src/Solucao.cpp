@@ -821,7 +821,7 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
 
         double support = areaSuport / area;
 
-        if(input.support && support < instanciaG.minSupport)
+        if(input.support && support < input.minSupportArea)
         {
             //std::cout << "support: " << support << "\n";
             return false;
@@ -836,10 +836,10 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
         sumRightTemp += right;
     }
 
-    std::printf("\nsumLeftTemp: %.2f\n", sumLeftTemp);
-    std::printf("sumRightTemp: %.2f\n\n", sumRightTemp);
-    std::printf("limit: %.2f\n\n", input.balancedLoadingD * this->demandaTotal);
-PRINT_THROW();
+    //std::printf("\nsumLeftTemp: %.2f\n", sumLeftTemp);
+    //std::printf("sumRightTemp: %.2f\n\n", sumRightTemp);
+    //std::printf("limit: %.2f\n\n", input.balancedLoadingD * this->demandaTotal);
+//PRINT_THROW();
     /*
     for(int i = 0; i < numItens; ++i)
     {
@@ -860,12 +860,12 @@ PRINT_THROW();
             feasible = false;
         }
         */
-        double limit = input.balancedLoadingD * this->demandaTotal; //* 1.05;
+        double limit = std::ceil(input.balancedLoadingD * this->demandaTotal); //* 1.05;
         if(sumLeftBalancedLoading > limit || sumRightBalancedLoading > limit)
         {
             if(print)
                 std::printf("Balanced Loading Limit\n");
-            feasible = fromCp;
+            feasible = false;
         }
     }
 
@@ -1223,6 +1223,7 @@ bool SolucaoNS::checkCompactness(Bin &bin, const VectorI &vetTop, std::string *s
             minDist = bin.vetPosItem[i].vetDim[1];
     }
 
+    /*
     if(minDist > DistCompactnessFront)
     {
         // std::printf("Compactness, minDist(%.1f) is gretter then limit (%.1f)\n",
@@ -1234,7 +1235,7 @@ bool SolucaoNS::checkCompactness(Bin &bin, const VectorI &vetTop, std::string *s
                 DistCompactnessFront);
         return false;
     }
-
+    */
     // return true;
 
     /*
@@ -1253,8 +1254,8 @@ bool SolucaoNS::checkCompactness(Bin &bin, const VectorI &vetTop, std::string *s
 
     for(int i = 0; i < bin.numItens; ++i)
     {
-        if(vetTop[i])
-            continue;
+        //if(vetTop[i])
+        //    continue;
 
         // bool tochRight = tochRightSideOfTruck(bin.vetItemId[i], bin.vetPosItem[i],
         // bin.vetRotacao[i]);
@@ -1267,26 +1268,19 @@ bool SolucaoNS::checkCompactness(Bin &bin, const VectorI &vetTop, std::string *s
 
         double sumAreasRight = 0.0;
         double sumAreasLeft = 0.0;
-        bool   mostLeftItem = true;
 
-        for(int j = 0; j < bin.numItens; ++j)
+        if(!tochLeft)
         {
-            if(i == j)
-                continue;
+            for(int j = 0; j < bin.numItens; ++j)
+            {
+                if(i == j)
+                    continue;
 
-            const int      itemJ = bin.vetItemId[j];
-            const Ponto    pJ = bin.vetPosItem[j];
-            const Rotation rJ = bin.vetRotacao[j];
-
-            if(doubleLess(pJ.vetDim[0], pI.vetDim[0]))
-                mostLeftItem = false;
-
-            // if(!tochRight)
-            //     sumAreasRight += getIntercetion(itemI, pI, rI, Right, itemJ, pJ, rJ,
-            //     Left);
-
-            if(!tochLeft)
+                const int      itemJ = bin.vetItemId[j];
+                const Ponto    pJ = bin.vetPosItem[j];
+                const Rotation rJ = bin.vetRotacao[j];
                 sumAreasLeft += getIntercetion(itemI, pI, rI, Left, itemJ, pJ, rJ, Right);
+            }
         }
 
         double dz = instanciaG.vetItens[itemI].getDimRotacionada(2, rI);
@@ -1310,10 +1304,10 @@ bool SolucaoNS::checkCompactness(Bin &bin, const VectorI &vetTop, std::string *s
         }
         */
 
-        if(!tochLeft && !mostLeftItem)
+        if(!tochLeft)
         {
             double ratio = sumAreasLeft / areaTotal;
-            if(ratio < instanciaG.minLR_Support)
+            if(ratio < input.minLeftSupportArea)
             {
                 if(strError)
                 {
@@ -1357,7 +1351,8 @@ double SolucaoNS::getIntercetion(int                  item0,
 
         // Test Colision
         max = p1.vetDim[0] + instanciaG.vetItens[item1].getDimRotacionada(0, r1);
-        bool colision = std::abs(p0.vetDim[0] - max) <= DistCompactnessFront;
+        double dif = p0.vetDim[0] - max;
+        bool colision = dif <= DifDistColision && dif >= 0.0;
         //bool equal    = doubleEqual(p0.vetDim[0], max, DifDistColision);
 
         /*

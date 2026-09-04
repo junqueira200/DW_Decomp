@@ -117,7 +117,7 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep,
     double support = areaSuport / area;
     // std::cout<<"support: "<<support<<"\n";
 
-    return support >= instanciaG.minSupport;
+    return support >= input.minSupportArea;
 }
 
 double ConstrutivoBinNS::computeXY_Overlap(InstanceNS::Item       &item0,

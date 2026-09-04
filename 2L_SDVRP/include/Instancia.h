@@ -59,6 +59,7 @@ class Item
         vetDimNor[0] = vetDim[0]/term0;
         vetDimNor[1] = vetDim[1]/term0;
         vetDimNor[2] = vetDim[2]/term2;
+        volNormDual = vetDimNor[0]*vetDimNor[1]*vetDimNor[2];
     }
 };
 
@@ -71,15 +72,14 @@ class Instance
 {
   public:
     std::string nome;
-    int         numClientes = 0;
-    int         numItens = 0;
+    int         numClientes   		= 0;
+    int         numItens      		= 0;
     Vector<int> vetNumItensPorCli;
-    int         numVeiculos = 0;
-    int         numDim = 2;
-    int         numRotation = 6;
-    double      maxPayload = 0;
-    double      minSupport = 0.75;
-    double      minLR_Support = 0.12;
+    int         numVeiculos   		= 0;
+    int         numDim        		= 2;
+    int         numRotation   		= 6;
+    double      maxPayload    		= 0;
+    double      maxItemVolume 		= 0.0;
 
     Array<double, 3> vetDimVeiculo;
     // double veicAltura = 0.0;
@@ -122,6 +122,7 @@ class Instance
     Instance();
     Instance(int numClientes_, int numItens_, int numVeiculos_);
     void atualizaVetMinDimItens();
+    void setMaxItemVolume();
 };
 
 void   read2dInstance(const std::string &strFile);
@@ -136,6 +137,7 @@ int    copiaItensClientes(VectorI &vetClientes,
                           bool     push = false);
 double calculaDistancia(VectorI &vet, int tam);
 int    generateRandomListOfItems(int numItens, VectorI &vetItems);
+
 
 inline Instance                                    instanciaG;
 inline static const Array<InstanceNS::Rotation, 2> vetRot = {Rot0, Rot1}; //, Rot2};

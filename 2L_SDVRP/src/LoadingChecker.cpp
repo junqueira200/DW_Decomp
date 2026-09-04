@@ -64,9 +64,9 @@ LoadingChecker::ConstraintProgrammingSolver(PackingType                  packing
                                                  items,
                                                  numberStops,
                                                  loadingMask,
-                                                 InstanceNS::instanciaG.minSupport,
+                                                 ParseInputNS::input.minSupportArea,
                                                  maxRuntimeSec,
-                                                 InstanceNS::instanciaG.minLR_Support);
+                                                 ParseInputNS::input.minLeftSupportArea);
     auto status = containerLoadingCP.Solve();
 
     if(status == LoadingStatus::Invalid)
@@ -115,9 +115,9 @@ LoadingStatus LoadingChecker::ConstraintProgrammingSolverGetPacking(
                                                  items,
                                                  numberStops,
                                                  loadingMask,
-                                                 InstanceNS::instanciaG.minSupport,
+                                                 ParseInputNS::input.minSupportArea,
                                                  maxRuntime,
-                                                 InstanceNS::instanciaG.minLR_Support);
+                                                 ParseInputNS::input.minLeftSupportArea);
 
     auto status = containerLoadingCP.Solve();
 

@@ -253,6 +253,7 @@ void InstanceNS::read2dInstance(const std::string &strFile)
     instanciaG.atualizaVetMinDimItens();
 
     file.close();
+    instanciaG.setMaxItemVolume();
 }
 
 void InstanceNS::readOroloc3D(const std::string &strFile)
@@ -647,6 +648,7 @@ void InstanceNS::read3dInstance(const std::string &strFile)
     std::printf("instanciaG.numVeiculos: %d\n\n", instanciaG.numVeiculos);
 
     file.close();
+    instanciaG.setMaxItemVolume();
 }
 
 void InstanceNS::Instance::atualizaVetMinDimItens()
@@ -658,6 +660,14 @@ void InstanceNS::Instance::atualizaVetMinDimItens()
     }
 
     // std::cout<<"vetMinDimItens: "<<vetMinDimItens<<"\n\n";
+}
+
+void InstanceNS::Instance::setMaxItemVolume()
+{
+    for(Item& item:vetItens)
+        maxItemVolume = std::max(maxItemVolume, item.volume);
+
+    std::printf("maxItemVolume: %.2f\n", maxItemVolume);
 }
 
 std::string InstanceNS::Item::print(Rotation r, bool printVol)
@@ -1020,6 +1030,7 @@ void InstanceNS::readOroloc3D2(const std::string &strFile)
     file.close();
 
     convertInstanceToCm(instanciaG);
+    instanciaG.setMaxItemVolume();
     // EXIT_PRINT();
 }
 

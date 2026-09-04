@@ -160,13 +160,28 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
 
     bool feasible = false;
 
+    if(useDualFunction)
+        check(vetItems);
+
+
     if(onlyHeuristic >= 1)
     {
         feasible =
         ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
                                                 25, &route);
         if(feasible)
+        {
             routeSetFeasible.insert(route);
+
+
+            if(useDualFunction && doBreakTestRoute)
+            {
+                std::printf("Heuristic is feasible ??\n");
+                goto jmpCp;
+                PRINT_THROW();
+            }
+
+        }
         //if(feasible)
         //    return true;
         return feasible;
@@ -178,7 +193,7 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
     {
         feasible =
             ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
-                                                std::numeric_limits<int>::max()-1, &route);
+                                                    50, &route);
     }
 
     //std::printf("Construtivo: %d\n", feasible);
@@ -188,6 +203,15 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
 
     if(feasible)
     {
+
+        if(useDualFunction && doBreakTestRoute)
+        {
+            std::printf("Heuristic is feasible ??\n");
+            goto jmpCp;
+            PRINT_THROW();
+        }
+
+
         routeSetFeasible.insert(route);
         if(!doInverseRoute)
             return 1;
@@ -204,6 +228,7 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
     //if(onlyHeuristic >= 1)
     //    return 0;
 
+    jmpCp:
 
     std::vector<Cuboid>   vetCuboids;
     Collections::IdVector stopIds;
@@ -279,6 +304,13 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
 
             }
 
+            if(useDualFunction && doBreakTestRoute)
+            {
+                std::printf("\nInfeasible\n");
+                PRINT_THROW();
+            }
+
+
             return 0;
         }
         else if(status == LoadingStatus::Invalid)
@@ -327,6 +359,14 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
                     return 1;
 
             }
+
+
+            if(useDualFunction && doBreakTestRoute)
+            {
+                std::printf("\nFeasOpt\n");
+                PRINT_THROW();
+            }
+
 
             return 1;
         }
@@ -426,7 +466,8 @@ void setClassical3DPackingProblem()
     input.lifo			  		= false;
     input.mlifo			  		= false;
     input.removeFromShortSide	= true;
-    input.fragility				= true;
+    input.fragility				= false;
+    input.support				= false;
 }
 
 void setOroloc3DProblem()
@@ -456,12 +497,14 @@ void setDualFeasibleFunction(double ep0, double ep2)
         instanciaG.vetVolNormDualCust[item.customer] += item.volNormDual;
     }
 
+    /*
     for(int i=0; i < instanciaG.numClientes; ++i)
     {
         std::printf("%d: %.2f\n", i, instanciaG.vetVolNormDualCust[i]);
     }
 
     std::printf("\n\n");
+    */
 }
 
 double getDualVolume(int cust)

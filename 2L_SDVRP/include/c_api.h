@@ -17,6 +17,7 @@ struct RouteData
 
 inline RouteData routeData;
 
+
 extern "C"
 {
     void ini_3D_Packing(char* strInst_c, int oroloc3D);
@@ -37,6 +38,8 @@ extern "C"
     double getDualVolume(int cust);
     double getDualVolumeTotal();
 
+    inline bool doBreakTestRoute = false;
+    constexpr bool useDualFunction = false;
 
     // TODO: Criar uma estrutura para as rotas;
     // TODO: Criar uma funcao para recuperar as solucoes do binpacking

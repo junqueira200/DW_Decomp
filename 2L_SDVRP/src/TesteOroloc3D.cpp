@@ -434,8 +434,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     for(int veic = 0; veic < sol.vetBin.size(); ++veic)
     {
-         //if(veic != 4)
-         //    continue;
+         if(veic != 3)
+             continue;
 
 
         Bin  &bin = sol.vetBin[veic];
@@ -538,6 +538,9 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         double int_fk, int_fFA, int_fRA, int_fTA;
 
         int n = 0;
+
+        //if(0 == 1)
+        {
         for(PackingType type : vetPackingType)
         {
             double ompStart = omp_get_wtime();
@@ -677,6 +680,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
             n += 1;
             if(n >= 2)
                 break;
+        }
         }
 
         input.axleWights = inputAxleWights;

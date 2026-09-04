@@ -596,7 +596,7 @@ void ContainerLoadingCP::CreateVariables()
     for(int i = 0; i < mItems.size(); ++i)
         totalMass += mItems[i].Weight;
 
-    int limitWight = totalMass * input.balancedLoadingD * scaleBalancedLoading;
+    int limitWight = std::ceil(totalMass*input.balancedLoadingD) * scaleBalancedLoading2;
 
     if(input.balancedLoading)
     {
@@ -859,7 +859,7 @@ void ContainerLoadingCP::CreateVariables()
     mMaxLength = mModelCP.NewIntVar({0, mContainer.Dx});
 
     if(input.compactness)
-        mMinX = mModelCP.NewIntVar({0, mContainer.Dx});
+        mMinX = mModelCP.NewIntVar({0, 0});
 }
 
 void ContainerLoadingCP::CreateTopItem()
@@ -1065,11 +1065,12 @@ void ContainerLoadingCP::CreateBalancedLoading()
 
     int64_t totalMass = 0;
     for(int i = 0; i < mItems.size(); ++i)
-        totalMass += mItems[i].Weight*scaleBalancedLoading2;
+        totalMass += mItems[i].Weight;
 
 
     for(int i = 0; i < mItems.size(); ++i)
     {
+
         {
             auto tempLeftf0 = mModelCP.NewIntVar({0, 100 * w});
             mModelCP.AddMaxEquality(tempLeftf0, {wDiv2 -
@@ -1092,6 +1093,8 @@ void ContainerLoadingCP::CreateBalancedLoading()
             exp0 += resLeft;
         }
 
+
+        /*
         {
             auto tempRight0 = mModelCP.NewIntVar({0, 100 * w});
             mModelCP.AddMaxEquality(
@@ -1113,17 +1116,25 @@ void ContainerLoadingCP::CreateBalancedLoading()
                 mWidths[i]*scaleBalancedLoading);
             exp1 += resRight;
         }
+        */
     }
+
+
+    /*
+    mModelCP.AddLessOrEqual(
+        exp1,
+        (int64_t)(std::ceil(input.balancedLoadingD * totalMass)*scaleBalancedLoading2));
+    */
 
     mModelCP.AddLessOrEqual(
         exp0,
-        (int64_t) (input.balancedLoadingD * totalMass*scaleBalancedLoading2));
-    mModelCP.AddLessOrEqual(
-        exp1,
-        (int64_t)(input.balancedLoadingD * totalMass*scaleBalancedLoading2));
+        (int64_t)(std::ceil(input.balancedLoadingD * totalMass)*scaleBalancedLoading2));
 
-    mModelCP.AddEquality(sumRightBalancedLoading, exp1);
-    mModelCP.AddEquality(sumLeftBalancedLoading, exp0);
+
+    mModelCP.AddEquality(sumLeftBalancedLoading,  exp0);
+    mModelCP.AddEquality(sumRightBalancedLoading, totalMass*scaleBalancedLoading2 -
+                                                  sumLeftBalancedLoading);
+
 }
 
 /// Relative directions of items. Necessary for non overlapping items.
@@ -1721,15 +1732,15 @@ void ContainerLoadingCP::CreateCompactnessArea()
             .AddGreaterOrEqual(
                 supportedArea,
                 static_cast<int>(std::ceil(msupportAreaLeft * mItems[i].Dy * mItems[i].Dz)))
-            .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][NoRotation],
-                            mTopBool[i].Not()});
+            .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][NoRotation]});
+                            //mTopBool[i].Not()});
 
         mModelCP
             .AddGreaterOrEqual(
                 supportedArea,
                 static_cast<int>(std::ceil(msupportAreaLeft * mItems[i].Dx * mItems[i].Dz)))
-            .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][RotationZ],
-                            mTopBool[i].Not()});
+            .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][RotationZ]});
+                            //mTopBool[i].Not()});
 
     }
 }
