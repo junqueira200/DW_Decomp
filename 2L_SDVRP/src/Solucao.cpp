@@ -68,7 +68,6 @@ std::string SolucaoNS::Ponto::print() const
     return str;
 }
 
-// Add item na posicao x,y e cria dois EPs TODO: verificar!
 void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
 {
 
@@ -120,6 +119,8 @@ void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
     ponto = pontoRefe;
     ponto.vetDim[0] += instanciaG.vetItens[idItem].getDimRotacionada(0, r);
 
+    ponto = projectEP(ponto.vetDim[0], ponto.vetDim[1], ponto.vetDim[2]);
+
     if(PrintEP)
         std::cout << "posItem: " << vetPosItem[numItens - 1].print() << "\n";
 
@@ -130,6 +131,7 @@ void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
 
     ponto = pontoRefe;
     ponto.vetDim[1] += instanciaG.vetItens[idItem].getDimRotacionada(1, r);
+    ponto = projectEP(ponto.vetDim[0], ponto.vetDim[1], ponto.vetDim[2]);
 
     if(PrintEP)
         std::cout << "\t\t\tCriando EP" << ponto.print() << "\n";
@@ -139,6 +141,7 @@ void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
     {
         ponto = pontoRefe;
         ponto.vetDim[2] += instanciaG.vetItens[idItem].getDimRotacionada(2, r);
+        ponto = projectEP(ponto.vetDim[0], ponto.vetDim[1], ponto.vetDim[2]);
         addEp(ponto);
     }
 
@@ -153,7 +156,7 @@ void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
 
     for(int i = 0; i < numEps; ++i)
     {
-        if(epColideItem(vetEp[i], vetPosItem[numItens - 1], idItem))
+        if(epColideItem(vetEp[i], vetPosItem[numItens-1], idItem, vetRotacao[numItens-1]))
         {
             vetEpRm[tamVetEpRm] = i;
             tamVetEpRm += 1;
@@ -259,6 +262,14 @@ void SolucaoNS::Bin::addEp(const Ponto &ep)
             break;
     }
 
+    for (int i = 0; i < numEps; ++i)
+    {
+        if(doubleEqual(vetEp[i].vetDim[0], ep.vetDim[0], 1E-3) &&
+           doubleEqual(vetEp[i].vetDim[1], ep.vetDim[1], 1E-3) &&
+           doubleEqual(vetEp[i].vetDim[2], ep.vetDim[2], 1E-3))
+            return;
+    }
+
     if(PrintEP)
         std::cout << "\t\t\t\t" << "EP criado\n\n";
     // std::cout<<"Cria EP("<<x<<","<<y<<")\n\n";
@@ -295,6 +306,34 @@ std::string SolucaoNS::Bin::printPlot()
     }
 
     return str;
+}
+
+SolucaoNS::Ponto SolucaoNS::Bin::projectEP(double x, double y, double sourceZ)
+{
+    double targetZ = 0.0;
+
+    for(int i = 0; i < numItens; ++i)
+    {
+        Ponto& pos = vetPosItem[i];
+        Item& item = instanciaG.vetItens[vetItemId[i]];
+
+        double x0 = pos.vetDim[0];
+        double x1 = x0 + item.getDimRotacionada(0, vetRotacao[i]);
+
+        double y0 = pos.vetDim[1];
+        double y1 = y0 + item.getDimRotacionada(1, vetRotacao[i]);
+
+        double itemTopZ = pos.vetDim[2] + item.getDimRotacionada(2, vetRotacao[i]);
+
+        if(x >= x0 && x < x1 && y >= y0 && y < y1)
+        {
+            if(itemTopZ <= sourceZ+1E-5 && itemTopZ > targetZ)
+                targetZ = itemTopZ;
+        }
+    }
+
+    return Ponto(x, y, targetZ);
+
 }
 
 bool SolucaoNS::Bin::rmI_Ep(int i)
@@ -762,8 +801,9 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
 
         // continue;
 
-        if(vetPosItem[i].vetDim[2] == 0)
-            continue;
+        bool testSupport = input.support;
+        if(vetPosItem[i].vetDim[2] <= 1E-5)
+            testSupport = false;
 
         double areaSuport = 0.0;
 
@@ -779,7 +819,7 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
                 exPointOutro.vetDim[2] +
                 instanciaG.vetItens[vetItemId[j]].getDimRotacionada(2, vetRotacao[j]);
             // double dif = std::abs(outroZ_Ex-ep.vetDim[2]);
-            if(doubleEqual(outroZ_Ex, vetPosItem[i].vetDim[2]))
+            if(doubleEqual(outroZ_Ex, vetPosItem[i].vetDim[2]) && testSupport)
             {
                 double sup = computeXY_Overlap(instanciaG.vetItens[vetItemId[i]],
                                                vetRotacao[i],
@@ -801,6 +841,7 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
 
                         if(print)
                             std::printf("Fragility %.2f\n", sup);
+                        vetPackinErros[PackingErroFragility] += 1;
                         return false;
                     }
                 }
@@ -821,9 +862,10 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
 
         double support = areaSuport / area;
 
-        if(input.support && support < input.minSupportArea)
+        if(input.support && testSupport && support < input.minSupportArea)
         {
             //std::cout << "support: " << support << "\n";
+            vetPackinErros[PackingErroSupport] += 1;
             return false;
         }
 
@@ -861,10 +903,12 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
         }
         */
         double limit = std::ceil(input.balancedLoadingD * this->demandaTotal); //* 1.05;
-        if(sumLeftBalancedLoading > limit || sumRightBalancedLoading > limit)
+        if(sumLeftTemp > limit || sumRightTemp > limit)
         {
             if(print)
                 std::printf("Balanced Loading Limit\n");
+
+            vetPackinErros[PackingErroLoadBalancing] += 1;
             feasible = false;
         }
     }
@@ -879,6 +923,8 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
             std::printf("Axle Weights fails\n");
         }
 
+        if(!axleWeights)
+            vetPackinErros[PackingErroAxleWights] += 1;
 
         feasible = axleWeights * feasible;
     }
@@ -1177,6 +1223,7 @@ std::printf("itemI: %d\n\tPos: (%s)\n\t%s\n\n", bin.vetItemId[i], bin.vetPosItem
 std::printf("itemJ: %d\n\tPos: (%s)\n\t%s\n", bin.vetItemId[j], bin.vetPosItem[j].print().c_str(), itemJ.print(bin.vetRotacao[j]).c_str());
 PRINT_THROW();
 */
+                    vetPackinErros[PackingErroLifo] += 1;
                     return false;
                 }
 
@@ -1315,8 +1362,10 @@ bool SolucaoNS::checkCompactness(Bin &bin, const VectorI &vetTop, std::string *s
                         "There isn't enough left support({}%) for the item({})",
                         ratio,
                         itemI);
-                    return false;
                 }
+
+                vetPackinErros[PackingErroCompactness] += 1;
+                return false;
             }
         }
     }

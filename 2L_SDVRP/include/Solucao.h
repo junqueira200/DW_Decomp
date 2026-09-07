@@ -110,6 +110,7 @@ struct Bin
     void        addItem(int idEp, int idItem, InstanceNS::Rotation r);
     void        addEp(const Ponto &ep);
     std::string printPlot();
+    Ponto projectEP(double x, double y, double sourceZ);
 
     inline __attribute__((always_inline)) void
     setItem(int pos, int itemId, double x, double y, double z)

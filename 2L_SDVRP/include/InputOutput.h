@@ -35,7 +35,7 @@ class Input
     bool        splitInstancia 				= false;
     bool        splitVrp 					= false;
     double      aphaBin 					= 0.1; // 0.15
-    double      aphaBinEscolhaEp 			= 0.45; // 0.6
+    double      aphaBinEscolhaEp 			= 0.4; // 0.6
     double      alphaVrp 					= 0.45;  // 0.45
     int         numItIG 					= 3000; // 500
     double      gapIgReset 					= 0.2; // 0.2
@@ -58,7 +58,7 @@ class Input
     double      minLeftSupportArea 			= 0.45;
     bool        axleWights 					= true;
     int         supportLimit 				= 0;
-    double      balancedLoadingD 			= 0.6;
+    double      balancedLoadingD 			= 0.65;
     bool        balancedLoading             = true;
     double 		maxTimePackingHeuristic 	= 10.0;
     bool        fragility				    = true;

@@ -62,9 +62,10 @@ bool canInsert(const SolucaoNS::Ponto &ep,
                double                 &maxDif,
                double				   wightLimit);
 
-bool epColideItem(const SolucaoNS::Ponto &ep,
-                  const SolucaoNS::Ponto &ponto,
-                  const int               itemId);
+bool epColideItem(const SolucaoNS::Ponto 	&ep,
+                  const SolucaoNS::Ponto 	&ponto,
+                  const int               	 itemId,
+                  const InstanceNS::Rotation r);
 
 int construtivoBinPacking(Vector<SolucaoNS::Bin> &vetBin,
                           const int               vetBinTam,
@@ -76,7 +77,7 @@ bool construtivoBinPacking(SolucaoNS::Bin  &bin,
                            VectorI         &vetItens,
                            const int        vetItensTam,
                            const double     alpha,
-                           const int        numRepeticoes,
+                           const int64_t    numRepeticoes,
                            SolucaoNS::Rota *rota = nullptr);
 
 double computeXY_Overlap(InstanceNS::Item       &item0,
@@ -87,6 +88,47 @@ double computeXY_Overlap(InstanceNS::Item       &item0,
                          const SolucaoNS::Ponto &p1);
 
 void sortVetItemsByCustomer(VectorI& vetItems, int size);
+
+enum PackingErro
+{
+    PackingErroGeometric = 0,
+    PackingErroLifo,
+    PackingErroSupport,
+    PackingErroAxleWights,
+    PackingErroLoadBalancing,
+    PackingErroCompactness,
+    PackingErroFragility
+
+};
+
+constexpr int PackingErroSize = PackingErroFragility+1;
+
+inline Array<int, PackingErroSize> vetPackinErros;
+
+INLINE
+std::string plotVetPackinErros()
+{
+    std::string str;
+    const char* PackingErroNames[] =
+        {
+            "Geometric",
+            "Lifo",
+            "Support",
+            "AxleWights",
+            "LoadBalancing",
+            "Compactness",
+            "Fragility"
+        };
+
+    for (int i = 0; i < PackingErroSize; ++i)
+    {
+        str += std::format("{}: \t {}\n",
+                            PackingErroNames[i],
+                            vetPackinErros[i]);
+    }
+
+    return str;
+}
 
 } // namespace ConstrutivoBinNS
 

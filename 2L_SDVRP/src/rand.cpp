@@ -11,7 +11,7 @@
 
 unsigned int RandNs::startEngine(unsigned int rd_, bool validoRd)
 {
-    if(!start_)
+    //if(!start_)
     {
         if(!validoRd)
         {

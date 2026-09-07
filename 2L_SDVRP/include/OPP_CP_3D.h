@@ -8,6 +8,7 @@
 #include "LoadingStatus.h"
 #include "PlacementPoints.h"
 #include "sefe_array.h"
+#include "safe_vector.h"
 
 namespace ContainerLoading
 {
@@ -174,6 +175,9 @@ class ContainerLoadingCP
 
     void SetParameters(operations_research::sat::SatParameters &parameters) const;
 };
+
+inline VectorI posX, posY, posZ, rot;
+inline bool useValuesFromHeuristic = false;
 
 } // namespace Algorithms
 } // namespace ContainerLoading

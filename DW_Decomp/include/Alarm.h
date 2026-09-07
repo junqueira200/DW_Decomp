@@ -16,7 +16,7 @@ void on_alarm(int signal)
 {
     alarm_stopG = 1;
     alarmSet = 0;
-    std::cout << "TIME OUT!; alarm_stopG: "<<alarm_stopG<<"\n";
+    //std::cout << "TIME OUT!; alarm_stopG: "<<alarm_stopG<<"\n";
 }
 
 void setAlarm(unsigned int alarmPeriod)

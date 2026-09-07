@@ -196,7 +196,7 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
                                                     50, &route);
     }
 
-    //std::printf("Construtivo: %d\n", feasible);
+    std::printf("Construtivo: %d\n", feasible);
 
     //std::printf("**************END CONSTRUTIVO************\n");
     //std::printf("*****************************************\n\n");

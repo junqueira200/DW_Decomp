@@ -35,17 +35,29 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep,
     {
         if(ep.vetDim[d] + instanciaG.vetItens[itemId].getDimRotacionada(d, r) >
            bin.binDim[d])
+        {
+            if(PrintConst)
+                std::printf("\t\t\tdont fit in the truck\n");
+
+            vetPackinErros[PackingErroGeometric] += 1;
             return false;
+
+        }
     }
 
-    // Verifica colisao com cada item que esta no bin
+           // Verifica colisao com cada item que esta no bin
     for(int i = 0; i < bin.numItens; ++i)
     {
         int itemIdOutro = bin.vetItemId[i];
         // Verfica a intersecao em cada dimensao
         if(verificaColisaoDoisItens(
                itemIdOutro, itemId, bin.vetPosItem[i], ep, bin.vetRotacao[i], r))
+        {
+            vetPackinErros[PackingErroGeometric] += 1;
+            if(PrintConst)
+                std::printf("\t\t\tColision\n");
             return false;
+        }
     }
 
 
@@ -59,26 +71,42 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep,
     double sumLeft = left   + bin.sumLeftBalancedLoading;
     double sumRight = right + bin.sumRightBalancedLoading;
 
-    //static const double limit = input.balancedLoadingD * instanciaG.maxPayload;
+           //static const double limit = input.balancedLoadingD * instanciaG.maxPayload;
 
-    if(input.balancedLoading)
+    if(input.balancedLoading)// && bin.numItens > 5)
     {
         if(sumRight > wightLimit || sumLeft > wightLimit)
+        {
+            if(PrintConst)
+                std::printf("\t\t\tbalancedLoading\n");
+
+            vetPackinErros[PackingErroLoadBalancing] += 1;
             return false;
+        }
     }
 
-    maxDif = std::fabs(sumLeft-sumRight);
+    maxDif = std::max(sumRight, sumLeft);
 
-    if(input.inst2d || ep.vetDim[2] == 0.0)
+    bool tochLeft = true;//tochLeftSideOfTruck(itemId, ep, r);
+
+    if(!input.compactness)
+        tochLeft = true;
+
+    bool checkSupport = input.support;
+    if(ep.vetDim[2] <= 1E-5)
+        checkSupport = false;
+
+    if(input.inst2d)
     {
         // std::cout<<"z = 0\n";
         return true;
     }
 
-    if(!input.support)
-        return true;
+    //if(!input.support)
+    //return true;
 
-    double areaSuport = 0.0;
+    double areaSuport   = 0.0;
+    double sumAreasLeft = 0.0;
 
     for(int i = 0; i < bin.numItens; ++i)
     {
@@ -87,6 +115,13 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep,
         int          itemIdOutro = bin.vetItemId[i];
         Rotation     rOutro = bin.vetRotacao[i];
         const Ponto &exPointOutro = bin.vetPosItem[i];
+
+        if(!tochLeft)
+        {
+            sumAreasLeft += getIntercetion(itemId, ep, r, Left, itemIdOutro, exPointOutro,
+                                           rOutro, Right);
+        }
+
         double outroZ_Ex = exPointOutro.vetDim[2] +
                            instanciaG.vetItens[itemIdOutro].getDimRotacionada(2, rOutro);
         // double dif = std::abs(outroZ_Ex-ep.vetDim[2]);
@@ -103,11 +138,15 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep,
             {
                 if(instanciaG.vetItens[itemIdOutro].fragility &&
                    !instanciaG.vetItens[itemId].fragility)
+                {
+                    if(PrintConst)
+                        std::printf("\t\t\tfragility\n");
                     return false;
+                }
 
             }
 
-            // std::cout<<"sup: "<<sup<<"\n";
+                   // std::cout<<"sup: "<<sup<<"\n";
             areaSuport += sup;
         }
     }
@@ -115,9 +154,39 @@ bool ConstrutivoBinNS::canInsert(const Ponto &ep,
     double area = instanciaG.vetItens[itemId].getDimRotacionada(0, r) *
                   instanciaG.vetItens[itemId].getDimRotacionada(1, r);
     double support = areaSuport / area;
+
+    double dz = instanciaG.vetItens[itemId].getDimRotacionada(2, r);
+    double dy = instanciaG.vetItens[itemId].getDimRotacionada(1, r);
+    double areaTotal = dz * dy;
     // std::cout<<"support: "<<support<<"\n";
 
-    return support >= input.minSupportArea;
+    //return true;
+
+
+    if(!tochLeft)
+    {
+        double ratio = sumAreasLeft / areaTotal;
+        if(ratio < input.minLeftSupportArea)
+        {
+            vetPackinErros[PackingErroCompactness] += 1;
+            if(PrintConst)
+                std::printf("\t\t\tCompactness\n");
+            return false;
+        }
+    }
+
+
+    if(support < input.minSupportArea && checkSupport)
+    {
+        if(PrintConst)
+            std::printf("\t\t\tSupport\n");
+
+        vetPackinErros[PackingErroSupport] += 1;
+        return false;
+    }
+    else
+        return true;
+
 }
 
 double ConstrutivoBinNS::computeXY_Overlap(InstanceNS::Item       &item0,
@@ -133,26 +202,26 @@ double ConstrutivoBinNS::computeXY_Overlap(InstanceNS::Item       &item0,
     double deltaX = std::max(0.0, std::min(x0Coord, x1Coord) - std::max(p0.vetDim[0],
     p1.vetDim[0]));
 
-    double y0Coord = p0.vetDim[1] + item0.getDimRotacionada(1, r0);
-    double y1Coord = p1.vetDim[1] + item1.getDimRotacionada(1, r1);
-    double deltaY  = std::max(0.0, std::min(y0Coord, y1Coord) - std::max(p0.vetDim[1],
-    p1.vetDim[1]));
+     double y0Coord = p0.vetDim[1] + item0.getDimRotacionada(1, r0);
+     double y1Coord = p1.vetDim[1] + item1.getDimRotacionada(1, r1);
+     double deltaY  = std::max(0.0, std::min(y0Coord, y1Coord) - std::max(p0.vetDim[1],
+     p1.vetDim[1]));
 
-    return deltaX*deltaY;
-    */
+      return deltaX*deltaY;
+      */
 
     /*
     std::printf("**************** XY OVERLAP BEGING ****************\n");
     std::printf("***************************************************\n\n");
 
-    std::printf("\tItem0:\n\tPos: (%f, %f)\n", p0.vetDim[0], p0.vetDim[1]);
-    std::printf("\tDim: (%f, %f)\n\n", item0.getDimRotacionada(0, r0),
-    item0.getDimRotacionada(1, r0));
+     std::printf("\tItem0:\n\tPos: (%f, %f)\n", p0.vetDim[0], p0.vetDim[1]);
+     std::printf("\tDim: (%f, %f)\n\n", item0.getDimRotacionada(0, r0),
+     item0.getDimRotacionada(1, r0));
 
-    std::printf("\tItem1:\n\tPos: (%f, %f)\n", p1.vetDim[0], p1.vetDim[1]);
-    std::printf("\tDim: (%f, %f)\n\n", item1.getDimRotacionada(0, r1),
-    item1.getDimRotacionada(1, r1));
-    */
+      std::printf("\tItem1:\n\tPos: (%f, %f)\n", p1.vetDim[0], p1.vetDim[1]);
+      std::printf("\tDim: (%f, %f)\n\n", item1.getDimRotacionada(0, r1),
+      item1.getDimRotacionada(1, r1));
+      */
 
     const double minX = std::max(p0.vetDim[0], p1.vetDim[0]);
     const double minY = std::max(p0.vetDim[1], p1.vetDim[1]);
@@ -169,28 +238,30 @@ double ConstrutivoBinNS::computeXY_Overlap(InstanceNS::Item       &item0,
     std::printf("\tminX: %.1f; maxX: %.1f\n", minX, maxX);
     std::printf("\tminY: %.1f; maxY: %.1f\n", minY, maxY);
 
-    std::printf("\toverlapX: %.2f; overlapY: %.2f\n", overlapX, overlapY);
+     std::printf("\toverlapX: %.2f; overlapY: %.2f\n", overlapX, overlapY);
 
 
-    std::printf("\n***************** XY OVERLAP END ******************\n");
-    std::printf("***************************************************\n\n");
-    */
+      std::printf("\n***************** XY OVERLAP END ******************\n");
+      std::printf("***************************************************\n\n");
+      */
 
     return overlapX * overlapY;
 }
 
-bool ConstrutivoBinNS::epColideItem(const SolucaoNS::Ponto &ep,
-                                    const SolucaoNS::Ponto &ponto,
-                                    const int               itemId)
+bool ConstrutivoBinNS::epColideItem(const SolucaoNS::Ponto 		&ep,
+                                    const SolucaoNS::Ponto 		&ponto,
+                                    const int               	 itemId,
+                                    const InstanceNS::Rotation 	 r)
 { // const double epX, const double epY, const double x, const double y, const int itemId
 
     static Array<double, 2> arrayTemp0;
 
-    // Verifica colisao nos eixos
+           // Verifica colisao nos eixos
     for(int d = 0; d < instanciaG.numDim; ++d)
     {
         arrayTemp0[0] = ponto.vetDim[d];
-        arrayTemp0[1] = arrayTemp0[0] + instanciaG.vetItens[itemId].vetDim[d];
+        arrayTemp0[1] = arrayTemp0[0] +
+                        instanciaG.vetItens[itemId].getDimRotacionada(d, r);
 
         if(!(ep.vetDim[d] > arrayTemp0[0] && ep.vetDim[d] < arrayTemp0[1]))
             return false;
@@ -203,12 +274,12 @@ bool ConstrutivoBinNS::epColideItem(const SolucaoNS::Ponto &ep,
         arrayTemp0[0] = y;
         arrayTemp0[1] = y+instanciaG.vetItemAltura[itemId];
 
-        if(epY >= arrayTemp0[0] && epY <= arrayTemp0[1])
-            return true;
-        else
-            return false;
+         if(epY >= arrayTemp0[0] && epY <= arrayTemp0[1])
+             return true;
+         else
+             return false;
 
-    */
+      */
 }
 
 // TODO: Armazenar a sequencia dos itens e a sua rotacao
@@ -226,7 +297,7 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
     if(vetBin.size() > 1)
         totalWight = instanciaG.maxPayload;
 
-    double wightLimit = input.balancedLoadingD * totalWight;
+    double wightLimit = std::round(input.balancedLoadingD * totalWight);
 
 
 
@@ -261,10 +332,15 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
     int numItensAlocados = 0;
 
     VectorI seqItens(instanciaG.numItens);
+    static Vector<int8_t> vetSwap(instanciaG.numItens);
+
+    vetSwap.setAll(0);
+
     int     tamseqItens = 0;
 
-    // Tenta alocar todos os itens
-    for(int k = 0; k < vetItensTam; ++k)
+           // Tenta alocar todos os itens
+    int k=0;
+    while(k < vetItensTam)
     {
         int tamTemp = vetItensTam - k; // std::max(int(alpha*(vetItensTam-k)), 1);
         if(PrintConst)
@@ -286,6 +362,7 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
             std::cout << "\n***********************************************\n\n";
             std::cout << "Item: " << itemId << "; " << instanciaG.vetItens[itemId].print()
                       << "\n\n";
+            std::cout<<vetBin[0].printPlot()<<"\n\n";
         }
         // Selecionar um bin
         tamVetBinVol = 0;
@@ -314,7 +391,7 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
             tamVetBinVol += 1;
         }
 
-        // Verifica se nao existe bin
+               // Verifica se nao existe bin
         if(tamVetBinVol == 0)
         {
             // Verifica se existe um bin vazio e o adiciona
@@ -346,14 +423,14 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
 
         bool realizouInsercao = false;
 
-        // Percorre os bins
+               // Percorre os bins
         for(int b = 0; b < tamVetBinVol; ++b)
         {
             Bin &bin = vetBin[vetBinId[b]];
             if(PrintConst)
                 std::cout << "\tBin escolhido: " << vetBinId[b] << "\n\n";
 
-            // Verificar os EPs
+                   // Verificar os EPs
             int numEps = 0;
 
             if(vetIdEpRot.size() < bin.numEps)
@@ -367,7 +444,7 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
             if(PrintConst)
                 std::cout << "\t\tNumEps: " << bin.numEps << "\n\n";
 
-            // Percorre os EPs do bin
+                   // Percorre os EPs do bin
             for(int ep = 0; ep < bin.numEps; ++ep)
             {
 
@@ -395,11 +472,23 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
             if(numEps == 0)
                 continue; // FOR(int b=0; b < tamVetBinArea; ++b)
 
-            // Escolhe o EP com menor coordenada
+                   // Escolhe o EP com menor coordenada
             int idVetIdEp = 0;
             if(numEps > 1)
             {
-                std::sort(vetIdEpRot.begin(), vetIdEpRot.begin() + numEps);
+                std::sort(vetIdEpRot.begin(), vetIdEpRot.begin() + numEps,
+                          [&](const EpRot& ra, const EpRot& rb)
+                          {
+                            const Ponto& a = bin.vetEp[ra.epId];
+                            const Ponto& b = bin.vetEp[rb.epId];
+                            if(!doubleEqual(a.vetDim[0], b.vetDim[0]))
+                                return a.vetDim[0] < b.vetDim[0];
+                            if(!doubleEqual(a.vetDim[2], b.vetDim[2]))
+                                return a.vetDim[2] < b.vetDim[2];
+                            else
+                                return a.vetDim[1] < b.vetDim[1];
+                          });
+
                 int tam = std::max(1, int(numEps * input.aphaBinEscolhaEp));
                 idVetIdEp = getRandInt(0, tam - 1);
             }
@@ -408,7 +497,7 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
                 std::cout << "\t\tAdd item a EP"
                           << bin.vetEp[vetIdEpRot[idVetIdEp].epId].print() << ")\n";
 
-            // Adicionar o item ao bin
+                   // Adicionar o item ao bin
             bin.addItem(vetIdEpRot[idVetIdEp].epId, itemId, vetIdEpRot[idVetIdEp].r);
             realizouInsercao = true;
             break; // FOR(int b=0; b < tamVetBinArea; ++b)
@@ -424,7 +513,7 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
                 Bin &bin = vetBin[binVazioId];
                 bool itemMaior = false;
 
-                // Verifica se o item cabe no bin
+                       // Verifica se o item cabe no bin
                 for(int d = 0; d < instanciaG.numDim; ++d)
                 {
                     if(instanciaG.vetItens[itemId].vetDim[d] > bin.binDim[d])
@@ -434,7 +523,7 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
                     }
                 }
 
-                // TODO: Percorrer bins vazios
+                       // TODO: Percorrer bins vazios
                 if(itemMaior)
                     break;
 
@@ -446,14 +535,23 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
                     std::cout << "\t\tAdd item ao bin(" << binVazioId << ") vazio\n\n";
             }
 
-            // TODO remove?
-            return numItensAlocados;
+                   // TODO remove?
+            if(k == vetItensTam-1 || vetSwap[vetItens[k]] == 1)
+                return numItensAlocados;
+            else
+            {
+                vetSwap[vetItens[k]] = 1;
+                std::swap(vetItens[k], vetItens[vetItensTam-1]);
+                continue;
+            }
         }
         else
             numItensAlocados += 1;
+
+        k += 1;
     } // END FOR(int i=0; i < numItens; ++i)
 
-    // std::cout<<"Sequencia de itens: "<<seqItens.printN(instanciaG.numItens)<<"\n";
+           // std::cout<<"Sequencia de itens: "<<seqItens.printN(instanciaG.numItens)<<"\n";
 
     if(PrintConst)
     {
@@ -473,7 +571,7 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin  &bin,
                                              VectorI         &vetItens,
                                              const int        vetItensTam,
                                              const double     alpha,
-                                             const int        numRepeticoes,
+                                             const int64_t    numRepeticoes,
                                              SolucaoNS::Rota *rota)
 {
     // if(input.comprimentoAlturaIguais1)
@@ -515,19 +613,28 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin  &bin,
         //if(i > 0 &(i%100000) == 0)
         //    std::printf("%d\n", i);
         if(alarm_stopG == 1)
+        {
+            //std::printf("NO SOLUTION\n");
+            //std::cout<<plotVetPackinErros();
+            //PRINT_THROW();
             return false;
+        }
 
         copiaBin(bin, binVet[0]);
         copyVet(vetItens, vetItensAux, vetItensTam);
 
-        // std::cout<<"vetItensAux: "<<vetItensAux<<"\n\n";
+               // std::cout<<"vetItensAux: "<<vetItensAux<<"\n\n";
 
         int numItensAlo =
             construtivoBinPacking(binVet, 1, vetItensAux, vetItensTam, alpha);
 
+        if(numItensAlo == vetItensTam)
+        {
+            //std::cout<<"Plot: "<<binVet[0].printPlot();
+            //std::printf("\nFeasible packing!\n");
+        }
 
-
-        // std::cout<<"numItensAlo: "<<numItensAlo<<"\n\n";
+               // std::cout<<"numItensAlo: "<<numItensAlo<<"\n\n";
         if(numItensAlo == vetItensTam)
         {
             //setOffAlarm();
@@ -536,37 +643,49 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin  &bin,
             if(!input.comprimentoAlturaIguais1)
             {
                 //copiaBin(binVet[0], bin);
-                if(binVet[0].checkFeasibility(rota))
+                if(binVet[0].checkFeasibility(rota, false, false))
                 {
                     copiaBin(binVet[0], bin);
+                    //std::cout<<plotVetPackinErros();
+                    //std::printf("A SOLUTION WAS FAUNDED\n");
+                    //PRINT_THROW();
                     return true;
                 }
+                continue;
             }
             else
+            {
+                //std::cout<<plotVetPackinErros();
+                //PRINT_THROW();
                 return true;
+            }
         }
     }
 
-    //setOffAlarm();
+    //std::cout<<plotVetPackinErros();
+    //std::printf("NO SOLUTION!\n");
+    //PRINT_THROW();
+
+           //setOffAlarm();
 
     /*
     if(input.cpSat)
     {
         copiaVet(vetItens, vetItensAux, vetItensTam);
 
-        for(int i=0; i < bin.numItens; ++i)
-            vetItensAux[i+vetItensTam] = binVet[0].vetItemId[i];
+         for(int i=0; i < bin.numItens; ++i)
+             vetItensAux[i+vetItensTam] = binVet[0].vetItemId[i];
 
-        if(cpSatBinPacking(binVet[0], vetItensAux, bin.numItens+vetItensTam))
-        {
-            std::cout<<"CP-SAT Encontrou Solucao Viavel!\n";
-            copiaBin(binVet[0], bin);
-            return true;
-        }
+          if(cpSatBinPacking(binVet[0], vetItensAux, bin.numItens+vetItensTam))
+          {
+              std::cout<<"CP-SAT Encontrou Solucao Viavel!\n";
+              copiaBin(binVet[0], bin);
+              return true;
+          }
 
-        return false;
-    }
-    */
+         return false;
+     }
+     */
     // std::printf("Utilizacao %.2f%%\n", binVet[0].getPorcentagemUtilizacao());
     return false;
 }
@@ -574,7 +693,7 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin  &bin,
 void ConstrutivoBinNS::sortVetItemsByCustomer(VectorI &vetItems, int size)
 {
 
-    static Vector<ItemRandom> vetItemRand(instanciaG.maxNumItensPorClie);
+    static Vector<ItemRandom> vetItemRand(instanciaG.numItens);
     static VectorI vetItemsCopy(instanciaG.numItens);
 
     copyVet(vetItems, vetItemsCopy, size);
@@ -586,15 +705,32 @@ void ConstrutivoBinNS::sortVetItemsByCustomer(VectorI &vetItems, int size)
         item.itemId    = -1;
         item.randomKey = -1;
     }
-
     int posStart = 0;
+
+    if(!input.lifo)
+    {
+        for(int i=0; i < size; ++i)
+        {
+            vetItemRand[i].itemId    = vetItems[i];
+            vetItemRand[i].randomKey = instanciaG.maxItemVolume -
+                                       instanciaG.vetItens[vetItems[i]].volume;
+        }
+
+        std::sort(vetItemRand.begin(), vetItemRand.begin()+size);
+
+        for(int i=0; i < size; ++i)
+            vetItems[i] = vetItemRand[i].itemId;
+        return;
+    }
+
+
 
     while(posStart < size)
     {
         int posEnd = posStart;
-        int cust   = instanciaG.vetItens[posStart].customer;
+        int cust   = instanciaG.vetItens[vetItems[posStart]].customer;
 
-        while (cust == instanciaG.vetItens[posEnd].customer)
+        while (cust == instanciaG.vetItens[vetItems[posEnd]].customer)
         {
             posEnd += 1;
 
@@ -607,7 +743,9 @@ void ConstrutivoBinNS::sortVetItemsByCustomer(VectorI &vetItems, int size)
         for(int i=posStart; i <= posEnd; ++i)
         {
             vetItemRand[k].itemId    = vetItems[i];
-            vetItemRand[k].randomKey = RandNs::getRandInt(0, 100);
+            vetItemRand[k].randomKey = //RandNs::getRandInt(0, 100);
+                                       instanciaG.maxItemVolume -
+                                       instanciaG.vetItens[vetItems[i]].volume;
 
             if(setItems.count(vetItems[i]) != 0)
             {
@@ -623,7 +761,7 @@ void ConstrutivoBinNS::sortVetItemsByCustomer(VectorI &vetItems, int size)
 
         std::sort(vetItemRand.begin(), vetItemRand.begin()+posEnd-posStart+1);
 
-        //std::printf("INI\n");
+               //std::printf("INI\n");
 
         k=0;
         for(int i=posStart; i <= posEnd; ++i)
@@ -634,7 +772,7 @@ void ConstrutivoBinNS::sortVetItemsByCustomer(VectorI &vetItems, int size)
 
         posStart = posEnd + 1;
 
-        //std::printf("END\n");
+               //std::printf("END\n");
     }
 
     for(int i=0; i < size; ++i)
@@ -645,5 +783,6 @@ void ConstrutivoBinNS::sortVetItemsByCustomer(VectorI &vetItems, int size)
             PRINT_THROW();
         }
     }
+
 
 }

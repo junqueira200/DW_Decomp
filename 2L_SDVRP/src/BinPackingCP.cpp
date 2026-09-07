@@ -461,7 +461,8 @@ void BinPackingCP_NS::criaEPs(SolucaoNS::Bin &bin)
 
             for(int t = 0; t < bin.numItens; ++t)
             {
-                if(epColideItem(ep, bin.vetPosItem[t], bin.vetItemId[t]))
+                if(epColideItem(ep, bin.vetPosItem[t], bin.vetItemId[t],
+                                bin.vetRotacao[t]))
                 {
                     colisao = true;
                     break;

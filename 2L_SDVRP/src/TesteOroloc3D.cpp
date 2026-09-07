@@ -9,6 +9,7 @@
 #include <fstream>
 #include <omp.h>
 #include "c_api.h"
+#include "DualFeasibleFunctions.h"
 
 using namespace TesteOroloc3D_NS;
 using namespace InstanceNS;
@@ -22,6 +23,8 @@ using namespace SolucaoNS;
 using namespace AxleWeightsNS;
 using namespace ConstrutivoBinNS;
 using namespace IBM_CpOptimizerNS;
+using namespace DualFeasibleFunctionsNS;
+
 // using namespace SCIP_NS;
 
 
@@ -434,8 +437,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     for(int veic = 0; veic < sol.vetBin.size(); ++veic)
     {
-         if(veic != 3)
-             continue;
+         //if(veic != 3)
+         //    continue;
 
 
         Bin  &bin = sol.vetBin[veic];
@@ -475,15 +478,57 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         //std::reverse(vetItems.begin(), vetItems.begin() + numItems);
 
         double ompStart = omp_get_wtime();
+        RandNs::startEngine(RandNs::estado_, true);
         // TODO remove comment!
         bool feasibleSolConst = construtivoBinPacking(bin2,
                                                       vetItems,
                                                       numItems,
                                                       input.aphaBin,
-                                                      std::numeric_limits<int>::max(),
+                                                      std::numeric_limits<int64_t>::max(),
                                                       &solCp.vetRota[veic]);
         if(!feasibleSolConst)
             bin2.reset();
+
+        if(feasibleSolConst)
+        {
+            useValuesFromHeuristic = true;
+            posX = VectorI();
+            posY = VectorI();
+            posZ = VectorI();
+
+            for(int i=0; i < bin2.numItens; ++i)
+            {
+                int itemId = vetItems[i];
+                int indexInBin = -1;
+
+                for(int j=0; j < bin2.numItens; ++j)
+                {
+                    if(itemId == bin2.vetItemId[j])
+                    {
+                        indexInBin = j;
+                        break;
+                    }
+                }
+
+                if(indexInBin == -1)
+                {
+                    std::printf("Error, itemId(%d) not find!\n", itemId);
+                    PRINT_THROW();
+                }
+
+                int px = (int)bin2.vetPosItem[indexInBin].vetDim[0];
+                int py = (int)bin2.vetPosItem[indexInBin].vetDim[1];
+                int pz = (int)bin2.vetPosItem[indexInBin].vetDim[2];
+
+                posX.push_back(px);
+                posY.push_back(py);
+                posZ.push_back(pz);
+                rot.push_back((int)bin2.vetRotacao[indexInBin]);
+
+            }
+        }
+        else
+            useValuesFromHeuristic = false;
 
         double ompEnd = omp_get_wtime();
         double timeConst = ompEnd - ompStart;
@@ -494,6 +539,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
         bool feasible = bin.checkFeasibility(&rota);
         std::printf("Bin check: %d\n", feasible);
+
+        //continue;
 
         std::vector<Cuboid>   vetCuboids;
         Collections::IdVector stopIds;
@@ -512,6 +559,10 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                                                   numItems,
                                                   sol.vetRota[veic]);
         }
+
+        int dualFeasible = check(vetItems);
+        if(dualFeasible)
+            std::printf("Dual Feasible\n");
 
         for(int i = 1; i < sol.vetRota[veic].numPos - 1; ++i)
             stopIds.push_back(sol.vetRota[veic].vetRota[i]);

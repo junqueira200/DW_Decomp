@@ -144,6 +144,9 @@ void testMLIFO()
 
 int main(int argc, const char *argv[])
 {
+
+    vetPackinErros.setAll(0);
+
     std::cout << "OR-Tools version: "
               //<< operations_research::OrToolsMajorVersion()
               << operations_research::OrToolsVersionString()
@@ -356,6 +359,25 @@ int main(int argc, const char *argv[])
     // EXIT_PRINT();
 
     testeOroloc3D_2();
+
+    const char* PackingErroNames[] =
+        {
+            "Geometric",
+            "Lifo",
+            "Support",
+            "AxleWights",
+            "LoadBalancing",
+            "Compactness",
+            "Fragility"
+        };
+
+    for (int i = 0; i < PackingErroSize; ++i)
+    {
+        std::printf("%s: \t %d\n",
+                    PackingErroNames[i],
+                    vetPackinErros[i]);
+    }
+
     // IBM_CpOptimizerNS::testSCIP();
     return 0;
 
