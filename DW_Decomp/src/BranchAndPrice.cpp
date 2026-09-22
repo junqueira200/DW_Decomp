@@ -249,7 +249,7 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
     // PRINT_DEBUG("", "");
     // throw "NAO EH ERRO";
 
-    while(!searchD->empty() && gap > gapLimit && !alarm_stopG)
+    while(!searchD->empty() && gap > gapLimit && !doStop())
     {
 
         it += 1;
@@ -307,7 +307,7 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
             continue;
         }
 
-        if(alarm_stopG)
+        if(doStop())
         {
             if(!searchD->empty())
                 lowerBound = searchD->getMin();
@@ -381,7 +381,7 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
     statisticD.upperBound = upperBound;
     statisticD.lowerBound = lowerBound;
     statisticD.gap = gap;
-    statisticD.timeLimit = alarm_stopG;
+    statisticD.timeLimit = doStop();
     statisticD.numIt = numIt;
 
     std::cout << "it(" << it << ") \t LB(" << lowerBound << ") \t UB(" << upperBound

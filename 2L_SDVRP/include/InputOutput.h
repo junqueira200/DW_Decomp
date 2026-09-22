@@ -30,18 +30,22 @@ class File
 class Input
 {
   public:
+
+    Array<double, static_cast<size_t>(SolucaoNS::Penalty::TypePenalty::Count)>
+        arrayPenaltyWeight;
+
     std::string strInstCompleto;
     std::string strInst;
     bool        splitInstancia 				= false;
     bool        splitVrp 					= false;
     double      aphaBin 					= 0.1; // 0.15
-    double      aphaBinEscolhaEp 			= 0.4; // 0.6
+    double      aphaBinEscolhaEp 			= 0.2; // 0.6
     double      alphaVrp 					= 0.45;  // 0.45
     int         numItIG 					= 3000; // 500
     double      gapIgReset 					= 0.2; // 0.2
     bool        comprimentoAlturaIguais1 	= false;
     bool        cpSat 						= true;
-    double      cpSatTime 					= 600.0;
+    double      cpSatTime 					= 600.0; // 600
     // 0 Forward, 1 Backard, 2 Bidirectional
     int         labelingType 				= 0;
     bool        lifo 						= true;
@@ -60,13 +64,24 @@ class Input
     int         supportLimit 				= 0;
     double      balancedLoadingD 			= 0.65;
     bool        balancedLoading             = true;
-    double 		maxTimePackingHeuristic 	= 10.0;
+    double 		maxTimePackingHeuristic 	= 3.0;
     bool        fragility				    = true;
     bool        useCm						= true;
+
+
+    int			gaPopulationSize			= 500;
+    int			gaNumberOfGenerations		= 100;
+    double		gaDiscartPercetence			= 0.05;
     // bool		inst3d                   = true;
 
     File file;
     // std::string commit = "54f84fa9027eeb1a17566368b19204f726b1e4d0";
+    Input()
+    {
+        arrayPenaltyWeight.fill(1.0);
+        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::Compactness] = 2.0;
+        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::AxleWeights] = 2.0;
+    }
 };
 
 class Output

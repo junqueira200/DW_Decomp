@@ -24,7 +24,7 @@ InstanceNS::Instance::Instance(int numClientes_, int numItens_, int numVeiculos_
       // vetItemLargura(numItens_),
       vetDemandaCliente(numClientes_), vetItemCliente(numItens_), matCliItensIniFim(0, 0),
       vetNumItensPorCli(numClientes_), vetMinDimItens(numItens_), vetTw(numClientes_),
-      vetVolNormDualCust(numClientes_, 0.0)
+      vetVolNormDualCust(numClientes_, 0.0), vetVolumeCliente(numClientes_, 0.0)
 
 {
 
@@ -596,11 +596,10 @@ void InstanceNS::read3dInstance(const std::string &strFile)
 
         maxNumItensPorCli = std::max(maxNumItensPorCli, numItensPorClie);
 
-        if(node != 0)
-        {
-            instanciaG.matCliItensIniFim.get(node, 0) = nextItem;
-            // instancia.matCliItensIniFim.get(node, 1) = nextItem+(numItensPorClie-1);
-        }
+        if(node == 0)
+            continue;
+
+        instanciaG.matCliItensIniFim.get(node, 0) = nextItem;
 
         double wight = instanciaG.vetDemandaCliente[node] / numItensPorClie;
 
@@ -630,6 +629,8 @@ void InstanceNS::read3dInstance(const std::string &strFile)
             instanciaG.vetItens[instanciaG.vetItens.size() - 1].setNorm(maxDim, maxDim);
             instanciaG.vetItens[instanciaG.vetItens.size() - 1].fragility = fragility;
             instanciaG.vetItens[instanciaG.vetItens.size() - 1].customer = node;
+            instanciaG.vetVolumeCliente[node] +=
+                instanciaG.vetItens[instanciaG.vetItens.size() - 1].volume;
             nextItem += 1;
         }
 
@@ -1050,6 +1051,7 @@ void InstanceNS::convertInstanceToCm(Instance &instance)
             item.vetDim[i] = (int)((item.vetDim[i]*0.1)+0.5);
 
         item.volume = item.vetDim[0]*item.vetDim[1]*item.vetDim[2];
+        instance.vetVolumeCliente[item.customer] += item.volume;
     }
 
     for(int i=0; i < 3; ++i)

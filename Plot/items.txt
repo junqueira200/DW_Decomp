@@ -1,7 +1,65 @@
-1
-itemId(79)
-orolocId Bt126
+2 3 8 7 
+
+8
+itemId(12)
+orolocId 
 Pos: (0.0,0.0,0.0)
-Width 287
-Length 168
-Height 34
+Width 14
+Length 15
+Height 12
+
+
+itemId(3)
+orolocId 
+Pos: (0.0,15.0,0.0)
+Width 36
+Length 5
+Height 6
+
+
+itemId(11)
+orolocId 
+Pos: (0.0,15.0,6.0)
+Width 21
+Length 7
+Height 10
+
+
+itemId(14)
+orolocId 
+Pos: (0.0,0.0,12.0)
+Width 31
+Length 6
+Height 9
+
+
+itemId(10)
+orolocId 
+Pos: (0.0,6.0,12.0)
+Width 23
+Length 7
+Height 10
+
+
+itemId(1)
+orolocId 
+Pos: (21.0,15.0,6.0)
+Width 29
+Length 8
+Height 15
+
+
+itemId(13)
+orolocId 
+Pos: (0.0,6.0,22.0)
+Width 27
+Length 8
+Height 7
+
+
+itemId(13)
+orolocId 
+Pos: (14.0,0.0,0.0)
+Width 27
+Length 8
+Height 7

@@ -97,7 +97,7 @@ set(public_headers
     include/SearchStrategy.h
     include/PrimalHeuristic.h
     include/Branch.h
-    include/Alarm.h
+    #include/Alarm.h
     include/Statistics.h
 )
 
@@ -105,3 +105,5 @@ set(public_headers
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 #message(STATUS "CMake module path: ${CMAKE_MODULE_PATH}")
 include(Installing)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE Timer)

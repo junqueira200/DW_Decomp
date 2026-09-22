@@ -1,21 +1,43 @@
 include("packing.jl")
+include("enumerateRoutes.jl")
 
 function build_model(data::DataArcVRP, app)
 
-   A = arcs(data) 
+   A = data.G′.A
+   #println("Arcs: ", A)
    V = [i for i in 1:n(data)] 
    Q = veh_capacity(data)
    Vol_veic = veh_volume(data)
 
+   routesNotFeasible = []
+
+
    useVolume  = true
+
+   if useVolume
+      routesNotFeasible = []#enumerateInfeasibleRoutes(4, 2500)
+   end
 
    println("Q: ", Q)
 
    # Formulation
    vrptw = VrpModel()
-   @variable(vrptw.formulation, x[a in A], Int)
+
+
+   @variable(vrptw.formulation, x[a in A], Bin)
    @objective(vrptw.formulation, Min, sum(c(data,a) * x[a] for a in A))
    @constraint(vrptw.formulation, indeg[i in V], sum(x[a] for a in A if a[2] == i) == 1.0)
+
+   #write_to_file(vrptw.formulation, "vrp_model.lp")
+   # 596.982
+
+   for S in routesNotFeasible
+      k = length(S)
+      @constraint(vrptw.formulation, sum(x[(i, j)] for i in S, j in S if i != j) <= k - 2)
+      #println("Rute: ", S)
+      #println("Rhs: ", k-2, "\n")
+      #exit(-1)
+   end
 
    #println(vrptw.formulation)
 
@@ -29,7 +51,8 @@ function build_model(data::DataArcVRP, app)
       V1 = [i for i in 0:n(data)]
 
       L, U = lowerBoundNbVehicles(data), upperBoundNbVehicles(data) # multiplicity
-      print("lowerBoundNbVehicles: ", lowerBoundNbVehicles(data), "\n\n")
+      print("lowerBoundNbVehicles: ", lowerBoundNbVehicles(data), "\n")
+      println("upperBoundNbVehicles: ", U)
       G = VrpGraph(vrptw, V1, v_source, v_sink, (L, U))
 
       epValues = [2E-5, 2E-7, 2E-9]
@@ -130,6 +153,9 @@ function build_model(data::DataArcVRP, app)
    define_elementarity_sets_distance_matrix!(vrptw, G, [[c(data, (i, j)) for j in V] for i in V])
 
    add_capacity_cut_separator!(vrptw, [ ( [(G,i)], Float64(d(data, i)) ) for i in V], Float64(Q))
+   if useVolume
+      add_capacity_cut_separator!(vrptw, [ ( [(G,i)], Float64(vol(data, i)) ) for i in V], Float64(veh_volume(data)))
+   end
 
    set_branching_priority!(vrptw, "x", 1)
 

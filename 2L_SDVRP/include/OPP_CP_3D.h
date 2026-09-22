@@ -99,6 +99,8 @@ class ContainerLoadingCP
     ORIntVars1D mStartPositionsZ;
     ORIntVars1D mEndPositionsZ;
 
+    ORIntVars1D propagateVars;
+
     ORIntervalVars mIntervalsX;
     ORIntervalVars mIntervalsY;
     ORIntervalVars mIntervalsZ;
@@ -165,6 +167,7 @@ class ContainerLoadingCP
     void CreateBalancedLoading();
     void AddObjective();
     void CreateVariables();
+    void addVarsToPropagateVars();
 
     void CreateTopItem();
     void CreateCompactnessItem();

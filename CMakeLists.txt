@@ -15,6 +15,10 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g")#-Wall")
 
+
+add_subdirectory(Timer)
+include_directories(Timer/include)
+
 add_subdirectory(DW_Decomp)
 include_directories(DW_Decomp/include)
 

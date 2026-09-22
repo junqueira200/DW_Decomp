@@ -67,10 +67,10 @@ std::string SolucaoNS::Ponto::print() const
     str += ")";
     return str;
 }
-
+// Error here?
 void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
 {
-
+    //std::printf("idEp: %d\n", idEp);
     if(vetPosItem.size() < (numItens + 1))
     {
         vetPosItem.push_back(Ponto());
@@ -95,11 +95,11 @@ void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
 
         if(sumLeftBalancedLoading > massLimit || sumRightBalancedLoading > massLimit)
         {
-            std::printf("Error! left(%.1f), right(%.1f); massLimit(%.1f)\n",
-                        sumLeftBalancedLoading,
-                        sumRightBalancedLoading,
-                        massLimit);
-            PRINT_THROW();
+            //std::printf("Error! left(%.1f), right(%.1f); massLimit(%.1f)\n",
+            //            sumLeftBalancedLoading,
+            //            sumRightBalancedLoading,
+            //            massLimit);
+            //PRINT_THROW();
         }
     }
 
@@ -282,7 +282,6 @@ std::string SolucaoNS::Bin::printPlot()
 {
     std::string str;
     str += std::format("{}\n", numItens);
-
     for(int i = 0; i < numItens; ++i)
     {
         Ponto &pos = vetPosItem[i];
@@ -684,6 +683,48 @@ int SolucaoNS::getBinVazio(const Vector<Bin> &vetBin, int tam)
     return -1;
 }
 
+double SolucaoNS::
+       verificaColisaoDoisItensVol(int                  item0,
+                                   int                  item1,
+                                   const Ponto         &p0,
+                                   const Ponto         &p1,
+                                   InstanceNS::Rotation r0,
+                                   InstanceNS::Rotation r1)
+{
+    // Representacao dois segmentos de reta em um unica dimensao
+    static Array<double, 2> arrayTemp0;
+    static Array<double, 2> arrayTemp1;
+
+    double vol = 1;
+
+    // Verfica a intersecao em cada dimensao
+    for(int d = 0; d < 3; ++d)
+    {
+        arrayTemp0[0] = p0.vetDim[d];
+        // arrayTemp0[1] = arrayTemp0[0] + instanciaG.vetItens[item0].vetDim[d];
+        arrayTemp0[1] =
+            arrayTemp0[0] + instanciaG.vetItens[item0].getDimRotacionada(d, r0);
+
+        arrayTemp1[0] = p1.vetDim[d];
+        arrayTemp1[1] =
+            arrayTemp1[0] + instanciaG.vetItens[item1].getDimRotacionada(d, r1);
+
+        double ini = std::max(arrayTemp0[0], arrayTemp1[0]);
+        double fim = std::min(arrayTemp0[1], arrayTemp1[1]);
+
+        if(ini < fim)
+            vol *= (fim - ini);
+        else
+            return 0.0;
+
+        if((d + 1) == instanciaG.numDim)
+            break;
+    }
+
+    return vol;
+}
+
+
 bool SolucaoNS::verificaColisaoDoisItens(const int                  item0,
                                          const int                  item1,
                                          const Ponto               &p0,
@@ -760,6 +801,17 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
     for(int i = 0; i < numItens; ++i)
     {
         int itemI = vetItemId[i];
+        Ponto pI  = vetPosItem[i];
+        Rotation rI = vetRotacao[i];
+
+        for(int t=0; t < instanciaG.numDim; ++t)
+        {
+            if(pI.vetDim[t]+instanciaG.vetItens[itemI].getDimRotacionada(t, rI) >
+               instanciaG.vetDimVeiculo[t] + 1e-5)
+            {
+                return false;
+            }
+        }
 
         for(int j = i + 1; j < numItens; ++j)
         {
@@ -1464,4 +1516,205 @@ double SolucaoNS::getIntercetion(int                  item0,
         std::printf("ERROR, f0 = %d isnt implementd!\n", f0);
         PRINT_THROW();
     }
+}
+
+void SolucaoNS::penalizeSolution(Rota& route, Bin &bin, Penalty& penalty)
+{
+
+    double colisionP 		= 0.0;
+    double supportP  		= 0.0;
+    double axleWightsP		= 0.0;
+    double loadBalancingP	= 0.0;
+    double compactnessP		= 0.0;
+    double lifoP			= 0.0;
+    double fragilityP		= 0.0;
+
+    bin.sumLeftBalancedLoading  = 0.0;
+    bin.sumRightBalancedLoading = 0.0;
+
+    static Eigen::Matrix<int, -1, -1, Eigen::RowMajor>
+        matSupportItems(instanciaG.numItens, instanciaG.numItens);
+    matSupportItems.setConstant(0);
+
+    for(int i=0; i < bin.numItens; ++i)
+    {
+        int itemI    = bin.vetItemId[i];
+        Rotation rI  = bin.vetRotacao[i];
+        Ponto&   pI  = bin.vetPosItem[i];
+
+        bool tochLeft = tochLeftSideOfTruck(itemI, pI, rI);
+
+        for(int t=0; t < instanciaG.numDim; ++t)
+        {
+
+            if(pI.vetDim[t]+instanciaG.vetItens[itemI].getDimRotacionada(t, rI) >
+               instanciaG.vetDimVeiculo[t] + 1e-5)
+            {
+                double vol = instanciaG.vetDimVeiculo[t] -
+                       (pI.vetDim[t]+instanciaG.vetItens[itemI].getDimRotacionada(t, rI));
+
+                for(int tt=0; tt < instanciaG.numDim; ++tt)
+                {
+                    if(tt != t)
+                        vol *= instanciaG.vetItens[itemI].getDimRotacionada(tt, rI);
+                }
+
+                colisionP += vol;
+                //break;
+            }
+        }
+
+        double areaSuport = 0.0;
+        double sumAreasLeft = 0.0;
+
+        for(int j=0; j < bin.numItens; ++j)
+        {
+            if(i == j)
+                continue;
+
+            int itemJ    = bin.vetItemId[j];
+            Rotation rJ  = bin.vetRotacao[j];
+            Ponto&   pJ  = bin.vetPosItem[j];
+
+            if(input.support && pI.vetDim[2] > 1E-5)
+            {
+                double zMaxJ = pJ.vetDim[2] +
+                           instanciaG.vetItens[itemJ].getDimRotacionada(2, rJ);
+
+                if(doubleEqual(zMaxJ, pI.vetDim[2]))
+                {
+                    double sup = computeXY_Overlap(instanciaG.vetItens[itemI],
+                                                   rI,
+                                                   pI,
+                                                   instanciaG.vetItens[itemJ],
+                                                   rJ,
+                                                   pJ);
+
+                    if(doubleGreater(sup, 0.0))
+                    {
+                        areaSuport += sup;
+                        matSupportItems(itemI, itemJ) = 1;
+
+                        if(input.fragility &&
+                           instanciaG.vetItens[itemJ].fragility &&
+                           !instanciaG.vetItens[itemI].fragility)
+                        {
+                            fragilityP += instanciaG.vetItens[itemJ].volume +
+                                          instanciaG.vetItens[itemI].volume;
+                        }
+                    }
+                }
+            }
+
+            if(j > i)
+                colisionP += verificaColisaoDoisItensVol(itemI, itemJ, pI, pJ, rI, rJ);
+
+            if(!tochLeft && input.compactness)
+                sumAreasLeft += getIntercetion(itemI, pI, rI, Left, itemJ, pJ, rJ, Right);
+        }
+
+        double area =
+            instanciaG.vetItens[itemI].getDimRotacionada(0, rI) *
+            instanciaG.vetItens[itemI].getDimRotacionada(1, rI);
+        double support = areaSuport/area;
+
+        if(input.support && support < input.minSupportArea && pI.vetDim[2] > 1E-5)
+            supportP += instanciaG.vetItens[itemI].volume;
+
+        if(input.balancedLoading)
+        {
+            double w = instanciaG.vetItens[itemI].getDimRotacionada(1, rI);
+            double left = computeLeftBalancedLoading(pI.vetDim[1], w,
+                                                     instanciaG.vetItens[itemI].weight);
+            bin.sumLeftBalancedLoading  += left;
+            bin.sumRightBalancedLoading += instanciaG.vetItens[itemI].weight - left;
+        }
+
+        if(input.compactness && !tochLeft)
+        {
+            double dz = instanciaG.vetItens[itemI].getDimRotacionada(2, rI);
+            double dy = instanciaG.vetItens[itemI].getDimRotacionada(1, rI);
+
+            double areaTotal = dz * dy;
+            double ratio = sumAreasLeft / areaTotal;
+            if(ratio < input.minLeftSupportArea)
+                compactnessP += areaTotal*(input.minLeftSupportArea-ratio);
+        }
+    }
+
+    if(input.lifo)
+    {
+    for(int i=0; i < bin.numItens; ++i)
+    {
+        int itemI    = bin.vetItemId[i];
+        int posItemI = findPos(route, bin.vetItemId[i]);
+
+        for(int j=0; j < bin.numItens; ++j)
+        {
+            if(i == j)
+                continue;
+
+            int itemJ    = bin.vetItemId[j];
+
+            if(instanciaG.vetItens[itemI].customer != instanciaG.vetItens[itemJ].customer)
+            {
+                int posItemJ = findPos(route, bin.vetItemId[j]);
+                if(posItemI < posItemJ)
+                {
+                    if(!lifo(instanciaG.vetItens[itemI],
+                             bin.vetPosItem[i],
+                             bin.vetRotacao[i],
+                             instanciaG.vetItens[itemJ],
+                             bin.vetPosItem[j],
+                             bin.vetRotacao[j],
+                             input.mlifo,
+                             input.removeFromShortSide,
+                             matSupportItems))
+                    {
+                        lifoP += instanciaG.vetItens[itemI].volume +
+                                 instanciaG.vetItens[itemJ].volume;
+                    }
+                }
+            }
+
+        }
+    }
+    }
+
+    if(input.balancedLoading)
+    {
+        double limit = std::ceil(input.balancedLoadingD * bin.demandaTotal);
+        if(bin.sumLeftBalancedLoading > limit)
+            loadBalancingP += bin.sumLeftBalancedLoading - limit;
+
+
+        if(bin.sumRightBalancedLoading > limit)
+            loadBalancingP += bin.sumRightBalancedLoading - limit;
+
+    }
+
+    double fk, fFA, fRA, fTA;
+    if(!semiTrailer.checkAxleWeights(bin, false, &fk, &fFA, &fRA, &fTA))
+        axleWightsP = std::max({fFA, fRA, fTA});
+
+    penalty = Penalty(colisionP, supportP, axleWightsP, loadBalancingP, compactnessP,
+                      lifoP, fragilityP, 0.0);
+}
+
+double SolucaoNS::Penalty::getValue()
+{
+    double value = 0.0;
+    bool allZero = true;
+
+    for(int i=0; i < (int)TypePenalty::Count; ++i)
+    {
+        value += ParseInputNS::input.arrayPenaltyWeight[i]*penalties[i];
+        if(!doubleEqual(penalties[i], 0.0))
+            allZero = false;
+    }
+
+    if(!allZero)
+        return value;
+    else
+        return 0.0;
 }

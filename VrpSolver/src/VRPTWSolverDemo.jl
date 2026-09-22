@@ -2,7 +2,8 @@ __precompile__(false)
 module VRPTWSolverDemo
 using VrpSolver, JuMP, ArgParse
 using Base.StackTraces
-
+using Printf
+using Dates
 
 include("data.jl")
 include("model.jl")
@@ -53,6 +54,12 @@ function parse_commandline(args_array::Array{String,1}, appfolder::String)
 end
 
 function run_vrptw(app::Dict{String,Any})
+    
+    solByHeuristic = 0
+    solByExact     = 0
+    solTotal       = 0
+
+    
     usePacking = true
     println("Application parameters:")
     for (arg, val) in app
@@ -61,6 +68,8 @@ function run_vrptw(app::Dict{String,Any})
     flush(stdout)
 
     instance_name = split(basename(app["instance"]), ".")[1]
+
+    startTime = omp_get_wtime()
 
     data = createInstance(app["instance"], app["Oroloc3D"])
 
@@ -83,7 +92,37 @@ function run_vrptw(app::Dict{String,Any})
             #end
 
             println("From mycallback")
+
+            if getMasterRutesIsNull()
+                
+                return
+            end
+
+            masterRoutes = getMasterRutes()
+            #println(masterRoutes)
+
+            routes = []
+            route  = []
+            
+            ini = true
+            for id in masterRoutes
+                if !ini && id == 0
+                    push!(route, 0)
+                    #println(route)
+                    push!(routes, route)
+                    route = []
+                    push!(route, 0)
+                    continue
+                end
+                ini = false
+                push!(route, id)
+                
+            end
+
+            
+            
             integer = true
+            #=
             for (i,j) in E
                 e = (i,j)
                 value = get_value(optimizer, x[e])
@@ -92,15 +131,17 @@ function run_vrptw(app::Dict{String,Any})
                     break
                 end
             end
+            =#
 
             if integer
-                println("Soluton is integer!")
-                sol = getsolution(data, x, get_objective_value(optimizer), optimizer)
-                for route in sol.routes
+                #sol = getsolution(data, x, get_objective_value(optimizer), optimizer)
+                #println("Soluton is integer!")
+                #sol = getsolution(data, x, get_objective_value(optimizer), optimizer)
+                for route in routes
                     #println(route)
                     vet = Vector{Int32}()
 
-                    push!(vet, 0)
+                    #push!(vet, 0)
                     totalDemand = 0
                     totalVol    = 0.0
 
@@ -109,7 +150,7 @@ function run_vrptw(app::Dict{String,Any})
                         totalDemand += d(data, i)
                         totalVol    += vol(data, i)
                     end
-                    println("totalDemand: ", totalDemand)
+                    #println("totalDemand: ", totalDemand)
                     if(totalDemand > veh_capacity(data))
                         println("Error: totalDemand: ", totalDemand, "\nveh_capacity: ", veh_capacity(data))
                         exit(-1)
@@ -120,38 +161,110 @@ function run_vrptw(app::Dict{String,Any})
                         exit(-1)
                     end
                     #println("totalVol: ", totalVol)
-                    push!(vet, 0)
-                    result = testRoute(vet)
+                    #push!(vet, 0)
+                    
+                    inFeasibleSet = routeIsInFeasibleSet(vet)
+                    if inFeasibleSet >= 1
+                        continue
+                    end
+
+                    heuristic   = heuristicPacking(vet)
+
+                    if heuristic >= 1
+                        solByHeuristic += 1
+                        solTotal   += 1
+                        continue
+                    end
+                    
+                    #result      = testRoute(vet)
+
+                    #=
+                    if heuristic >= 1
+                        if result <= 0
+                            println("Error, heuristic(", heuristic, ") != result(", result, ")")
+                            exit(-1)
+                        end
+                    end
+
+                    if exact != result
+                        
+                        @printf "exact(%d) != result(%d)\n" exact result
+                        exit(-1)
+                    end
+                    =#
+
+                    inveasible = routeIsInNotfeasibleSet(vet)
+
+
+                    #if getUseExactPacking() <= 0 && inveasible <= 0
+                    #    setFalseHeuristicWorks()
+                    #    break #for route
+                    #end
+
+                    #=
+                    feasible    = routeIsInFeasibleSet(vet)
+                    notFeasible = routeIsInNotfeasibleSet(vet)
+
+                    if heuristic >= 1
+                        if result <= 0
+                            println("Error, heuristic(", heuristic, ") != result(", result, ")")
+                            exit(-1)
+                        end
+                    end
+
+                    if feasible != result
+                        println("Error, result(", result, ") != feasible(", feasible, ")")
+                        exit(-1)
+                    end
+
+                    if feasible == notFeasible
+                        println("Error, feasible(", feasible, ") == notFeasible(", notFeasible, ")")
+                        exit(-1)
+                    end
+                    =#
+
+                    result = 0
+
+                    if inveasible <= 0
+                        result  = exactPacking(vet)
+
+                        if result >= 1
+                            solByExact += 1
+                            solTotal   += 1
+                        end
+                    end
+
                     if(result == 0)
 
                         vetArcs = []
                         vetMult = []
 
-                        for i in 1:(length(vet)-1)
-                            #for j in 1:(length(vet)-1)
-                            j = i + 1
-                            if i != j
-                                arc = (vet[i], vet[j])
-                                push!(vetArcs, x[arc])
-                                push!(vetMult, 1.0)
+                        for i in 2:(length(route)-1)
+                            for j in 2:(length(route)-1)
+                            #j = i + 1
+                                if i != j && route[i] != route[j]
+                                    arc = (route[i], route[j])
+                                    #println(arc)
+                                    push!(vetArcs, x[arc])
+                                    push!(vetMult, 1.0)
 
+                                end
                             end
-                            #end
                             #arc = (vet[i], vet[i+1])
                             #push!(vetArcs, x[arc])
                             #push!(vetMult, 1.0)
 
                             
                         end
-                        println("Cut route")
-                        println("\t", vetArcs, "\n\t", vetMult, "\n\n\trhs: ", length(vet)-1-1)
+                        println("\nCut route")
+                        #println("\t", vetArcs, "\n\t", vetMult, "\n\n\trhs: ", length(route)-4)
+                        println("rhs: ", length(route)-4)
                         
-                        
-                        add_dynamic_constr!(optimizer, vetArcs, vetMult, <=, length(vet)-1-1, "mycallback")
+                        add_dynamic_constr!(optimizer, vetArcs, vetMult, <=, length(route)-4, "mycallback")
 
  
 
-                        break
+                        #break
                         #exit(-1)
                     end
                     #println(vet)
@@ -160,7 +273,7 @@ function run_vrptw(app::Dict{String,Any})
 
                 
                 #add_dynamic_constr!(model.optimizer, [x[e]], [1.0], <=, 1.0, "edge_ub")
-            end
+            end            
 
         end 
         if usePacking
@@ -168,7 +281,7 @@ function run_vrptw(app::Dict{String,Any})
         end
 
         println("Calling optimize!")
-        startTime = omp_get_wtime()
+        #startTime = omp_get_wtime()
 
         (status, solution_found) = optimize!(optimizer)
 
@@ -177,11 +290,45 @@ function run_vrptw(app::Dict{String,Any})
         totalTime = endTime - startTime
 
         println("Total Time: ", totalTime/60.0, " min\n")
+        println("Total: ", solTotal)
+        println("Heuristic: ", solByHeuristic)
+        println("Exact: ", solByExact)
+
         println("stats: ", optimizer.stats)
+
+        ub = get_objective_value(optimizer)  # Best feasible integer solution cost
+        lb = optimizer.stats[:bcRecBestDb]            # Best relaxation lower bound from BCP
+
+        gap = ((ub-lb)/ub)*100.0
+
+        #println("instance_name; lb; ub; gap; totalTime")
+        iniUb = Inf
+
+        if app["ub"] != nothing
+            iniUb = app["ub"]
+        end
+
+        println(instance_name, "; ", lb, "; ", ub, "; ", gap, "; ", totalTime)
+
+        current_datetime = Dates.format(now(), "dd-mm-yyyy HH:MM")
+
+        open("resultsVrpSolver.csv", "a") do file
+            println(file, 
+                    instance_name, "; ", 
+                    @sprintf("%.2f", lb), "; ", 
+                    @sprintf("%.2f", ub), "; ", 
+                    @sprintf("%.2f", gap), "; ",
+                    @sprintf("%.2f", iniUb), "; ",
+                    @sprintf("%.2f", totalTime/60.0), "; ",
+                    current_datetime
+                    )
+        end
 
         if solution_found
             sol = getsolution(data, x, get_objective_value(optimizer), optimizer)
         end
+
+        
     end
 
     println("########################################################")

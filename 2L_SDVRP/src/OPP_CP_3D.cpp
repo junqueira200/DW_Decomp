@@ -40,11 +40,18 @@ LoadingStatus ContainerLoadingCP::Solve()
 
     operations_research::sat::SatParameters parameters;
     SetParameters(parameters);
+    parameters.set_search_branching(operations_research::sat::SatParameters_SearchBranching_FIXED_SEARCH);
 
     operations_research::sat::Model model = operations_research::sat::Model();
     model.Add(operations_research::sat::NewSatParameters(parameters));
+    mModelCP.AddDecisionStrategy(propagateVars,
+        operations_research::sat::DecisionStrategyProto::CHOOSE_FIRST,
+        operations_research::sat::DecisionStrategyProto::SELECT_MIN_VALUE);
 
     operations_research::sat::CpModelProto protoModel = mModelCP.Build();
+    //protoModel(propagateVars,
+    //                               operations_research::sat::DecisionStrategyProto::CHOOSE_FIRST,
+    //                               operations_research::sat::DecisionStrategyProto::SELECT_MIN_VALUE);
     ////auto validationResponse = operations_research::sat::ValidateCpModel(protoModel);
     ////LOG(INFO) << validationResponse;
 
@@ -560,6 +567,19 @@ std::vector<int> ContainerLoadingCP::ExtractSequence() const
     return sequence;
 }
 
+void ContainerLoadingCP::addVarsToPropagateVars()
+{
+    propagateVars = ORIntVars1D();
+
+    propagateVars.insert(propagateVars.end(), mStartPositionsX.begin(),
+                         mStartPositionsX.end());
+    propagateVars.insert(propagateVars.end(), mStartPositionsY.begin(),
+                         mStartPositionsY.end());
+    propagateVars.insert(propagateVars.end(), mStartPositionsZ.begin(),
+                         mStartPositionsZ.end());
+
+}
+
 void ContainerLoadingCP::CreateVariables()
 {
     size_t numberOfItems = mItems.size();
@@ -860,6 +880,8 @@ void ContainerLoadingCP::CreateVariables()
 
     if(input.compactness)
         mMinX = mModelCP.NewIntVar({0, 0});
+
+    addVarsToPropagateVars();
 }
 
 void ContainerLoadingCP::CreateTopItem()
@@ -907,7 +929,7 @@ void ContainerLoadingCP::AddConstraints()
 
     CreateItemOrientations();
 
-    if(mEnableFragility || mEnableSupport)
+    if(input.fragility || input.support)
     {
         CreateXYIntersectionBool();
         CreateSupportItem();
@@ -919,11 +941,9 @@ void ContainerLoadingCP::AddConstraints()
         CreateFragility();
     }
 
-
-    CreateOnFloorConstraints();
-
-    if(mEnableSupport)
+    if(input.support)
     {
+        CreateOnFloorConstraints();
         CreateXYIntersectionArea();
         CreateSupportArea();
     }
@@ -946,7 +966,6 @@ void ContainerLoadingCP::AddConstraints()
         CreateYZIntersectionBool();
         CreateYZIntersectionArea();
     }
-
 }
 
 void ContainerLoadingCP::CreateAxleWeights()

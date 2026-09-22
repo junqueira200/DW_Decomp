@@ -355,7 +355,7 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
         tamseqItens += 1;
 
         for(int t = i; t > k; --t)
-            vetItens[t] = vetItens[t - 1];
+            vetItens[t] = vetItens[t-1];
 
         if(PrintConst)
         {
@@ -534,9 +534,12 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
                 if(PrintConst)
                     std::cout << "\t\tAdd item ao bin(" << binVazioId << ") vazio\n\n";
             }
+            else
+                return numItensAlocados;
 
+            /*
                    // TODO remove?
-            if(k == vetItensTam-1 || vetSwap[vetItens[k]] == 1)
+            if(i == vetItensTam-1 || vetSwap[vetItens[k]] == 1)
                 return numItensAlocados;
             else
             {
@@ -544,9 +547,13 @@ int ConstrutivoBinNS::construtivoBinPacking(Vector<Bin>   &vetBin,
                 std::swap(vetItens[k], vetItens[vetItensTam-1]);
                 continue;
             }
+            */
         }
         else
+        {
             numItensAlocados += 1;
+            vetSwap.setAll(0);
+        }
 
         k += 1;
     } // END FOR(int i=0; i < numItens; ++i)
@@ -612,7 +619,7 @@ bool ConstrutivoBinNS::construtivoBinPacking(SolucaoNS::Bin  &bin,
     {
         //if(i > 0 &(i%100000) == 0)
         //    std::printf("%d\n", i);
-        if(alarm_stopG == 1)
+        if(doStop())
         {
             //std::printf("NO SOLUTION\n");
             //std::cout<<plotVetPackinErros();
@@ -720,6 +727,8 @@ void ConstrutivoBinNS::sortVetItemsByCustomer(VectorI &vetItems, int size)
 
         for(int i=0; i < size; ++i)
             vetItems[i] = vetItemRand[i].itemId;
+
+        //std::printf("Items: %s\n", printVet(vetItems, size).c_str());
         return;
     }
 
@@ -785,4 +794,35 @@ void ConstrutivoBinNS::sortVetItemsByCustomer(VectorI &vetItems, int size)
     }
 
 
+}
+
+bool ConstrutivoBinNS::checkIfPackedAllTheItems(const SolucaoNS::Bin 	&bin,
+                                                VectorI 				&vetItems,
+                                                int 					 numItems)
+{
+    if(numItems != bin.numItens)
+        return false;
+
+    for(int i=0; i < numItems; ++i)
+    {
+        bool find = false;
+        for(int j=0; j < numItems; ++j)
+        {
+            if(vetItems[i] == bin.vetItemId[j])
+            {
+                find = true;
+                break;
+            }
+        }
+
+        if(!find)
+        {
+            std::printf("Error, item(%d), was not find in bin!\n", vetItems[i]);
+            std::printf("vetItems: \t%s\n", printVet(vetItems, numItems).c_str());
+            std::printf("vetItems bin: \t%s\n", printVet(bin.vetItemId, numItems).c_str());
+            PRINT_THROW();
+        }
+    }
+
+    return true;
 }

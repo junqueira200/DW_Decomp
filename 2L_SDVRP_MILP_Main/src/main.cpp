@@ -272,7 +272,7 @@ int main(int argc, const char *argv[])
 
     if(!input.instOroloc3D_2)
     {
-        setClassical3DPackingProblem();
+        setClassical3DPackingProblem(true);
 
         //bool result = testRoute(&vetItems2[0], vetItems2.size(), 0);
         //std::printf("Resultado: %d\n", (int)result);

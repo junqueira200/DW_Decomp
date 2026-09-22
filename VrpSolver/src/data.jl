@@ -105,6 +105,12 @@ function getDistance(i::Int, j::Int)
             )       
 end
 
+function roundDistances()
+    ccall((:roundDistances, LIB),
+          Cvoid,
+          (),)
+end
+
 function getVehicleCapacity()
     return ccall(
                 (:getVehicleCapacity, LIB),
@@ -125,6 +131,7 @@ function createInstance(instt, oroloc3D)
     
     ini_3D_Packing(instt, oroloc3D)
 
+    #roundDistances()
 
     numberOfCustoms = getNumberOfCustoms()
     numberOfTrucks  = getNumberOfTrucks()
@@ -162,8 +169,9 @@ function createInstance(instt, oroloc3D)
 
     for i in 0:numberOfCustoms-1
         for j in 0:numberOfCustoms-1
-            if i != j            
-                dist[(i,j)] = getDistance(i, j)
+            if i != j  
+                a = (Int64(i), Int64(j))          
+                dist[a] = getDistance(i, j)
             end
         end
     end
@@ -180,7 +188,7 @@ function createInstance(instt, oroloc3D)
     #println("Demand: ", demand)
 
     vetVertex = Vector{Vertex}()
-    vetEdges  = Tuple{Int64,Int64}[]
+    vetEdges  = []
 
     for i in 0:numberOfCustoms-1
         push!(vetVertex, Vertex(i, demand[i], volume[i]))
@@ -202,9 +210,9 @@ function createInstance(instt, oroloc3D)
 end
 
 arcs(data::DataArcVRP) = data.G′.A # return set of arcs
-function c(data,a) 
-   if !(haskey(data.G′.cost, a)) 
-      return Inf
+function c(data, a::Tuple{Int64, Int64})
+   if !(haskey(data.G′.cost, a))         
+        return Inf
    end
    return data.G′.cost[a] 
 end
@@ -216,14 +224,16 @@ veh_volume(data::DataArcVRP) = data.Vol
 vol(data::DataArcVRP, i) = data.G′.V′[i+1].volume
 
 function lowerBoundNbVehicles(data::DataArcVRP) 
-    sumVol = 0.0
+    
+    #sumVol = 0.0
     sumDemand = 0
     for it in data.G′.V′
-        sumVol += it.volume
+        #sumVol += it.volume
         sumDemand += it.demand
     end
 
-    return Int(max(round(sumVol/veh_volume(data)), round(sumDemand/veh_capacity(data))))
+    #return Int(round(sumDemand/veh_capacity(data)))
+    return 1
 end
 
 function upperBoundNbVehicles(data::DataArcVRP) 

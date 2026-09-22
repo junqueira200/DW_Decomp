@@ -105,6 +105,7 @@ class Instance
     // Vector<double> vetItemArea;
 
     Vector<double> vetDemandaCliente;
+    Vector<double> vetVolumeCliente;
 
     Vector<int> vetItemCliente;    // Indica o cliente dado um item; mat[itemId] = cliente
     Matrix<int> matCliItensIniFim; // Indica o id Inicial e id Final do primeiro e ultimo

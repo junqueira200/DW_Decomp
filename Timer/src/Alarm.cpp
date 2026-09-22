@@ -1,16 +1,7 @@
-//
-// Created by igor on 10/01/25.
-//
-#ifndef DW_ALARM_H
-#define DW_ALARM_H
+#include "../include/Alarm.h"
 
-#include <csignal>
-#include <iostream>
-#include <unistd.h>
-
-inline sig_atomic_t alarm_stopG = 0;
-inline sig_atomic_t alarmSet    = 0;
-// inline unsigned int alarmPeriodG = 5*60; // 5 min
+sig_atomic_t alarm_stopG = 0;
+sig_atomic_t alarmSet    = 0;
 
 void on_alarm(int signal)
 {
@@ -19,6 +10,13 @@ void on_alarm(int signal)
     //std::cout << "TIME OUT!; alarm_stopG: "<<alarm_stopG<<"\n";
 }
 
+bool doStop()
+{
+    //std::printf("alarm_stopG: %d\n", alarm_stopG);
+    return alarm_stopG==1;
+}
+
+//inline
 void setAlarm(unsigned int alarmPeriod)
 {
     //static bool alarmSet = false;
@@ -41,11 +39,10 @@ void setAlarm(unsigned int alarmPeriod)
     }
 }
 
+
 void setOffAlarm()
 {
     alarm(0);
     alarmSet = 0;
     alarm_stopG = 0;
 }
-
-#endif // DW_ALARM_H

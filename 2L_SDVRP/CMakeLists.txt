@@ -50,6 +50,7 @@ message("set solution_borrow_checker=1")
 add_library(${PROJECT_NAME} SHARED
     include/Commit.h
     directions.txt
+    include/ConstrutivoBin2.h
 )
 
 target_sources(${PROJECT_NAME}
@@ -76,6 +77,10 @@ target_sources(${PROJECT_NAME}
         src/c_api.cpp
         src/SetPartition.cpp
         src/DualFeasibleFunctions.cpp
+        #src/Alarm.cpp
+        src/ConstrutivoBin2.cpp
+        src/RandomKey.cpp
+        src/GA.cpp
 )
 
 
@@ -87,6 +92,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE gurobi)
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
 target_link_libraries(${PROJECT_NAME} PRIVATE CPLEX::CPLEX)
+target_link_libraries(${PROJECT_NAME} PRIVATE Timer)
+
 #target_link_libraries(${PROJECT_NAME} PRIVATE ScipPP)
                         
 target_include_directories(${PROJECT_NAME}
@@ -152,6 +159,9 @@ set(public_headers
     include/SetPartition.h
     include/c_api.h
     include/DualFeasibleFunctions.h
+    include/ConstrutivoBin2.h
+    include/RandomKey.h
+    include/GA.h
 )
 
 # where to find our CMake modules

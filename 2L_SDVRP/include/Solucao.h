@@ -20,6 +20,91 @@
 namespace SolucaoNS
 {
 
+
+class Penalty
+{
+  public:
+    enum class TypePenalty : std::size_t
+    {
+        Collision = 0,
+        Support,
+        AxleWeights,
+        LoadBalancing,
+        Compactness,
+        Lifo,
+        Fragility,
+        VolItemsNotPacked,
+        Count // Used to size the array automatically
+    };
+
+  private:
+    Array<double, (std::size_t)TypePenalty::Count> penalties{};
+    static constexpr
+    std::array<std::string_view, static_cast<std::size_t>(TypePenalty::Count)> Names = {
+        "Collision",
+        "Support",
+        "Axle Weights",
+        "Load Balancing",
+        "Compactness",
+        "LIFO",
+        "Fragility",
+        "VolItemsNotPacked"
+    };
+
+  public:
+
+    // Default constructor (initializes all values to 0.0)
+    Penalty() { penalties.fill(0.0); }
+
+    // Parameterized constructor
+    Penalty(double collision, double support, double axleWeights,
+            double loadBalancing, double compactness, double lifo, double fragility,
+            double volItemsNotPacked)
+        : penalties{collision, support, axleWeights,
+                    loadBalancing, compactness, lifo, fragility, volItemsNotPacked} {}
+
+    // Getter using Enum
+    double get(TypePenalty type) const
+    {
+        return penalties[static_cast<std::size_t>(type)];
+    }
+
+    // Setter using Enum
+    void set(TypePenalty type, double value)
+    {
+        penalties[static_cast<std::size_t>(type)] = value;
+    }
+
+    // Array subscript operator overloads for convenient syntax: p[Penalty::Type::Collision]
+    double operator[](TypePenalty type) const
+    {
+        return penalties[static_cast<std::size_t>(type)];
+    }
+
+    double& operator[](TypePenalty type)
+    {
+        return penalties[static_cast<std::size_t>(type)];
+    }
+
+    void set0(){penalties.setAll(0.0);}
+
+    double getValue();
+    void print() const
+    {
+        std::cout << "--- Penalty Breakdown ---\n";
+        for (std::size_t i = 0; i < static_cast<std::size_t>(TypePenalty::Count); ++i)
+        {
+            std::printf("%-16.*s : %.2f\n",
+                        static_cast<int>(Names[i].length()),
+                        Names[i].data(),
+                        penalties[i]);
+        }
+
+        std::printf("\n");
+    }
+};
+
+
 struct Ponto
 {
     Array<double, 3> vetDim;
@@ -270,12 +355,20 @@ bool verificaColisaoDoisItens(int                  item0,
                               InstanceNS::Rotation r0,
                               InstanceNS::Rotation r1);
 
+double verificaColisaoDoisItensVol(int                  item0,
+                                   int                  item1,
+                                   const Ponto         &p0,
+                                   const Ponto         &p1,
+                                   InstanceNS::Rotation r0,
+                                   InstanceNS::Rotation r1);
+
 std::string printPonto(const Ponto &ponto, int dim);
 
 int    calculaNumBinOcupados(const Solucao &solucao);
 double calculaVolumeOcupado(const Solucao &solucao);
 double calculaVolumeLivre(const Solucao &solucao);
 double calculaMenorAreaLivre(const Solucao &solucao);
+void penalizeSolution(Rota& route, Bin& bin, Penalty& penalty);
 
 inline __attribute__((always_inline)) bool pontosIguais(const Ponto &p0, const Ponto &p1)
 {

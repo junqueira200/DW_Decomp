@@ -10,11 +10,13 @@
 #include <omp.h>
 #include "c_api.h"
 #include "DualFeasibleFunctions.h"
+#include "ConstrutivoBin2.h"
+#include "RandomKey.h"
+#include "GA.h"
 
 using namespace TesteOroloc3D_NS;
 using namespace InstanceNS;
 using namespace ParseInputNS;
-
 using namespace ContainerLoading;
 using namespace VehicleRouting;
 using namespace VehicleRouting::Algorithms;
@@ -24,6 +26,9 @@ using namespace AxleWeightsNS;
 using namespace ConstrutivoBinNS;
 using namespace IBM_CpOptimizerNS;
 using namespace DualFeasibleFunctionsNS;
+using namespace ConstrutivoBin2NS;
+using namespace RandomKeyNS;
+using namespace GA_NS;
 
 // using namespace SCIP_NS;
 
@@ -405,7 +410,7 @@ void TesteOroloc3D_NS::appendToFile(const std::string &fileName,
 void TesteOroloc3D_NS::testeOroloc3D_2()
 {
     //setClassical3DPackingProblem();
-    setOroloc3DProblem();
+    setOroloc3DProblem(true);
 
     std::printf("testeOroloc3D_2\n");
     int numItems = 2;
@@ -476,16 +481,30 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                         RandNs::estado_, veic, numItems);
 
         //std::reverse(vetItems.begin(), vetItems.begin() + numItems);
+        RandNs::startEngine(RandNs::estado_, true);
+        Bin binRandKey;
+
+        double ompStartGA = omp_get_wtime();
+        bool resultRandKey = ga(binRandKey, solCp.vetRota[veic], &vetItems, numItems);
+        double timeGA = omp_get_wtime() - ompStartGA;
+
+        std::printf("GA: %d; time: %f\n\n", (int)resultRandKey, timeGA);
 
         double ompStart = omp_get_wtime();
         RandNs::startEngine(RandNs::estado_, true);
         // TODO remove comment!
+        /*
         bool feasibleSolConst = construtivoBinPacking(bin2,
                                                       vetItems,
                                                       numItems,
                                                       input.aphaBin,
                                                       std::numeric_limits<int64_t>::max(),
                                                       &solCp.vetRota[veic]);
+        */
+
+        bool feasibleSolConst = packItemsIntoBin(bin2, solCp.vetRota[veic], vetItems, numItems,
+                                                 true, false);
+
         if(!feasibleSolConst)
             bin2.reset();
 
@@ -560,9 +579,9 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                                                   sol.vetRota[veic]);
         }
 
-        int dualFeasible = check(vetItems);
-        if(dualFeasible)
-            std::printf("Dual Feasible\n");
+        //int dualFeasible = check(vetItems);
+        //if(dualFeasible)
+        //    std::printf("Dual Feasible\n");
 
         for(int i = 1; i < sol.vetRota[veic].numPos - 1; ++i)
             stopIds.push_back(sol.vetRota[veic].vetRota[i]);
@@ -602,9 +621,10 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                 input.axleWights = false;
 
             std::vector<Array<int, 4>> vetArray;
-            auto status = loadingChecker.ConstraintProgrammingSolver(
-                type, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
-                int_fk, int_fFA, int_fRA, int_fTA);
+            auto status = LoadingStatus::Infeasible;
+                //loadingChecker.ConstraintProgrammingSolver(
+                //type, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
+                //int_fk, int_fFA, int_fRA, int_fTA);
 
             double ompEnd = omp_get_wtime();
 
@@ -756,9 +776,14 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         // mapPackingTypeToString[lastType], mapStatusOroloc3D_ToString[statusOroc3D]);
 
         if(feasibleSolConst)
-            output += std::format("FEASIBLE; {:.4f}", timeConst);
+            output += std::format("FEASIBLE; {:.4f}; ", timeConst);
         else
-            output += std::format("TIME_LIMIT; {:.4f}", timeConst);
+            output += std::format("TIME_LIMIT; {:.4f}; ", timeConst);
+
+        if(resultRandKey)
+            output += std::format("FEASIBLE; {:.4f} ", timeGA);
+        else
+            output += std::format("TIME_LIMIT; {:.4f} ", timeGA);
 
         std::cout << output << "\n";
         appendToFile("../oroloc3D.csv", output);
@@ -777,8 +802,11 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
 
     //std::cout<<solHeur.printSol()<<"\n\n";
-    writeToFile(solHeur.printSol(), "../Oroloc3D_Sol/Heuristic/"+input.strInst+".txt");
-    writeToFile(solCp.printSol(), "../Oroloc3D_Sol/Model/"+input.strInst+"dd.txt");
+    std::string strSolHeur = solHeur.printSol();
+    std::string strModel   = solCp.printSol();
+
+    writeToFile(strSolHeur, "../Oroloc3D_Sol/Heuristic/"+input.strInst+".txt");
+    writeToFile(strModel, "../Oroloc3D_Sol/Model/"+input.strInst+"dd.txt");
 
     //printSol(solCp);
 }

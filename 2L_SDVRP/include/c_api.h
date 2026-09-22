@@ -16,15 +16,27 @@ struct RouteData
 };
 
 inline RouteData routeData;
+constexpr bool   useHash = true;
 
 
 extern "C"
 {
     void ini_3D_Packing(char* strInst_c, int oroloc3D);
     int testRoute(int* vet_c, int vetSize, int onlyHeuristic=0, int doInverseRoute=0);
+    int testRouteCapVol(int* vet_c, int vetSize);
+    double getDistanceRoute(int* vet_c, int vetSize);
+    void roundDistances();
 
-    void setClassical3DPackingProblem();
-    void setOroloc3DProblem();
+    int routeIsInFeasibleSet(int* vet_c, int vetSize);
+    int routeIsInNotfeasibleSet(int* vet_c, int vetSize);
+    int heuristicPacking(int* vet_c, int vetSize);
+    int exactPacking(int* vet_c, int vetSize);
+
+    void setClassical3DPackingProblem(int doPrint);
+    void setLoadingOnlyProblem(int doPrint);
+    void setOroloc3DProblem(int doPrint);
+    void saveProblem(Input& inputTemp);
+    void setProblem(Input& inputTemp);
 
     int 	getNumberOfCustoms();
     int 	getNumberOfTrucks();

@@ -15,11 +15,13 @@ class AxleData
     AxleData() {};
     virtual ~AxleData() {};
     virtual bool checkAxleWeights(SolucaoNS::Bin &bin,
-                                  bool            print = false,
-                                  double*         fk    = nullptr,
-                                  double*         fFa   = nullptr,
-                                  double*         fRa   = nullptr,
-                                  double*	      fTa   = nullptr) const = 0;
+                                  bool            print 	= false,
+                                  double*         fk    	= nullptr,
+                                  double*         fFa   	= nullptr,
+                                  double*         fRa   	= nullptr,
+                                  double*	      fTa   	= nullptr,
+                                  double*         ptrSumF  	= nullptr,
+                                  double*		  ptrSumM  	= nullptr) const = 0;
 };
 
 class SemiTrailer : public AxleData
@@ -46,7 +48,9 @@ class SemiTrailer : public AxleData
                             double*         ptrFk    = nullptr,
                             double*         ptrFFa   = nullptr,
                             double*         ptrFRa   = nullptr,
-                            double*			ptrFTa   = nullptr) const override;
+                            double*			ptrFTa   = nullptr,
+                            double*         ptrSumF  = nullptr,
+                            double*			ptrSumM  = nullptr) const override;
 
     double computeMaxFK(SolucaoNS::Bin &bin) const;
 

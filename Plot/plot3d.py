@@ -4,10 +4,17 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 # Truck dimensions
-TRUCK_WIDTH = 1350 # 60
-TRUCK_LENGTH = 245 # 25
-TRUCK_HEIGHT = 270 # 30
 
+truckOroloc = False
+
+if truckOroloc:
+    TRUCK_WIDTH = 1350 # 60
+    TRUCK_LENGTH = 245 # 25
+    TRUCK_HEIGHT = 270 # 30
+else:
+    TRUCK_WIDTH  = 60
+    TRUCK_LENGTH = 25
+    TRUCK_HEIGHT = 30
 
 def read_items(filename):
     with open(filename, "r") as f:
@@ -104,7 +111,7 @@ def plot_items(items):
 
     for it in items:
         facecolor = None
-        if it["id"] == 65:
+        if it["id"] == -1:
             facecolor = "cyan"
 
         draw_box(

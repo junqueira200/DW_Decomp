@@ -23,7 +23,9 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin,
                                                    double*        ptrFk,
                                                    double*        ptrFFa,
                                                    double*        ptrFRa,
-                                                   double*		  ptrFTa) const
+                                                   double*		  ptrFTa,
+                                                   double*        ptrSumF,
+                                                   double*		  ptrSumM) const
 {
     GravityCm = GravityCmConst;
 
@@ -47,8 +49,7 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin,
         sumF += f;
         double r = (double)distanceCargoSpaceTrailerAxle - bin.vetPosItem[i].vetDim[0] -
                    instanciaG.vetItens[bin.vetItemId[i]].getDimRotacionada(
-                       0, bin.vetRotacao[i]) /
-                       2.0;
+                       0, bin.vetRotacao[i]) / 2.0;
 
         //r = std::round(r);
 
@@ -93,6 +94,12 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin,
 
     if(ptrFTa)
         *ptrFTa = fTA;
+
+    if(ptrSumF)
+        *ptrSumF = sumF;
+
+    if(ptrSumM)
+        *ptrSumM = sumM;
 
     // 1.01
     if(fFA > (double)maxMassFrontAxle* GravityCm)
