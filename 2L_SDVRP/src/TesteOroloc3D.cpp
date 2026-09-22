@@ -783,7 +783,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         if(resultRandKey)
             output += std::format("FEASIBLE; {:.4f} ", timeGA);
         else
-            output += std::format("TIME_LIMIT; {:.4f} ", timeGA);
+            output += std::format("TIME_LIMIT0; {:.4f} ", timeGA);
 
         std::cout << output << "\n";
         appendToFile("../oroloc3D.csv", output);
