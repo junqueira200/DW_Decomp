@@ -40,13 +40,13 @@ LoadingStatus ContainerLoadingCP::Solve()
 
     operations_research::sat::SatParameters parameters;
     SetParameters(parameters);
-    parameters.set_search_branching(operations_research::sat::SatParameters_SearchBranching_FIXED_SEARCH);
+    //parameters.set_search_branching(operations_research::sat::SatParameters_SearchBranching_FIXED_SEARCH);
 
     operations_research::sat::Model model = operations_research::sat::Model();
     model.Add(operations_research::sat::NewSatParameters(parameters));
-    mModelCP.AddDecisionStrategy(propagateVars,
-        operations_research::sat::DecisionStrategyProto::CHOOSE_FIRST,
-        operations_research::sat::DecisionStrategyProto::SELECT_MIN_VALUE);
+    //mModelCP.AddDecisionStrategy(propagateVars,
+    //    operations_research::sat::DecisionStrategyProto::CHOOSE_FIRST,
+    //    operations_research::sat::DecisionStrategyProto::SELECT_MIN_VALUE);
 
     operations_research::sat::CpModelProto protoModel = mModelCP.Build();
     //protoModel(propagateVars,
@@ -1742,26 +1742,30 @@ void ContainerLoadingCP::CreateCompactnessArea()
             }
         }
 
-        operations_research::sat::IntVar supportedArea = mModelCP.NewIntVar({0, maxAreaI});
-        mModelCP.AddEquality(supportedArea, supportedAreaExpr)
-            .OnlyEnforceIf(mPlacedOnLeft[i].Not());
+        //operations_research::sat::IntVar supportedArea = mModelCP.NewIntVar({0, maxAreaI});
+        //mModelCP.AddEquality(supportedArea, supportedAreaExpr)
+        //    .OnlyEnforceIf(mPlacedOnLeft[i].Not());
+
 
 
         mModelCP
             .AddGreaterOrEqual(
-                supportedArea,
-                static_cast<int>(std::ceil(msupportAreaLeft * mItems[i].Dy * mItems[i].Dz)))
+                supportedAreaExpr,
+                static_cast<int64_t>(std::ceil(msupportAreaLeft * mItems[i].Dy * mItems[i].Dz)))
             .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][NoRotation]});
                             //mTopBool[i].Not()});
 
         mModelCP
             .AddGreaterOrEqual(
-                supportedArea,
-                static_cast<int>(std::ceil(msupportAreaLeft * mItems[i].Dx * mItems[i].Dz)))
+                supportedAreaExpr,
+                static_cast<int64_t>(std::ceil(msupportAreaLeft * mItems[i].Dx * mItems[i].Dz)))
             .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][RotationZ]});
                             //mTopBool[i].Not()});
 
+
     }
+
+    //std::printf("Compactness disabled\n");
 }
 
 void ContainerLoadingCP::CreateYZIntersectionBool()

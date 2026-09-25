@@ -7,7 +7,7 @@ namespace DualFeasibleFunctionsNS
 {
 
     double funcionU(double ep, double x);
-    bool check(const VectorI& vetItems);
+    bool check(const VectorI& vetItems, int sizeVetItems=-1);
 }
 
 

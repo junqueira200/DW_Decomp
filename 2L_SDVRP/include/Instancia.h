@@ -53,11 +53,11 @@ class Item
     std::string print(Rotation r=Rot0, bool printVol = false);
     double      getDimRotacionada(int d, Rotation r);
     INLINE
-    void setNorm(double term0, double term2)
+    void setNorm(double term0, double term1, double term2)
     {
         //for(int d=0; d < 3; ++d)
         vetDimNor[0] = vetDim[0]/term0;
-        vetDimNor[1] = vetDim[1]/term0;
+        vetDimNor[1] = vetDim[1]/term1;
         vetDimNor[2] = vetDim[2]/term2;
         volNormDual = vetDimNor[0]*vetDimNor[1]*vetDimNor[2];
     }
@@ -141,7 +141,7 @@ int    generateRandomListOfItems(int numItens, VectorI &vetItems);
 
 
 inline Instance                                    instanciaG;
-inline static const Array<InstanceNS::Rotation, 2> vetRot = {Rot0, Rot1}; //, Rot2};
+inline static const Array<InstanceNS::Rotation, 1> vetRot = {Rot0};//, Rot1}; //, Rot2};
 // std::string printItem(int itemId);
 } // namespace InstanceNS
 

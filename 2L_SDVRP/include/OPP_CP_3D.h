@@ -90,7 +90,7 @@ class ContainerLoadingCP
                                             {AxisX, InFrontX, BehindX},
                                             {AxisZ, AboveZ, BelowZ}};
     std::vector<Orientation> mItemOrientations =
-        std::vector{NoRotation, RotationZ}; //, RotationZ, RotationX};
+        std::vector{NoRotation}; //, RotationZ, RotationX};
     operations_research::sat::CpModelBuilder mModelCP;
     ORIntVars1D mStartPositionsX;
     ORIntVars1D mEndPositionsX;

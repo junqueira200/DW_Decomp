@@ -27,12 +27,15 @@ using namespace SetPartitionNS;
 bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
 {
 
+    std::printf("metaheuristicaIg\n");
+
     std::string strError;
     Solucao     sol(instanciaG);
     int         ultimaA = 0;
 
     for(int i = 0; i < 500; ++i)
     {
+        std::printf("First Feasible solution: %d\n", i);
         sol.reset();
         if(construtivoVrp(sol, input.alphaVrp, input.aphaBin))
         {

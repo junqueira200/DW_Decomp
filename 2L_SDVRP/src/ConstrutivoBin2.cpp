@@ -67,7 +67,7 @@ static bool isPlacementFeasible(const Bin                 &bin,
 {
     Item &item = instanciaG.vetItens[itemId];
 
-           // 1. Boundary check
+    // 1. Boundary check
     for(int d = 0; d < instanciaG.numDim; ++d)
     {
         double dimR = item.getDimRotacionada(d, r);
@@ -127,11 +127,14 @@ static bool isPlacementFeasible(const Bin                 &bin,
         {
             int placedId = bin.vetItemId[k];
             Item &placedItem = instanciaG.vetItens[placedId];
-            double topZ = bin.vetPosItem[k].vetDim[2] + placedItem.getDimRotacionada(2, bin.vetRotacao[k]);
+            double topZ = bin.vetPosItem[k].vetDim[2] +
+                          placedItem.getDimRotacionada(2, bin.vetRotacao[k]);
 
             if(doubleEqual(topZ, p.vetDim[2], 1e-4))
             {
-                double overlap = computeXY_Overlap(item, r, p, placedItem, bin.vetRotacao[k], bin.vetPosItem[k]);
+                double overlap =
+                    computeXY_Overlap(item, r, p, placedItem, bin.vetRotacao[k], bin.vetPosItem[k]);
+
                 if(overlap > 0.0)
                 {
                     // Non-fragile item cannot sit on a fragile item
@@ -147,7 +150,7 @@ static bool isPlacementFeasible(const Bin                 &bin,
             return false;
     }
 
-           // 4. LIFO / Unloading sequence check with already packed items
+    // 4. LIFO / Unloading sequence check with already packed items
     if(ParseInputNS::input.lifo)
     {
         int posNew = findPos(rota, itemId);
@@ -168,14 +171,16 @@ static bool isPlacementFeasible(const Bin                 &bin,
             {
                 Item tempNew = item;
                 if(!lifo(tempNew, p, r, placedItem, bin.vetPosItem[k], bin.vetRotacao[k],
-                         ParseInputNS::input.mlifo, ParseInputNS::input.removeFromShortSide, matSupportItems))
+                         ParseInputNS::input.mlifo, ParseInputNS::input.removeFromShortSide,
+                         matSupportItems))
                     return false;
             }
             else
             {
                 Item tempNew = item;
                 if(!lifo(placedItem, bin.vetPosItem[k], bin.vetRotacao[k], tempNew, p, r,
-                         ParseInputNS::input.mlifo, ParseInputNS::input.removeFromShortSide, matSupportItems))
+                         ParseInputNS::input.mlifo, ParseInputNS::input.removeFromShortSide,
+                         matSupportItems))
                     return false;
             }
         }
@@ -189,7 +194,8 @@ static bool isPlacementFeasible(const Bin                 &bin,
         double right = item.weight - left;
 
         double limit = std::ceil(ParseInputNS::input.balancedLoadingD * (bin.demandaTotal + item.weight));
-        if((bin.sumLeftBalancedLoading + left) > limit || (bin.sumRightBalancedLoading + right) > limit)
+        if((bin.sumLeftBalancedLoading + left) > limit ||
+           (bin.sumRightBalancedLoading + right) > limit)
             return false;
     }
 
@@ -209,7 +215,7 @@ static bool isPlacementFeasible(const Bin                 &bin,
             double placedDx = placedItem.getDimRotacionada(0, bin.vetRotacao[k]);
             double placedMaxX = bin.vetPosItem[k].vetDim[0] + placedDx;
 
-                   // If placed item touches the left face of the new candidate item
+            // If placed item touches the left face of the new candidate item
             if(doubleEqual(placedMaxX, p.vetDim[0], 1e-4))
             {
                 double placedDy = placedItem.getDimRotacionada(1, bin.vetRotacao[k]);
@@ -220,7 +226,7 @@ static bool isPlacementFeasible(const Bin                 &bin,
                 double pZ = p.vetDim[2];
                 double pkZ = bin.vetPosItem[k].vetDim[2];
 
-                       // Calculate overlap area in the Y-Z plane
+                // Calculate overlap area in the Y-Z plane
                 double overlapY = std::max(0.0, std::min(pY + dy, pkY + placedDy) - std::max(pY, pkY));
                 double overlapZ = std::max(0.0, std::min(pZ + dz, pkZ + placedDz) - std::max(pZ, pkZ));
 
@@ -255,7 +261,7 @@ static double computePlacementScore(const Bin &bin, int itemId, const Ponto &p, 
     if(doubleEqual(p.vetDim[1] + dy, bin.binDim[1], 1e-4)) contactArea += dx * dz; // Front wall
     if(p.vetDim[2] <= 1e-4) contactArea += dx * dy;                               // Floor
 
-           // DBL weights: prioritize minimum Z (floor), then minimum Y (depth), then minimum X (lateral)
+    // DBL weights: prioritize minimum Z (floor), then minimum Y (depth), then minimum X (lateral)
     double score = 1000.0 * p.vetDim[2] + 10.0 * p.vetDim[1] + 1.0 * p.vetDim[0] - 0.05 * contactArea;
     return score;
 }
@@ -396,11 +402,13 @@ bool packItemsIntoBin(SolucaoNS::Bin          &bin,
 
             for(int i=0; i < numItems; ++i)
             {
+                /*
                 if(i > 0)
                 {
                     AxleWeightsNS::semiTrailer.checkAxleWeights(bin, false, &fk, &fFA,
                                                                 &fRA, &fTA, &sumM, &sumF);
                 }
+                */
 
                 int itemId = sortedItems[i];
                 static Vector<PlacementCandidate> candidates(NumEpPorBin);
@@ -415,7 +423,7 @@ bool packItemsIntoBin(SolucaoNS::Bin          &bin,
                     //std::printf("\tepIdx: %d\n", epIdx);
                     const Ponto &ep = bin.vetEp[epIdx];
 
-                    for(int rIdx = 0; rIdx < 2; ++rIdx)
+                    for(int rIdx = 0; rIdx < vetRot.size(); ++rIdx)
                     {
                         Rotation r = vetRot[rIdx];
 

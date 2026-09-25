@@ -91,38 +91,10 @@ function run_vrptw(app::Dict{String,Any})
             #    println(frame.func, " at ", frame.file, ":", frame.line)
             #end
 
-            println("From mycallback")
+            println("From mycallbackk")
 
-            if getMasterRutesIsNull()
-                
-                return
-            end
-
-            masterRoutes = getMasterRutes()
-            #println(masterRoutes)
-
-            routes = []
-            route  = []
-            
-            ini = true
-            for id in masterRoutes
-                if !ini && id == 0
-                    push!(route, 0)
-                    #println(route)
-                    push!(routes, route)
-                    route = []
-                    push!(route, 0)
-                    continue
-                end
-                ini = false
-                push!(route, id)
-                
-            end
-
-            
             
             integer = true
-            #=
             for (i,j) in E
                 e = (i,j)
                 value = get_value(optimizer, x[e])
@@ -131,17 +103,15 @@ function run_vrptw(app::Dict{String,Any})
                     break
                 end
             end
-            =#
 
             if integer
-                #sol = getsolution(data, x, get_objective_value(optimizer), optimizer)
-                #println("Soluton is integer!")
-                #sol = getsolution(data, x, get_objective_value(optimizer), optimizer)
-                for route in routes
+                println("Soluton is integer!")
+                sol = getsolution(data, x, get_objective_value(optimizer), optimizer)
+                for route in sol.routes
                     #println(route)
                     vet = Vector{Int32}()
 
-                    #push!(vet, 0)
+                    push!(vet, 0)
                     totalDemand = 0
                     totalVol    = 0.0
 
@@ -150,7 +120,7 @@ function run_vrptw(app::Dict{String,Any})
                         totalDemand += d(data, i)
                         totalVol    += vol(data, i)
                     end
-                    #println("totalDemand: ", totalDemand)
+                    println("totalDemand: ", totalDemand)
                     if(totalDemand > veh_capacity(data))
                         println("Error: totalDemand: ", totalDemand, "\nveh_capacity: ", veh_capacity(data))
                         exit(-1)
@@ -161,7 +131,7 @@ function run_vrptw(app::Dict{String,Any})
                         exit(-1)
                     end
                     #println("totalVol: ", totalVol)
-                    #push!(vet, 0)
+                    push!(vet, 0)
                     
                     inFeasibleSet = routeIsInFeasibleSet(vet)
                     if inFeasibleSet >= 1
@@ -239,12 +209,11 @@ function run_vrptw(app::Dict{String,Any})
                         vetArcs = []
                         vetMult = []
 
-                        for i in 2:(length(route)-1)
-                            for j in 2:(length(route)-1)
+                        for i in 1:(length(route))
+                            for j in 1:(length(route))
                             #j = i + 1
-                                if i != j && route[i] != route[j]
+                                if i != j
                                     arc = (route[i], route[j])
-                                    #println(arc)
                                     push!(vetArcs, x[arc])
                                     push!(vetMult, 1.0)
 
@@ -256,15 +225,15 @@ function run_vrptw(app::Dict{String,Any})
 
                             
                         end
-                        println("\nCut route")
-                        #println("\t", vetArcs, "\n\t", vetMult, "\n\n\trhs: ", length(route)-4)
-                        println("rhs: ", length(route)-4)
+                        println("Cut route")
+                        println("\t", vetArcs, "\n\t", vetMult, "\n\n\trhs: ", length(route)-2)
                         
-                        add_dynamic_constr!(optimizer, vetArcs, vetMult, <=, length(route)-4, "mycallback")
+                        
+                        add_dynamic_constr!(optimizer, vetArcs, vetMult, <=, length(route)-2, "mycallback")
 
  
 
-                        #break
+                        break
                         #exit(-1)
                     end
                     #println(vet)
@@ -273,7 +242,7 @@ function run_vrptw(app::Dict{String,Any})
 
                 
                 #add_dynamic_constr!(model.optimizer, [x[e]], [1.0], <=, 1.0, "edge_ub")
-            end            
+            end
 
         end 
         if usePacking

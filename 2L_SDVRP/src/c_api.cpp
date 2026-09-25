@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <omp.h>
 #include "DualFeasibleFunctions.h"
+#include "GA.h"
 
 using namespace ConstrutivoBinNS;
 using namespace InstanceNS;
@@ -13,6 +14,7 @@ using namespace VehicleRouting;
 using namespace VehicleRouting::Algorithms;
 using namespace TesteOroloc3D_NS;
 using namespace DualFeasibleFunctionsNS;
+using namespace GA_NS;
 
 void ini_3D_Packing(char *strInst_c, int oroloc3D)
 {
@@ -124,9 +126,9 @@ int heuristicPacking(int* vet_c, int vetSize)
 
     std::reverse(vetItems.begin(), vetItems.begin() + numItems);
 
-    bool feasible =
-         ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
-                                                 std::numeric_limits<int64_t>::max(), &route);
+    bool feasible = ga(bin, route, &vetItems, numItems);
+         //ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
+         //                                        std::numeric_limits<int64_t>::max(), &route);
     if(feasible)
     {
         if(useHash)
@@ -216,6 +218,14 @@ int exactPacking(int* vet_c, int vetSize)
     numItems = copiaItensClientes(route.vetRota, route.numPos, vetItems);
     std::reverse(vetItems.begin(), vetItems.begin() + numItems);
 
+    bool dualFeasible = check(vetItems);
+    if(!dualFeasible)
+    {
+        std::printf("dual infeasible!\n");
+    }
+
+
+
     std::vector<Cuboid>   vetCuboids;
     Collections::IdVector stopIds;
 
@@ -270,6 +280,13 @@ int exactPacking(int* vet_c, int vetSize)
 
         if(status == LoadingStatus::Infeasible)
         {
+
+            if(!dualFeasible)
+            {
+                std::printf("Packing is NOT dualFeasible\nIt worked!\n");
+                //PRINT_THROW();
+            }
+
             //if(feasible)
             //{
             //    std::printf("ERROR, LoadingStatus::Infeasible, and heuristic solved\n\n");
@@ -320,6 +337,12 @@ int exactPacking(int* vet_c, int vetSize)
 
             if(!checkIfPackedAllTheItems(bin, vetItems, numItems))
             {
+                PRINT_THROW();
+            }
+
+            if(!dualFeasible)
+            {
+                std::printf("Error, packing is dual infeasible! CP generated a feasible Solution\n");
                 PRINT_THROW();
             }
 
@@ -505,6 +528,8 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
         return 0;
     }
 
+    bool dualFeasible = check(vetItems, numItems);
+
     //std::printf("numItems: %d\n", numItems);
 
     //std::printf("vetItems: ");
@@ -536,23 +561,34 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
 
     if(onlyHeuristic >= 1)
     {
-        feasible =
-        ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
-                                                25, &route);
+        feasible = ga(bin, route, &vetItems, numItems);
+        //ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
+        //                                        25, &route);
         if(feasible)
         {
+            //std::printf("GA work!\n");
+            if(!dualFeasible)
+            {
+                std::printf("Error, packing is dual infeasible!\n");
+                PRINT_THROW();
+            }
+
             if(useHash)
                 routeSetFeasible.insert(route);
 
 
+            /*
             if(useDualFunction && doBreakTestRoute)
             {
                 std::printf("Heuristic is feasible ??\n");
                 goto jmpCp;
                 PRINT_THROW();
             }
+            */
 
         }
+        //else
+        //    std::printf("GA dident work!\n");
         //if(feasible)
         //    return true;
         return feasible;
@@ -562,9 +598,15 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
     }
     else
     {
-        feasible =
-            ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
-                                                    50, &route);
+        feasible = ga(bin, route, &vetItems, numItems);
+            //ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
+            //                                        50, &route);
+
+        if(!dualFeasible && feasible)
+        {
+            std::printf("Error, packing is dual infeasible!\n");
+            PRINT_THROW();
+        }
     }
 
     //std::printf("Construtivo: %d\n", feasible);
@@ -866,6 +908,18 @@ void setClassical3DPackingProblem(int doPrint)
     input.removeFromShortSide	= true;
     input.fragility				= false;
     input.support				= false;
+
+    if(input.mlifo && !input.lifo)
+    {
+        std::printf("Error, lifo needs to be active when mlifo is!\n");
+        PRINT_THROW();
+    }
+
+    std::printf("Solving Problem:\n\taxleWights: \t\t %d \n", input.axleWights);
+    std::printf("\tbalancedLoading: \t %d\n", input.balancedLoading);
+    std::printf("\tcompactness: \t\t %d\n", input.compactness);
+    std::printf("\tlifo: \t\t\t %d\n", input.lifo);
+    std::printf("\tmlifo: \t\t\t %d\n", input.mlifo);
 }
 
 void setLoadingOnlyProblem(int doPrint)
@@ -882,6 +936,18 @@ void setLoadingOnlyProblem(int doPrint)
     input.removeFromShortSide	= true;
     input.fragility				= false;
     input.support				= false;
+
+    if(input.mlifo && !input.lifo)
+    {
+        std::printf("Error, lifo needs to be active when mlifo is!\n");
+        PRINT_THROW();
+    }
+
+    std::printf("Solving Problem:\n\taxleWights: \t\t %d \n", input.axleWights);
+    std::printf("\tbalancedLoading: \t %d\n", input.balancedLoading);
+    std::printf("\tcompactness: \t\t %d\n", input.compactness);
+    std::printf("\tlifo: \t\t\t %d\n", input.lifo);
+    std::printf("\tmlifo: \t\t\t %d\n", input.mlifo);
 }
 
 void setOroloc3DProblem(int doPrint)
@@ -889,13 +955,27 @@ void setOroloc3DProblem(int doPrint)
     if(doPrint)
         std::printf("Seting parameters for Oroloc3D loading\n");
 
+
+
     input.instOroloc3D_2  		= true;
     input.axleWights      		= true;
     input.balancedLoading 		= true;
     input.compactness     		= true;
-    input.lifo			  		= false;
+    input.lifo			  		= true;
     input.mlifo			  		= true;
     input.removeFromShortSide	= false;
+
+    std::printf("Solving Problem:\n\taxleWights: \t\t %d \n", input.axleWights);
+    std::printf("\tbalancedLoading: \t %d\n", input.balancedLoading);
+    std::printf("\tcompactness: \t\t %d\n", input.compactness);
+    std::printf("\tlifo: \t\t\t %d\n", input.lifo);
+    std::printf("\tmlifo: \t\t\t %d\n", input.mlifo);
+
+    if(input.mlifo && !input.lifo)
+    {
+        std::printf("Error, lifo needs to be active when mlifo is!\n");
+        PRINT_THROW();
+    }
 }
 
 void saveProblem(Input& inputTemp)

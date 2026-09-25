@@ -36,9 +36,12 @@ double DualFeasibleFunctionsNS::funcionU(double ep, double x)
 
 }
 
-bool DualFeasibleFunctionsNS::check(const VectorI &vetItems)
+bool DualFeasibleFunctionsNS::check(const VectorI &vetItems, int sizeVetItems)
 {
     static const Array<double, 5> arrayEp{1.0/3, 1.0/4, 1.0/5, 1.0/6, 1.0/7};
+
+    if(sizeVetItems <= 0)
+        sizeVetItems = vetItems.size();
 
     for(double ep0:arrayEp)
     {
@@ -47,10 +50,10 @@ bool DualFeasibleFunctionsNS::check(const VectorI &vetItems)
             setDualFeasibleFunction(ep0, ep1);
             double vol = 0.0;
 
-            for(int item:vetItems)
-                vol += InstanceNS::instanciaG.vetItens[item].volNormDual;
+            for(int i=0; i < sizeVetItems; ++i)
+                vol += InstanceNS::instanciaG.vetItens[vetItems[i]].volNormDual;
 
-            if(vol > 1.00001)
+            if(doubleGreater(vol, 1.0))
             {
                 std::printf("Dual function detects a infeasible packing! vol: %.2f\n", vol);
                 doBreakTestRoute = true;

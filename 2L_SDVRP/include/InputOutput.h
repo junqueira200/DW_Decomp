@@ -72,6 +72,8 @@ class Input
     int			gaPopulationSize			= 500;
     int			gaNumberOfGenerations		= 100;
     double		gaDiscartPercetence			= 0.05;
+    double		gaElitePercetence			= 0.10;
+    double		gaProbabilityToInheritFromElite = 0.6;
     // bool		inst3d                   = true;
 
     File file;

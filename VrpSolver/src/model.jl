@@ -96,7 +96,7 @@ function build_model(data::DataArcVRP, app)
       cap_res_id = add_resource!(G, main = true)
    
       if useVolume
-         vol_res_id = add_resource!(G, main=false)
+         vol_res_id = add_resource!(G, main=true)
          #vol_dual_id = add_resource!(G, main=false)
       end
       #end

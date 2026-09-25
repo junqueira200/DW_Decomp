@@ -626,7 +626,7 @@ void InstanceNS::read3dInstance(const std::string &strFile)
 
             instanciaG.matCliItensIniFim.get(node, 1) = nextItem;
             instanciaG.vetItens.push_back(Item(largura, comprimento, altura, wight, nextItem));
-            instanciaG.vetItens[instanciaG.vetItens.size() - 1].setNorm(maxDim, maxDim);
+            instanciaG.vetItens[instanciaG.vetItens.size() - 1].setNorm(instanciaG.vetDimVeiculo[0], instanciaG.vetDimVeiculo[1], instanciaG.vetDimVeiculo[2]);
             instanciaG.vetItens[instanciaG.vetItens.size() - 1].fragility = fragility;
             instanciaG.vetItens[instanciaG.vetItens.size() - 1].customer = node;
             instanciaG.vetVolumeCliente[node] +=
@@ -650,6 +650,8 @@ void InstanceNS::read3dInstance(const std::string &strFile)
 
     file.close();
     instanciaG.setMaxItemVolume();
+    instanciaG.numRotation = 1;
+    std::printf("Seting the number of rotations to 1\n");
 }
 
 void InstanceNS::Instance::atualizaVetMinDimItens()
@@ -884,6 +886,7 @@ void InstanceNS::readOroloc3D2(const std::string &strFile)
     file >> trash >> veicDim[1];
     file >> trash >> veicDim[2];
 
+
     // std::printf("maxPayload: %f\n", maxPayload);
     // std::cout<<"Veic dim: "<<veicDim<<"\n";
 
@@ -1032,6 +1035,9 @@ void InstanceNS::readOroloc3D2(const std::string &strFile)
 
     convertInstanceToCm(instanciaG);
     instanciaG.setMaxItemVolume();
+
+    instanciaG.numRotation = 1;
+    std::printf("Seting the number of rotations to 1\n");
     // EXIT_PRINT();
 }
 
@@ -1043,6 +1049,14 @@ void InstanceNS::convertInstanceToCm(Instance &instance)
         return;
     }
 
+    for(int i=0; i < 3; ++i)
+        instance.vetDimVeiculo[i] = (int)(instance.vetDimVeiculo[i]*0.1);
+
+    const double volVeich = instanciaG.vetDimVeiculo[0]*instanciaG.vetDimVeiculo[1]*
+                            instanciaG.vetDimVeiculo[2];
+
+    const double maxDim = std::cbrt(volVeich);
+
     //std::printf("Instance not converted to cm\n");
     //return;
     for(Item& item:instance.vetItens)
@@ -1051,11 +1065,13 @@ void InstanceNS::convertInstanceToCm(Instance &instance)
             item.vetDim[i] = (int)((item.vetDim[i]*0.1)+0.5);
 
         item.volume = item.vetDim[0]*item.vetDim[1]*item.vetDim[2];
+
+        item.vetDimNor[0] = item.vetDim[0]/maxDim;
+        item.vetDimNor[1] = item.vetDim[1]/maxDim;
+        item.vetDimNor[2] = item.vetDim[2]/maxDim;
+
         instance.vetVolumeCliente[item.customer] += item.volume;
     }
-
-    for(int i=0; i < 3; ++i)
-        instance.vetDimVeiculo[i] = (int)(instance.vetDimVeiculo[i]*0.1);
 
     std::printf("Instance converted to cm\n");
 }

@@ -24,7 +24,7 @@ namespace RandomKeyNS
 
     bool decoderRandomKey(RandomKey& 			randKey,
                           SolucaoNS::Bin&	 	bin,
-                          VectorI&	 			vetItems,
+                          const VectorI&	 	vetItems,
                           int	 				vetItemsSize,
                           SolucaoNS::Rota&		route,
                           SolucaoNS::Penalty& 	penalty);

@@ -442,8 +442,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     for(int veic = 0; veic < sol.vetBin.size(); ++veic)
     {
-         //if(veic != 3)
-         //    continue;
+        //if(veic != 2)
+        //   continue;
 
 
         Bin  &bin = sol.vetBin[veic];
@@ -488,6 +488,15 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         bool resultRandKey = ga(binRandKey, solCp.vetRota[veic], &vetItems, numItems);
         double timeGA = omp_get_wtime() - ompStartGA;
 
+        if(resultRandKey)
+        {
+            if(!checkIfPackedAllTheItems(binRandKey, vetItems, numItems))
+            {
+                std::printf("Error in the BRKGA!\n");
+                PRINT_THROW();
+            }
+        }
+
         std::printf("GA: %d; time: %f\n\n", (int)resultRandKey, timeGA);
 
         double ompStart = omp_get_wtime();
@@ -502,12 +511,14 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                                                       &solCp.vetRota[veic]);
         */
 
-        bool feasibleSolConst = packItemsIntoBin(bin2, solCp.vetRota[veic], vetItems, numItems,
-                                                 true, false);
+        bool feasibleSolConst = packItemsIntoBin(bin2, solCp.vetRota[veic], vetItems,
+                                                 numItems, true, false);
 
         if(!feasibleSolConst)
             bin2.reset();
 
+
+        /*
         if(feasibleSolConst)
         {
             useValuesFromHeuristic = true;
@@ -546,7 +557,9 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
             }
         }
+
         else
+        */
             useValuesFromHeuristic = false;
 
         double ompEnd = omp_get_wtime();
@@ -579,9 +592,11 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                                                   sol.vetRota[veic]);
         }
 
-        //int dualFeasible = check(vetItems);
-        //if(dualFeasible)
-        //    std::printf("Dual Feasible\n");
+        int dualFeasible = check(vetItems);
+        if(!dualFeasible)
+            std::printf("Dual Infeasible\n");
+        else
+            std::printf("Dual feasible\n");
 
         for(int i = 1; i < sol.vetRota[veic].numPos - 1; ++i)
             stopIds.push_back(sol.vetRota[veic].vetRota[i]);
@@ -621,10 +636,10 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                 input.axleWights = false;
 
             std::vector<Array<int, 4>> vetArray;
-            auto status = LoadingStatus::Infeasible;
-                //loadingChecker.ConstraintProgrammingSolver(
-                //type, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
-                //int_fk, int_fFA, int_fRA, int_fTA);
+            auto status = //LoadingStatus::Infeasible;
+                loadingChecker.ConstraintProgrammingSolver(
+                type, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
+                int_fk, int_fFA, int_fRA, int_fTA);
 
             double ompEnd = omp_get_wtime();
 
@@ -783,7 +798,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         if(resultRandKey)
             output += std::format("FEASIBLE; {:.4f} ", timeGA);
         else
-            output += std::format("TIME_LIMIT0; {:.4f} ", timeGA);
+            output += std::format("TIME_LIMIT; {:.4f} ", timeGA);
 
         std::cout << output << "\n";
         appendToFile("../oroloc3D.csv", output);
