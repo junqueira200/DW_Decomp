@@ -113,8 +113,8 @@ void ParseInputNS::parseInput(int argc, const char *argv[])
         if(result.count("oroloc3D_2") == 1 && result.count("solOroloc3D_2") == 0)
             assertm(true, "Missing param solOroloc3D_2");
 
-        if(result.count("oroloc3D_2") == 1 && result.count("solOroloc3D_output") == 0)
-            assertm(true, "Missing param solOroloc3D_output");
+        //if(result.count("oroloc3D_2") == 1 && result.count("solOroloc3D_output") == 0)
+            //assertm(true, "Missing param solOroloc3D_output");
 
         RandNs::startEngine(output.semente, bool(result.count("seed") == 1));
     }

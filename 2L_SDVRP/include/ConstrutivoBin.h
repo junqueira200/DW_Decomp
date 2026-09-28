@@ -130,7 +130,9 @@ std::string plotVetPackinErros()
     return str;
 }
 
-bool checkIfPackedAllTheItems(const SolucaoNS::Bin& bin, VectorI& vetItems, int numItems);
+bool checkIfPackedAllTheItems(const SolucaoNS::Bin& bin,
+                              const VectorI& vetItems,
+                              int numItems);
 
 } // namespace ConstrutivoBinNS
 

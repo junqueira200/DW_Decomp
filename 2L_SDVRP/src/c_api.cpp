@@ -146,7 +146,7 @@ int exactPacking(int* vet_c, int vetSize)
     //std::printf("exactPacking\n");
     SolucaoNS::Rota 	route;
     SolucaoNS::Bin  	bin;
-    VectorI			vetItems(instanciaG.numItens);
+    VectorI				vetItems(instanciaG.numItens);
 
     route.binPtr = &bin;
     route.reset();
@@ -218,7 +218,7 @@ int exactPacking(int* vet_c, int vetSize)
     numItems = copiaItensClientes(route.vetRota, route.numPos, vetItems);
     std::reverse(vetItems.begin(), vetItems.begin() + numItems);
 
-    bool dualFeasible = check(vetItems);
+    bool dualFeasible = check(vetItems, numItems);
     if(!dualFeasible)
     {
         std::printf("dual infeasible!\n");
@@ -261,6 +261,7 @@ int exactPacking(int* vet_c, int vetSize)
     std::printf(    "**************INI CP-SAT************\n\n");
 
     double int_fk, int_fFA, int_fRA, int_fTA;
+    VectorI vetSumAreasLeft(numItems, 0);
 
     for(int i=0; i < 1; ++i)
     {
@@ -271,7 +272,7 @@ int exactPacking(int* vet_c, int vetSize)
         //double ompStart = omp_get_wtime();
         auto status = loadingChecker.ConstraintProgrammingSolver(
             PackingType::Complete, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
-            int_fk, int_fFA, int_fRA, int_fTA);
+            int_fk, int_fFA, int_fRA, int_fTA, vetSumAreasLeft);
         // std::cout<<"ret\n";
         //double ompEnd = omp_get_wtime();
 
@@ -426,6 +427,19 @@ void roundDistances()
 
 int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
 {
+    if(vetSize == 2)
+    {
+        if(vet_c[0] == 0 && vet_c[1] == 0)
+            return true;
+        else
+        {
+            std::printf("Error in route: ");
+            for(int i=0; i < vetSize; ++i)
+                std::printf("%d ", vet_c[i]);
+            std::printf("\n\n");
+            PRINT_THROW();
+        }
+    }
 
     //std::printf("testRoute\n");
     //onlyHeuristic = false;
@@ -492,6 +506,12 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
 
 
     int numItems = copiaItensClientes(route.vetRota, route.numPos, vetItems);
+    if(numItems == 0)
+    {
+        std::printf("Error, vetItems is empty!\n");
+        std::printf("Route: %s\n", route.printRota(false).c_str());
+        PRINT_THROW();
+    }
 
     //std::printf("vetItems: ");
     //for(int i=0; i < numItems; ++i)
@@ -555,21 +575,22 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
 
     bool feasible = false;
 
-    if(useDualFunction)
-        check(vetItems);
+    //if(useDualFunction)
+    //    check(vetItems);
 
 
     if(onlyHeuristic >= 1)
     {
-        feasible = ga(bin, route, &vetItems, numItems);
-        //ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
-        //                                        25, &route);
+        feasible = //ga(bin, route, &vetItems, numItems);
+        ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
+                                                25, &route);
         if(feasible)
         {
             //std::printf("GA work!\n");
             if(!dualFeasible)
             {
                 std::printf("Error, packing is dual infeasible!\n");
+                std::printf("Plot: \n%s\n", bin.printPlot().c_str());
                 PRINT_THROW();
             }
 
@@ -690,6 +711,7 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
     std::printf(    "**************INI CP-SAT************\n\n");
 
     double int_fk, int_fFA, int_fRA, int_fTA;
+    VectorI vetSumAreasLeft(numItems, 0);
 
     for(int i=0; i < 1; ++i)
     {
@@ -700,7 +722,7 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
         //double ompStart = omp_get_wtime();
         auto status = loadingChecker.ConstraintProgrammingSolver(
         PackingType::Complete, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
-            int_fk, int_fFA, int_fRA, int_fTA);
+            int_fk, int_fFA, int_fRA, int_fTA, vetSumAreasLeft);
         // std::cout<<"ret\n";
         //double ompEnd = omp_get_wtime();
 

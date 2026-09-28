@@ -5,7 +5,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 # Truck dimensions
 
-truckOroloc = False
+truckOroloc = True
 
 if truckOroloc:
     TRUCK_WIDTH = 1350 # 60
@@ -13,7 +13,7 @@ if truckOroloc:
     TRUCK_HEIGHT = 270 # 30
 else:
     TRUCK_WIDTH  = 60
-    TRUCK_LENGTH = 25
+    TRUCK_LENGTH = 50
     TRUCK_HEIGHT = 30
 
 def read_items(filename):

@@ -774,7 +774,10 @@ bool SolucaoNS::verificaColisaoDoisItens(const int                  item0,
     return (numInterc == instanciaG.numDim);
 }
 
-bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
+bool SolucaoNS::Bin::checkFeasibility(Rota*		rota,
+                                      bool 		fromCp,
+                                      bool 		print,
+                                      VectorI* 	vetSumAreasLeftPtr)
 {
 
     if(vazio() || input.comprimentoAlturaIguais1)
@@ -1001,7 +1004,7 @@ bool SolucaoNS::Bin::checkFeasibility(Rota *rota, bool fromCp, bool print)
     bool compactness = true;
 
     if(input.compactness)
-        compactness = checkCompactness(*this, vetTop, &error);
+        compactness = checkCompactness(*this, vetTop, &error, vetSumAreasLeftPtr);
 
 
     if(!compactness && print)
@@ -1309,7 +1312,10 @@ PRINT_THROW();
     return true;
 }
 
-bool SolucaoNS::checkCompactness(Bin &bin, const VectorI &vetTop, std::string *strError)
+bool SolucaoNS::checkCompactness(Bin &bin,
+                                 const VectorI &vetTop,
+                                 std::string *strError,
+                                 VectorI* 	vetSumAreasLeftPtr)
 {
     if(bin.vazio())
         return true;
@@ -1378,7 +1384,11 @@ bool SolucaoNS::checkCompactness(Bin &bin, const VectorI &vetTop, std::string *s
                 const int      itemJ = bin.vetItemId[j];
                 const Ponto    pJ = bin.vetPosItem[j];
                 const Rotation rJ = bin.vetRotacao[j];
-                sumAreasLeft += getIntercetion(itemI, pI, rI, Left, itemJ, pJ, rJ, Right);
+                double inter = getIntercetion(itemI, pI, rI, Left, itemJ, pJ, rJ, Right);
+                //if(inter > 0.0)
+                //    std::printf("\t(%d): %.2f\n", bin.vetItemId[j], inter);
+
+                sumAreasLeft += inter;
             }
         }
 
@@ -1403,11 +1413,16 @@ bool SolucaoNS::checkCompactness(Bin &bin, const VectorI &vetTop, std::string *s
         }
         */
 
+        //std::printf("sumAreasLeft(%d): %.2f\n\n", bin.vetItemId[i], sumAreasLeft);
+        if(vetSumAreasLeftPtr)
+            (*vetSumAreasLeftPtr)[i] = sumAreasLeft;
+
         if(!tochLeft)
         {
             double ratio = sumAreasLeft / areaTotal;
             if(ratio < input.minLeftSupportArea)
             {
+
                 if(strError)
                 {
                     (*strError) = std::format(
@@ -1418,9 +1433,14 @@ bool SolucaoNS::checkCompactness(Bin &bin, const VectorI &vetTop, std::string *s
 
                 vetPackinErros[PackingErroCompactness] += 1;
                 return false;
+
+
+                //if(!vetSumAreasLeftPtr)
+                //    return false;
             }
         }
     }
+
 
     return true;
 }

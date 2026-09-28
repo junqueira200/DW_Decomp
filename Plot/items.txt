@@ -1,65 +1,71 @@
-2 3 8 7 
-
-8
-itemId(12)
-orolocId 
+9
+itemId(6)
+orolocId Bt007
 Pos: (0.0,0.0,0.0)
-Width 14
-Length 15
-Height 12
+Width 577
+Length 218
+Height 54
 
 
-itemId(3)
-orolocId 
-Pos: (0.0,15.0,0.0)
-Width 36
-Length 5
-Height 6
+itemId(7)
+orolocId Bt008
+Pos: (577.0,0.0,0.0)
+Width 577
+Length 218
+Height 54
+
+
+itemId(67)
+orolocId Bt079
+Pos: (0.0,0.0,54.0)
+Width 453
+Length 202
+Height 48
 
 
 itemId(11)
-orolocId 
-Pos: (0.0,15.0,6.0)
-Width 21
-Length 7
-Height 10
+orolocId Bt112
+Pos: (1154.0,0.0,0.0)
+Width 120
+Length 198
+Height 107
 
 
-itemId(14)
-orolocId 
-Pos: (0.0,0.0,12.0)
-Width 31
-Length 6
-Height 9
+itemId(9)
+orolocId Bt110
+Pos: (0.0,0.0,102.0)
+Width 198
+Length 120
+Height 107
 
 
 itemId(10)
-orolocId 
-Pos: (0.0,6.0,12.0)
-Width 23
-Length 7
-Height 10
+orolocId Bt111
+Pos: (198.0,0.0,102.0)
+Width 198
+Length 120
+Height 107
 
 
-itemId(1)
-orolocId 
-Pos: (21.0,15.0,6.0)
-Width 29
-Length 8
-Height 15
+itemId(12)
+orolocId Bt113
+Pos: (453.0,0.0,54.0)
+Width 120
+Length 198
+Height 93
 
 
-itemId(13)
-orolocId 
-Pos: (0.0,6.0,22.0)
-Width 27
-Length 8
-Height 7
+itemId(68)
+orolocId Bt080
+Pos: (573.0,0.0,54.0)
+Width 569
+Length 203
+Height 61
 
 
-itemId(13)
-orolocId 
-Pos: (14.0,0.0,0.0)
-Width 27
-Length 8
-Height 7
+itemId(8)
+orolocId Bt009
+Pos: (573.0,0.0,115.0)
+Width 538
+Length 229
+Height 53

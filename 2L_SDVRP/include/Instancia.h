@@ -55,6 +55,9 @@ class Item
     INLINE
     void setNorm(double term0, double term1, double term2)
     {
+        double max = std::max(term0, term1);
+        max = std::max(max, term2);
+
         //for(int d=0; d < 3; ++d)
         vetDimNor[0] = vetDim[0]/term0;
         vetDimNor[1] = vetDim[1]/term1;
@@ -141,7 +144,7 @@ int    generateRandomListOfItems(int numItens, VectorI &vetItems);
 
 
 inline Instance                                    instanciaG;
-inline static const Array<InstanceNS::Rotation, 1> vetRot = {Rot0};//, Rot1}; //, Rot2};
+inline static const Array<InstanceNS::Rotation, 2> vetRot = {Rot0, Rot1}; //, Rot2};
 // std::string printItem(int itemId);
 } // namespace InstanceNS
 

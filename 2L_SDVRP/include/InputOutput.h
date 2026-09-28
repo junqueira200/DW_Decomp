@@ -69,7 +69,7 @@ class Input
     bool        useCm						= true;
 
 
-    int			gaPopulationSize			= 500;
+    int			gaPopulationSize			= 200;  // 500
     int			gaNumberOfGenerations		= 100;
     double		gaDiscartPercetence			= 0.05;
     double		gaElitePercetence			= 0.10;

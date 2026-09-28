@@ -10,6 +10,7 @@
 #include "sefe_array.h"
 #include <boost/dynamic_bitset.hpp>
 #include <boost/functional/hash.hpp>
+#include "safe_vector.h"
 
 namespace ContainerLoading
 {
@@ -60,7 +61,8 @@ class LoadingChecker
                                 double& fk,
                                 double& fFA,
                                 double& fRA,
-                                double& fTA);
+                                double& fTA,
+                                VectorI& vetSumAreasLeft);
     // bool isCallTypeExact,
     // double maxRuntime = std::numeric_limits<double>::max());
 

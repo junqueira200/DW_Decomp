@@ -5,10 +5,10 @@ using namespace GA_NS;
 using namespace ParseInputNS;
 using namespace RandomKeyNS;
 
-bool GA_NS::ga(SolucaoNS::Bin  &bin,
-               SolucaoNS::Rota &route,
-               VectorI* 		ptrVetItems,
-               int 				sizeVetItems)
+bool GA_NS::ga(SolucaoNS::Bin  		&bin,
+               SolucaoNS::Rota 		&route,
+               const VectorI*const	ptrVetItems,
+               int 					sizeVetItems)
 {
     static Vector<RandomKey> vetRandKeyAux(input.gaPopulationSize);
     static VectorI vetItems(InstanceNS::instanciaG.numItens);

@@ -650,8 +650,8 @@ void InstanceNS::read3dInstance(const std::string &strFile)
 
     file.close();
     instanciaG.setMaxItemVolume();
-    instanciaG.numRotation = 1;
-    std::printf("Seting the number of rotations to 1\n");
+    //instanciaG.numRotation = 1;
+    //std::printf("Seting the number of rotations to 1\n");
 }
 
 void InstanceNS::Instance::atualizaVetMinDimItens()
@@ -1036,8 +1036,8 @@ void InstanceNS::readOroloc3D2(const std::string &strFile)
     convertInstanceToCm(instanciaG);
     instanciaG.setMaxItemVolume();
 
-    instanciaG.numRotation = 1;
-    std::printf("Seting the number of rotations to 1\n");
+    instanciaG.numRotation = 2;
+    //std::printf("Seting the number of rotations to 1\n");
     // EXIT_PRINT();
 }
 

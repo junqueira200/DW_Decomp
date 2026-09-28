@@ -51,7 +51,8 @@ LoadingChecker::ConstraintProgrammingSolver(PackingType                  packing
                                             double& fk,
                                             double& fFA,
                                             double& fRA,
-                                            double& fTA)
+                                            double& fTA,
+                                            VectorI& vetSumAreasLeft)
 // bool isCallTypeExact,
 // double maxRuntime)
 {
@@ -78,7 +79,7 @@ LoadingChecker::ConstraintProgrammingSolver(PackingType                  packing
     {
 
         //std::cout<<"FeasOpt\n";
-        containerLoadingCP.PrintSolution(vetPos, fk, fFA, fRA, fTA);
+        containerLoadingCP.PrintSolution(vetPos, fk, fFA, fRA, fTA, vetSumAreasLeft);
     }
 
     // containerLoadingCP.PrintSolution();

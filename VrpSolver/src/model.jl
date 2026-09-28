@@ -55,18 +55,25 @@ function build_model(data::DataArcVRP, app)
       println("upperBoundNbVehicles: ", U)
       G = VrpGraph(vrptw, V1, v_source, v_sink, (L, U))
 
-      epValues = [2E-5, 2E-7, 2E-9]
-      dualVolumeTotal = getDualVolumeTotal()
+      epValues = [2E-3, 2E-4, 2E-5]
+      dualVolumeTotal = 1.0+1E-5
       println("dualVolumeTotal: ", dualVolumeTotal)
       epValuesSize = length(epValues)
       numOfDualFunctions = epValuesSize * epValuesSize
       dictDualFeasiFunc = Dict{Int, Dict{Int, Float64}}()
       dictIndexRes_id =  Dict{Int, Int}()
 
+      useDualVolume = true
+
       i = 0
       j = 0
 
+
       for ep0 in epValues
+
+         if !useDualVolume
+            break
+         end
 
          j = 0
          for ep2 in epValues            
@@ -81,8 +88,10 @@ function build_model(data::DataArcVRP, app)
                dict[t] = getDualVolume(t)               
             end
          
-            dictDualFeasiFunc[index] = dict
-            #dictIndexRes_id[index] = add_resource!(G, main=false)
+            dictDualFeasiFunc[index] = dict         
+            
+            id = add_resource!(G, main=false)
+            dictIndexRes_id[index] = id
 
             j += 1
          end
@@ -110,9 +119,13 @@ function build_model(data::DataArcVRP, app)
             #set_resource_bounds!(G, v, vol_dual_id, 0.0, 1.0)
 
             for i_ in 0:(length(epValues)-1)
+               if !useDualVolume
+                  break
+               end
+
                for j_ in 0:(length(epValues)-1)
                   index = linearIndex(i_, j_, length(epValues))
-                  #set_resource_bounds!(G, v, dictIndexRes_id[index], 0.0, dualVolumeTotal)
+                  set_resource_bounds!(G, v, dictIndexRes_id[index], 0.0, dualVolumeTotal)
                
                end
             end
@@ -130,14 +143,17 @@ function build_model(data::DataArcVRP, app)
             set_arc_consumption!(G, arc_id, vol_res_id, vol(data, j))
 
             for i_ in 0:(length(epValues)-1)
+               if !useDualVolume
+                  break
+               end
+
                for j_ in 0:(length(epValues)-1)
                   index = linearIndex(i_, j_, length(epValues))
-                  #set_arc_consumption!(G, arc_id, dictIndexRes_id[index], dictDualFeasiFunc[index][j])
+                  set_arc_consumption!(G, arc_id, dictIndexRes_id[index], dictDualFeasiFunc[index][j])
                
                end
             end
-
-            #set_arc_consumption!(G, arc_id, vol_dual_id, getDualVolume(j))
+            
          end
       end
 

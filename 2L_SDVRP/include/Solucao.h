@@ -233,7 +233,10 @@ struct Bin
 
     void reset();
     int  getEpComMenorCoord(const VectorI &vetIdEp, int tam);
-    bool checkFeasibility(Rota *rota = nullptr, bool fromCp = false, bool print=false);
+    bool checkFeasibility(Rota *rota = nullptr,
+                          bool fromCp = false,
+                          bool print=false,
+                          VectorI* 	vetSumAreasLeftPtr=nullptr);
 
     void rmItens(const VectorI &vetItensRm, const int tam);
 
@@ -595,7 +598,8 @@ bool tochFrontSideOfTruck(int item, Ponto p, InstanceNS::Rotation r)
     return doubleEqual(maxX, InstanceNS::instanciaG.vetDimVeiculo[1], DifDistColision);
 }
 
-bool checkCompactness(Bin &bin, const VectorI &vetTop, std::string *strError = nullptr);
+bool checkCompactness(Bin &bin, const VectorI &vetTop, std::string *strError = nullptr,
+                      VectorI* 	vetSumAreasLeftPtr=nullptr);
 } // namespace SolucaoNS
 
 #endif // INC_2L_SDVRP_SOLUCAO_H

@@ -797,7 +797,7 @@ void ConstrutivoBinNS::sortVetItemsByCustomer(VectorI &vetItems, int size)
 }
 
 bool ConstrutivoBinNS::checkIfPackedAllTheItems(const SolucaoNS::Bin 	&bin,
-                                                VectorI 				&vetItems,
+                                                const VectorI 			&vetItems,
                                                 int 					 numItems)
 {
     if(numItems != bin.numItens)

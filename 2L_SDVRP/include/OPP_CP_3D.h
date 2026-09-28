@@ -26,7 +26,8 @@ class ContainerLoadingCP
                                                  double& fk,
                                                  double& fFA,
                                                  double& fRA,
-                                                 double& fTA);
+                                                 double& fTA,
+                                                 VectorI& vetSumAreasLeft);
 
     void ExtractPacking(std::vector<Cuboid> &items) const;
     [[nodiscard]] std::vector<int> ExtractSequence() const;
@@ -76,7 +77,7 @@ class ContainerLoadingCP
 
     const double mMaxRuntime;
 
-    const int scale = 10;
+    const int64_t scale = 10;
     const int64_t scaleBalancedLoading = 100;
     const int64_t scaleBalancedLoading2 = 100;
 
@@ -90,7 +91,7 @@ class ContainerLoadingCP
                                             {AxisX, InFrontX, BehindX},
                                             {AxisZ, AboveZ, BelowZ}};
     std::vector<Orientation> mItemOrientations =
-        std::vector{NoRotation}; //, RotationZ, RotationX};
+        std::vector{NoRotation, RotationZ}; //, RotationZ, RotationX};
     operations_research::sat::CpModelBuilder mModelCP;
     ORIntVars1D mStartPositionsX;
     ORIntVars1D mEndPositionsX;
@@ -122,7 +123,7 @@ class ContainerLoadingCP
     ORBoolVars2D mItemsOverlapsYZ; // mItemsOverlapsYZ[i][j], bool, items i and j
                                    // intersect in yz-plane
     ORBoolVars2D mLeftYZ;// mLeftYZ[i][j], bool, 1, if item i is Left supported by item j
-                         // yz-plane ? -> items intersect AND item j is directly at left
+                         // yz-plane  -> items intersect AND item j is directly at left
                          // of item i
     ORIntVars2D mOverlapAreasYZ; // mOverlapAreasYZ[i][j], integer, size of intersection
                                  // area in yz-plane of items i and j
@@ -146,6 +147,8 @@ class ContainerLoadingCP
                                     // i in route, smaller values visited earlier
     ORBoolVars2D mSuccessionMatrix; // suceeds[i][j], bool, 1, if customer i succeeds
                                     // customer j in route
+
+    ORIntVars1D sumAreaCompactness;
 
     operations_research::sat::IntVar mMaxLength;
     operations_research::sat::IntVar mMinX;
