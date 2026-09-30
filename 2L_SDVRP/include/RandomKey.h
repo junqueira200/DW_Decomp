@@ -1,3 +1,12 @@
+/* ****************************************
+ * ****************************************
+ *  Data:    20/09/26
+ *  Arquivo: RandomKey.h
+ *  Autor:   Igor de Andrade Junqueira
+ *  Projeto: 2L-SDVRP
+ * ****************************************
+ * ****************************************/
+
 #ifndef RANDOMKEY_H
 #define RANDOMKEY_H
 

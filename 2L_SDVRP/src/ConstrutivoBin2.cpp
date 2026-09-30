@@ -61,13 +61,13 @@ static bool isPlacementFeasible(const Bin                 &bin,
                                 int                        itemId,
                                 const Ponto               &p,
                                 InstanceNS::Rotation       r,
-                                Eigen::Matrix<int, -1, -1, Eigen::RowMajor> &matSupportItems,
+                                //Eigen::Matrix<int, -1, -1, Eigen::RowMajor> &matSupportItems, // Now unused in this function
                                 double 					   sumM,
                                 double					   sumF)
 {
     Item &item = instanciaG.vetItens[itemId];
 
-    // 1. Boundary check
+           // 1. Boundary check
     for(int d = 0; d < instanciaG.numDim; ++d)
     {
         double dimR = item.getDimRotacionada(d, r);
@@ -79,45 +79,46 @@ static bool isPlacementFeasible(const Bin                 &bin,
     double f = instanciaG.vetItens[itemId].weight * GravityCm;
     sumF += f;
 
-    double r_ = (double)AxleWeightsNS::semiTrailer.distanceCargoSpaceTrailerAxle -
-               p.vetDim[0] -
-               instanciaG.vetItens[itemId].getDimRotacionada(0, r) / 2.0;
+     double r_ = (double)AxleWeightsNS::semiTrailer.distanceCargoSpaceTrailerAxle -
+                p.vetDim[0] -
+                instanciaG.vetItens[itemId].getDimRotacionada(0, r) / 2.0;
 
-    sumM += f * r_;
+      sumM += f * r_;
 
-    double fK = (1.0 / (double)AxleWeightsNS::semiTrailer.distanceKingpinTrailerAxle) *
-         (sumM + (double)AxleWeightsNS::semiTrailer.massTrailer * GravityCm *
-                     AxleWeightsNS::semiTrailer.distanceMassTrailerTrailerAxle);
+     double fK = (1.0 / (double)AxleWeightsNS::semiTrailer.distanceKingpinTrailerAxle) *
+          (sumM + (double)AxleWeightsNS::semiTrailer.massTrailer * GravityCm *
+                      AxleWeightsNS::semiTrailer.distanceMassTrailerTrailerAxle);
 
-    double fFA = (1.0 / (double)AxleWeightsNS::semiTrailer.wheelBase) *
-          (fK * (double)AxleWeightsNS::semiTrailer.distanceKingpinRearAxle +
-           (double)AxleWeightsNS::semiTrailer.massTractor *
-                      GravityCm * AxleWeightsNS::semiTrailer.distanceMassTractorRearAxle);
+      double fFA = (1.0 / (double)AxleWeightsNS::semiTrailer.wheelBase) *
+            (fK * (double)AxleWeightsNS::semiTrailer.distanceKingpinRearAxle +
+             (double)AxleWeightsNS::semiTrailer.massTractor *
+                        GravityCm * AxleWeightsNS::semiTrailer.distanceMassTractorRearAxle);
 
-    double fRA = fK + (double)AxleWeightsNS::semiTrailer.massTractor * GravityCm - fFA;
-    double fTA = sumF + (double)AxleWeightsNS::semiTrailer.massTrailer * GravityCm - fK;
+     double fRA = fK + (double)AxleWeightsNS::semiTrailer.massTractor * GravityCm - fFA;
+     double fTA = sumF + (double)AxleWeightsNS::semiTrailer.massTrailer * GravityCm - fK;
 
-    if(fFA > (double)AxleWeightsNS::semiTrailer.maxMassFrontAxle* GravityCm*1.1)
-        return false;
+      if(fFA > (double)AxleWeightsNS::semiTrailer.maxMassFrontAxle* GravityCm*1.1)
+          return false;
 
+     if(fRA > (double)AxleWeightsNS::semiTrailer.maxMassRearAxle * GravityCm*1.1)
+         return false;
 
-    if(fRA > (double)AxleWeightsNS::semiTrailer.maxMassRearAxle * GravityCm*1.1)
-        return false;
+      if(fTA > (double)AxleWeightsNS::semiTrailer.maxMassTrailerAxle * GravityCm*1.1) // ||
+          return false;
+      */
 
-
-    if(fTA > (double)AxleWeightsNS::semiTrailer.maxMassTrailerAxle * GravityCm*1.1) // ||
-        return false;
-    */
-
-    // 2. Collision check with all already-packed items
+           // 2. Collision check with all already-packed items
     for(int k = 0; k < bin.numItens; ++k)
     {
         if(verificaColisaoDoisItens(itemId, bin.vetItemId[k], p, bin.vetPosItem[k], r,
                                     bin.vetRotacao[k]))
+        {
+            vetPackinErros[PackingErroGeometric] += 1;
             return false;
+        }
     }
 
-    // 3. Bottom Support & Fragility check (if 3D and item is not resting on the floor)
+           // 3. Bottom Support & Fragility check (if 3D and item is not resting on the floor)
     if(instanciaG.numDim == 3 && ParseInputNS::input.support && p.vetDim[2] > 1e-4)
     {
         double supportedArea = 0.0;
@@ -139,7 +140,10 @@ static bool isPlacementFeasible(const Bin                 &bin,
                 {
                     // Non-fragile item cannot sit on a fragile item
                     if(ParseInputNS::input.fragility && placedItem.fragility && !item.fragility)
+                    {
+                        vetPackinErros[PackingErroFragility] += 1;
                         return false;
+                    }
 
                     supportedArea += overlap;
                 }
@@ -147,18 +151,24 @@ static bool isPlacementFeasible(const Bin                 &bin,
         }
 
         if((supportedArea / itemBaseArea) < ParseInputNS::input.minSupportArea)
+        {
+            vetPackinErros[PackingErroSupport] += 1;
             return false;
+        }
     }
 
     // 4. LIFO / Unloading sequence check with already packed items
     if(ParseInputNS::input.lifo)
     {
         int posNew = findPos(rota, itemId);
+        double topNew = p.vetDim[2] + item.getDimRotacionada(2, r);
 
         for(int k = 0; k < bin.numItens; ++k)
         {
             int placedId = bin.vetItemId[k];
             Item &placedItem = instanciaG.vetItens[placedId];
+            Ponto pPlaced = bin.vetPosItem[k];
+            Rotation rPlaced = bin.vetRotacao[k];
 
             if(item.customer == placedItem.customer)
                 continue;
@@ -167,26 +177,52 @@ static bool isPlacementFeasible(const Bin                 &bin,
             if(posPlaced == posNew)
                 continue;
 
+            // --- NEW: DYNAMICALLY CALCULATE VERTICAL SUPPORT ---
+            bool new_supports_placed = false;
+            bool placed_supports_new = false;
+            double topPlaced = pPlaced.vetDim[2] + placedItem.getDimRotacionada(2, rPlaced);
+
+                   // Does candidate support placedItem? (Candidate is directly under placedItem)
+            if(doubleEqual(topNew, pPlaced.vetDim[2], 1e-4)) {
+                if(computeXY_Overlap(item, r, p, placedItem, rPlaced, pPlaced) > 0.0)
+                    new_supports_placed = true;
+            }
+
+                   // Does placedItem support candidate? (placedItem is directly under Candidate)
+            if(doubleEqual(topPlaced, p.vetDim[2], 1e-4)) {
+                if(computeXY_Overlap(item, r, p, placedItem, rPlaced, pPlaced) > 0.0)
+                    placed_supports_new = true;
+            }
+            // ---------------------------------------------------
+
             if(posNew < posPlaced)
             {
                 Item tempNew = item;
-                if(!lifo(tempNew, p, r, placedItem, bin.vetPosItem[k], bin.vetRotacao[k],
+                if(!lifo(tempNew, p, r, placedItem, pPlaced, rPlaced,
                          ParseInputNS::input.mlifo, ParseInputNS::input.removeFromShortSide,
-                         matSupportItems))
+                         placed_supports_new,    // item1_supports_item0
+                         new_supports_placed))   // item0_supports_item1
+                {
+                    vetPackinErros[PackingErroLifo] += 1;
                     return false;
+                }
             }
             else
             {
                 Item tempNew = item;
-                if(!lifo(placedItem, bin.vetPosItem[k], bin.vetRotacao[k], tempNew, p, r,
+                if(!lifo(placedItem, pPlaced, rPlaced, tempNew, p, r,
                          ParseInputNS::input.mlifo, ParseInputNS::input.removeFromShortSide,
-                         matSupportItems))
+                         new_supports_placed,    // item1_supports_item0
+                         placed_supports_new))   // item0_supports_item1
+                {
+                    vetPackinErros[PackingErroLifo] += 1;
                     return false;
+                }
             }
         }
     }
 
-    // 5. Lateral load balance check
+           // 5. Lateral load balance check
     if(ParseInputNS::input.balancedLoading && !ParseInputNS::input.comprimentoAlturaIguais1)
     {
         double width = item.getDimRotacionada(1, r);
@@ -196,10 +232,13 @@ static bool isPlacementFeasible(const Bin                 &bin,
         double limit = std::ceil(ParseInputNS::input.balancedLoadingD * (bin.demandaTotal + item.weight));
         if((bin.sumLeftBalancedLoading + left) > limit ||
            (bin.sumRightBalancedLoading + right) > limit)
+        {
+            vetPackinErros[PackingErroLoadBalancing] += 1;
             return false;
+        }
     }
 
-    // 6. Left Compactness Check (Prevent floating gaps on the left side)
+           // 6. Left Compactness Check (Prevent floating gaps on the left side)
     if(ParseInputNS::input.compactness && p.vetDim[0] > 1e-4) // Not touching the left truck wall
     {
         double dy = item.getDimRotacionada(1, r);
@@ -215,7 +254,7 @@ static bool isPlacementFeasible(const Bin                 &bin,
             double placedDx = placedItem.getDimRotacionada(0, bin.vetRotacao[k]);
             double placedMaxX = bin.vetPosItem[k].vetDim[0] + placedDx;
 
-            // If placed item touches the left face of the new candidate item
+                   // If placed item touches the left face of the new candidate item
             if(doubleEqual(placedMaxX, p.vetDim[0], 1e-4))
             {
                 double placedDy = placedItem.getDimRotacionada(1, bin.vetRotacao[k]);
@@ -226,7 +265,7 @@ static bool isPlacementFeasible(const Bin                 &bin,
                 double pZ = p.vetDim[2];
                 double pkZ = bin.vetPosItem[k].vetDim[2];
 
-                // Calculate overlap area in the Y-Z plane
+                       // Calculate overlap area in the Y-Z plane
                 double overlapY = std::max(0.0, std::min(pY + dy, pkY + placedDy) - std::max(pY, pkY));
                 double overlapZ = std::max(0.0, std::min(pZ + dz, pkZ + placedDz) - std::max(pZ, pkZ));
 
@@ -234,8 +273,11 @@ static bool isPlacementFeasible(const Bin                 &bin,
             }
         }
 
-        if((leftSupport / leftAreaTotal) < ParseInputNS::input.minLeftSupportArea)
+        if(leftSupport < std::ceil(ParseInputNS::input.minLeftSupportArea*leftAreaTotal))
+        {
+            vetPackinErros[PackingErroCompactness] += 1;
             return false;
+        }
     }
 
     return true;
@@ -387,10 +429,10 @@ bool packItemsIntoBin(SolucaoNS::Bin          &bin,
             }
 
                    // Scratch support matrix for LIFO check
-            static Eigen::Matrix<int, -1, -1, Eigen::RowMajor>
-                matSupportItems(instanciaG.numItens, instanciaG.numItens);
+            //static Eigen::Matrix<int, -1, -1, Eigen::RowMajor>
+            //    matSupportItems(instanciaG.numItens, instanciaG.numItens);
 
-            matSupportItems.setConstant(0);
+            //matSupportItems.setConstant(0);
 
                    // Number of rotations to try (2 if vertical stability only, or up to 6 if 3D rotation allowed)
             int numRotationsToTry = (instanciaG.numRotation >= 6) ? 6 : 2;
@@ -427,8 +469,7 @@ bool packItemsIntoBin(SolucaoNS::Bin          &bin,
                     {
                         Rotation r = vetRot[rIdx];
 
-                        if(isPlacementFeasible(bin, rota, itemId, ep, r, matSupportItems,
-                                               sumM, sumF))
+                        if(isPlacementFeasible(bin, rota, itemId, ep, r, sumM, sumF))
                         {
                             double score = computePlacementScore(bin, itemId, ep, r);
                             candidates[numOfCandidates] = {score, epIdx, r};

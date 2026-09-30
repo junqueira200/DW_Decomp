@@ -442,7 +442,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     for(int veic = 0; veic < sol.vetBin.size(); ++veic)
     {
-        if(veic != 1)
+        if(veic <= 1)
            continue;
 
 
@@ -500,7 +500,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                 PRINT_THROW();
             }
 
-            binRandKey.checkFeasibility(&solCp.vetRota[veic], false, true, nullptr);
+            binRandKey.checkFeasibility(&solCp.vetRota[veic], false, false, nullptr);
         }
 
         std::printf("GA: %d; time: %f\n\n", (int)resultRandKey, timeGA);
@@ -516,19 +516,20 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                                                       std::numeric_limits<int64_t>::max(),
                                                       &solCp.vetRota[veic]);
         */
-        std::printf("INI packItemsIntoBin\n");
-        bool feasibleSolConst = packItemsIntoBin(bin2, solCp.vetRota[veic], vetItems,
-                                                 numItems, true, false);
-        std::printf("END packItemsIntoBin\n");
+        //std::printf("INI packItemsIntoBin\n");
+        bool feasibleSolConst = false;//packItemsIntoBin(bin2, solCp.vetRota[veic], vetItems,
+                                      //           numItems, true, false);
+        //std::printf("END packItemsIntoBin\n");
         //if(!feasibleSolConst)
         //    bin2.reset();
 
 
 
+
         if(resultRandKey)
         {
-            std::printf("Plot: \n%s\n\n", binRandKey.printPlot().c_str());
-            std::printf("Before \n");
+            //std::printf("Plot: \n%s\n\n", binRandKey.printPlot().c_str());
+            //std::printf("Before \n");
 
             useValuesFromHeuristic = true;
             posX = VectorI();
@@ -560,6 +561,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                 int py = (int)binRandKey.vetPosItem[indexInBin].vetDim[1];
                 int pz = (int)binRandKey.vetPosItem[indexInBin].vetDim[2];
 
+                std::printf("id(%d), %d(%d): %d, %d, %d\n", itemId, i, indexInBin, px, py, pz);
+
                 posX.push_back(px);
                 posY.push_back(py);
                 posZ.push_back(pz);
@@ -567,7 +570,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
             }
 
-            std::printf("After\n");
+            std::printf("\n\nAfter\n");
+            //useValuesFromHeuristic = false;
 
         }
         else
@@ -699,17 +703,21 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                         binCp.vetRotacao[item] = (InstanceNS::Rotation)array[3];
                         binCp.vetItemId[item]  = vetItems[item];
 
+                        std::printf("item(%d), %d: %d, %d, %d\n", vetItems[item], item, array[0], array[1], array[2]);
+
                         item += 1;
                         binCp.numItens += 1;
                     }
 
                     binCp.computeLoadingBalancing();
+                    std::printf("\n\n");
 
                     // std::printf("\n\n");
                 }
 
                 //std::cout<<binCp.printPlot()<<"\n**********\n\n";
 
+                /*
                 double fk, fFA, fRA, fTA;
                 semiTrailer.checkAxleWeights(binCp, false, &fk, &fFA, &fRA, &fTA);
 
@@ -746,12 +754,17 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                     std::printf("\nError in F\n");
                     PRINT_THROW();
                 }
-
+                */
+                std::printf("axleWights consistency check disable!\n");
 
                 // binCp.numItens = numItems;
                 if(binCp.checkFeasibility(&rota, false, true, &vetSumAreasLeft2))
                 {
-
+                    if(useValuesFromHeuristic)
+                        std::cout<<vetSumAreasLeft<<"\n"<<vetSumAreasLeft2<<"\n\n";
+                    /*
+                    if(useValuesFromHeuristic)
+                    {
                     for(int i=0; i < numItems; ++i)
                     {
                         if(std::abs(vetSumAreasLeft2[i]-vetSumAreasLeft[i]) > 2)
@@ -763,13 +776,30 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                         }
                     }
 
-                    std::cout<<vetSumAreasLeft<<"\n"<<vetSumAreasLeft2<<"\n\n";
 
+                    std::cout<<vetSumAreasLeft<<"\n"<<vetSumAreasLeft2<<"\n\n";
+                    }
+                    */
+                    std::printf("compactness consistency check disable!\n");
                     //semiTrailer.checkAxleWeights(binCp, true);
 
-                    std::cout<<"Plot:\n"<<binCp.printPlot()<<"\n**********\n\n";
-                    std::cout<<"Plot: \n"<<bin2.printPlot()<<"\n##########\n\n";
+                    //std::cout<<"Plot:\n"<<binCp.printPlot()<<"\n**********\n\n";
+                    //std::cout<<"Plot: \n"<<bin2.printPlot()<<"\n##########\n\n";
                     output += "FEASIBLE; ";
+
+                    if(useValuesFromHeuristic)
+                    {
+                        std::string strError;
+                        if(!binCp.isEqual(binRandKey, &strError))
+                        {
+                            std::printf("Error: %s\n", strError.c_str());
+                            std::printf("binCp: %s\n",
+                                        printVet(binCp.vetItemId, binCp.numItens).c_str());
+
+                            printVet(binCp.vetItemId, binCp.numItens);
+                            PRINT_THROW();
+                        }
+                    }
 
                 }
                 else

@@ -243,6 +243,8 @@ struct Bin
     double getPorcentagemUtilizacao() const;
     void   computeLoadingBalancing();
 
+    bool isEqual(const Bin& bin, std::string* error);
+
     Bin();
     Bin(const Bin &bin) = delete;
     Bin &operator=(const Bin &bin) = delete;
@@ -449,7 +451,9 @@ bool lifo(InstanceNS::Item    							&item0,
           InstanceNS::Rotation 							r1,
           bool                 						   	mlifo,
           bool						                   	removeFromShortSide,
-          Eigen::Matrix<int, -1, -1, Eigen::RowMajor> 	&matSupportItems)
+          bool 											item1_supports_item0,
+          bool											item0_supports_item1)
+          //Eigen::Matrix<int, -1, -1, Eigen::RowMajor> 	&matSupportItems)
 {
     // Item0 is delevery first
 
@@ -464,9 +468,9 @@ bool lifo(InstanceNS::Item    							&item0,
     bool overlapX = !(maxX0 <= p1.vetDim[0] || maxX1 <= p0.vetDim[0]);
     bool overlapY = !(maxY0 <= p1.vetDim[1] || maxY1 <= p0.vetDim[1]);
 
-           // matSupportItems[i][j] = 1 → j supports i
-    bool item1_supports_item0 = matSupportItems(item1.itemId, item0.itemId);
-    bool item0_supports_item1 = matSupportItems(item0.itemId, item1.itemId);
+    // matSupportItems[i][j] = 1 → j supports i
+    //bool item1_supports_item0 = matSupportItems(item0.itemId, item1.itemId);
+    //bool item0_supports_item1 = matSupportItems(item1.itemId, item0.itemId);
 
     if(mlifo && !removeFromShortSide)
     {

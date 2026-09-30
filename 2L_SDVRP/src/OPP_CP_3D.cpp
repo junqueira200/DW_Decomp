@@ -29,7 +29,7 @@ void ContainerLoadingCP::BuildModel()
 
     CreateVariables();
     AddConstraints();
-
+    std::printf("End BuildModel\n");
 
     ////AddObjective();
 }
@@ -231,8 +231,13 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
     double leftBalancedLoading  = 0.0;
     double rightBalancedLoading = 0.0;
 
+    std::printf("placedOnLeft: \n\n");
+
     for(size_t i = 0; i < mItems.size(); ++i)
     {
+        bool placedOnLeft = operations_research::sat::SolutionIntegerValue(mResponse,
+                                                                           mPlacedOnLeft[i]);
+        std::printf("%d: %d\n", i, placedOnLeft);
 
         if(input.axleWights)
         {
@@ -343,9 +348,10 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
         std::cout<<"\n";
         */
     }
-
+    std::printf("\n\n");
     if(input.balancedLoading)
     {
+        /*
         int tolBalance = 5;
 
         double rightBalancedLoading_ =
@@ -370,12 +376,13 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
 
         std::printf("rightBalancedLoading\nComputed: \t %.2f\nModel: \t %.2f\n\n",
                     rightBalancedLoading, rightBalancedLoading_);
-
+        */
+        std::printf("balancedLoading consistency test skiped!\n");
     }
 
 
-
-    if(!input.axleWights)
+    std::printf("axleWights not check!");
+    //if(!input.axleWights)
         return;
 
     //     mModelCP
@@ -865,11 +872,16 @@ void ContainerLoadingCP::CreateVariables()
             if(input.compactness)
                 mItemsOverlapsYZ[i].emplace_back(mModelCP.NewBoolVar());
 
+            double maxXYArea = InstanceNS::instanciaG.vetDimVeiculo[0]*
+                               InstanceNS::instanciaG.vetDimVeiculo[1];
+
             if(mEnableSupport)
             {
                 mOverlapAreasXY[i].emplace_back(mModelCP.NewIntVar({0, maxIntersection}));
             }
 
+            double maxYZArea = InstanceNS::instanciaG.vetDimVeiculo[2]*
+                               InstanceNS::instanciaG.vetDimVeiculo[1];
             if(input.compactness)
                 mOverlapAreasYZ[i].emplace_back(mModelCP.NewIntVar({0, maxIntersection2}));
         }
@@ -907,9 +919,9 @@ void ContainerLoadingCP::CreateVariables()
         std::printf("Ini load solution\n");
         for(int i=0; i < numberOfItems; ++i)
         {
-            mModelCP.FixVariable(mStartPositionsX[i], posX[i]);
-            mModelCP.FixVariable(mStartPositionsY[i], posY[i]);
-            mModelCP.FixVariable(mStartPositionsZ[i], posZ[i]);
+            mModelCP.AddEquality(mStartPositionsX[i], posX[i]);
+            mModelCP.AddEquality(mStartPositionsY[i], posY[i]);
+            mModelCP.AddEquality(mStartPositionsZ[i], posZ[i]);
             mModelCP.FixVariable(mOrientation[i][rot[i]], true);
         }
 
@@ -983,34 +995,45 @@ void ContainerLoadingCP::AddConstraints()
         CreateSupportArea();
     }
 
+
     if(input.lifo)
         CreateLifoSequence();
+    //std::printf("lifo disable\n");
 
-
+    //std::printf("axleWights disable\n");
     if(input.axleWights)
         CreateAxleWeights();
 
-
+    //std::printf("balancedLoading disable\n");
     if(input.balancedLoading)
         CreateBalancedLoading();
 
 
+
+
     if(input.compactness)
     {
+        std::printf("Ini Compactness\n");
         //CreateTopItem();
         CreateCompactnessItem();
+        std::printf("Ini CreateOnLeftConstraints\n");
         CreateOnLeftConstraints();
         CreateCompactnessArea();
         CreateYZIntersectionBool();
         CreateYZIntersectionArea();
+        std::printf("End Compactness\n");
     }
+
+
+    //std::printf("compactness disable\n");
+
 }
 
 void ContainerLoadingCP::CreateAxleWeights()
 {
 
     operations_research::sat::LinearExpr sumMoments;
-    int                                  sumForces = 0;
+    int64_t                              sumForces = 0;
     //std::printf("Force: ");
     for(int i = 0; i < mItems.size(); ++i)
     {
@@ -1021,9 +1044,9 @@ void ContainerLoadingCP::CreateAxleWeights()
         // mModelCP.AddEquality(2*mR[i], 2*semiTrailer.distanceCargoSpaceTrailerAxle
         // -2*mStartPositionsX[i] - mLengths[i]);
         mModelCP
-            .AddEquality(2 * mR[i],
-                               2 * semiTrailer.distanceCargoSpaceTrailerAxle*scale -
-                                   2 * mStartPositionsX[i]*scale - mLengths[i]*scale)
+            .AddEquality(mR[i],
+                               semiTrailer.distanceCargoSpaceTrailerAxle*scale -
+                             mStartPositionsX[i]*scale - mLengths[i]*(scale/2))
             .WithName("R0");
 
 
@@ -1034,7 +1057,7 @@ void ContainerLoadingCP::CreateAxleWeights()
         //    .WithName("R1");
 
 
-        int itemF = mItems[i].Weight * GravityCmConst;
+        int64_t itemF = mItems[i].Weight * (int64_t)GravityCmConst;
         //std::printf("%ld: %d; ", mItems[i].ExternId, itemF);
         //std::printf("%ld: %.1f; ", mItems[i].ExternId, mItems[i].Weight);
         sumMoments += itemF * mR[i];
@@ -1532,30 +1555,8 @@ void ContainerLoadingCP::CreateLifoSequence()
 
                 // i is delevered first
 
-                // std::printf("%d %d\n", (int)mItems[i].ExternId,
-                // (int)mItems[j].ExternId);
-                //  Item i must be placed behind or below item j if
-                //  - item i is unloaded after item j (smaller group id) and
-                //  - item i is not placed left or right of item j -> in way to rear end
-                //  of container
-
-                // Original Constraint
-                // mModelCP.AddAtLeastOne({mRelativeDirections[i][j][BehindX],
-                // mRelativeDirections[i][j][BelowZ]})
-                //    .OnlyEnforceIf({mRelativeDirections[i][j][LeftY].Not(),
-                //    mRelativeDirections[i][j][RightY].Not()});
-                // Funciona
-
                 operations_research::sat::LinearExpr linExp;
 
-                /*
-                if(input.mlifo)
-                {
-                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][InFrontX],
-                mRelativeDirections[i][j][BehindX], mRelativeDirections[i][j][RightY],
-                mRelativeDirections[i][j][AboveZ], mRelativeDirections[i][j][LeftY]});
-                }
-                else*/
                 if(input.mlifo && !input.removeFromShortSide)
                 {
                     BoolVar belowAndNotSupport = mModelCP.NewBoolVar();
@@ -1691,6 +1692,7 @@ void ContainerLoadingCP::CreateCompactnessItem()
     for(size_t i = 0; i < mItems.size(); ++i)
     {
         mModelCP.FixVariable(mLeftYZ[i][i], false);
+
         for(size_t j = 0; j < mItems.size(); ++j)
         {
             if(i == j)
@@ -1702,78 +1704,51 @@ void ContainerLoadingCP::CreateCompactnessItem()
             BoolVar dWithinTol = mModelCP.NewBoolVar();
             BoolVar isAdjacent = mModelCP.NewBoolVar();
 
-
-
-            //mModelCP.AddEquality(mEndPositionsX[j], mStartPositionsX[i])
-            //    .OnlyEnforceIf(isAdjacent);
-            //mModelCP.AddNotEqual(mEndPositionsX[j], mStartPositionsX[i])
-            //    .OnlyEnforceIf(isAdjacent.Not());
-
-            //dNonNeg = true   => StartX[i] - EndX[j] >= 0
+            // dNonNeg = true   => StartX[i] - EndX[j] >= 0
             mModelCP.AddGreaterOrEqual(mStartPositionsX[i] - mEndPositionsX[j], 0)
-                                      .OnlyEnforceIf(dNonNeg);
+                .OnlyEnforceIf(dNonNeg);
 
-            //dNonNeg = false  => StartX[i] - EndX[j] <  0
+            // dNonNeg = false  => StartX[i] - EndX[j] <  0
             mModelCP.AddLessThan(mStartPositionsX[i] - mEndPositionsX[j], 0)
-                                .OnlyEnforceIf(dNonNeg.Not());
+                .OnlyEnforceIf(dNonNeg.Not());
 
-            // dWithinTol = true   => StartX[i] - EndX[j] <= 5 cm
+            // dWithinTol = true   => StartX[i] - EndX[j] <= DifDistColision
             mModelCP.AddLessOrEqual(mStartPositionsX[i] - mEndPositionsX[j],
                                     DifDistColision).OnlyEnforceIf(dWithinTol);
 
-            // dWithinTol = false  => StartX[i] - EndX[j] >  5 cm
+                   // dWithinTol = false  => StartX[i] - EndX[j] >  DifDistColision
             mModelCP.AddGreaterThan(mStartPositionsX[i] - mEndPositionsX[j],
                                     DifDistColision).OnlyEnforceIf(dWithinTol.Not());
 
-            mModelCP.AddBoolAnd({dNonNeg, dWithinTol})
-                .OnlyEnforceIf(isAdjacent);
+            // isAdjacent <==> (dNonNeg AND dWithinTol)
             mModelCP.AddEquality(isAdjacent, 1).OnlyEnforceIf({dNonNeg, dWithinTol});
-
             mModelCP.AddImplication(isAdjacent, dNonNeg);
             mModelCP.AddImplication(isAdjacent, dWithinTol);
 
-            mModelCP.AddImplication(isAdjacent, mLeftYZ[i][j]);
+
+            // Retrieve the correct YZ overlap boolean using your upper-triangular indexing
+            BoolVar overlapsYZ = (i < j) ?
+                                     mItemsOverlapsYZ[i][j - i - 1] :
+                                     mItemsOverlapsYZ[j][i - j - 1];
+
+            // mLeftYZ[i][j] should be TRUE if AND ONLY IF they are adjacent in X AND overlap in YZ
+
+            // 1. If mLeftYZ[i][j] is true, it implies BOTH conditions are met
+            mModelCP.AddImplication(mLeftYZ[i][j], isAdjacent);
+            mModelCP.AddImplication(mLeftYZ[i][j], overlapsYZ);
+
+            // 2. If BOTH conditions are met, mLeftYZ[i][j] MUST be true
+            mModelCP.AddEquality(mLeftYZ[i][j], 1).OnlyEnforceIf({isAdjacent, overlapsYZ});
+
+            // 3. If either condition is false, mLeftYZ[i][j] is false
             mModelCP.AddImplication(isAdjacent.Not(), mLeftYZ[i][j].Not());
-
-            /*
-            mModelCP.AddLessOrEqual(mStartPositionsX[i]-mEndPositionsX[j], DifDistColision)
-                .OnlyEnforceIf(isAdjacent);
-            mModelCP.AddGreaterOrEqual(mStartPositionsX[i]-mEndPositionsX[j], 0)
-                .OnlyEnforceIf(isAdjacent);
-
-            mModelCP.AddGreaterThan(mStartPositionsX[i]-mEndPositionsX[j], DifDistColision)
-                .OnlyEnforceIf(isAdjacent.Not());
-
-
-            mModelCP.AddImplication(isAdjacent.Not(), mLeftYZ[i][j].Not());
-            mModelCP.AddImplication(isAdjacent, mLeftYZ[i][j]);
-            */
-
-            if(i < j)
-            {
-                auto position = j - i - 1;
-
-                mModelCP.AddAtLeastOne({mLeftYZ[i][j],
-                                        isAdjacent.Not(),
-                                        mItemsOverlapsYZ[i][position].Not()});
-                mModelCP.AddImplication(
-                    mItemsOverlapsYZ[i][position].Not(), mLeftYZ[i][j].Not());
-            }
-            else
-            {
-                auto position = i - j - 1;
-
-                mModelCP.AddAtLeastOne({mLeftYZ[i][j],
-                                        isAdjacent.Not(),
-                                        mItemsOverlapsYZ[j][position].Not()});
-                mModelCP.AddImplication(
-                    mItemsOverlapsYZ[j][position].Not(), mLeftYZ[i][j].Not());
-            }
+            mModelCP.AddImplication(overlapsYZ.Not(), mLeftYZ[i][j].Not());
         }
     }
-
 }
 
+
+// Check it
 void ContainerLoadingCP::CreateCompactnessArea()
 {
     for(size_t i = 0; i < mItems.size(); ++i)
@@ -1786,7 +1761,7 @@ void ContainerLoadingCP::CreateCompactnessArea()
         //operations_research::sat::IntVar areaI = mModelCP.NewIntVar({minAreaI, maxAreaI});
         //mModelCP.AddMultiplicationEquality(areaI, {mHeights[i], mLengths[i]});
 
-        for(size_t j = 0; j < mItems.size(); ++j)
+        for(size_t j=0; j < mItems.size(); ++j)
         {
             if(i == j)
             {
@@ -1805,18 +1780,24 @@ void ContainerLoadingCP::CreateCompactnessArea()
 
                 operations_research::sat::IntVar usableArea =
                     mModelCP.NewIntVar({0, std::max(maxAreaI, maxAreaJ)});
+                int position;
                 if(i < j)
                 {
-                    auto position = j - i - 1;
-                    mModelCP.AddMultiplicationEquality(
-                        usableArea, {mOverlapAreasYZ[i][position], mLeftYZ[i][j]});
+                    position = j - i - 1;
+                    //mModelCP.AddMultiplicationEquality(
+                    //    usableArea, {mOverlapAreasYZ[i][position], mLeftYZ[i][j]});
+                    mModelCP.AddEquality(usableArea, mOverlapAreasYZ[i][position]).
+                        OnlyEnforceIf(mLeftYZ[i][j]);
                 }
                 else
                 {
-                    auto position = i - j - 1;
-                    mModelCP.AddMultiplicationEquality(
-                        usableArea, {mOverlapAreasYZ[j][position], mLeftYZ[i][j]});
+                    position = i - j - 1;
+                    mModelCP.AddEquality(usableArea, mOverlapAreasYZ[j][position]).
+                        OnlyEnforceIf(mLeftYZ[i][j]);
                 }
+
+                //mModelCP.AddEquality(usableArea, mOverlapAreasYZ[i][position]).
+                //    OnlyEnforceIf(mLeftYZ[i][j]);
 
                 mModelCP.AddEquality(usableArea, 0).OnlyEnforceIf(mLeftYZ[i][j].Not());
                 supportedAreaExpr += usableArea;
@@ -1829,6 +1810,13 @@ void ContainerLoadingCP::CreateCompactnessArea()
 
 
         mModelCP.AddEquality(sumAreaCompactness[i], supportedAreaExpr);
+
+        /*
+        if(rot[i] == 0)
+            std::printf("i(%d): %d\n", (int)i, (int)(msupportAreaLeft * mItems[i].Dy * mItems[i].Dz));
+        else
+            std::printf("i(%d): %d\n", (int)i, (int)(msupportAreaLeft * mItems[i].Dx * mItems[i].Dz));
+        */
 
 
         mModelCP
@@ -1848,6 +1836,7 @@ void ContainerLoadingCP::CreateCompactnessArea()
 
     }
 
+    //std::printf("\n");
     //std::printf("Compactness disabled\n");
 }
 
@@ -1920,7 +1909,7 @@ void ContainerLoadingCP::CreateYZIntersectionArea()
                 mModelCP.AddEquality(zOverlap, 0)
                     .OnlyEnforceIf(mItemsOverlapsYZ[i][positionJ].Not());
 
-                       // Overlap in y
+                // Overlap in y
                 operations_research::sat::IntVar diffYij =
                     mModelCP.NewIntVar({0, mContainer.Dy});
                 mModelCP
@@ -1944,14 +1933,28 @@ void ContainerLoadingCP::CreateYZIntersectionArea()
                 mModelCP.AddEquality(yOverlap, 0)
                     .OnlyEnforceIf(mItemsOverlapsYZ[i][positionJ].Not());
 
-                       // Area
+                // Area
                 mModelCP.AddMultiplicationEquality(
                     mOverlapAreasYZ[i][positionJ], {zOverlap, yOverlap});
+
+                mModelCP.AddEquality(diffZij, 0)
+                    .OnlyEnforceIf(mItemsOverlapsYZ[i][positionJ].Not());
+
+                mModelCP.AddEquality(diffZji, 0)
+                    .OnlyEnforceIf(mItemsOverlapsYZ[i][positionJ].Not());
+
+                mModelCP.AddEquality(diffYij, 0)
+                    .OnlyEnforceIf(mItemsOverlapsYZ[i][positionJ].Not());
+
+                mModelCP.AddEquality(diffYji, 0)
+                    .OnlyEnforceIf(mItemsOverlapsYZ[i][positionJ].Not());
+
             }
         }
     }
 
 }
+
 
 void ContainerLoadingCP::CreateOnLeftConstraints()
 {
@@ -1961,6 +1964,7 @@ void ContainerLoadingCP::CreateOnLeftConstraints()
         mModelCP.AddEquality(mStartPositionsX[i], mMinX).OnlyEnforceIf(mPlacedOnLeft[i]);
         mModelCP.AddGreaterThan(mStartPositionsX[i], mMinX)
             .OnlyEnforceIf(mPlacedOnLeft[i].Not());
+
     }
 
 }

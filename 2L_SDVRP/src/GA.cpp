@@ -1,3 +1,12 @@
+/* ****************************************
+ * ****************************************
+ *  Data:    22/09/26
+ *  Arquivo: GA.cpp
+ *  Autor:   Igor de Andrade Junqueira
+ *  Projeto: 2L-SDVRP
+ * ****************************************
+ * ****************************************/
+
 #include "GA.h"
 #include "InputOutput.h"
 
@@ -10,6 +19,8 @@ bool GA_NS::ga(SolucaoNS::Bin  		&bin,
                const VectorI*const	ptrVetItems,
                int 					sizeVetItems)
 {
+    std::printf("GA INI\n");
+
     static Vector<RandomKey> vetRandKeyAux(input.gaPopulationSize);
     static VectorI vetItems(InstanceNS::instanciaG.numItens);
     static Vector<RandomKeyPair> vetRandKey(input.gaPopulationSize);
@@ -65,15 +76,22 @@ bool GA_NS::ga(SolucaoNS::Bin  		&bin,
 
     for(int i=0; i < input.gaNumberOfGenerations; ++i)
     {
+        std::printf("Iteration: %d\n", i);
         // Evaluate the population
+        std::printf("\tINI decoderRandomKey\n");
         for(auto& it:vetRandKey)
         {
             randKey.vetRandomKey = it.second->vetRandomKey;
             if(decoderRandomKey(randKey, bin, vetItems, sizeVetItems, route, penalty))
+            {
+                std::printf("GA END\n");
                 return true;
+            }
 
             it.first = penalty.getValue();
         }
+
+        std::printf("\tEND decoderRandomKey\n");
 
         // Sort the population using the penalty value
         std::sort(vetRandKey.begin(), vetRandKey.end(),
@@ -92,16 +110,21 @@ bool GA_NS::ga(SolucaoNS::Bin  		&bin,
 
         // Remove the worse randomKeys
         int quant = 0;
-
+        std::printf("\tINI Remove\n");
         for(int i=(input.gaPopulationSize-1); quant < numberOfDiscart && i >= 0; --i)
         {
             vetRandKey[i].second->generateRandomKey(sizeVetItems);
             quant += 1;
         }
 
+        std::printf("\tEND Remove\n");
+
+
+
         // Crossover
         int nextSon = 0;
 
+        std::printf("\tINI Crossover\n");
         for(int j=0; j < numberOfRest; ++j)
         {
             int index  = RandNs::getRandInt(indexElite.first, indexElite.second);
@@ -124,13 +147,18 @@ bool GA_NS::ga(SolucaoNS::Bin  		&bin,
             nextSon += 1;
         }
 
+        std::printf("\tEND Crossover\n");
+
+        std::printf("\tINI Swap\n");
+
         // Swap the generated sons to the population
         for(int j=indexRest.first; j <= indexRest.second; ++j)
             std::swap(vetRandKey[j].second, vetRandKeyAux2Ptr[j-indexRest.first]);
 
-
+        std::printf("\tEND Swap\n\n");
     }
 
+    std::printf("GA END\n");
     return false;
 
 }

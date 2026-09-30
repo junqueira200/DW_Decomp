@@ -282,8 +282,17 @@ std::string SolucaoNS::Bin::printPlot()
 {
     std::string str;
     str += std::format("{}\n", numItens);
+    //std::printf("numItens: %d\n", numItens);
     for(int i = 0; i < numItens; ++i)
     {
+        //std::printf("vetItemId[i]: %d\n", vetItemId[i]);
+
+        if(vetItemId[i] < 0 || vetItemId[i] >= instanciaG.numItens)
+        {
+            std::printf("Error, vetItemId[i]: %d is invalid\n", vetItemId[i]);
+            PRINT_THROW();
+        }
+
         Ponto &pos = vetPosItem[i];
         str += std::format("itemId({})\norolocId {}\nPos: ({:.1f},{:.1f},{:.1f})\n",
                            vetItemId[i],
@@ -297,9 +306,9 @@ std::string SolucaoNS::Bin::printPlot()
         str += std::format(
             "Length {}\n",
             (int)instanciaG.vetItens[vetItemId[i]].getDimRotacionada(1, vetRotacao[i]));
-        str += std::format(
-            "Height {}\n",
-            (int)instanciaG.vetItens[vetItemId[i]].getDimRotacionada(2, vetRotacao[i]));
+
+        int height = (int)instanciaG.vetItens[vetItemId[i]].getDimRotacionada(2, vetRotacao[i]);
+        str += std::format("Height {}\n", height);
 
         str += std::format("Fragility {}\n\n", (int)instanciaG.vetItens[vetItemId[i]].fragility);
     }
@@ -1090,6 +1099,67 @@ void SolucaoNS::Bin::computeLoadingBalancing()
     }
 }
 
+bool SolucaoNS::Bin::isEqual(const Bin &bin, std::string* error)
+{
+
+    if(numItens != bin.numItens)
+    {
+        if(error)
+            (*error) += "Number of items are diferent\n";
+        return false;
+    }
+
+    static VectorI vet(instanciaG.numItens);
+    static VectorI vetBin(instanciaG.numItens);
+
+    std::unordered_map<int, Ponto> map;
+    map.reserve(numItens);
+
+    vet.setAll(0);
+    vetBin.setAll(0);
+
+    for(int i=0; i < numItens; ++i)
+    {
+        vet[vetItemId[i]] += 1;
+        vetBin[bin.vetItemId[i]] += 1;
+    }
+
+    for(int i=0; i < numItens; ++i)
+    {
+        if(vet[i] != vetBin[i])
+        {
+            if(error)
+                (*error) += std::format("Item ({}) is used: {}, and {}", i, vet[i],
+                                        vetBin[i]);
+
+            return false;
+        }
+    }
+
+    for(int i=0; i < numItens; ++i)
+        map[vetItemId[i]] = vetPosItem[i];
+
+    for(int i=0; i < numItens; ++i)
+    {
+        Ponto p  = bin.vetPosItem[i];
+        Ponto p2 = map[bin.vetItemId[i]];
+
+        if(!doubleEqual(p.vetDim[0], p2.vetDim[0]) ||
+           !doubleEqual(p.vetDim[1], p2.vetDim[1]) ||
+           !doubleEqual(p.vetDim[2], p2.vetDim[2]))
+        {
+
+            if(error)
+                (*error) += std::format("Points are differents: {}, p0: {}; p1: {}\n",
+                                        bin.vetItemId[i], p.print(), p2.print());
+            return false;
+        }
+    }
+
+    return true;
+
+}
+
 std::string SolucaoNS::printPonto(const Ponto &ponto, int dim)
 {
     std::string str;
@@ -1266,7 +1336,8 @@ bool SolucaoNS::
                          bin.vetRotacao[j],
                          input.mlifo,
                          input.removeFromShortSide,
-                         matSupportItems))
+                         matSupportItems(itemI.itemId, itemJ.itemId),
+                         matSupportItems(itemJ.itemId, itemI.itemId)))
                 {
                     // std::cout<<"Pos: "<<i<<" "<<j<<"\n";
 //std::printf("i: %d; j: %d\n\n", bin.vetItemId[i], bin.vetItemId[j]);
@@ -1281,27 +1352,6 @@ PRINT_THROW();
                     vetPackinErros[PackingErroLifo] += 1;
                     return false;
                 }
-
-                // EXIT_PRINT();
-                /*
-                if(isBehind(itemI, bin.vetPosItem[i], bin.vetRotacao[i], itemJ,
-                bin.vetPosItem[j], bin.vetRotacao[j]))
-                {
-                    std::cout<<"Unloading Sequence for Item "<<bin.vetItemId[i]<<" not
-                respected due to Item "<< bin.vetItemId[j]<<"\n";
-
-                    return false;
-                }
-
-                if(isBelow(itemI, bin.vetPosItem[i], bin.vetRotacao[i], itemJ,
-                bin.vetPosItem[j], bin.vetRotacao[j], true))
-                {
-                    std::cout<<"Unloading Sequence for Item "<<bin.vetItemId[i]<<" not
-                respected due to Item "<< bin.vetItemId[j]<<"\n";
-
-                    return false;
-                }
-                */
             }
 
             // std::cout<<"\n************\n\n";
@@ -1689,7 +1739,8 @@ void SolucaoNS::penalizeSolution(Rota& route, Bin &bin, Penalty& penalty)
                              bin.vetRotacao[j],
                              input.mlifo,
                              input.removeFromShortSide,
-                             matSupportItems))
+                             matSupportItems(itemI, itemJ),
+                             matSupportItems(itemJ, itemI)))
                     {
                         lifoP += instanciaG.vetItens[itemI].volume +
                                  instanciaG.vetItens[itemJ].volume;
