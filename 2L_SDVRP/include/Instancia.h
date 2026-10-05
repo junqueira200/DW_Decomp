@@ -118,10 +118,14 @@ class Instance
     std::map<int, Vector<int>> mapOrderIdItem; // Maps orderId to its items
     std::map<int, int>         mapOrderIdCust;
     std::map<int, int> mapItem_IdItem; // Maps original item id to itemId of the instance
+
     std::map<int, int> mapCustomer_idToCustomer; // Maps the original customer_id to the
                                                  // customer of the instance
     std::map<int, int> mapCustomerToCustomer_id; // Maps the  customer of the instance to
                                                  // the original customer_id
+
+    std::map<int, int> 		mapCustomer_idToOrolocCustomerId;
+    std::multimap<int, int> mapOrolocCustomerIdToCustomer_id;
 
     Instance();
     Instance(int numClientes_, int numItens_, int numVeiculos_);
@@ -133,6 +137,7 @@ void   read2dInstance(const std::string &strFile);
 void   read3dInstance(const std::string &strFile);
 void   readOroloc3D(const std::string &strFile);
 void   readOroloc3D2(const std::string &strFile);
+void   readOroloc3D3(const std::string &strFile);
 void   convertInstanceToCm(Instance& instance);
 int    copiaItensCliente(int cliente, VectorI &vetItens);
 int    copiaItensClientes(VectorI &vetClientes,
@@ -144,7 +149,7 @@ int    generateRandomListOfItems(int numItens, VectorI &vetItems);
 
 
 inline Instance                                    instanciaG;
-inline static const Array<InstanceNS::Rotation, 2> vetRot = {Rot0, Rot1}; //, Rot2};
+inline static const Array<InstanceNS::Rotation, 2> vetRot = {Rot0, Rot1};//, Rot1}; //, Rot2};
 // std::string printItem(int itemId);
 } // namespace InstanceNS
 

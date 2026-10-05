@@ -169,9 +169,9 @@ function build_model(data::DataArcVRP, app)
    define_elementarity_sets_distance_matrix!(vrptw, G, [[c(data, (i, j)) for j in V] for i in V])
 
    add_capacity_cut_separator!(vrptw, [ ( [(G,i)], Float64(d(data, i)) ) for i in V], Float64(Q))
-   if useVolume
+   #if useVolume
       add_capacity_cut_separator!(vrptw, [ ( [(G,i)], Float64(vol(data, i)) ) for i in V], Float64(veh_volume(data)))
-   end
+   #end
 
    set_branching_priority!(vrptw, "x", 1)
 

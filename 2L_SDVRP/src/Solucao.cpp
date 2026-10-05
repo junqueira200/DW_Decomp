@@ -854,6 +854,10 @@ bool SolucaoNS::Bin::checkFeasibility(Rota*		rota,
                               << "\n";
                     std::cout << "Item j: " << instanciaG.vetItens[vetItemId[j]].vetDim
                               << "\n";
+                    std::cout<<"ItemI Oroloc3d_id: "<<
+                        instanciaG.vetItens[vetItemId[i]].oroloc3D_item_id_str<<"\n";
+                    std::cout<<"ItemJ Oroloc3d_id: "<<
+                        instanciaG.vetItens[vetItemId[j]].oroloc3D_item_id_str<<"\n";
 
                     if(a != b)
                         std::cout << "a!=b\n";
@@ -1024,6 +1028,25 @@ bool SolucaoNS::Bin::checkFeasibility(Rota*		rota,
 
     feasible = feasible * compactness;
 
+    /*
+    std::printf("matSupportItems: \n\n");
+    for(int i=0; i < numItens; ++i)
+    {
+        int itemI = vetItemId[i];
+        std::printf("%d: ", itemI);
+        for(int j=0; j < numItens; ++j)
+        {
+            int itemJ = vetItemId[j];
+
+            int sup = matSupportItems(itemI, itemJ);
+            std::printf("%d(%d) ", itemJ, sup);
+        }
+
+        std::printf("\n");
+    }
+
+    std::printf("\n\n");
+    */
     // std::printf("verificaViabilidade so testou colisoes!\n");
     return feasible;
 }

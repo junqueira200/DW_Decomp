@@ -111,7 +111,7 @@ def plot_items(items):
 
     for it in items:
         facecolor = None
-        if it["id"] == -1:
+        if it["id"] <= 93:
             facecolor = "cyan"
 
         draw_box(

@@ -150,7 +150,7 @@ static bool isPlacementFeasible(const Bin                 &bin,
             }
         }
 
-        if((supportedArea / itemBaseArea) < ParseInputNS::input.minSupportArea)
+        if(supportedArea < (ParseInputNS::input.minSupportArea*itemBaseArea))
         {
             vetPackinErros[PackingErroSupport] += 1;
             return false;
@@ -377,7 +377,7 @@ bool packItemsIntoBin(SolucaoNS::Bin          &bin,
 
             // 1. Generate persistent random noise for this packing pass (+/- 10%)
             // This allows randomized sorting while maintaining strict weak ordering rules for std::sort.
-            static std::vector<double> noise(MaxNumItemsBin);
+            static Vector<double> noise(instanciaG.numItens);
             for(int i=0; i < numItems; ++i)
                 noise[sortedItems[i]] = RandNs::getRandDouble();
 

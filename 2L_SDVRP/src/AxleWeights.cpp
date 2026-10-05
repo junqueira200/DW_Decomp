@@ -27,6 +27,13 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin,
                                                    double*        ptrSumF,
                                                    double*		  ptrSumM) const
 {
+    /*
+    if(print)
+    {
+        PRINT_THROW();
+    }
+    */
+
     GravityCm = GravityCmConst;
 
     double fK = 0.0;
@@ -37,8 +44,8 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin,
     double sumF = 0.0;
     double sumM = 0.0;
 
-    if(print)
-        std::printf("SemiTrailer\nR: ");
+    //if(print)
+    //    std::printf("SemiTrailer\nR: ");
 
     //std::printf("bin.numItens: %d\n", bin.numItens);
 
@@ -53,14 +60,14 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin,
 
         //r = std::round(r);
 
-        if(print)
-            std::printf("%d: %.1f; ", bin.vetItemId[i], r);
+        //if(print)
+        //    std::printf("%d: %.1f; ", bin.vetItemId[i], r);
 
         sumM += f * r;
     }
 
-    if(print)
-        std::printf("\n\nsumF: %.1f\n", sumF);
+    //if(print)
+    //    std::printf("\n\nsumF: %.1f\n", sumF);
 
 
     fK = (1.0 / (double)distanceKingpinTrailerAxle) *
@@ -74,6 +81,7 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin,
 
     fTA = sumF + (double)massTrailer * GravityCm - fK;
 
+    /*
     if(print)
     {
         std::printf("GravityMM: %.1f\n", GravityCm);
@@ -82,6 +90,7 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin,
                     fRA, (double)maxMassRearAxle * GravityCm,
                     fTA, (double)maxMassTrailerAxle * GravityCm);
     }
+    */
 
     if(ptrFk)
         *ptrFk = fK;

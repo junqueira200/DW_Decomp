@@ -16,6 +16,7 @@
 #include <vector>
 
 // Wrapper around std::vector, has temporary sanity checks in the operators [].
+// DONT USE AS A POINTER TO std::vector! std::vector::~std::vector is not virtual!
 template <typename T> class Vector : public std::vector<T>
 {
   public:

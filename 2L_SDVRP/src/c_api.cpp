@@ -958,6 +958,8 @@ void setLoadingOnlyProblem(int doPrint)
     input.removeFromShortSide	= true;
     input.fragility				= false;
     input.support				= false;
+    input.useCm					= false;
+
 
     if(input.mlifo && !input.lifo)
     {
@@ -970,6 +972,7 @@ void setLoadingOnlyProblem(int doPrint)
     std::printf("\tcompactness: \t\t %d\n", input.compactness);
     std::printf("\tlifo: \t\t\t %d\n", input.lifo);
     std::printf("\tmlifo: \t\t\t %d\n", input.mlifo);
+    std::printf("\tuseCm: \t\t\t %d\n", input.useCm);
 }
 
 void setOroloc3DProblem(int doPrint)
@@ -986,12 +989,14 @@ void setOroloc3DProblem(int doPrint)
     input.lifo			  		= true;
     input.mlifo			  		= true;
     input.removeFromShortSide	= false;
+    input.useCm					= false;
 
     std::printf("Solving Problem:\n\taxleWights: \t\t %d \n", input.axleWights);
     std::printf("\tbalancedLoading: \t %d\n", input.balancedLoading);
     std::printf("\tcompactness: \t\t %d\n", input.compactness);
     std::printf("\tlifo: \t\t\t %d\n", input.lifo);
     std::printf("\tmlifo: \t\t\t %d\n", input.mlifo);
+    std::printf("\tuseCm: \t\t\t %d\n", input.useCm);
 
     if(input.mlifo && !input.lifo)
     {

@@ -31,6 +31,10 @@ link_directories(${CPLEX_CP_LIBRARY})
 #set(CMAKE_CXX_FLAGS "-pedantic")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g")# -pedantic -Wall -Wextra -fPIC")
 
+#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftrivial-auto-var-init=zero")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftrivial-auto-var-init=zero")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined")
+
 #find_package(Boost CONFIG)
 
 #add_library(DW_Decomp SHARED)

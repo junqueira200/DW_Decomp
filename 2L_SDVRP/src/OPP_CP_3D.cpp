@@ -29,7 +29,7 @@ void ContainerLoadingCP::BuildModel()
 
     CreateVariables();
     AddConstraints();
-    std::printf("End BuildModel\n");
+    //std::printf("End BuildModel\n");
 
     ////AddObjective();
 }
@@ -56,9 +56,9 @@ LoadingStatus ContainerLoadingCP::Solve()
 
 
 
-    std::printf("Ini SolveCpModel\n");
+    //std::printf("Ini SolveCpModel\n");
     mResponse = operations_research::sat::SolveCpModel(protoModel, &model);
-    std::printf("END SolveCpModel\n");
+    //std::printf("END SolveCpModel\n");
     ////LOG(INFO) << operations_research::sat::CpSolverResponseStats(mResponse);
 
     //GravityMM = GravityMM_const;
@@ -186,6 +186,7 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
                                        double& fTA,
                                        VectorI& vetSumAreasLeft)
 {
+    //std::printf("Model\n");
 
     vetPos = std::vector<Array<int, 4>>();
     vetPos.reserve(mItems.size());
@@ -231,13 +232,13 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
     double leftBalancedLoading  = 0.0;
     double rightBalancedLoading = 0.0;
 
-    std::printf("placedOnLeft: \n\n");
+    //std::printf("placedOnLeft: \n\n");
 
     for(size_t i = 0; i < mItems.size(); ++i)
     {
-        bool placedOnLeft = operations_research::sat::SolutionIntegerValue(mResponse,
-                                                                           mPlacedOnLeft[i]);
-        std::printf("%d: %d\n", i, placedOnLeft);
+        //bool placedOnLeft = operations_research::sat::SolutionIntegerValue(mResponse,
+        //                                                                   mPlacedOnLeft[i]);
+        //std::printf("%d: %d\n", i, placedOnLeft);
 
         if(input.axleWights)
         {
@@ -314,6 +315,11 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
             if(util)
             {
                 array[3] = (int)mapOritentationRotation[mItemOrientations[o]];
+                if(array[3] >= 2)
+                {
+                    std::printf("Error");
+                    PRINT_THROW();
+                }
                 break;
             }
         }
@@ -335,6 +341,7 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
 
         //std::printf("Sum Area item(%d): %d\n", (int)mItems[i].ExternId, sumArea);
 
+        //std::printf("%d: ", (int)mItems[i].ExternId);
         /*
         for(int j=0; j < mItems.size(); ++j)
         {
@@ -342,16 +349,19 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
                 std::cout<<"0 ";
 
             bool sup = operations_research::sat::SolutionBooleanValue(mResponse,
-        mSupportXY[i][j]); std::cout<<sup<<" ";
+        mSupportXY[i][j]);
+
+            std::printf("%d(%d) ", (int)mItems[j].ExternId, (int)sup);
         }
 
         std::cout<<"\n";
         */
     }
-    std::printf("\n\n");
+    //std::printf("\n\n");
+
     if(input.balancedLoading)
     {
-        /*
+
         int tolBalance = 5;
 
         double rightBalancedLoading_ =
@@ -374,15 +384,15 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
             PRINT_THROW();
         }
 
-        std::printf("rightBalancedLoading\nComputed: \t %.2f\nModel: \t %.2f\n\n",
-                    rightBalancedLoading, rightBalancedLoading_);
-        */
-        std::printf("balancedLoading consistency test skiped!\n");
+        //std::printf("rightBalancedLoading\nComputed: \t %.2f\nModel: \t %.2f\n\n",
+        //            rightBalancedLoading, rightBalancedLoading_);
+
+        //std::printf("balancedLoading consistency test skiped!\n");
     }
 
 
-    std::printf("axleWights not check!");
-    //if(!input.axleWights)
+    //std::printf("axleWights not check!");
+    if(!input.axleWights)
         return;
 
     //     mModelCP
@@ -610,18 +620,18 @@ void ContainerLoadingCP::CreateVariables()
         forceK =
             mModelCP.NewIntVar({0,//-scale * 9*(int64_t)(GravityCmConst * maxK),
                                 scale *(int64_t)(GravityCmConst * maxK)});
-        std::printf("Max Fk: \t %lld\n", scale *(int64_t)(GravityCmConst * maxK));
+        //std::printf("Max Fk: \t %lld\n", scale *(int64_t)(GravityCmConst * maxK));
         forceRA = mModelCP.NewIntVar({0,//-scale*(int64_t)(GravityCmConst * semiTrailer.maxMassRearAxle),
                                       scale *(int64_t)(GravityCmConst * semiTrailer.maxMassRearAxle)});
-        std::printf("Max FRa: \t %lld\n", scale *(int64_t)(GravityCmConst * semiTrailer.maxMassRearAxle));
+        //std::printf("Max FRa: \t %lld\n", scale *(int64_t)(GravityCmConst * semiTrailer.maxMassRearAxle));
         forceFA = mModelCP.NewIntVar({0,//-scale *(int64_t)(GravityCmConst * semiTrailer.maxMassFrontAxle),
                                       scale *(int64_t)(GravityCmConst * semiTrailer.maxMassFrontAxle)});
-        std::printf("Max FA: \t %lld\n", scale *(int64_t)(GravityCmConst * semiTrailer.maxMassFrontAxle));
+        //std::printf("Max FA: \t %lld\n", scale *(int64_t)(GravityCmConst * semiTrailer.maxMassFrontAxle));
         forceTA =
             mModelCP.NewIntVar({0,//-scale * (int64_t)(GravityCmConst * semiTrailer.maxMassTrailerAxle),
                                 scale * (int64_t)(GravityCmConst * semiTrailer.maxMassTrailerAxle)});
 
-        std::printf("Max TA: \t %lld\n", scale * (int64_t)(GravityCmConst * semiTrailer.maxMassTrailerAxle));
+        //std::printf("Max TA: \t %lld\n", scale * (int64_t)(GravityCmConst * semiTrailer.maxMassTrailerAxle));
 
         int max0 = std::max(scale * GravityCm * maxK, scale*GravityCm * semiTrailer.maxMassFrontAxle);
         int max = std::max(max0, (int)(scale*GravityCm * semiTrailer.maxMassTrailerAxle));
@@ -995,9 +1005,11 @@ void ContainerLoadingCP::AddConstraints()
         CreateSupportArea();
     }
 
+    //std::printf("support disable\n");
 
     if(input.lifo)
         CreateLifoSequence();
+
     //std::printf("lifo disable\n");
 
     //std::printf("axleWights disable\n");
@@ -1013,19 +1025,16 @@ void ContainerLoadingCP::AddConstraints()
 
     if(input.compactness)
     {
-        std::printf("Ini Compactness\n");
+        //std::printf("Ini Compactness\n");
         //CreateTopItem();
         CreateCompactnessItem();
-        std::printf("Ini CreateOnLeftConstraints\n");
+        //std::printf("Ini CreateOnLeftConstraints\n");
         CreateOnLeftConstraints();
         CreateCompactnessArea();
         CreateYZIntersectionBool();
         CreateYZIntersectionArea();
-        std::printf("End Compactness\n");
+        //std::printf("End Compactness\n");
     }
-
-
-    //std::printf("compactness disable\n");
 
 }
 
@@ -1386,7 +1395,7 @@ void ContainerLoadingCP::CreateSupportArea()
         mModelCP
             .AddGreaterOrEqual(
                 supportedArea,
-                static_cast<int>(std::ceil(mSupportArea * mItems[i].Dx * mItems[i].Dy)))
+                static_cast<int>((mSupportArea * mItems[i].Dx * mItems[i].Dy)))
             .OnlyEnforceIf(mPlacedOnFloor[i].Not());
     }
 }
@@ -1552,7 +1561,6 @@ void ContainerLoadingCP::CreateLifoSequence()
             // <
             if(mItems[i].pos < mItems[j].pos)
             {
-
                 // i is delevered first
 
                 operations_research::sat::LinearExpr linExp;
@@ -1560,10 +1568,12 @@ void ContainerLoadingCP::CreateLifoSequence()
                 if(input.mlifo && !input.removeFromShortSide)
                 {
                     BoolVar belowAndNotSupport = mModelCP.NewBoolVar();
-                    mModelCP.AddMultiplicationEquality(belowAndNotSupport,
-                             {mSupportXY[j][i].Not(), mRelativeDirections[i][j][BelowZ]});
+                    //mModelCP.AddMultiplicationEquality(belowAndNotSupport,
+                    //         {mSupportXY[j][i].Not(), mRelativeDirections[i][j][BelowZ]});
+                    mModelCP.AddEquality(belowAndNotSupport, mRelativeDirections[i][j][BelowZ]).OnlyEnforceIf(mSupportXY[j][i].Not());
+                    mModelCP.AddEquality(belowAndNotSupport, 0).OnlyEnforceIf(mSupportXY[j][i]);
 
-                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][LeftY],
+                    mModelCP.AddAtLeastOne({mRelativeDirections[i][j][RightY],
                                             mRelativeDirections[i][j][AboveZ],
                                             belowAndNotSupport}).
                         OnlyEnforceIf({mRelativeDirections[i][j][InFrontX].Not(),
@@ -1971,3 +1981,10 @@ void ContainerLoadingCP::CreateOnLeftConstraints()
 
 } // namespace Algorithms
 } // namespace ContainerLoading
+
+/*
+ *
+ * statistics_cols: instance & :Optimal & cutoff & :bcRecRootDb & :bcTimeRootEval & :bcCountNodeProc & :bcRecBestDb & :bcRecBestInc & :bcTimeMain \\
+statistics: 3l_cvrp10 & 1 & 551.0 & 541.72 & 65.30 & 3 & 542.87 & 542.87 & 67.38 \\
+ *
+ */

@@ -165,7 +165,7 @@ int main(int argc, const char *argv[])
 
 
     if(input.instOroloc3D_2)
-        InstanceNS::readOroloc3D2(input.strInstCompleto);
+        InstanceNS::readOroloc3D3(input.strInstCompleto);
     else if(input.instOroloc3D)
         InstanceNS::readOroloc3D(input.strInstCompleto);
     else if(input.inst2d)

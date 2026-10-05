@@ -477,7 +477,6 @@ bool lifo(InstanceNS::Item    							&item0,
         if (overlapX)
         {
 //std::printf("\toverlapX\n");
-            bool in_front_block = (maxY1 < p0.vetDim[1]);
             bool above = p0.vetDim[2] >= maxZ1;
             bool below = p1.vetDim[2] >= maxZ0;
             bool left  = p0.vetDim[1] >= maxY1;

@@ -28,6 +28,7 @@ namespace TesteOroloc3D_NS
 
     void appendToFile(const std::string &fileName, const std::string &content);
     void readSolOroloc3D_2(SolucaoNS::Solucao &sol);
+    void readSolOroloc3D_3(SolucaoNS::Solucao &sol);
     void printSol(SolucaoNS::Solucao &sol);
     void writeToFile(const std::string& str, const std::string& strFile);
 

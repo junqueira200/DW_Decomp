@@ -19,11 +19,11 @@ enum DimensionType
 
 enum RelativeDirection
 {
-    RightY = 0, // y
-    LeftY,      // y
+    RightY = 0, // y+
+    LeftY,      // y-
     InFrontX,   // x
     BehindX,    // x
-    AboveZ,     // z
+    AboveZ,     // z+
     BelowZ      // z
 };
 
