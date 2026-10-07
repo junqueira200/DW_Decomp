@@ -989,7 +989,7 @@ void setOroloc3DProblem(int doPrint)
     input.lifo			  		= true;
     input.mlifo			  		= true;
     input.removeFromShortSide	= false;
-    input.useCm					= false;
+    //input.useCm					= false;
 
     std::printf("Solving Problem:\n\taxleWights: \t\t %d \n", input.axleWights);
     std::printf("\tbalancedLoading: \t %d\n", input.balancedLoading);

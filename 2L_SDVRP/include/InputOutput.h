@@ -66,14 +66,14 @@ class Input
     bool        balancedLoading             = true;
     double 		maxTimePackingHeuristic 	= 3.0;
     bool        fragility				    = true;
-    bool        useCm						= false;
+    bool        useCm						= true;
 
 
-    int			gaPopulationSize			= 200;  // 500
-    int			gaNumberOfGenerations		= 100;
-    double		gaDiscartPercetence			= 0.05;
-    double		gaElitePercetence			= 0.10;
-    double		gaProbabilityToInheritFromElite = 0.8;
+    int			gaPopulationSize			= 400;  // 200
+    int			gaNumberOfGenerations		= 1000;
+    double		gaDiscartPercetence			= 0.2; // 0.05 // 0.2
+    double		gaElitePercetence			= 0.2; // 0.10 // 0.2
+    double		gaProbToInheritFromElite    = 0.8;
     // bool		inst3d                   = true;
 
     File file;

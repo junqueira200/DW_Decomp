@@ -149,7 +149,7 @@ bool GA_NS::ga(SolucaoNS::Bin  		&bin,
             for(int t=0; t < sizeVetItems; ++t)
             {
                 double randVal = RandNs::getRandDouble();
-                if(randVal < input.gaProbabilityToInheritFromElite)
+                if(randVal < input.gaProbToInheritFromElite)
                     randKeySon->vetRandomKey[t] = randKeyElite->vetRandomKey[t];
                 else
                     randKeySon->vetRandomKey[t] = randKeyRest->vetRandomKey[t];

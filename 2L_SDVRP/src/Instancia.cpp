@@ -1161,6 +1161,7 @@ void InstanceNS::readOroloc3D3(const std::string &strFile)
         file >> bt >> delivery_address >> order_id >> vetDimMass[0] >> vetDimMass[1] >>
             vetDimMass[2] >> vetDimMass[3];
         std::getline(file, trash);
+        std::printf("BT: %s\n", bt.c_str());
 
         bt.erase(0, 2);
         // std::printf("%d\n", std::stoi(bt));

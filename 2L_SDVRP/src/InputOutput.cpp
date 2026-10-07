@@ -84,7 +84,9 @@ void ParseInputNS::parseInput(int argc, const char *argv[])
                 cxxopts::value<std::string>(input.strSolOroloc3D_output))(
                 "balancedLoadingD",
                 "Parameter D to compute balanced Loading",
-                cxxopts::value<double>(input.balancedLoadingD));
+                cxxopts::value<double>(input.balancedLoadingD))
+                //("useCm","", cxxopts::value<bool>(input.useCm))
+                ;
         // SolOroloc3D_output
         auto result = options.parse(argc, argv);
 

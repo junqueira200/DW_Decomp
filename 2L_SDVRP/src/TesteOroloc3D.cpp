@@ -587,11 +587,14 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
             }
 
             //std::printf("\n\nAfter\n");
-            useValuesFromHeuristic = false;
+            //useValuesFromHeuristic = false;
 
         }
         else
+        {
             useValuesFromHeuristic = false;
+            //continue;
+        }
 
         double ompEnd = omp_get_wtime();
         double timeConst = ompEnd - ompStart;
@@ -670,10 +673,10 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
             std::vector<Array<int, 4>> vetArray;
             //std::printf("INI CP\n");
-            auto status = //LoadingStatus::Infeasible;
-                loadingChecker.ConstraintProgrammingSolver(
-                type, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
-                int_fk, int_fFA, int_fRA, int_fTA, vetSumAreasLeft);
+            auto status = LoadingStatus::Infeasible;
+                //loadingChecker.ConstraintProgrammingSolver(
+                //type, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
+                //int_fk, int_fFA, int_fRA, int_fTA, vetSumAreasLeft);
 
             //std::printf("END CP\n");
 
