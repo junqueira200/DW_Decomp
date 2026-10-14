@@ -8,11 +8,11 @@
 #include <iostream>
 #include <unistd.h>
 
-//inline  sig_atomic_t alarm_stopG;
-//inline  sig_atomic_t alarmSet;
-// inline unsigned int alarmPeriodG = 5*60; // 5 min
+// inline  sig_atomic_t alarm_stopG;
+// inline  sig_atomic_t alarmSet;
+//  inline unsigned int alarmPeriodG = 5*60; // 5 min
 
-//inline
+// inline
 void on_alarm(int signal);
 void setAlarm(unsigned int alarmPeriod);
 void setOffAlarm();

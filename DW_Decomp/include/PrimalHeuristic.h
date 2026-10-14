@@ -22,7 +22,7 @@ class PrimalHeuristicInter
     virtual ~PrimalHeuristicInter() = default;
     virtual DW_DecompNS::DW_DecompNode *operator()(DW_DecompNS::DW_DecompNode *node,
                                                    DW_DecompNS::AuxData       &auxVet,
-                                                   double upperBound) = 0;
+                                                   double                      upperBound) = 0;
 };
 
 class SimpleDiving : public PrimalHeuristicInter
@@ -30,7 +30,7 @@ class SimpleDiving : public PrimalHeuristicInter
   public:
     DW_DecompNS::DW_DecompNode *operator()(DW_DecompNS::DW_DecompNode *node,
                                            DW_DecompNS::AuxData       &auxVet,
-                                           double upperBound) override;
+                                           double                      upperBound) override;
 
     SimpleDiving() = default;
     ~SimpleDiving() override = default;

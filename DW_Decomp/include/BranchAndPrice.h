@@ -50,8 +50,8 @@ Eigen::VectorXd branchAndPrice(DW_DecompNS::DW_DecompNode              &cRootNod
                                SearchStrategyNS::SearchDataInter       *searchD,
                                PrimalHeuristicNS::PrimalHeuristicInter *ptrPrimalH,
                                BranchNS::BranchInter                   *branch,
-                               RobustCutGenerator           *robustCutGenerator,
-                               StatisticsNS::StatisticsData &statisticD);
+                               RobustCutGenerator                      *robustCutGenerator,
+                               StatisticsNS::StatisticsData            &statisticD);
 
 double computeGap(double lb, double ub);
 void   writeToFile(StatisticsNS::StatisticsData &statisticsD,

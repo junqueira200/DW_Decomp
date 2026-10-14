@@ -17,12 +17,11 @@ void multSparseMatLinTimesCol(const SparseNS::SparseMatLin<T> &matA,
 
     static_assert(std::is_arithmetic_v<T>, "T is not a number!");
     assertm(matA.numCol != vetCol.size(),
-            "Impossible to multiply mat(" << matA.numLin << ", " << matA.numCol
-                                          << ") x vetCol(" << vetCol.size() << ")\n");
+            "Impossible to multiply mat(" << matA.numLin << ", " << matA.numCol << ") x vetCol("
+                                          << vetCol.size() << ")\n");
 
     assertm(matA.numCol != vetColResult.size(),
-            "vetColResult(" << vetColResult.size()
-                            << ") should have a size of: " << matA.numCol);
+            "vetColResult(" << vetColResult.size() << ") should have a size of: " << matA.numCol);
 
     for(int64_t t = 0; t < vetColResult.size(); ++t)
     {
@@ -48,13 +47,11 @@ void multLinTimesSparseMatLinFast(const Vector<T>                 &vetLin,
 
     static_assert(std::is_arithmetic_v<T>, "T is not a number!");
     assertm(matA.numCol != vetLin.size(),
-            "Impossible to multiply mat(" << matA.numLin << ", " << matA.numCol
-                                          << ") x vetCol(" << matA.vetCol.size()
-                                          << ")\n");
+            "Impossible to multiply mat(" << matA.numLin << ", " << matA.numCol << ") x vetCol("
+                                          << matA.vetCol.size() << ")\n");
 
     assertm(matA.numCol != vetColResult.size(),
-            "vetColResult(" << vetColResult.size()
-                            << ") should have a size of: " << matA.numCol);
+            "vetColResult(" << vetColResult.size() << ") should have a size of: " << matA.numCol);
 
     vetColResult.setAll(T(0));
 
@@ -82,12 +79,11 @@ void multLinTimesSparseMatCol(const SparseNS::SparseVector<T> &vetLin,
     static_assert(std::is_arithmetic_v<T>, "T is not a number!");
 
     assertm(matA.numCol != vetLin.n,
-            "Impossible to multiply mat(" << matA.numLin << ", " << matA.numCol
-                                          << ") x vetCol(" << vetLin.n << ")\n");
+            "Impossible to multiply mat(" << matA.numLin << ", " << matA.numCol << ") x vetCol("
+                                          << vetLin.n << ")\n");
 
-    assertm(
-        matA.numCol != vetColResult.n,
-        "vetColResult(" << vetColResult.n << ") should have a size of: " << matA.numCol);
+    assertm(matA.numCol != vetColResult.n,
+            "vetColResult(" << vetColResult.n << ") should have a size of: " << matA.numCol);
 
     for(int64_t j = 0; j < matA.numCol; ++j)
     {
@@ -130,9 +126,8 @@ void multSparseMatColTimesVetCol(const SparseNS::SparseMatCol<T> &matA,
     vetLinResult.resetVector();
     assertm(matA.numCol != vetCol.n,
             "mat.numCol(" << matA.numCol << ") != vetCol.n(" << vetCol.n << ")");
-    assertm(
-        matA.numLin != vetLinResult.n,
-        "mat.numLin(" << matA.numLin << ") != vetLinResult.n(" << vetLinResult.n << ")");
+    assertm(matA.numLin != vetLinResult.n,
+            "mat.numLin(" << matA.numLin << ") != vetLinResult.n(" << vetLinResult.n << ")");
 
     for(int64_t j = 0; j < vetLinResult.n; ++j)
     {

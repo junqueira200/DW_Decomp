@@ -1,11 +1,11 @@
 #include "c_api.h"
 #include "ConstrutivoBin.h"
-#include "Instancia.h"
-#include "TesteOroloc3D.h"
-#include <unordered_set>
-#include <omp.h>
 #include "DualFeasibleFunctions.h"
 #include "GA.h"
+#include "Instancia.h"
+#include "TesteOroloc3D.h"
+#include <omp.h>
+#include <unordered_set>
 
 using namespace ConstrutivoBinNS;
 using namespace InstanceNS;
@@ -19,12 +19,12 @@ using namespace GA_NS;
 void ini_3D_Packing(char *strInst_c, int oroloc3D)
 {
 
-    //static bool doInit = true;
-    //std::printf("Inst: %s\n", strInst_c);
-    //if(doInit)
+    // static bool doInit = true;
+    // std::printf("Inst: %s\n", strInst_c);
+    // if(doInit)
 
-    //std::printf("oroloc3D: %d\n", oroloc3D);
-    //PRINT_THROW()
+    // std::printf("oroloc3D: %d\n", oroloc3D);
+    // PRINT_THROW()
 
     if(oroloc3D == 0)
         setClassical3DPackingProblem(true);
@@ -38,38 +38,36 @@ void ini_3D_Packing(char *strInst_c, int oroloc3D)
     else
         InstanceNS::read3dInstance(input.strInstCompleto);
 
-    output.semente =  RandNs::startEngine(output.semente, false);
+    output.semente = RandNs::startEngine(output.semente, false);
     input.strInst = getNomeInstancia(input.strInstCompleto);
 
     startConstGlobalVaribles();
 
     output.setup();
-    std::cout << "INST: " << input.strInst << " SEMENTE: " << RandNs::estado_ << " "
-              << output.data << "";
-
+    std::cout << "INST: " << input.strInst << " SEMENTE: " << RandNs::estado_ << " " << output.data
+              << "";
 }
 
-int routeIsInFeasibleSet(int* vet_c, int vetSize)
+int routeIsInFeasibleSet(int *vet_c, int vetSize)
 {
-    static SolucaoNS::Rota 	route;
+    static SolucaoNS::Rota route;
 
     route.reset();
-    for(int i=0; i < vetSize; ++i)
+    for(int i = 0; i < vetSize; ++i)
         route.vetRota[i] = vet_c[i];
 
     route.numPos = vetSize;
     route.computeDistance();
 
     return (int)routeData.routeSetFeasible.contains(route);
-
 }
 
-int routeIsInNotfeasibleSet(int* vet_c, int vetSize)
+int routeIsInNotfeasibleSet(int *vet_c, int vetSize)
 {
-    static SolucaoNS::Rota 	route;
+    static SolucaoNS::Rota route;
 
     route.reset();
-    for(int i=0; i < vetSize; ++i)
+    for(int i = 0; i < vetSize; ++i)
         route.vetRota[i] = vet_c[i];
 
     route.numPos = vetSize;
@@ -78,17 +76,17 @@ int routeIsInNotfeasibleSet(int* vet_c, int vetSize)
     return (int)routeData.routeSetInfeasible.contains(route);
 }
 
-int heuristicPacking(int* vet_c, int vetSize)
+int heuristicPacking(int *vet_c, int vetSize)
 {
-    static SolucaoNS::Rota 	route;
-    static SolucaoNS::Bin  	bin;
-    static VectorI			vetItems(instanciaG.numItens);
+    static SolucaoNS::Rota route;
+    static SolucaoNS::Bin  bin;
+    static VectorI         vetItems(instanciaG.numItens);
 
     route.binPtr = &bin;
     route.reset();
     bin.reset();
 
-    for(int i=0; i < vetSize; ++i)
+    for(int i = 0; i < vetSize; ++i)
         route.vetRota[i] = vet_c[i];
 
     route.numPos = vetSize;
@@ -97,16 +95,16 @@ int heuristicPacking(int* vet_c, int vetSize)
     int numItems = copiaItensClientes(route.vetRota, route.numPos, vetItems);
 
     double totalVolume = 0.0;
-    int totalDemand    = 0;
-    for(int i=0; i < numItems; ++i)
+    int    totalDemand = 0;
+    for(int i = 0; i < numItems; ++i)
     {
-        Item& item = instanciaG.vetItens[vetItems[i]];
-        totalVolume += item.vetDim[0]*item.vetDim[1]*item.vetDim[2];
+        Item &item = instanciaG.vetItens[vetItems[i]];
+        totalVolume += item.vetDim[0] * item.vetDim[1] * item.vetDim[2];
         totalDemand += instanciaG.vetItens[i].weight;
     }
 
-    //for(int i=0; i < vetSize; ++i)
-    //    totalDemand += instanciaG.vetDemandaCliente[route.vetRota[i]];
+    // for(int i=0; i < vetSize; ++i)
+    //     totalDemand += instanciaG.vetDemandaCliente[route.vetRota[i]];
 
     static double volumeOfVeicule = getVehicleVolume();
     if(totalVolume > volumeOfVeicule)
@@ -127,8 +125,8 @@ int heuristicPacking(int* vet_c, int vetSize)
     std::reverse(vetItems.begin(), vetItems.begin() + numItems);
 
     bool feasible = ga(bin, route, &vetItems, numItems);
-         //ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
-         //                                        std::numeric_limits<int64_t>::max(), &route);
+    // ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
+    //                                         std::numeric_limits<int64_t>::max(), &route);
     if(feasible)
     {
         if(useHash)
@@ -138,64 +136,63 @@ int heuristicPacking(int* vet_c, int vetSize)
     }
     else
         return 0;
-
 }
 
-int exactPacking(int* vet_c, int vetSize)
+int exactPacking(int *vet_c, int vetSize)
 {
-    //std::printf("exactPacking\n");
-    SolucaoNS::Rota 	route;
-    SolucaoNS::Bin  	bin;
-    VectorI				vetItems(instanciaG.numItens);
+    // std::printf("exactPacking\n");
+    SolucaoNS::Rota route;
+    SolucaoNS::Bin  bin;
+    VectorI         vetItems(instanciaG.numItens);
 
     route.binPtr = &bin;
     route.reset();
     bin.reset();
 
-    for(int i=0; i < vetSize; ++i)
+    for(int i = 0; i < vetSize; ++i)
     {
-        //std::printf("%d ", vet_c[i]);
+        // std::printf("%d ", vet_c[i]);
         route.vetRota[i] = vet_c[i];
     }
 
-    //std::printf("\n");
+    // std::printf("\n");
 
     route.numPos = vetSize;
     route.computeDistance();
 
     int numItems = copiaItensClientes(route.vetRota, route.numPos, vetItems);
 
-    //std::printf("vetItems: ");
-    //for(int i=0; i < numItems; ++i)
-    //    std::printf("%d ", vetItems[i]);
+    // std::printf("vetItems: ");
+    // for(int i=0; i < numItems; ++i)
+    //     std::printf("%d ", vetItems[i]);
 
-    //std::printf("\n\n");
+    // std::printf("\n\n");
 
     double totalVolume = 0.0;
     double totalDemand = 0.0;
-    for(int i=0; i < numItems; ++i)
+    for(int i = 0; i < numItems; ++i)
     {
-        Item& item = instanciaG.vetItens[vetItems[i]];
-        totalVolume += item.vetDim[0]*item.vetDim[1]*item.vetDim[2];
-        //totalDemand += instanciaG.vetItens[i].weight;
+        Item &item = instanciaG.vetItens[vetItems[i]];
+        totalVolume += item.vetDim[0] * item.vetDim[1] * item.vetDim[2];
+        // totalDemand += instanciaG.vetItens[i].weight;
     }
 
-    for(int i=0; i < vetSize; ++i)
+    for(int i = 0; i < vetSize; ++i)
         totalDemand += instanciaG.vetDemandaCliente[route.vetRota[i]];
 
     static double volumeOfVeicule = getVehicleVolume();
     if(totalVolume > volumeOfVeicule)
     {
-        std::printf("max Vol; totalVolume: %.2f; volumeOfVeicule: %.2f\n\n", totalVolume,
-                     volumeOfVeicule);
+        std::printf(
+            "max Vol; totalVolume: %.2f; volumeOfVeicule: %.2f\n\n", totalVolume, volumeOfVeicule);
         PRINT_THROW();
         return 0;
     }
 
     if(totalDemand > instanciaG.maxPayload)
     {
-        std::printf("maxPayload\ntotalDemand: %f; maxPayload: %f", totalDemand,
-                    instanciaG.maxPayload);
+        std::printf(
+            "maxPayload\ntotalDemand: %f; maxPayload: %f", totalDemand, instanciaG.maxPayload);
         PRINT_THROW();
         return 0;
     }
@@ -211,9 +208,9 @@ int exactPacking(int* vet_c, int vetSize)
 
     std::reverse(vetItems.begin(), vetItems.begin() + numItems);
 
-    //bool feasible =
-    //    ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
-    //                                            50, &route);
+    // bool feasible =
+    //     ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
+    //                                             50, &route);
 
     numItems = copiaItensClientes(route.vetRota, route.numPos, vetItems);
     std::reverse(vetItems.begin(), vetItems.begin() + numItems);
@@ -224,13 +221,10 @@ int exactPacking(int* vet_c, int vetSize)
         std::printf("dual infeasible!\n");
     }
 
-
-
     std::vector<Cuboid>   vetCuboids;
     Collections::IdVector stopIds;
 
-    convertVectorOfItensToVectorOfCuboids(
-        vetItems, vetCuboids, numItems, route);
+    convertVectorOfItensToVectorOfCuboids(vetItems, vetCuboids, numItems, route);
     // int lastCustomerId =
     // instanciaG.vetItens[bin.vetItens[bin.numItens-1]].customer;
 
@@ -247,34 +241,42 @@ int exactPacking(int* vet_c, int vetSize)
     inputParam.SetLoadingFlags();
 
     static LoadingChecker loadingChecker(inputParam.ContainerLoading);
-    static Container    container((int)instanciaG.vetDimVeiculo[0],
-                               (int)instanciaG.vetDimVeiculo[1],
-                               (int)instanciaG.vetDimVeiculo[2],
-                               (int)instanciaG.maxPayload);
+    static Container      container((int)instanciaG.vetDimVeiculo[0],
+                                    (int)instanciaG.vetDimVeiculo[1],
+                                    (int)instanciaG.vetDimVeiculo[2],
+                                    (int)instanciaG.maxPayload);
 
     PackingType    lastType;
     StatusOroloc3D statusOroc3D;
     double         tempoCpu;
-    int totalTry = 0;
+    int            totalTry = 0;
 
     std::printf("\n\n************************************\n");
-    std::printf(    "**************INI CP-SAT************\n\n");
+    std::printf("**************INI CP-SAT************\n\n");
 
-    double int_fk, int_fFA, int_fRA, int_fTA;
+    double  int_fk, int_fFA, int_fRA, int_fTA;
     VectorI vetSumAreasLeft(numItems, 0);
 
-    for(int i=0; i < 1; ++i)
+    for(int i = 0; i < 1; ++i)
     {
         bin.reset();
 
         std::vector<Array<int, 4>> vetArray;
         // std::cout<<"n: "<<n<<"\n";
-        //double ompStart = omp_get_wtime();
-        auto status = loadingChecker.ConstraintProgrammingSolver(
-            PackingType::Complete, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
-            int_fk, int_fFA, int_fRA, int_fTA, vetSumAreasLeft);
+        // double ompStart = omp_get_wtime();
+        auto status = loadingChecker.ConstraintProgrammingSolver(PackingType::Complete,
+                                                                 container,
+                                                                 stopIds,
+                                                                 vetCuboids,
+                                                                 input.cpSatTime,
+                                                                 vetArray,
+                                                                 int_fk,
+                                                                 int_fFA,
+                                                                 int_fRA,
+                                                                 int_fTA,
+                                                                 vetSumAreasLeft);
         // std::cout<<"ret\n";
-        //double ompEnd = omp_get_wtime();
+        // double ompEnd = omp_get_wtime();
 
         std::printf("************************************\n");
         std::printf("**************END CP-SAT************\n\n");
@@ -285,14 +287,14 @@ int exactPacking(int* vet_c, int vetSize)
             if(!dualFeasible)
             {
                 std::printf("Packing is NOT dualFeasible\nIt worked!\n");
-                //PRINT_THROW();
+                // PRINT_THROW();
             }
 
-            //if(feasible)
+            // if(feasible)
             //{
-            //    std::printf("ERROR, LoadingStatus::Infeasible, and heuristic solved\n\n");
-            //    PRINT_THROW();
-            //}
+            //     std::printf("ERROR, LoadingStatus::Infeasible, and heuristic solved\n\n");
+            //     PRINT_THROW();
+            // }
             if(useHash)
                 routeData.routeSetInfeasible.insert(route);
 
@@ -305,7 +307,7 @@ int exactPacking(int* vet_c, int vetSize)
         }
         else if(status == LoadingStatus::Unknown)
         {
-            //std::printf("Status: Unknown, Time Limit?");
+            // std::printf("Status: Unknown, Time Limit?");
             std::printf("ERROR, status: Unknown\n");
             PRINT_THROW();
             continue;
@@ -328,7 +330,7 @@ int exactPacking(int* vet_c, int vetSize)
             if(!bin.checkFeasibility(&route, true, true))
             {
                 std::printf("ERROR, feasible solution from CP model is not feasible!\n");
-                std::cout<<bin.printPlot()<<"\n";
+                std::cout << bin.printPlot() << "\n";
                 PRINT_THROW();
                 continue;
             }
@@ -343,7 +345,8 @@ int exactPacking(int* vet_c, int vetSize)
 
             if(!dualFeasible)
             {
-                std::printf("Error, packing is dual infeasible! CP generated a feasible Solution\n");
+                std::printf(
+                    "Error, packing is dual infeasible! CP generated a feasible Solution\n");
                 PRINT_THROW();
             }
 
@@ -354,43 +357,41 @@ int exactPacking(int* vet_c, int vetSize)
             std::printf("Status Unknown: %d\n", status);
             PRINT_THROW();
         }
-
     }
 
     PRINT_THROW();
     return 0;
 }
 
-int testRouteCapVol(int* vet_c, int vetSize)
+int testRouteCapVol(int *vet_c, int vetSize)
 {
     double totalVolume = 0.0;
     double totalDemand = 0.0;
 
-    SolucaoNS::Rota 	route;
-    for(int i=0; i < vetSize; ++i)
+    SolucaoNS::Rota route;
+    for(int i = 0; i < vetSize; ++i)
         route.vetRota[i] = vet_c[i];
 
     route.numPos = vetSize;
-    double totalVolItems = 0;
+    double  totalVolItems = 0;
     VectorI vetItems;
 
     int numItems = copiaItensClientes(route.vetRota, vetSize, vetItems, true);
 
-    for(int i=0; i < numItems; ++i)
+    for(int i = 0; i < numItems; ++i)
         totalVolItems += instanciaG.vetItens[vetItems[i]].volume;
 
-    for(int i=0; i < vetSize; ++i)
+    for(int i = 0; i < vetSize; ++i)
     {
-        //Item& item = instanciaG.vetItens[vetItems[i]];
+        // Item& item = instanciaG.vetItens[vetItems[i]];
         totalVolume += instanciaG.vetVolumeCliente[vet_c[i]];
         totalDemand += instanciaG.vetDemandaCliente[vet_c[i]];
-        //totalDemand += instanciaG.vetItens[i].weight;
+        // totalDemand += instanciaG.vetItens[i].weight;
     }
 
     if(!doubleEqual(totalVolItems, totalVolume, 1E-5))
     {
-        std::printf("Error, totalVolItems(%f) != totalVolume(%f)", totalVolItems,
-                                                                   totalVolume);
+        std::printf("Error, totalVolItems(%f) != totalVolume(%f)", totalVolItems, totalVolume);
         PRINT_THROW();
     }
 
@@ -407,20 +408,20 @@ int testRouteCapVol(int* vet_c, int vetSize)
     return 1;
 }
 
-double getDistanceRoute(int* vet_c, int vetSize)
+double getDistanceRoute(int *vet_c, int vetSize)
 {
     double dist = 0.0;
-    for(int i=0; i < (vetSize-1); ++i)
-        dist += getDistance(vet_c[i], vet_c[i+1]);
+    for(int i = 0; i < (vetSize - 1); ++i)
+        dist += getDistance(vet_c[i], vet_c[i + 1]);
 
     return dist;
 }
 
 void roundDistances()
 {
-    for(int i=0; i < instanciaG.numClientes; ++i)
+    for(int i = 0; i < instanciaG.numClientes; ++i)
     {
-        for(int j=0; j < instanciaG.numClientes; ++j)
+        for(int j = 0; j < instanciaG.numClientes; ++j)
             instanciaG.matDist.get(i, j) = std::round(getDistance(i, j));
     }
 }
@@ -434,23 +435,23 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
         else
         {
             std::printf("Error in route: ");
-            for(int i=0; i < vetSize; ++i)
+            for(int i = 0; i < vetSize; ++i)
                 std::printf("%d ", vet_c[i]);
             std::printf("\n\n");
             PRINT_THROW();
         }
     }
 
-    //std::printf("testRoute\n");
-    //onlyHeuristic = false;
-    //std::printf("onlyHeuristic: %d\n", onlyHeuristic);
+    // std::printf("testRoute\n");
+    // onlyHeuristic = false;
+    // std::printf("onlyHeuristic: %d\n", onlyHeuristic);
 
-    HASH_ROUTE& 	routeSetFeasible   = routeData.routeSetFeasible;
-    HASH_ROUTE& 	routeSetInfeasible = routeData.routeSetInfeasible;
+    HASH_ROUTE     &routeSetFeasible = routeData.routeSetFeasible;
+    HASH_ROUTE     &routeSetInfeasible = routeData.routeSetInfeasible;
     SolucaoNS::Rota route;
-    SolucaoNS::Rota	routeInverse;
+    SolucaoNS::Rota routeInverse;
     SolucaoNS::Bin  bin;
-    VectorI			vetItems(instanciaG.numItens);
+    VectorI         vetItems(instanciaG.numItens);
 
     route.binPtr = &bin;
 
@@ -458,28 +459,28 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
     route.reset();
     routeInverse.reset();
 
-    //std::printf("vetSize: %d\n", vetSize);
+    // std::printf("vetSize: %d\n", vetSize);
 
-    for(int i=0; i < vetSize; ++i)
+    for(int i = 0; i < vetSize; ++i)
     {
         route.vetRota[i] = vet_c[i];
-        //std::printf("%d ", vet_c[i]);
+        // std::printf("%d ", vet_c[i]);
     }
-    //std::printf("\n");
+    // std::printf("\n");
     route.numPos = vetSize;
     route.computeDistance();
 
     if(doInverseRoute)
     {
         SolucaoNS::copiaRota(route, routeInverse);
-        std::reverse(routeInverse.vetRota.begin(),
-                     routeInverse.vetRota.begin()+routeInverse.numPos);
+        std::reverse(
+            routeInverse.vetRota.begin(), routeInverse.vetRota.begin() + routeInverse.numPos);
         routeInverse.computeDistance();
 
-        //std::cout<<"Inverse: "<<routeInverse.printRota(false)<<"\n";
+        // std::cout<<"Inverse: "<<routeInverse.printRota(false)<<"\n";
     }
 
-    //std::cout<<"Testing route: "<<route.printRota()<<"\n";
+    // std::cout<<"Testing route: "<<route.printRota()<<"\n";
 
     // 0 all infesible
     // 1 only forwerd route is fesible
@@ -504,7 +505,6 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
             return 0;
     }
 
-
     int numItems = copiaItensClientes(route.vetRota, route.numPos, vetItems);
     if(numItems == 0)
     {
@@ -513,57 +513,56 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
         PRINT_THROW();
     }
 
-    //std::printf("vetItems: ");
-    //for(int i=0; i < numItems; ++i)
-    //    std::printf("%d ", vetItems[i]);
+    // std::printf("vetItems: ");
+    // for(int i=0; i < numItems; ++i)
+    //     std::printf("%d ", vetItems[i]);
 
-    //std::printf("\n\n");
+    // std::printf("\n\n");
 
     double totalVolume = 0.0;
     double totalDemand = 0.0;
-    for(int i=0; i < numItems; ++i)
+    for(int i = 0; i < numItems; ++i)
     {
-        Item& item = instanciaG.vetItens[vetItems[i]];
-        totalVolume += item.vetDim[0]*item.vetDim[1]*item.vetDim[2];
-        //totalDemand += instanciaG.vetItens[i].weight;
+        Item &item = instanciaG.vetItens[vetItems[i]];
+        totalVolume += item.vetDim[0] * item.vetDim[1] * item.vetDim[2];
+        // totalDemand += instanciaG.vetItens[i].weight;
     }
 
-    for(int i=0; i < vetSize; ++i)
+    for(int i = 0; i < vetSize; ++i)
         totalDemand += instanciaG.vetDemandaCliente[route.vetRota[i]];
 
     static double volumeOfVeicule = getVehicleVolume();
     if(totalVolume > volumeOfVeicule)
     {
-        //std::printf("max Vol; totalVolume: %.2f; volumeOfVeicule: %.2f\n\n", totalVolume,
-        //             volumeOfVeicule);
-        //PRINT_THROW();
+        // std::printf("max Vol; totalVolume: %.2f; volumeOfVeicule: %.2f\n\n", totalVolume,
+        //              volumeOfVeicule);
+        // PRINT_THROW();
         return 0;
     }
 
     if(totalDemand > instanciaG.maxPayload)
     {
-        //std::printf("maxPayload\ntotalDemand: %d; maxPayload: %f", totalDemand,
-        //            instanciaG.maxPayload);
-        //PRINT_THROW();
+        // std::printf("maxPayload\ntotalDemand: %d; maxPayload: %f", totalDemand,
+        //             instanciaG.maxPayload);
+        // PRINT_THROW();
         return 0;
     }
 
     bool dualFeasible = check(vetItems, numItems);
 
-    //std::printf("numItems: %d\n", numItems);
+    // std::printf("numItems: %d\n", numItems);
 
-    //std::printf("vetItems: ");
-    //for(int i=0; i < numItems; ++i)
-    //    std::printf("%d ", vetItems[i]);
+    // std::printf("vetItems: ");
+    // for(int i=0; i < numItems; ++i)
+    //     std::printf("%d ", vetItems[i]);
 
-    //std::printf("\n");
+    // std::printf("\n");
 
     std::reverse(vetItems.begin(), vetItems.begin() + numItems);
 
-    //std::printf("vetItems: ");
-    //for(int i=0; i < numItems; ++i)
-    //    std::printf("%d ", vetItems[i]);
-
+    // std::printf("vetItems: ");
+    // for(int i=0; i < numItems; ++i)
+    //     std::printf("%d ", vetItems[i]);
 
     /*
     if(onlyHeuristic == 0)
@@ -575,18 +574,17 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
 
     bool feasible = false;
 
-    //if(useDualFunction)
-    //    check(vetItems);
-
+    // if(useDualFunction)
+    //     check(vetItems);
 
     if(onlyHeuristic >= 1)
     {
-        feasible = //ga(bin, route, &vetItems, numItems);
-        ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
-                                                25, &route);
+        feasible = // ga(bin, route, &vetItems, numItems);
+            ConstrutivoBinNS::construtivoBinPacking(
+                bin, vetItems, numItems, input.aphaBin, 25, &route);
         if(feasible)
         {
-            //std::printf("GA work!\n");
+            // std::printf("GA work!\n");
             if(!dualFeasible)
             {
                 std::printf("Error, packing is dual infeasible!\n");
@@ -597,7 +595,6 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
             if(useHash)
                 routeSetFeasible.insert(route);
 
-
             /*
             if(useDualFunction && doBreakTestRoute)
             {
@@ -606,22 +603,21 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
                 PRINT_THROW();
             }
             */
-
         }
-        //else
-        //    std::printf("GA dident work!\n");
-        //if(feasible)
-        //    return true;
+        // else
+        //     std::printf("GA dident work!\n");
+        // if(feasible)
+        //     return true;
         return feasible;
 
-        //input.cpSatTime = 0.000001;
-        //onlyHeuristic = 0;
+        // input.cpSatTime = 0.000001;
+        // onlyHeuristic = 0;
     }
     else
     {
         feasible = ga(bin, route, &vetItems, numItems);
-            //ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
-            //                                        50, &route);
+        // ConstrutivoBinNS::construtivoBinPacking(bin, vetItems, numItems, input.aphaBin,
+        //                                         50, &route);
 
         if(!dualFeasible && feasible)
         {
@@ -630,10 +626,10 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
         }
     }
 
-    //std::printf("Construtivo: %d\n", feasible);
+    // std::printf("Construtivo: %d\n", feasible);
 
-    //std::printf("**************END CONSTRUTIVO************\n");
-    //std::printf("*****************************************\n\n");
+    // std::printf("**************END CONSTRUTIVO************\n");
+    // std::printf("*****************************************\n\n");
 
     numItems = copiaItensClientes(route.vetRota, route.numPos, vetItems);
 
@@ -645,7 +641,7 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
             PRINT_THROW();
         }
 
-        //std::printf("Plot: \n%s\n", bin.printPlot().c_str());
+        // std::printf("Plot: \n%s\n", bin.printPlot().c_str());
 
         if(useDualFunction && doBreakTestRoute)
         {
@@ -670,16 +666,15 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
         }
     }
 
-    //if(onlyHeuristic >= 1)
-    //    return 0;
+    // if(onlyHeuristic >= 1)
+    //     return 0;
 
-    jmpCp:
+jmpCp:
 
     std::vector<Cuboid>   vetCuboids;
     Collections::IdVector stopIds;
 
-    convertVectorOfItensToVectorOfCuboids(
-        vetItems, vetCuboids, numItems, route);
+    convertVectorOfItensToVectorOfCuboids(vetItems, vetCuboids, numItems, route);
     // int lastCustomerId =
     // instanciaG.vetItens[bin.vetItens[bin.numItens-1]].customer;
 
@@ -696,35 +691,43 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
     inputParam.SetLoadingFlags();
 
     static LoadingChecker loadingChecker(inputParam.ContainerLoading);
-    static Container    container((int)instanciaG.vetDimVeiculo[0],
-                        (int)instanciaG.vetDimVeiculo[1],
-                        (int)instanciaG.vetDimVeiculo[2],
-                        (int)instanciaG.maxPayload);
+    static Container      container((int)instanciaG.vetDimVeiculo[0],
+                                    (int)instanciaG.vetDimVeiculo[1],
+                                    (int)instanciaG.vetDimVeiculo[2],
+                                    (int)instanciaG.maxPayload);
 
-           //
+    //
     PackingType    lastType;
     StatusOroloc3D statusOroc3D;
     double         tempoCpu;
-    int totalTry = 0;
+    int            totalTry = 0;
 
     std::printf("\n\n************************************\n");
-    std::printf(    "**************INI CP-SAT************\n\n");
+    std::printf("**************INI CP-SAT************\n\n");
 
-    double int_fk, int_fFA, int_fRA, int_fTA;
+    double  int_fk, int_fFA, int_fRA, int_fTA;
     VectorI vetSumAreasLeft(numItems, 0);
 
-    for(int i=0; i < 1; ++i)
+    for(int i = 0; i < 1; ++i)
     {
         bin.reset();
 
         std::vector<Array<int, 4>> vetArray;
         // std::cout<<"n: "<<n<<"\n";
-        //double ompStart = omp_get_wtime();
-        auto status = loadingChecker.ConstraintProgrammingSolver(
-        PackingType::Complete, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
-            int_fk, int_fFA, int_fRA, int_fTA, vetSumAreasLeft);
+        // double ompStart = omp_get_wtime();
+        auto status = loadingChecker.ConstraintProgrammingSolver(PackingType::Complete,
+                                                                 container,
+                                                                 stopIds,
+                                                                 vetCuboids,
+                                                                 input.cpSatTime,
+                                                                 vetArray,
+                                                                 int_fk,
+                                                                 int_fFA,
+                                                                 int_fRA,
+                                                                 int_fTA,
+                                                                 vetSumAreasLeft);
         // std::cout<<"ret\n";
-        //double ompEnd = omp_get_wtime();
+        // double ompEnd = omp_get_wtime();
 
         std::printf("************************************\n");
         std::printf("**************END CP-SAT************\n\n");
@@ -748,13 +751,11 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
             */
             if(doInverseRoute)
             {
-                bool inverse = testRoute(&routeInverse.vetRota[0], routeInverse.numPos,
-                                         0, 0);
+                bool inverse = testRoute(&routeInverse.vetRota[0], routeInverse.numPos, 0, 0);
                 if(inverse)
                     return 3;
                 else
                     return 0;
-
             }
 
             if(useDualFunction && doBreakTestRoute)
@@ -762,7 +763,6 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
                 std::printf("\nInfeasible\n");
                 PRINT_THROW();
             }
-
 
             return 0;
         }
@@ -773,7 +773,7 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
         }
         else if(status == LoadingStatus::Unknown)
         {
-            //std::printf("Status: Unknown, Time Limit?");
+            // std::printf("Status: Unknown, Time Limit?");
             return 0;
             PRINT_THROW();
             continue;
@@ -796,7 +796,7 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
             if(!bin.checkFeasibility(&route, true, true))
             {
                 std::printf("ERROR, feasible solution from CP model is not feasible!\n");
-                std::cout<<bin.printPlot()<<"\n";
+                std::cout << bin.printPlot() << "\n";
                 PRINT_THROW();
                 continue;
             }
@@ -811,15 +811,12 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
 
             if(doInverseRoute)
             {
-                bool inverse = testRoute(&routeInverse.vetRota[0], routeInverse.numPos,
-                                         0, 0);
+                bool inverse = testRoute(&routeInverse.vetRota[0], routeInverse.numPos, 0, 0);
                 if(inverse)
                     return 2;
                 else
                     return 1;
-
             }
-
 
             if(useDualFunction && doBreakTestRoute)
             {
@@ -827,33 +824,21 @@ int testRoute(int *vet_c, int vetSize, int onlyHeuristic, int doInverseRoute)
                 PRINT_THROW();
             }
 
-
             return 1;
         }
-
     }
 
-    //std::printf("ERROR, STATUS FROM OR TOOLS IS TIME LIMIT\n");
-    //PRINT_THROW();
+    // std::printf("ERROR, STATUS FROM OR TOOLS IS TIME LIMIT\n");
+    // PRINT_THROW();
 
     return false;
 }
 
-int getNumberOfCustoms()
-{
+int getNumberOfCustoms() { return instanciaG.numClientes; }
 
-    return instanciaG.numClientes;
-}
+int getNumberOfTrucks() { return instanciaG.numVeiculos; }
 
-int getNumberOfTrucks()
-{
-    return instanciaG.numVeiculos;
-}
-
-int getDemandFromCustomr(int i)
-{
-    return instanciaG.vetDemandaCliente[i];
-}
+int getDemandFromCustomr(int i) { return instanciaG.vetDemandaCliente[i]; }
 
 double getDistance(int i, int j)
 {
@@ -863,10 +848,7 @@ double getDistance(int i, int j)
         return instanciaG.matDist(i, j);
 }
 
-int getVehicleCapacity()
-{
-    return instanciaG.maxPayload;
-}
+int getVehicleCapacity() { return instanciaG.maxPayload; }
 
 double getVolumeFromCustomr(int cust)
 {
@@ -881,20 +863,20 @@ double getVolumeFromCustomr(int cust)
 
     if(input.instOroloc3D_2)
     {
-        for(int i=ini; i <= end; ++i)
+        for(int i = ini; i <= end; ++i)
         {
-            const Item& item = instanciaG.vetItens[i];
-            vol += (item.vetDim[0])*(item.vetDim[1])*(item.vetDim[2]);
-            //std::printf("Item: %d; volume: %f\n", i, instanciaG.vetItens[i].volume);
+            const Item &item = instanciaG.vetItens[i];
+            vol += (item.vetDim[0]) * (item.vetDim[1]) * (item.vetDim[2]);
+            // std::printf("Item: %d; volume: %f\n", i, instanciaG.vetItens[i].volume);
         }
     }
     else
     {
-        for(int i=ini; i <= end; ++i)
+        for(int i = ini; i <= end; ++i)
         {
-            const Item& item = instanciaG.vetItens[i];
-            vol += item.vetDim[0]*item.vetDim[1]*item.vetDim[2];
-            //std::printf("Item: %d; volume: %f\n", i, instanciaG.vetItens[i].volume);
+            const Item &item = instanciaG.vetItens[i];
+            vol += item.vetDim[0] * item.vetDim[1] * item.vetDim[2];
+            // std::printf("Item: %d; volume: %f\n", i, instanciaG.vetItens[i].volume);
         }
     }
 
@@ -905,15 +887,15 @@ double getVehicleVolume()
 {
 
     if(input.instOroloc3D_2)
-    {    return instanciaG.vetDimVeiculo[0]*0.001*instanciaG.vetDimVeiculo[1]*0.001*
-                instanciaG.vetDimVeiculo[2]*0.001;
+    {
+        return instanciaG.vetDimVeiculo[0] * 0.001 * instanciaG.vetDimVeiculo[1] * 0.001 *
+               instanciaG.vetDimVeiculo[2] * 0.001;
     }
     else
     {
-        return instanciaG.vetDimVeiculo[0]*instanciaG.vetDimVeiculo[1]*
+        return instanciaG.vetDimVeiculo[0] * instanciaG.vetDimVeiculo[1] *
                instanciaG.vetDimVeiculo[2];
     }
-
 }
 
 void setClassical3DPackingProblem(int doPrint)
@@ -921,15 +903,15 @@ void setClassical3DPackingProblem(int doPrint)
     if(doPrint)
         std::printf("Seting parameters for classical 3D loading; NO LIFO\n");
 
-    input.instOroloc3D_2  		= false;
-    input.axleWights      		= false;
-    input.balancedLoading 		= false;
-    input.compactness     		= false;
-    input.lifo			  		= false;
-    input.mlifo			  		= false;
-    input.removeFromShortSide	= true;
-    input.fragility				= false;
-    input.support				= false;
+    input.instOroloc3D_2 = false;
+    input.axleWights = false;
+    input.balancedLoading = false;
+    input.compactness = false;
+    input.lifo = false;
+    input.mlifo = false;
+    input.removeFromShortSide = true;
+    input.fragility = false;
+    input.support = false;
 
     if(input.mlifo && !input.lifo)
     {
@@ -949,17 +931,16 @@ void setLoadingOnlyProblem(int doPrint)
     if(doPrint)
         std::printf("Seting parameters for classical loading only\n");
 
-    input.instOroloc3D_2  		= false;
-    input.axleWights      		= false;
-    input.balancedLoading 		= false;
-    input.compactness     		= false;
-    input.lifo			  		= false;
-    input.mlifo			  		= false;
-    input.removeFromShortSide	= true;
-    input.fragility				= false;
-    input.support				= false;
-    input.useCm					= false;
-
+    input.instOroloc3D_2 = false;
+    input.axleWights = false;
+    input.balancedLoading = false;
+    input.compactness = false;
+    input.lifo = false;
+    input.mlifo = false;
+    input.removeFromShortSide = true;
+    input.fragility = false;
+    input.support = false;
+    input.useCm = false;
 
     if(input.mlifo && !input.lifo)
     {
@@ -980,16 +961,14 @@ void setOroloc3DProblem(int doPrint)
     if(doPrint)
         std::printf("Seting parameters for Oroloc3D loading\n");
 
-
-
-    input.instOroloc3D_2  		= true;
-    input.axleWights      		= true;
-    input.balancedLoading 		= true;
-    input.compactness     		= true;
-    input.lifo			  		= true;
-    input.mlifo			  		= true;
-    input.removeFromShortSide	= false;
-    //input.useCm					= false;
+    input.instOroloc3D_2 = true;
+    input.axleWights = true;
+    input.balancedLoading = true;
+    input.compactness = true;
+    input.lifo = true;
+    input.mlifo = true;
+    input.removeFromShortSide = false;
+    // input.useCm					= false;
 
     std::printf("Solving Problem:\n\taxleWights: \t\t %d \n", input.axleWights);
     std::printf("\tbalancedLoading: \t %d\n", input.balancedLoading);
@@ -1005,40 +984,40 @@ void setOroloc3DProblem(int doPrint)
     }
 }
 
-void saveProblem(Input& inputTemp)
+void saveProblem(Input &inputTemp)
 {
-    inputTemp.instOroloc3D_2 		= input.instOroloc3D_2;
-    inputTemp.axleWights     		= input.axleWights;
-    inputTemp.balancedLoading		= input.balancedLoading;
-    inputTemp.compactness			= input.compactness;
-    inputTemp.lifo					= input.lifo;
-    inputTemp.mlifo					= input.mlifo;
-    inputTemp.removeFromShortSide	= input.removeFromShortSide;
+    inputTemp.instOroloc3D_2 = input.instOroloc3D_2;
+    inputTemp.axleWights = input.axleWights;
+    inputTemp.balancedLoading = input.balancedLoading;
+    inputTemp.compactness = input.compactness;
+    inputTemp.lifo = input.lifo;
+    inputTemp.mlifo = input.mlifo;
+    inputTemp.removeFromShortSide = input.removeFromShortSide;
 }
 
-void setProblem(Input& inputTemp)
+void setProblem(Input &inputTemp)
 {
 
-    input.instOroloc3D_2 		= inputTemp.instOroloc3D_2;
-    input.axleWights     		= inputTemp.axleWights;
-    input.balancedLoading		= inputTemp.balancedLoading;
-    input.compactness			= inputTemp.compactness;
-    input.lifo					= inputTemp.lifo;
-    input.mlifo					= inputTemp.mlifo;
-    input.removeFromShortSide	= inputTemp.removeFromShortSide;
+    input.instOroloc3D_2 = inputTemp.instOroloc3D_2;
+    input.axleWights = inputTemp.axleWights;
+    input.balancedLoading = inputTemp.balancedLoading;
+    input.compactness = inputTemp.compactness;
+    input.lifo = inputTemp.lifo;
+    input.mlifo = inputTemp.mlifo;
+    input.removeFromShortSide = inputTemp.removeFromShortSide;
 }
 
 void setDualFeasibleFunction(double ep0, double ep2)
 {
     instanciaG.vetVolNormDualCust.setAll(0.0);
 
-    for(int i=0; i < instanciaG.numItens; ++i)
+    for(int i = 0; i < instanciaG.numItens; ++i)
     {
-        Item& item = instanciaG.vetItens[i];
+        Item  &item = instanciaG.vetItens[i];
         double d0 = funcionU(ep0, item.vetDimNor[0]);
         double d1 = funcionU(ep0, item.vetDimNor[1]);
         double d2 = funcionU(ep2, item.vetDimNor[2]);
-        item.volNormDual = d0*d1*d2;
+        item.volNormDual = d0 * d1 * d2;
 
         instanciaG.vetVolNormDualCust[item.customer] += item.volNormDual;
     }
@@ -1053,13 +1032,6 @@ void setDualFeasibleFunction(double ep0, double ep2)
     */
 }
 
-double getDualVolume(int cust)
-{
-    return instanciaG.vetVolNormDualCust[cust];
-}
+double getDualVolume(int cust) { return instanciaG.vetVolNormDualCust[cust]; }
 
-double getDualVolumeTotal()
-{
-
-    return instanciaG.volNormal;
-}
+double getDualVolumeTotal() { return instanciaG.volNormal; }

@@ -49,18 +49,12 @@ struct Hash
 
 typedef std::unordered_set<Route, Hash> RouteHash;
 
-void            combinationUtil(int              ind,
-                                int              r,
-                                VectorI         &data,
-                                Vector<VectorI> &result,
-                                VectorI         &arr);
+void combinationUtil(int ind, int r, VectorI &data, Vector<VectorI> &result, VectorI &arr);
 Vector<VectorI> findCombination(VectorI &arr, int r);
-void            enumerateRoutes(InstanceVRPTW_NS::InstanceVRPTW &instVrp,
-                                int                              numMax,
-                                RouteHash                       &routeHash);
-void            computeDistance(Route &route);
-void            computeHash(Route &route);
-int             computeDemand(VectorI &route);
+void enumerateRoutes(InstanceVRPTW_NS::InstanceVRPTW &instVrp, int numMax, RouteHash &routeHash);
+void computeDistance(Route &route);
+void computeHash(Route &route);
+int  computeDemand(VectorI &route);
 FloatType computeReducedCost(const Route &route, const Eigen::RowVectorXd &vetRowPi);
 
 } // namespace TestNS

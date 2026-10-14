@@ -124,8 +124,7 @@ bool bidirectionalAlgorithm(int                        numRes,
 // inline __attribute__((always_inline))
 bool checkCompleteDominance(const Label &l0, const Label &l1, int numResources);
 
-inline __attribute__((always_inline)) bool checkDominanceSubSet(const Label &l0,
-                                                                const Label &l1)
+inline __attribute__((always_inline)) bool checkDominanceSubSet(const Label &l0, const Label &l1)
 {
     return (l0.bitSetNg & l1.bitSetNg) == l0.bitSetNg;
 }
@@ -151,27 +150,20 @@ bool extendLabelBackward(const Label           &label,
                          int                    numResources,
                          const VetBackwardMask &vetBackwardMask);
 
-inline __attribute__((always_inline)) bool
-extendLabel(const Label           &label,
-            Label                 &newLabel,
-            const Vet3D_ResCost   &vetMatResCostForward,
-            const Vet3D_ResCost   &vetMatResCostBackward,
-            const MatBoundRes     &vetVetBound,
-            int                    custI,
-            int                    t,
-            const NgSet           &ngSet,
-            int                    numResources,
-            const VetBackwardMask &vetBackwardMask)
+inline __attribute__((always_inline)) bool extendLabel(const Label           &label,
+                                                       Label                 &newLabel,
+                                                       const Vet3D_ResCost   &vetMatResCostForward,
+                                                       const Vet3D_ResCost   &vetMatResCostBackward,
+                                                       const MatBoundRes     &vetVetBound,
+                                                       int                    custI,
+                                                       int                    t,
+                                                       const NgSet           &ngSet,
+                                                       int                    numResources,
+                                                       const VetBackwardMask &vetBackwardMask)
 {
     if(label.typeLabel == Forward)
-        return extendLabelForward(label,
-                                  newLabel,
-                                  vetMatResCostForward,
-                                  vetVetBound,
-                                  custI,
-                                  t,
-                                  ngSet,
-                                  numResources);
+        return extendLabelForward(
+            label, newLabel, vetMatResCostForward, vetVetBound, custI, t, ngSet, numResources);
     else
         return extendLabelBackward(label,
                                    newLabel,

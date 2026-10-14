@@ -32,8 +32,8 @@ InstanceNS::Instance::Instance(int numClientes_, int numItens_, int numVeiculos_
     numItens = numItens_;
     numVeiculos = numVeiculos_;
 
-    assertm(numClientes > MaxNumOfCustorms,
-            "Error, constant MaxNumOfCustorms is under estimate!\n");
+    assertm(
+        numClientes > MaxNumOfCustorms, "Error, constant MaxNumOfCustorms is under estimate!\n");
 
     if(numClientes < 0 || numItens < (numClientes - 1))
     {
@@ -51,8 +51,8 @@ InstanceNS::Instance::Instance(int numClientes_, int numItens_, int numVeiculos_
         {
             if(vetRot[j] < vetRot[i])
             {
-                std::printf("Error in vetRot. It shuld be sorted\n%s",
-                            getStrFromObj(vetRot).c_str());
+                std::printf(
+                    "Error in vetRot. It shuld be sorted\n%s", getStrFromObj(vetRot).c_str());
                 EXIT_PRINT();
             }
         }
@@ -60,8 +60,8 @@ InstanceNS::Instance::Instance(int numClientes_, int numItens_, int numVeiculos_
 }
 
 InstanceNS::Instance::Instance()
-    : matDist(0, 0), matTempo(0, 0), vetItens(0), vetDemandaCliente(0),
-      vetItemCliente(0, 0), matCliItensIniFim(0, 0), vetPesoItens(0)
+    : matDist(0, 0), matTempo(0, 0), vetItens(0), vetDemandaCliente(0), vetItemCliente(0, 0),
+      matCliItensIniFim(0, 0), vetPesoItens(0)
 
 {
 }
@@ -124,8 +124,7 @@ void InstanceNS::read2dInstance(const std::string &strFile)
     instanciaG.nome = strFile;
     instanciaG.numRotation = 2;
 
-    file >> instanciaG.maxPayload >> instanciaG.vetDimVeiculo[0] >>
-        instanciaG.vetDimVeiculo[1];
+    file >> instanciaG.maxPayload >> instanciaG.vetDimVeiculo[0] >> instanciaG.vetDimVeiculo[1];
 
     // std::cout << "veicCap: " << instanciaG.veicCap << "; veicComprimento: " <<
     // instanciaG.vetDimVeiculo[0] << "; veicLargura: " << instanciaG.vetDimVeiculo[1] <<
@@ -239,12 +238,11 @@ void InstanceNS::read2dInstance(const std::string &strFile)
             instanciaG.vetItemArea.push_back(vetVetItens[i][j] * vetVetItens[i][j + 1]);
             */
 
-            instanciaG.vetItens.push_back(
-                Item(vetVetItens[i][j],
-                     vetVetItens[i][j + 1],
-                     0.0,
-                     instanciaG.vetDemandaCliente[node] / numItensPorClie,
-                     itemId_));
+            instanciaG.vetItens.push_back(Item(vetVetItens[i][j],
+                                               vetVetItens[i][j + 1],
+                                               0.0,
+                                               instanciaG.vetDemandaCliente[node] / numItensPorClie,
+                                               itemId_));
             itemId_ += 1;
         }
     }
@@ -508,23 +506,21 @@ void InstanceNS::read3dInstance(const std::string &strFile)
     instanciaG.numDim = 3;
     instanciaG.nome = strFile;
 
-    file >> instanciaG.maxPayload >> instanciaG.vetDimVeiculo[2] >>
-        instanciaG.vetDimVeiculo[1] >> instanciaG.vetDimVeiculo[0];
+    file >> instanciaG.maxPayload >> instanciaG.vetDimVeiculo[2] >> instanciaG.vetDimVeiculo[1] >>
+        instanciaG.vetDimVeiculo[0];
 
-    const double volVeich = instanciaG.vetDimVeiculo[0]*instanciaG.vetDimVeiculo[1]*
-                            instanciaG.vetDimVeiculo[2];
+    const double volVeich =
+        instanciaG.vetDimVeiculo[0] * instanciaG.vetDimVeiculo[1] * instanciaG.vetDimVeiculo[2];
 
     const double maxDim = std::cbrt(volVeich);
 
-    const double term0 = std::max(instanciaG.vetDimVeiculo[0],
-                                  instanciaG.vetDimVeiculo[1]);
+    const double term0 = std::max(instanciaG.vetDimVeiculo[0], instanciaG.vetDimVeiculo[1]);
 
     const double term2 = instanciaG.vetDimVeiculo[2];
 
-    instanciaG.volNormal = (instanciaG.vetDimVeiculo[0]/maxDim) *
-                           (instanciaG.vetDimVeiculo[1]/maxDim) *
-                           (instanciaG.vetDimVeiculo[2]/maxDim);
-
+    instanciaG.volNormal = (instanciaG.vetDimVeiculo[0] / maxDim) *
+                           (instanciaG.vetDimVeiculo[1] / maxDim) *
+                           (instanciaG.vetDimVeiculo[2] / maxDim);
 
     std::cout << "veicCap: " << instanciaG.maxPayload
               << "; veicComprimento: " << instanciaG.vetDimVeiculo << "\n\n";
@@ -626,7 +622,10 @@ void InstanceNS::read3dInstance(const std::string &strFile)
 
             instanciaG.matCliItensIniFim.get(node, 1) = nextItem;
             instanciaG.vetItens.push_back(Item(largura, comprimento, altura, wight, nextItem));
-            instanciaG.vetItens[instanciaG.vetItens.size() - 1].setNorm(instanciaG.vetDimVeiculo[0], instanciaG.vetDimVeiculo[1], instanciaG.vetDimVeiculo[2]);
+            instanciaG.vetItens[instanciaG.vetItens.size() - 1].setNorm(
+                instanciaG.vetDimVeiculo[0],
+                instanciaG.vetDimVeiculo[1],
+                instanciaG.vetDimVeiculo[2]);
             instanciaG.vetItens[instanciaG.vetItens.size() - 1].fragility = fragility;
             instanciaG.vetItens[instanciaG.vetItens.size() - 1].customer = node;
             instanciaG.vetVolumeCliente[node] +=
@@ -641,17 +640,19 @@ void InstanceNS::read3dInstance(const std::string &strFile)
     instanciaG.atualizaVetMinDimItens();
 
     int totalDemand = 0;
-    for(int i=0; i < numItens; ++i)
+    for(int i = 0; i < numItens; ++i)
         totalDemand += instanciaG.vetItens[i].weight;
 
-    //instanciaG.numVeiculos = std::min((int)(std::round((double)totalDemand/(double)instanciaG.maxPayload)), instanciaG.numVeiculos);
+    // instanciaG.numVeiculos =
+    // std::min((int)(std::round((double)totalDemand/(double)instanciaG.maxPayload)),
+    // instanciaG.numVeiculos);
 
     std::printf("instanciaG.numVeiculos: %d\n\n", instanciaG.numVeiculos);
 
     file.close();
     instanciaG.setMaxItemVolume();
     instanciaG.numRotation = 2;
-    //std::printf("Seting the number of rotations to 1\n");
+    // std::printf("Seting the number of rotations to 1\n");
 }
 
 void InstanceNS::Instance::atualizaVetMinDimItens()
@@ -667,7 +668,7 @@ void InstanceNS::Instance::atualizaVetMinDimItens()
 
 void InstanceNS::Instance::setMaxItemVolume()
 {
-    for(Item& item:vetItens)
+    for(Item &item : vetItens)
         maxItemVolume = std::max(maxItemVolume, item.volume);
 
     std::printf("maxItemVolume: %.2f\n", maxItemVolume);
@@ -755,7 +756,7 @@ int InstanceNS::copiaItensCliente(int cliente, VectorI &vetItens)
         i <= instanciaG.matCliItensIniFim(cliente, 1);
         ++i)
     {
-        if((numItens+1) > vetItens.size())
+        if((numItens + 1) > vetItens.size())
             vetItens.push_back(i);
         else
             vetItens[numItens] = i;
@@ -766,15 +767,12 @@ int InstanceNS::copiaItensCliente(int cliente, VectorI &vetItens)
     return numItens;
 }
 
-int InstanceNS::copiaItensClientes(VectorI &vetClientes,
-                                   int      tam,
-                                   VectorI &vetItens,
-                                   bool     push)
+int InstanceNS::copiaItensClientes(VectorI &vetClientes, int tam, VectorI &vetItens, bool push)
 {
     int tamVetItens = 0;
     for(int i = 0; i < tam; ++i)
     {
-        int       cliente = vetClientes[i];
+        int cliente = vetClientes[i];
         if(cliente == 0)
             continue;
 
@@ -817,8 +815,8 @@ int InstanceNS::generateRandomListOfItems(int numItens, VectorI &vetItems)
     double volumeVeiculo = 1.0;
     double demanda = 0.0;
 
-    volumeVeiculo = instanciaG.vetDimVeiculo[0] * instanciaG.vetDimVeiculo[1] *
-                    instanciaG.vetDimVeiculo[2];
+    volumeVeiculo =
+        instanciaG.vetDimVeiculo[0] * instanciaG.vetDimVeiculo[1] * instanciaG.vetDimVeiculo[2];
 
     for(int t = 0; t < numItens; ++t)
     {
@@ -826,8 +824,7 @@ int InstanceNS::generateRandomListOfItems(int numItens, VectorI &vetItems)
         int       itemId = getRandInt(0, instanciaG.numItens - 1);
         const int itemIdIni = itemId;
         while(vetItensSelecionados[itemId] == (int8_t)1 ||
-              (volumeOcupado + instanciaG.vetItens[itemId].volume) >
-                  volumeVeiculo / 2.0 ||
+              (volumeOcupado + instanciaG.vetItens[itemId].volume) > volumeVeiculo / 2.0 ||
               demanda + instanciaG.vetItens[itemId].weight > instanciaG.maxPayload)
         {
             itemId = (itemId + 1) % instanciaG.numItens;
@@ -857,7 +854,7 @@ int InstanceNS::generateRandomListOfItems(int numItens, VectorI &vetItems)
 
 void InstanceNS::readOroloc3D2(const std::string &strFile)
 {
-    //std::printf("FILE: %s\n", strFile.c_str());
+    // std::printf("FILE: %s\n", strFile.c_str());
 
     int              numClientes = 0, numVeiculos = 0, numItens = 0, numArcs = 0;
     double           maxPayload = 0.0;
@@ -885,7 +882,6 @@ void InstanceNS::readOroloc3D2(const std::string &strFile)
     file >> trash >> veicDim[0];
     file >> trash >> veicDim[1];
     file >> trash >> veicDim[2];
-
 
     // std::printf("maxPayload: %f\n", maxPayload);
     // std::cout<<"Veic dim: "<<veicDim<<"\n";
@@ -1039,8 +1035,8 @@ void InstanceNS::readOroloc3D2(const std::string &strFile)
     instanciaG.setMaxItemVolume();
 
     instanciaG.numRotation = 2;
-    //std::printf("Seting the number of rotations to 1\n");
-    // EXIT_PRINT();
+    // std::printf("Seting the number of rotations to 1\n");
+    //  EXIT_PRINT();
 }
 
 void InstanceNS::convertInstanceToCm(Instance &instance)
@@ -1051,26 +1047,26 @@ void InstanceNS::convertInstanceToCm(Instance &instance)
         return;
     }
 
-    for(int i=0; i < 3; ++i)
-        instance.vetDimVeiculo[i] = (int)(instance.vetDimVeiculo[i]*0.1);
+    for(int i = 0; i < 3; ++i)
+        instance.vetDimVeiculo[i] = (int)(instance.vetDimVeiculo[i] * 0.1);
 
-    const double volVeich = instanciaG.vetDimVeiculo[0]*instanciaG.vetDimVeiculo[1]*
-                            instanciaG.vetDimVeiculo[2];
+    const double volVeich =
+        instanciaG.vetDimVeiculo[0] * instanciaG.vetDimVeiculo[1] * instanciaG.vetDimVeiculo[2];
 
     const double maxDim = std::cbrt(volVeich);
 
-    //std::printf("Instance not converted to cm\n");
-    //return;
-    for(Item& item:instance.vetItens)
+    // std::printf("Instance not converted to cm\n");
+    // return;
+    for(Item &item : instance.vetItens)
     {
-        for(int i=0; i < 3; ++i)
-            item.vetDim[i] = (int)((item.vetDim[i]*0.1)+0.5);
+        for(int i = 0; i < 3; ++i)
+            item.vetDim[i] = (int)((item.vetDim[i] * 0.1) + 0.5);
 
-        item.volume = item.vetDim[0]*item.vetDim[1]*item.vetDim[2];
+        item.volume = item.vetDim[0] * item.vetDim[1] * item.vetDim[2];
 
-        item.vetDimNor[0] = item.vetDim[0]/maxDim;
-        item.vetDimNor[1] = item.vetDim[1]/maxDim;
-        item.vetDimNor[2] = item.vetDim[2]/maxDim;
+        item.vetDimNor[0] = item.vetDim[0] / maxDim;
+        item.vetDimNor[1] = item.vetDim[1] / maxDim;
+        item.vetDimNor[2] = item.vetDim[2] / maxDim;
 
         instance.vetVolumeCliente[item.customer] += item.volume;
     }
@@ -1091,27 +1087,26 @@ void InstanceNS::readOroloc3D3(const std::string &strFile)
 
     getline(file, trash); // Name <NAME>
 
-    file>>trash>>numCust; 	// Number_of_Customers <numCust>
-    file>>trash>>numItens;	// Number_of_Items 	 <numItens>
+    file >> trash >> numCust;  // Number_of_Customers <numCust>
+    file >> trash >> numItens; // Number_of_Items 	 <numItens>
 
     getline(file, trash);
-    getline(file, trash);   // Number_of_ItemTypes ...
+    getline(file, trash); // Number_of_ItemTypes ...
 
-    file>>trash>>numVeic;	// Number_of_Vehicles 	 <numVeic>
+    file >> trash >> numVeic; // Number_of_Vehicles 	 <numVeic>
 
     getline(file, trash);
-    getline(file, trash);	// TimeWindows 	 0
+    getline(file, trash); // TimeWindows 	 0
     getline(file, trash);
-    getline(file, trash);	// VEHICLE
+    getline(file, trash); // VEHICLE
 
-    file>>trash>>maxPayload; // Mass_Capacity <maxPayload>
-    file>>trash>>veicDim[0]; // CargoSpace_Length 	 <>
-    file>>trash>>veicDim[1]; // CargoSpace_Width 	 <>
-    file>>trash>>veicDim[2]; // CargoSpace_Height 	 <>
+    file >> trash >> maxPayload; // Mass_Capacity <maxPayload>
+    file >> trash >> veicDim[0]; // CargoSpace_Length 	 <>
+    file >> trash >> veicDim[1]; // CargoSpace_Width 	 <>
+    file >> trash >> veicDim[2]; // CargoSpace_Height 	 <>
 
-    for(int i=0; i < 14; ++i)
+    for(int i = 0; i < 14; ++i)
         getline(file, trash);
-
 
     instanciaG = Instance(numCust, numItens, numVeic);
     std::filesystem::path path(strFile);
@@ -1131,30 +1126,30 @@ void InstanceNS::readOroloc3D3(const std::string &strFile)
     // Read Distances
 
     int custI, custJ, dist;
-    for(int i=0; i < numCust; ++i)
+    for(int i = 0; i < numCust; ++i)
     {
-        for(int j=0; j < numCust; ++j)
+        for(int j = 0; j < numCust; ++j)
         {
-            file>>custI>>custJ>>dist;
+            file >> custI >> custJ >> dist;
             std::printf("%d %d %d\n", custI, custJ, dist);
             instanciaG.matDist.get(custI, custJ) = (double)dist;
-
         }
     }
 
     getline(file, trash);
     getline(file, trash);
     getline(file, trash);
-    getline(file, trash); // Items # item_id, delivery_address, order_id, length, width, height, weight
+    getline(
+        file, trash); // Items # item_id, delivery_address, order_id, length, width, height, weight
     getline(file, trash);
 
-//std::printf("trash: %s\n\n", trash.c_str());
+    // std::printf("trash: %s\n\n", trash.c_str());
 
     Array<int, 4>                vetDimMass;
     std::map<int, Array<int, 4>> mapItem_id_to_ItemDimMass;
     std::string                  bt;
     int                          btInt;
-    int delivery_address, order_id;
+    int                          delivery_address, order_id;
 
     for(int i = 0; i < numItens; ++i)
     {
@@ -1167,7 +1162,7 @@ void InstanceNS::readOroloc3D3(const std::string &strFile)
         // std::printf("%d\n", std::stoi(bt));
         btInt = std::stoi(bt);
 
-        //std::cout<<btInt<<" "<<vetDimMass<<"\n";
+        // std::cout<<btInt<<" "<<vetDimMass<<"\n";
 
         mapItem_id_to_ItemDimMass[btInt] = vetDimMass;
     }
@@ -1176,7 +1171,7 @@ void InstanceNS::readOroloc3D3(const std::string &strFile)
     getline(file, trash);
     getline(file, trash);
 
-    for(int i=0; i < numCust; ++i)
+    for(int i = 0; i < numCust; ++i)
     {
         getline(file, trash);
     }
@@ -1185,7 +1180,7 @@ void InstanceNS::readOroloc3D3(const std::string &strFile)
     getline(file, trash); // DEMANDS PER CUSTOMER
     getline(file, trash); // i n Type Quantity
 
-    //std::printf("trash: %s\n\n", trash.c_str());
+    // std::printf("trash: %s\n\n", trash.c_str());
 
     int nextItem = 0;
     int maxItemsPerCust = 0;
@@ -1195,22 +1190,21 @@ void InstanceNS::readOroloc3D3(const std::string &strFile)
 
     std::string type;
 
-
-    for(int i=0; i < numCust; ++i)
+    for(int i = 0; i < numCust; ++i)
     {
-        //std::printf("Cust: %d\n", i);
-        file>>cust>>quant;
-        //std::printf("Cust: %d; quant: %d\n", cust, quant);
+        // std::printf("Cust: %d\n", i);
+        file >> cust >> quant;
+        // std::printf("Cust: %d; quant: %d\n", cust, quant);
 
         instanciaG.vetDemandaCliente[i];
 
-        for(int t=0; t < quant; ++t)
+        for(int t = 0; t < quant; ++t)
         {
-            file>>type>>numType;
-            int id = std::stoi(type.substr(2));
+            file >> type >> numType;
+            int            id = std::stoi(type.substr(2));
             Array<int, 4> &arrayDimMass = mapItem_id_to_ItemDimMass[id];
 
-            //std::printf("\ttype: %s\n", type.c_str());
+            // std::printf("\ttype: %s\n", type.c_str());
 
             for(int k = 0; k < numType; ++k)
             {
@@ -1227,7 +1221,7 @@ void InstanceNS::readOroloc3D3(const std::string &strFile)
                 item.weight = arrayDimMass[3];
                 item.customer = i;
 
-                //std::printf("\t\t%s\n", item.print().c_str());
+                // std::printf("\t\t%s\n", item.print().c_str());
 
                 instanciaG.vetItens.push_back(item);
                 instanciaG.mapItem_IdItem[id] = nextItem;
@@ -1235,11 +1229,8 @@ void InstanceNS::readOroloc3D3(const std::string &strFile)
                 instanciaG.vetDemandaCliente[i] += arrayDimMass[3];
 
                 nextItem += 1;
-
             }
         }
-
-
     }
 
     getline(file, trash);
@@ -1248,16 +1239,15 @@ void InstanceNS::readOroloc3D3(const std::string &strFile)
 
     // Read maps
 
-    for(int i=0; i < numCust; ++i)
+    for(int i = 0; i < numCust; ++i)
     {
         int customer, customer_id;
-        file>>customer>>customer_id;
-        //std::printf("customer(%d) customer_id(%d)\n", customer, customer_id);
+        file >> customer >> customer_id;
+        // std::printf("customer(%d) customer_id(%d)\n", customer, customer_id);
 
         if(instanciaG.mapCustomer_idToCustomer.contains(customer_id))
         {
-            std::printf("Error, customer_id(%d) is in mapCustomer_idToCustomer\n ",
-                        customer_id);
+            std::printf("Error, customer_id(%d) is in mapCustomer_idToCustomer\n ", customer_id);
             PRINT_THROW();
         }
 
@@ -1265,8 +1255,7 @@ void InstanceNS::readOroloc3D3(const std::string &strFile)
 
         if(instanciaG.mapCustomerToCustomer_id.contains(customer))
         {
-            std::printf("Error, customer(%d) is in mapCustomerToCustomer_id\n ",
-                        customer);
+            std::printf("Error, customer(%d) is in mapCustomerToCustomer_id\n ", customer);
             PRINT_THROW();
         }
 
@@ -1277,32 +1266,29 @@ void InstanceNS::readOroloc3D3(const std::string &strFile)
     getline(file, trash);
     getline(file, trash); // Custorms Map
 
-
-    for(int i=0; i < numCust; ++i)
+    for(int i = 0; i < numCust; ++i)
     {
         int customer_id, orolocCustomerId;
-        file>>customer_id>>orolocCustomerId;
+        file >> customer_id >> orolocCustomerId;
 
         if(instanciaG.mapCustomer_idToOrolocCustomerId.contains(customer_id))
         {
-            std::printf("Error, customer_id(%d) is in mapCustomer_idToOrolocCustomerId\n ",
-                        customer_id);
+            std::printf(
+                "Error, customer_id(%d) is in mapCustomer_idToOrolocCustomerId\n ", customer_id);
             PRINT_THROW();
         }
 
         instanciaG.mapCustomer_idToOrolocCustomerId[customer_id] = orolocCustomerId;
         instanciaG.mapOrolocCustomerIdToCustomer_id.insert({orolocCustomerId, customer_id});
-
     }
 
-    //std::printf("orolocCustomerId \t customer_id\n\n");
-    //for(auto& it:instanciaG.mapOrolocCustomerIdToCustomer_id)
+    // std::printf("orolocCustomerId \t customer_id\n\n");
+    // for(auto& it:instanciaG.mapOrolocCustomerIdToCustomer_id)
     //{
-    //    std::printf("%d \t %d\n", it.first, it.second);
-    //}
+    //     std::printf("%d \t %d\n", it.first, it.second);
+    // }
 
     file.close();
 
     convertInstanceToCm(instanciaG);
-
 }

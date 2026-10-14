@@ -66,8 +66,7 @@ void ContainerLoadingCP::WriteProtoModel(
     file.close();
 }
 
-void ContainerLoadingCP::SetParameters(
-    operations_research::sat::SatParameters &parameters) const
+void ContainerLoadingCP::SetParameters(operations_research::sat::SatParameters &parameters) const
 {
     parameters.set_num_search_workers(mParams.Threads);
     parameters.set_log_search_progress(mParams.LogFlag);
@@ -107,33 +106,17 @@ void ContainerLoadingCP::PrintSolution()
 {
     for(size_t i = 0; i < mItems.size(); ++i)
     {
-        LOG(INFO) << "Item " << std::to_string(i) << ": ("
-                  << operations_research::sat::SolutionIntegerValue(
-                         mResponse, mStartPositionsX[i])
-                  << ","
-                  << operations_research::sat::SolutionIntegerValue(
-                         mResponse, mStartPositionsY[i])
-                  << ","
-                  << operations_research::sat::SolutionIntegerValue(
-                         mResponse, mStartPositionsZ[i])
-                  << ") | ("
-                  << operations_research::sat::SolutionIntegerValue(
-                         mResponse, mLengths[i])
-                  << ","
-                  << operations_research::sat::SolutionIntegerValue(mResponse, mWidths[i])
-                  << ","
-                  << operations_research::sat::SolutionIntegerValue(
-                         mResponse, mHeights[i])
-                  << ") | ("
-                  << operations_research::sat::SolutionIntegerValue(
-                         mResponse, mEndPositionsX[i])
-                  << ","
-                  << operations_research::sat::SolutionIntegerValue(
-                         mResponse, mEndPositionsY[i])
-                  << ","
-                  << operations_research::sat::SolutionIntegerValue(
-                         mResponse, mEndPositionsZ[i])
-                  << ")";
+        LOG(INFO)
+            << "Item " << std::to_string(i) << ": ("
+            << operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsX[i]) << ","
+            << operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsY[i]) << ","
+            << operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsZ[i])
+            << ") | (" << operations_research::sat::SolutionIntegerValue(mResponse, mLengths[i])
+            << "," << operations_research::sat::SolutionIntegerValue(mResponse, mWidths[i]) << ","
+            << operations_research::sat::SolutionIntegerValue(mResponse, mHeights[i]) << ") | ("
+            << operations_research::sat::SolutionIntegerValue(mResponse, mEndPositionsX[i]) << ","
+            << operations_research::sat::SolutionIntegerValue(mResponse, mEndPositionsY[i]) << ","
+            << operations_research::sat::SolutionIntegerValue(mResponse, mEndPositionsZ[i]) << ")";
     }
 
     for(size_t i = 0; i < mItems.size(); ++i)
@@ -147,12 +130,10 @@ void ContainerLoadingCP::PrintSolution()
             for(const auto &dimension : mDimensions)
             {
                 vars << operations_research::sat::SolutionBooleanValue(
-                            mResponse,
-                            mRelativeDirections[i][j][dimension.FirstDirection])
+                            mResponse, mRelativeDirections[i][j][dimension.FirstDirection])
                      << " ";
                 vars << operations_research::sat::SolutionBooleanValue(
-                            mResponse,
-                            mRelativeDirections[i][j][dimension.SecondDirection])
+                            mResponse, mRelativeDirections[i][j][dimension.SecondDirection])
                      << " ";
             }
 
@@ -173,12 +154,9 @@ void ContainerLoadingCP::ExtractPacking(std::vector<Cuboid> &items) const
         item.Rotated = (Rotation)operations_research::sat::SolutionBooleanValue(
             mResponse, mOrientation[i][RotationZ]);
 
-        item.X = operations_research::sat::SolutionIntegerValue(
-            mResponse, mStartPositionsX[i]);
-        item.Y = operations_research::sat::SolutionIntegerValue(
-            mResponse, mStartPositionsY[i]);
-        item.Z = operations_research::sat::SolutionIntegerValue(
-            mResponse, mStartPositionsZ[i]);
+        item.X = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsX[i]);
+        item.Y = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsY[i]);
+        item.Z = operations_research::sat::SolutionIntegerValue(mResponse, mStartPositionsZ[i]);
     }
 }
 
@@ -188,9 +166,8 @@ std::vector<int> ContainerLoadingCP::ExtractSequence() const
     assignments.reserve(mNumberCustomers);
     for(size_t i = 0; i < mNumberCustomers; ++i)
     {
-        assignments.emplace_back(operations_research::sat::SolutionIntegerValue(
-                                     mResponse, mCustomerPosition[i]),
-                                 i);
+        assignments.emplace_back(
+            operations_research::sat::SolutionIntegerValue(mResponse, mCustomerPosition[i]), i);
     }
 
     std::ranges::sort(assignments);
@@ -233,10 +210,8 @@ void ContainerLoadingCP::CreateVariables()
     for(size_t i = 0; i < numberOfItems; i++)
     {
         const Cuboid &item = mItems[i];
-        int           minLength =
-            item.EnableHorizontalRotation ? std::min(item.Dx, item.Dy) : item.Dx;
-        int minWidth =
-            item.EnableHorizontalRotation ? std::min(item.Dx, item.Dy) : item.Dy;
+        int minLength = item.EnableHorizontalRotation ? std::min(item.Dx, item.Dy) : item.Dx;
+        int minWidth = item.EnableHorizontalRotation ? std::min(item.Dx, item.Dy) : item.Dy;
 
         mStartPositionsX.emplace_back(mModelCP.NewIntVar(
             operations_research::Domain::FromValues(placementPointsPerType[item].X)));
@@ -259,23 +234,17 @@ void ContainerLoadingCP::CreateVariables()
     {
         const Cuboid &item = mItems[i];
 
-        int minLength =
-            item.EnableHorizontalRotation ? std::min(item.Dx, item.Dy) : item.Dx;
-        int minWidth =
-            item.EnableHorizontalRotation ? std::min(item.Dx, item.Dy) : item.Dy;
+        int minLength = item.EnableHorizontalRotation ? std::min(item.Dx, item.Dy) : item.Dx;
+        int minWidth = item.EnableHorizontalRotation ? std::min(item.Dx, item.Dy) : item.Dy;
 
-        int maxLength =
-            item.EnableHorizontalRotation ? std::max(item.Dx, item.Dy) : item.Dx;
-        int maxWidth =
-            item.EnableHorizontalRotation ? std::max(item.Dx, item.Dy) : item.Dy;
+        int maxLength = item.EnableHorizontalRotation ? std::max(item.Dx, item.Dy) : item.Dx;
+        int maxWidth = item.EnableHorizontalRotation ? std::max(item.Dx, item.Dy) : item.Dy;
 
-        mLengths.emplace_back(
-            mModelCP.NewIntVar(operations_research::Domain::FromIntervals(
-                {{minLength, minLength}, {maxLength, maxLength}})));
+        mLengths.emplace_back(mModelCP.NewIntVar(operations_research::Domain::FromIntervals(
+            {{minLength, minLength}, {maxLength, maxLength}})));
 
-        mWidths.emplace_back(
-            mModelCP.NewIntVar(operations_research::Domain::FromIntervals(
-                {{minWidth, minWidth}, {maxWidth, maxWidth}})));
+        mWidths.emplace_back(mModelCP.NewIntVar(operations_research::Domain::FromIntervals(
+            {{minWidth, minWidth}, {maxWidth, maxWidth}})));
 
         mHeights.emplace_back(mModelCP.NewIntVar({item.Dz, item.Dz}));
     }
@@ -367,7 +336,7 @@ void ContainerLoadingCP::CreateVariables()
         for(size_t j = i + 1; j < numberOfItems; j++)
         {
             const Cuboid &itemJ = mItems[j];
-            int maxIntersection = std::max(itemI.Dx * itemI.Dy, itemJ.Dx * itemJ.Dy);
+            int           maxIntersection = std::max(itemI.Dx * itemI.Dy, itemJ.Dx * itemJ.Dy);
 
             mItemsOverlapsXY[i].emplace_back(mModelCP.NewBoolVar());
 
@@ -402,8 +371,7 @@ void ContainerLoadingCP::CreateVariables()
     mMaxLength = mModelCP.NewIntVar({0, mContainer.Dx});
 }
 
-std::tuple<ORIntVars1D, ORIntVars1D>
-ContainerLoadingCP::GetIntVars(DimensionType dimension) const
+std::tuple<ORIntVars1D, ORIntVars1D> ContainerLoadingCP::GetIntVars(DimensionType dimension) const
 {
     switch(dimension)
     {
@@ -478,18 +446,15 @@ void ContainerLoadingCP::CreateNoOverlap()
                 mModelCP.AddLessOrEqual(endPosition[j], startPosition[i])
                     .OnlyEnforceIf(mRelativeDirections[i][j][dimension.FirstDirection]);
                 mModelCP.AddLessThan(startPosition[i], endPosition[j])
-                    .OnlyEnforceIf(
-                        mRelativeDirections[i][j][dimension.FirstDirection].Not());
+                    .OnlyEnforceIf(mRelativeDirections[i][j][dimension.FirstDirection].Not());
 
                 mModelCP.AddLessOrEqual(endPosition[i], startPosition[j])
                     .OnlyEnforceIf(mRelativeDirections[i][j][dimension.SecondDirection]);
                 mModelCP.AddLessThan(startPosition[j], endPosition[i])
-                    .OnlyEnforceIf(
-                        mRelativeDirections[i][j][dimension.SecondDirection].Not());
+                    .OnlyEnforceIf(mRelativeDirections[i][j][dimension.SecondDirection].Not());
 
-                mModelCP.AddEquality(
-                    mRelativeDirections[i][j][dimension.FirstDirection],
-                    mRelativeDirections[j][i][dimension.SecondDirection]);
+                mModelCP.AddEquality(mRelativeDirections[i][j][dimension.FirstDirection],
+                                     mRelativeDirections[j][i][dimension.SecondDirection]);
             }
 
             // No overlap constraints
@@ -511,11 +476,9 @@ void ContainerLoadingCP::CreateItemOrientations()
             auto [itemLength, itemWidth, itemHeight] =
                 item.DetermineDimensions(mItemOrientations[o]);
 
-            mModelCP.AddEquality(mLengths[i], itemLength)
-                .OnlyEnforceIf(mOrientation[i][o]);
+            mModelCP.AddEquality(mLengths[i], itemLength).OnlyEnforceIf(mOrientation[i][o]);
             mModelCP.AddEquality(mWidths[i], itemWidth).OnlyEnforceIf(mOrientation[i][o]);
-            mModelCP.AddEquality(mHeights[i], itemHeight)
-                .OnlyEnforceIf(mOrientation[i][o]);
+            mModelCP.AddEquality(mHeights[i], itemHeight).OnlyEnforceIf(mOrientation[i][o]);
         }
 
         mModelCP.AddExactlyOne(mOrientation[i]);
@@ -534,8 +497,7 @@ void ContainerLoadingCP::CreateFragility()
     {
         for(size_t j = 0; j < numberOfItems; ++j)
         {
-            if(mItems[j].Fragility == Fragility::Fragile &&
-               mItems[i].Fragility == Fragility::None)
+            if(mItems[j].Fragility == Fragility::Fragile && mItems[i].Fragility == Fragility::None)
             {
                 if(i != j)
                 {
@@ -567,8 +529,7 @@ void ContainerLoadingCP::CreateSupportArea()
             {
                 int                              areaJ = mItems[j].Dy * mItems[j].Dx;
                 int                              minArea = std::min(areaI, areaJ);
-                operations_research::sat::IntVar usableArea =
-                    mModelCP.NewIntVar({0, minArea});
+                operations_research::sat::IntVar usableArea = mModelCP.NewIntVar({0, minArea});
                 if(i < j)
                 {
                     auto position = j - i - 1;
@@ -643,50 +604,42 @@ void ContainerLoadingCP::CreateXYIntersectionArea()
                 auto positionJ = j - i - 1;
 
                 // Overlap in x
-                operations_research::sat::IntVar diffXij =
-                    mModelCP.NewIntVar({0, mContainer.Dx});
+                operations_research::sat::IntVar diffXij = mModelCP.NewIntVar({0, mContainer.Dx});
                 mModelCP
                     .AddEquality(diffXij,
                                  ORLinExpr::LinearExpr::WeightedSum(
                                      {mEndPositionsX[i], mStartPositionsX[j]}, {1, -1}))
                     .OnlyEnforceIf({mItemsOverlapsXY[i][positionJ]});
 
-                operations_research::sat::IntVar diffXji =
-                    mModelCP.NewIntVar({0, mContainer.Dx});
+                operations_research::sat::IntVar diffXji = mModelCP.NewIntVar({0, mContainer.Dx});
                 mModelCP
                     .AddEquality(diffXji,
                                  ORLinExpr::LinearExpr::WeightedSum(
                                      {mEndPositionsX[j], mStartPositionsX[i]}, {1, -1}))
                     .OnlyEnforceIf({mItemsOverlapsXY[i][positionJ]});
 
-                operations_research::sat::IntVar xOverlap =
-                    mModelCP.NewIntVar({0, mContainer.Dx});
-                mModelCP.AddMinEquality(
-                    xOverlap, {diffXij, diffXji, mLengths[i], mLengths[j]});
+                operations_research::sat::IntVar xOverlap = mModelCP.NewIntVar({0, mContainer.Dx});
+                mModelCP.AddMinEquality(xOverlap, {diffXij, diffXji, mLengths[i], mLengths[j]});
                 mModelCP.AddEquality(xOverlap, 0)
                     .OnlyEnforceIf(mItemsOverlapsXY[i][positionJ].Not());
 
                 // Overlap in y
-                operations_research::sat::IntVar diffYij =
-                    mModelCP.NewIntVar({0, mContainer.Dy});
+                operations_research::sat::IntVar diffYij = mModelCP.NewIntVar({0, mContainer.Dy});
                 mModelCP
                     .AddEquality(diffYij,
                                  ORLinExpr::LinearExpr::WeightedSum(
                                      {mEndPositionsY[i], mStartPositionsY[j]}, {1, -1}))
                     .OnlyEnforceIf({mItemsOverlapsXY[i][positionJ]});
 
-                operations_research::sat::IntVar diffYji =
-                    mModelCP.NewIntVar({0, mContainer.Dy});
+                operations_research::sat::IntVar diffYji = mModelCP.NewIntVar({0, mContainer.Dy});
                 mModelCP
                     .AddEquality(diffYji,
                                  ORLinExpr::LinearExpr::WeightedSum(
                                      {mEndPositionsY[j], mStartPositionsY[i]}, {1, -1}))
                     .OnlyEnforceIf({mItemsOverlapsXY[i][positionJ]});
 
-                operations_research::sat::IntVar yOverlap =
-                    mModelCP.NewIntVar({0, mContainer.Dy});
-                mModelCP.AddMinEquality(
-                    yOverlap, {diffYij, diffYji, mWidths[i], mWidths[j]});
+                operations_research::sat::IntVar yOverlap = mModelCP.NewIntVar({0, mContainer.Dy});
+                mModelCP.AddMinEquality(yOverlap, {diffYij, diffYji, mWidths[i], mWidths[j]});
                 mModelCP.AddEquality(yOverlap, 0)
                     .OnlyEnforceIf(mItemsOverlapsXY[i][positionJ].Not());
 
@@ -712,8 +665,7 @@ void ContainerLoadingCP::CreateSupportItem()
                 continue;
             }
 
-            operations_research::sat::BoolVar isVerticallyAdjacent =
-                mModelCP.NewBoolVar();
+            operations_research::sat::BoolVar isVerticallyAdjacent = mModelCP.NewBoolVar();
             mModelCP.AddEquality(mEndPositionsZ[j], mStartPositionsZ[i])
                 .OnlyEnforceIf(isVerticallyAdjacent);
             mModelCP.AddNotEqual(mEndPositionsZ[j], mStartPositionsZ[i])
@@ -762,8 +714,8 @@ void ContainerLoadingCP::CreateLifoSequence()
                 // container
 
                 mModelCP
-                    .AddAtLeastOne({mRelativeDirections[i][j][Behind],
-                                    mRelativeDirections[i][j][Below]})
+                    .AddAtLeastOne(
+                        {mRelativeDirections[i][j][Behind], mRelativeDirections[i][j][Below]})
                     .OnlyEnforceIf({mRelativeDirections[i][j][Left].Not(),
                                     mRelativeDirections[i][j][Right].Not()});
             }
@@ -792,8 +744,8 @@ void ContainerLoadingCP::CreateLifoNoSequence()
                 {
                     auto position = customerJ - customerI - 1;
                     mModelCP
-                        .AddAtLeastOne({mRelativeDirections[i][j][Behind],
-                                        mRelativeDirections[i][j][Below]})
+                        .AddAtLeastOne(
+                            {mRelativeDirections[i][j][Behind], mRelativeDirections[i][j][Below]})
                         .OnlyEnforceIf({mRelativeDirections[i][j][Left].Not(),
                                         mRelativeDirections[i][j][Right].Not(),
                                         mSuccessionMatrix[customerI][position]});
@@ -802,8 +754,8 @@ void ContainerLoadingCP::CreateLifoNoSequence()
                 {
                     auto position = customerI - customerJ - 1;
                     mModelCP
-                        .AddAtLeastOne({mRelativeDirections[i][j][Behind],
-                                        mRelativeDirections[i][j][Below]})
+                        .AddAtLeastOne(
+                            {mRelativeDirections[i][j][Behind], mRelativeDirections[i][j][Below]})
                         .OnlyEnforceIf({mRelativeDirections[i][j][Left].Not(),
                                         mRelativeDirections[i][j][Right].Not(),
                                         mSuccessionMatrix[customerJ][position].Not()});
@@ -840,8 +792,7 @@ void ContainerLoadingCP::CreateOnFloorConstraints()
     for(size_t i = 0; i < mItems.size(); ++i)
     {
         mModelCP.AddEquality(mStartPositionsZ[i], 0).OnlyEnforceIf(mPlacedOnFloor[i]);
-        mModelCP.AddGreaterThan(mStartPositionsZ[i], 0)
-            .OnlyEnforceIf(mPlacedOnFloor[i].Not());
+        mModelCP.AddGreaterThan(mStartPositionsZ[i], 0).OnlyEnforceIf(mPlacedOnFloor[i].Not());
     }
 }
 

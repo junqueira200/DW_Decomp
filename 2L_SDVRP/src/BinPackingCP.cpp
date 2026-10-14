@@ -20,9 +20,7 @@ using namespace BinPackingCP_NS;
 using namespace ConstrutivoBinNS;
 using namespace ParseInputNS;
 
-bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult,
-                                      VectorI        &vetItens,
-                                      int             tamVet)
+bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult, VectorI &vetItens, int tamVet)
 {
     if(!input.cpSat)
     {
@@ -103,15 +101,11 @@ bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult,
             BoolVar no_overlap_y1 = model.NewBoolVar();
             BoolVar no_overlap_y2 = model.NewBoolVar();
 
-            model.AddLessOrEqual(vetX[i] + vetDx[i], vetX[j])
-                .OnlyEnforceIf(no_overlap_x1);
-            model.AddLessOrEqual(vetX[j] + vetDx[j], vetX[i])
-                .OnlyEnforceIf(no_overlap_x2);
+            model.AddLessOrEqual(vetX[i] + vetDx[i], vetX[j]).OnlyEnforceIf(no_overlap_x1);
+            model.AddLessOrEqual(vetX[j] + vetDx[j], vetX[i]).OnlyEnforceIf(no_overlap_x2);
 
-            model.AddLessOrEqual(vetY[i] + vetDy[i], vetY[j])
-                .OnlyEnforceIf(no_overlap_y1);
-            model.AddLessOrEqual(vetY[j] + vetDy[j], vetY[i])
-                .OnlyEnforceIf(no_overlap_y2);
+            model.AddLessOrEqual(vetY[i] + vetDy[i], vetY[j]).OnlyEnforceIf(no_overlap_y1);
+            model.AddLessOrEqual(vetY[j] + vetDy[j], vetY[i]).OnlyEnforceIf(no_overlap_y2);
 
             model.AddBoolOr({no_overlap_x1, no_overlap_x2, no_overlap_y1, no_overlap_y2});
         }
@@ -162,9 +156,7 @@ bool BinPackingCP_NS::cpSatBinPacking(SolucaoNS::Bin &binResult,
     return false;
 }
 
-bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult,
-                                       VectorI        &vetItens,
-                                       int             tamVet)
+bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult, VectorI &vetItens, int tamVet)
 {
     if(!input.cpSat)
     {
@@ -260,14 +252,10 @@ bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult,
             // model.AddMultiplicationEquality(and_, vetUsado[i], vetUsado[j]);
 
             model.AddNoOverlap2D();
-            model.AddLessOrEqual(vetX[i] + vetDx[i], vetX[j])
-                .OnlyEnforceIf(no_overlap_x1);
-            model.AddLessOrEqual(vetX[j] + vetDx[j], vetX[i])
-                .OnlyEnforceIf(no_overlap_x2);
-            model.AddLessOrEqual(vetY[i] + vetDy[i], vetY[j])
-                .OnlyEnforceIf(no_overlap_y1);
-            model.AddLessOrEqual(vetY[j] + vetDy[j], vetY[i])
-                .OnlyEnforceIf(no_overlap_y2);
+            model.AddLessOrEqual(vetX[i] + vetDx[i], vetX[j]).OnlyEnforceIf(no_overlap_x1);
+            model.AddLessOrEqual(vetX[j] + vetDx[j], vetX[i]).OnlyEnforceIf(no_overlap_x2);
+            model.AddLessOrEqual(vetY[i] + vetDy[i], vetY[j]).OnlyEnforceIf(no_overlap_y1);
+            model.AddLessOrEqual(vetY[j] + vetDy[j], vetY[i]).OnlyEnforceIf(no_overlap_y2);
             model.AddBoolOr({no_overlap_x1, no_overlap_x2, no_overlap_y1, no_overlap_y2})
                 .OnlyEnforceIf({vetUsado[i], vetUsado[j]});
 
@@ -284,8 +272,7 @@ bool BinPackingCP_NS::cpSatBinPacking2(SolucaoNS::Bin &binResult,
                 model.AddLessOrEqual(vetX[i] + vetDx[i], vetX[j]).OnlyEnforceIf(filo0);
                 model.AddLessOrEqual(vetX[j] + vetDx[j], vetX[i]).OnlyEnforceIf(filo1);
                 model.AddLessThan(vetY[i], vetY[j]).OnlyEnforceIf(filo2);
-                model.AddBoolOr({filo0, filo1, filo2})
-                    .OnlyEnforceIf({vetUsado[i], vetUsado[j]});
+                model.AddBoolOr({filo0, filo1, filo2}).OnlyEnforceIf({vetUsado[i], vetUsado[j]});
             }
         }
     }
@@ -357,8 +344,7 @@ Resultado BinPackingCP_NS::testaCpSatBinPacking(int numItens)
         int       itemId = getRandInt(0, instanciaG.numItens - 1);
         const int itemIdIni = itemId;
         while(vetItensSelecionados[itemId] == (int8_t)1 ||
-              (volumeOcupado + instanciaG.vetItens[itemId].volume) >
-                  volumeVeiculo / 2.0 ||
+              (volumeOcupado + instanciaG.vetItens[itemId].volume) > volumeVeiculo / 2.0 ||
               demanda + instanciaG.vetItens[itemId].weight > instanciaG.maxPayload)
         {
             itemId = (itemId + 1) % instanciaG.numItens;
@@ -461,8 +447,7 @@ void BinPackingCP_NS::criaEPs(SolucaoNS::Bin &bin)
 
             for(int t = 0; t < bin.numItens; ++t)
             {
-                if(epColideItem(ep, bin.vetPosItem[t], bin.vetItemId[t],
-                                bin.vetRotacao[t]))
+                if(epColideItem(ep, bin.vetPosItem[t], bin.vetItemId[t], bin.vetRotacao[t]))
                 {
                     colisao = true;
                     break;

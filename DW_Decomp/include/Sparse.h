@@ -86,10 +86,8 @@ template <typename T> class SparseMatLin
     T &operator()(int64_t i, int64_t j)
     {
 #ifdef VAR_VECTOR_SANITY_CHECK
-        assertm(
-            i >= numLin, "i(" << i << ") is out of range in numLine(" << numLin << ")");
-        assertm(
-            j >= numCol, "j(" << j << ") is out of range in numCol(" << numCol << ")");
+        assertm(i >= numLin, "i(" << i << ") is out of range in numLine(" << numLin << ")");
+        assertm(j >= numCol, "j(" << j << ") is out of range in numCol(" << numCol << ")");
 #endif
 
         Vector<int64_t> *vetInd = vetVetInd[i];
@@ -145,10 +143,8 @@ template <typename T> class SparseMatLin
     T getVal(int64_t i, int64_t j) const
     {
 #ifdef VAR_VECTOR_SANITY_CHECK
-        assertm(
-            i >= numLin, "i(" << i << ") is out of range in numLine(" << numLin << ")");
-        assertm(
-            j >= numCol, "j(" << j << ") is out of range in numCol(" << numCol << ")");
+        assertm(i >= numLin, "i(" << i << ") is out of range in numLine(" << numLin << ")");
+        assertm(j >= numCol, "j(" << j << ") is out of range in numCol(" << numCol << ")");
 #endif
 
         Vector<int64_t> *vetInd = vetVetInd[i];
@@ -166,10 +162,8 @@ template <typename T> class SparseMatLin
     void rmElement(int64_t i, int64_t j)
     {
 #ifdef VAR_VECTOR_SANITY_CHECK
-        assertm(
-            i >= numLin, "i(" << i << ") is out of range in numLine(" << numLin << ")");
-        assertm(
-            j >= numCol, "j(" << j << ") is out of range in numCol(" << numCol << ")");
+        assertm(i >= numLin, "i(" << i << ") is out of range in numLine(" << numLin << ")");
+        assertm(j >= numCol, "j(" << j << ") is out of range in numCol(" << numCol << ")");
 #endif
 
         Vector<int64_t> *vetInd = vetVetInd[i];
@@ -344,10 +338,8 @@ template <typename T> class SparseMatCol
     T &operator()(int64_t i, int64_t j)
     {
 #ifdef VAR_VECTOR_SANITY_CHECK
-        assertm(
-            i >= numLin, "i(" << i << ") is out of range in numLine(" << numLin << ")");
-        assertm(
-            j >= numCol, "j(" << j << ") is out of range in numCol(" << numCol << ")");
+        assertm(i >= numLin, "i(" << i << ") is out of range in numLine(" << numLin << ")");
+        assertm(j >= numCol, "j(" << j << ") is out of range in numCol(" << numCol << ")");
 #endif
 
         Vector<int64_t> *vetInd = vetVetInd[j];
@@ -407,10 +399,8 @@ template <typename T> class SparseMatCol
     T getVal(int64_t i, int64_t j) const
     {
 #ifdef VAR_VECTOR_SANITY_CHECK
-        assertm(
-            i >= numLin, "i(" << i << ") is out of range in numLine(" << numLin << ")");
-        assertm(
-            j >= numCol, "j(" << j << ") is out of range in numCol(" << numCol << ")");
+        assertm(i >= numLin, "i(" << i << ") is out of range in numLine(" << numLin << ")");
+        assertm(j >= numCol, "j(" << j << ") is out of range in numCol(" << numCol << ")");
 #endif
 
         Vector<int64_t> *vetInd = vetVetInd[j];
@@ -428,10 +418,8 @@ template <typename T> class SparseMatCol
     void rmElement(int64_t i, int64_t j)
     {
 #ifdef VAR_VECTOR_SANITY_CHECK
-        assertm(
-            i >= numLin, "i(" << i << ") is out of range in numLine(" << numLin << ")");
-        assertm(
-            j >= numCol, "j(" << j << ") is out of range in numCol(" << numCol << ")");
+        assertm(i >= numLin, "i(" << i << ") is out of range in numLine(" << numLin << ")");
+        assertm(j >= numCol, "j(" << j << ") is out of range in numCol(" << numCol << ")");
 #endif
 
         Vector<int64_t> *vetInd = vetVetInd[j];
@@ -667,8 +655,7 @@ template <typename T> class SparseVector
     // int64_t cap     = 0;
 };
 
-template <typename T>
-std::ostream &operator<<(std::ostream &os, const SparseMatLin<T> &sparseMat)
+template <typename T> std::ostream &operator<<(std::ostream &os, const SparseMatLin<T> &sparseMat)
 {
     for(int64_t i = 0; i < sparseMat.getNumLin(); ++i)
     {
@@ -683,8 +670,7 @@ std::ostream &operator<<(std::ostream &os, const SparseMatLin<T> &sparseMat)
     return os;
 }
 
-template <typename T>
-std::ostream &operator<<(std::ostream &os, const SparseMatCol<T> &sparseMat)
+template <typename T> std::ostream &operator<<(std::ostream &os, const SparseMatCol<T> &sparseMat)
 {
     for(int64_t i = 0; i < sparseMat.getNumLin(); ++i)
     {
@@ -699,8 +685,7 @@ std::ostream &operator<<(std::ostream &os, const SparseMatCol<T> &sparseMat)
     return os;
 }
 
-template <typename T>
-std::ostream &operator<<(std::ostream &os, const SparseVector<T> &sparseVet)
+template <typename T> std::ostream &operator<<(std::ostream &os, const SparseVector<T> &sparseVet)
 {
     for(int64_t i = 0; i < sparseVet.n; ++i)
     {

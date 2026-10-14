@@ -7,25 +7,25 @@
 #include <Eigen/Eigen>
 
 #define __PRETTYFILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-#define PRINT_DEBUG(inicio, texto)                                                       \
-    std::cout << inicio << "DEBUG: " << texto << "  FILE: " << __PRETTYFILE__            \
+#define PRINT_DEBUG(inicio, texto)                                                                 \
+    std::cout << inicio << "DEBUG: " << texto << "  FILE: " << __PRETTYFILE__                      \
               << "  FUNC: " << __PRETTY_FUNCTION__ << "  LINHA: " << __LINE__ << "\n";
 
-#define PRINT_EXIT()                                                                     \
-    std::cout << "  FILE: " << __PRETTYFILE__ << "  FUNC: " << __PRETTY_FUNCTION__       \
-              << "  LINHA: " << __LINE__ << "\n";                                        \
+#define PRINT_EXIT()                                                                               \
+    std::cout << "  FILE: " << __PRETTYFILE__ << "  FUNC: " << __PRETTY_FUNCTION__                 \
+              << "  LINHA: " << __LINE__ << "\n";                                                  \
     exit(-1);
-#define PRINT_THROW()                                                                    \
-    std::cout << "  FILE: " << __PRETTYFILE__ << "  FUNC: " << __PRETTY_FUNCTION__       \
-              << "  LINHA: " << __LINE__ << "\n";                                        \
+#define PRINT_THROW()                                                                              \
+    std::cout << "  FILE: " << __PRETTYFILE__ << "  FUNC: " << __PRETTY_FUNCTION__                 \
+              << "  LINHA: " << __LINE__ << "\n";                                                  \
     throw "ERROR";
 
-#define assertm(exp, msg)                                                                \
-    if(exp)                                                                              \
-    {                                                                                    \
-        std::cout << msg << "\n\nLINE: " << __LINE__ << "\nFILE: " << __PRETTYFILE__     \
-                  << "\nFUNC: " << __PRETTY_FUNCTION__ << "\n\n";                        \
-        throw "ERROR";                                                                   \
+#define assertm(exp, msg)                                                                          \
+    if(exp)                                                                                        \
+    {                                                                                              \
+        std::cout << msg << "\n\nLINE: " << __LINE__ << "\nFILE: " << __PRETTYFILE__               \
+                  << "\nFUNC: " << __PRETTY_FUNCTION__ << "\n\n";                                  \
+        throw "ERROR";                                                                             \
     }
 
 template <typename T, int option> class TempSpMatPrint
@@ -45,16 +45,14 @@ template <typename T, int option> class TempSpVetPrint
 template <typename T, int option>
 std::ostream &operator<<(std::ostream &s, const TempSpMatPrint<T, option> &temp)
 {
-    s << static_cast<const Eigen::SparseMatrixBase<Eigen::SparseMatrix<T, option>> &>(
-        temp.m);
+    s << static_cast<const Eigen::SparseMatrixBase<Eigen::SparseMatrix<T, option>> &>(temp.m);
     return s;
 }
 
 template <typename T, int option>
 std::ostream &operator<<(std::ostream &s, const TempSpVetPrint<T, option> &temp)
 {
-    s << static_cast<const Eigen::SparseMatrixBase<Eigen::SparseVector<T, option>> &>(
-        temp.m);
+    s << static_cast<const Eigen::SparseMatrixBase<Eigen::SparseVector<T, option>> &>(temp.m);
     return s;
 }
 

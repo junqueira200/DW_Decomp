@@ -4,8 +4,7 @@
 #include "VrpTW_Decomp.h"
 #include "rand.h"
 
-void VrpTW_DecompNS::criaMestre(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
-                                GRBModel                              &model)
+void VrpTW_DecompNS::criaMestre(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model)
 {
     const int NumClie = instVrpTw.numClientes;
 
@@ -16,8 +15,8 @@ void VrpTW_DecompNS::criaMestre(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw
         for(int j = 0; j < NumClie; ++j)
         {
             int index = getIndex(i, j, NumClie);
-            varX[index].set(GRB_StringAttr_VarName,
-                            "X_" + std::to_string(i) + "_" + std::to_string(j));
+            varX[index].set(
+                GRB_StringAttr_VarName, "X_" + std::to_string(i) + "_" + std::to_string(j));
             varX[index].set(GRB_DoubleAttr_Obj, instVrpTw.matDist(i, j));
         }
     }

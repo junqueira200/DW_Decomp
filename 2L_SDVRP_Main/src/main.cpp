@@ -193,8 +193,8 @@ int main(int argc, const char *argv[])
             consistentData = (cost[i].getSize() == nbLocations);
         if(!consistentData)
         {
-            env.out() << "ERROR: data file '" << filename
-                      << "' contains inconsistent data" << std::endl;
+            env.out() << "ERROR: data file '" << filename << "' contains inconsistent data"
+                      << std::endl;
         }
 
         IloIntVarArray supplier(env, nbStores, 0, nbLocations - 1);

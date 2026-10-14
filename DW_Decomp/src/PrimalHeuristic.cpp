@@ -16,9 +16,8 @@ using namespace DW_DecompNS;
 using namespace SearchStrategyNS;
 using namespace BranchAndPriceNS;
 
-DW_DecompNode *PrimalHeuristicNS::SimpleDiving::operator()(DW_DecompNode *node,
-                                                           AuxData       &auxVet,
-                                                           double         upperBound)
+DW_DecompNode *
+PrimalHeuristicNS::SimpleDiving::operator()(DW_DecompNode *node, AuxData &auxVet, double upperBound)
 {
     DepthFirst     dfs;
     DW_DecompNode *root = new DW_DecompNode(*node);

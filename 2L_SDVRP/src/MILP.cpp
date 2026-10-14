@@ -106,9 +106,8 @@ MatrixGRBVar::MatrixGRBVar(GRBModel           &model,
         for(int j = 0; j < numCol; ++j)
         {
             const int index = i * numCol + j;
-            vetVar[index].set(
-                GRB_StringAttr_VarName,
-                nome + "_(" + std::to_string(i) + "," + std::to_string(j) + ")");
+            vetVar[index].set(GRB_StringAttr_VarName,
+                              nome + "_(" + std::to_string(i) + "," + std::to_string(j) + ")");
 
             if(i == j && zeroI_EqualJ)
             {
@@ -187,9 +186,8 @@ void MatrixGRBVar::start(GRBModel           &model,
         for(int j = 0; j < numCol; ++j)
         {
             const int index = i * numCol + j;
-            vetVar[index].set(
-                GRB_StringAttr_VarName,
-                nome + "_(" + std::to_string(i) + "," + std::to_string(j) + ")");
+            vetVar[index].set(GRB_StringAttr_VarName,
+                              nome + "_(" + std::to_string(i) + "," + std::to_string(j) + ")");
 
             if(i == j && zeroI_EqualJ)
             {
@@ -252,9 +250,7 @@ Variables::Variables(GRBModel &model, VectorI &vetItems, int numItems)
     matRot.start(model, numItems, vetRot.size(), "R", GRB_BINARY, false);
 }
 
-void MILP_NS::addBasicConstraints(GRBModel       &model,
-                                  Variables      &variables,
-                                  SolucaoNS::Bin &bin)
+void MILP_NS::addBasicConstraints(GRBModel &model, Variables &variables, SolucaoNS::Bin &bin)
 {
 
     for(int i = 0; i < bin.numItens; ++i)

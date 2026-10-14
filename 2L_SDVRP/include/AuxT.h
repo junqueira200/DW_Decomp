@@ -19,31 +19,29 @@
 // #include <Eigen/Eigen>
 
 #define __PRETTYFILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
-#define PRINT_DEBUGG(inicio, texto)                                                      \
-    std::cout << inicio << "DEBUG: " << texto << "  FILE: " << __PRETTYFILE__            \
+#define PRINT_DEBUGG(inicio, texto)                                                                \
+    std::cout << inicio << "DEBUG: " << texto << "  FILE: " << __PRETTYFILE__                      \
               << "  FUNC: " << __PRETTY_FUNCTION__ << "  LINHA: " << __LINE__ << "\n";
 
-#define EXIT_PRINT()                                                                     \
-    PRINT_DEBUGG("", "");                                                                \
+#define EXIT_PRINT()                                                                               \
+    PRINT_DEBUGG("", "");                                                                          \
     exit(-1);
-#define PRINT_THROW()                                                                    \
-    PRINT_DEBUGG("", "");                                                                \
+#define PRINT_THROW()                                                                              \
+    PRINT_DEBUGG("", "");                                                                          \
     throw "ERROR";
 
-#define assertm(exp, msg)                                                                \
-    if(exp)                                                                              \
-    {                                                                                    \
-        std::cout << msg << "\n\nLINE: " << __LINE__ << "\nFILE: " << __PRETTYFILE__     \
-                  << "\nFUNC: " << __PRETTY_FUNCTION__ << "\n\n";                        \
-        throw "ERROR";                                                                   \
+#define assertm(exp, msg)                                                                          \
+    if(exp)                                                                                        \
+    {                                                                                              \
+        std::cout << msg << "\n\nLINE: " << __LINE__ << "\nFILE: " << __PRETTYFILE__               \
+                  << "\nFUNC: " << __PRETTY_FUNCTION__ << "\n\n";                                  \
+        throw "ERROR";                                                                             \
     }
 
 #define INLINE inline __attribute__((always_inline))
 
 template <typename T>
-void applyPermutation(Vector<T>              &vet,
-                      const std::vector<int> &permutation,
-                      const size_t            tam)
+void applyPermutation(Vector<T> &vet, const std::vector<int> &permutation, const size_t tam)
 {
 
     static std::vector<bool> vetDone(vet.size());
@@ -120,8 +118,7 @@ doubleEqual(double a, double b, double ep = std::numeric_limits<double>::epsilon
     return std::fabs(a - b) < ep;
 }
 
-inline __attribute__((always_inline)) bool
-doubleLess(double a, double b, double ep = 1E-3)
+inline __attribute__((always_inline)) bool doubleLess(double a, double b, double ep = 1E-3)
 {
     return (a - b) < -ep;
 }

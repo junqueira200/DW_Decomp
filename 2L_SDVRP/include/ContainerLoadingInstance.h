@@ -31,8 +31,7 @@ class Group
           double              totalArea,
           std::vector<Cuboid> items)
         : InternId(internId), ExternId(externId), PositionX(xPos), PositionY(yPos),
-          TotalWeight(totalWeight), TotalVolume(totalVolume), TotalArea(totalArea),
-          Items(items)
+          TotalWeight(totalWeight), TotalVolume(totalVolume), TotalArea(totalArea), Items(items)
     {
     }
 };

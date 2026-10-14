@@ -79,9 +79,8 @@ class MySubProbPath : public DW_DecompNS::SubProb
         vetGraphModCost; // Armazena os custos modificados para cada aresta
     Eigen::MatrixX<int64_t>
         matCovConst; // Armazenam para cada (k, vertice) o indice da const de conv
-    Eigen::MatrixX<VerticeType>
-            matVerticeType; // Armazenam para cada (k, vertice) o seu tipo
-    int64_t idS = -1, idT = -1;
+    Eigen::MatrixX<VerticeType> matVerticeType; // Armazenam para cada (k, vertice) o seu tipo
+    int64_t                     idS = -1, idT = -1;
 
     int getNumConvConstr() override { return numSubProb; }
 

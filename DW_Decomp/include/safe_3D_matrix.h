@@ -79,34 +79,30 @@ template <typename T, bool C = true> class Vector3D : public std::vector<T>
 #if VAR_VECTOR_SANITY_CHECK
             if(indexI >= n)
             {
-                std::cout << "Erro indice i: " << indexI
-                          << " esta errado para matrix de tam " << n << " x " << m
-                          << " x " << p << "\n";
+                std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam " << n
+                          << " x " << m << " x " << p << "\n";
                 throw std::out_of_range("");
             }
 
             if(indexJ >= m)
             {
-                std::cout << "Erro indice j: " << indexJ
-                          << " esta errado para matrix de tam " << n << " x " << m
-                          << " x " << p << "\n";
+                std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam " << n
+                          << " x " << m << " x " << p << "\n";
                 throw std::out_of_range("");
             }
 
             if(indexK >= p)
             {
 
-                std::cout << "Erro indice k: " << indexK
-                          << " esta errado para vetor de tam " << n << " x " << m << " x "
-                          << p << "\n";
+                std::cout << "Erro indice k: " << indexK << " esta errado para vetor de tam " << n
+                          << " x " << m << " x " << p << "\n";
                 throw std::out_of_range("");
             }
 
             if(index >= m * n * p)
             {
                 std::cout << "Erro indice(" << index << ") >= " << m * n * p << "\n";
-                std::cout << "i=" << indexI << "; j=" << indexJ << "; k=" << indexK
-                          << "\n";
+                std::cout << "i=" << indexI << "; j=" << indexJ << "; k=" << indexK << "\n";
 
                 throw std::out_of_range("");
             }
@@ -125,23 +121,23 @@ template <typename T, bool C = true> class Vector3D : public std::vector<T>
 #if VAR_VECTOR_SANITY_CHECK
         if(indexI >= n)
         {
-            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam "
-                      << n << " x " << m << " x " << p << "\n";
+            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam " << n
+                      << " x " << m << " x " << p << "\n";
             throw std::out_of_range("");
         }
 
         if(indexJ >= m)
         {
-            std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam "
-                      << n << " x " << m << " x " << p << "\n";
+            std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam " << n
+                      << " x " << m << " x " << p << "\n";
             throw std::out_of_range("");
         }
 
         if(indexK >= p)
         {
 
-            std::cout << "Erro indice k: " << indexK << " esta errado para vetor de tam "
-                      << n << " x " << m << " x " << p << "\n";
+            std::cout << "Erro indice k: " << indexK << " esta errado para vetor de tam " << n
+                      << " x " << m << " x " << p << "\n";
             throw std::out_of_range("");
         }
 

@@ -132,8 +132,7 @@ int main(int argc, const char **argv)
 
         ptr_instVrpG = &instVrpTw;
 
-        instanciaG =
-            Instance(instVrpTw.numClientes, instVrpTw.numClientes - 1, instVrpTw.numVeic);
+        instanciaG = Instance(instVrpTw.numClientes, instVrpTw.numClientes - 1, instVrpTw.numVeic);
         convertInstance(instVrpTw, instanciaG);
 
         // RouteHash routeHash;
@@ -144,8 +143,7 @@ int main(int argc, const char **argv)
         ArrayResources vetMaxResources;
         vetMaxResources[1] = instVrpTw.capVeic;
 
-        VrpLabelingSubProb vrpLabelingSubProb(
-            instVrpTw, instVrpTw.sumDist(), vetMaxResources);
+        VrpLabelingSubProb vrpLabelingSubProb(instVrpTw, instVrpTw.sumDist(), vetMaxResources);
         // Cvrp_DecompLabelingNS::CvrpLabelingSubProb vrpLabelingSubProb(instVrpTw,
         // instVrpTw.sumDist());
 
@@ -206,16 +204,11 @@ int main(int argc, const char **argv)
         vetValueOfReducedCostsG.reserve(99999999);
 
         std::cout << "Cria decompNode\n";
-        DW_DecompNS::DW_DecompNode decompNode(grbEnv,
-                                              model,
-                                              distVarA,
-                                              (DW_DecompNS::SubProb *)&vrpLabelingSubProb,
-                                              1,
-                                              auxVectors);
+        DW_DecompNS::DW_DecompNode decompNode(
+            grbEnv, model, distVarA, (DW_DecompNS::SubProb *)&vrpLabelingSubProb, 1, auxVectors);
 
         std::cout << "Num Vars Model: " << decompNode.uRmlp->get(GRB_IntAttr_NumVars);
-        std::cout << "\nNum Vars vetVarLambdaCol:" << decompNode.vetVarLambdaCol.size()
-                  << "\n";
+        std::cout << "\nNum Vars vetVarLambdaCol:" << decompNode.vetVarLambdaCol.size() << "\n";
 
         input.comprimentoAlturaIguais1 = true;
         input.numItIG = 5;
@@ -239,8 +232,7 @@ int main(int argc, const char **argv)
                     int cliI = rota.vetRota[t];
                     int cliJ = rota.vetRota[t + 1];
                     // std::cout<<"\t"<<cliI<<", "<<cliJ<<"\n";
-                    int index = VrpTW_DecompLabelingNS::getIndex(
-                        cliI, cliJ, instVrpTw.numClientes);
+                    int index = VrpTW_DecompLabelingNS::getIndex(cliI, cliJ, instVrpTw.numClientes);
                     vetX[index] = 1;
                 }
                 auxVectors.vetColConvCooef[0] = 1;
@@ -254,8 +246,7 @@ int main(int argc, const char **argv)
         decompNode.uRmlp->update();
 
         std::cout << "Num Vars Model: " << decompNode.uRmlp->get(GRB_IntAttr_NumVars);
-        std::cout << "\nNum Vars vetVarLambdaCol:" << decompNode.vetVarLambdaCol.size()
-                  << "\n";
+        std::cout << "\nNum Vars vetVarLambdaCol:" << decompNode.vetVarLambdaCol.size() << "\n";
         std::cout << "NumRotas: " << numRotas << "\n\n";
 
         decompNode.rhsConv = instVrpTw.numVeic;
@@ -272,12 +263,9 @@ int main(int argc, const char **argv)
         CapacityCut capacityCut(instVrpTw, 5000, 5000, 0.00001);
 
         std::cout << "sizeof(Label): " << sizeof(Label) << "\n";
-        std::cout << "vetNumSteps r0: " << vrpLabelingSubProb.labelingData.vetNumSteps[0]
-                  << "\n";
-        std::cout << "start r0: " << vrpLabelingSubProb.labelingData.vetStepSize[0].start
-                  << "\n";
-        std::cout << "vetNumSteps r1: " << vrpLabelingSubProb.labelingData.vetNumSteps[1]
-                  << "\n";
+        std::cout << "vetNumSteps r0: " << vrpLabelingSubProb.labelingData.vetNumSteps[0] << "\n";
+        std::cout << "start r0: " << vrpLabelingSubProb.labelingData.vetStepSize[0].start << "\n";
+        std::cout << "vetNumSteps r1: " << vrpLabelingSubProb.labelingData.vetNumSteps[1] << "\n";
         std::cout << "numClien: " << instVrpTw.numClientes << "\n";
         std::cout << "Cost Var A.: " << distVarA << "\n\n";
 
@@ -362,12 +350,9 @@ int main(int argc, const char **argv)
         // decompNode.columnGeneration(auxVectors);
 
         std::cout << "sizeof(Label): " << sizeof(Label) << "\n";
-        std::cout << "vetNumSteps r0: " << vrpLabelingSubProb.labelingData.vetNumSteps[0]
-                  << "\n";
-        std::cout << "start r0: " << vrpLabelingSubProb.labelingData.vetStepSize[0].start
-                  << "\n";
-        std::cout << "vetNumSteps r1: " << vrpLabelingSubProb.labelingData.vetNumSteps[1]
-                  << "\n";
+        std::cout << "vetNumSteps r0: " << vrpLabelingSubProb.labelingData.vetNumSteps[0] << "\n";
+        std::cout << "start r0: " << vrpLabelingSubProb.labelingData.vetStepSize[0].start << "\n";
+        std::cout << "vetNumSteps r1: " << vrpLabelingSubProb.labelingData.vetNumSteps[1] << "\n";
         std::cout << "numClien: " << instVrpTw.numClientes << "\n";
 
         std::cout << "DistMin: " << minDistG << "\nDistMax: " << maxDistG << "\n\n";
@@ -457,13 +442,11 @@ void computeMeanMaxMin()
     size_t size = vetValueOfReducedCostsG.size();
     if(size % 2 == 0)
     {
-        median = (vetValueOfReducedCostsG[size / 2] +
-                  vetValueOfReducedCostsG[(size / 2) + 1]) /
-                 2.0;
+        median =
+            (vetValueOfReducedCostsG[size / 2] + vetValueOfReducedCostsG[(size / 2) + 1]) / 2.0;
     }
     else
         median = vetValueOfReducedCostsG[size / 2];
 
-    std::printf(
-        "Min: %.2f\nMax: %.2f\nMean: %.2f\nMedian: %.2f\n\n", min, max, mean, median);
+    std::printf("Min: %.2f\nMax: %.2f\nMean: %.2f\nMedian: %.2f\n\n", min, max, mean, median);
 }

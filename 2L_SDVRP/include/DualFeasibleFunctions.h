@@ -6,9 +6,8 @@
 namespace DualFeasibleFunctionsNS
 {
 
-    double funcionU(double ep, double x);
-    bool check(const VectorI& vetItems, int sizeVetItems=-1);
-}
-
+double funcionU(double ep, double x);
+bool   check(const VectorI &vetItems, int sizeVetItems = -1);
+} // namespace DualFeasibleFunctionsNS
 
 #endif // DUALFEASIBLEFUNCTIONS_H

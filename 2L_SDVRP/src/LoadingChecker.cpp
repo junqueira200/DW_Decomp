@@ -40,19 +40,18 @@ std::vector<Cuboid> LoadingChecker::SelectItems(const Collections::IdVector &nod
     return selectedItems;
 }
 
-LoadingStatus
-LoadingChecker::ConstraintProgrammingSolver(PackingType                  packingType,
-                                            const Container             &container,
-                                            // const boost::dynamic_bitset<>& set,
-                                            const Collections::IdVector &stopIds,
-                                            const std::vector<Cuboid>   &items,
-                                            double                       maxRuntimeSec,
-                                            std::vector<Array<int, 4>>  &vetPos,
-                                            double& fk,
-                                            double& fFA,
-                                            double& fRA,
-                                            double& fTA,
-                                            VectorI& vetSumAreasLeft)
+LoadingStatus LoadingChecker::ConstraintProgrammingSolver(PackingType      packingType,
+                                                          const Container &container,
+                                                          // const boost::dynamic_bitset<>& set,
+                                                          const Collections::IdVector &stopIds,
+                                                          const std::vector<Cuboid>   &items,
+                                                          double                      maxRuntimeSec,
+                                                          std::vector<Array<int, 4>> &vetPos,
+                                                          double                     &fk,
+                                                          double                     &fFA,
+                                                          double                     &fRA,
+                                                          double                     &fTA,
+                                                          VectorI &vetSumAreasLeft)
 // bool isCallTypeExact,
 // double maxRuntime)
 {
@@ -78,7 +77,7 @@ LoadingChecker::ConstraintProgrammingSolver(PackingType                  packing
     if(status == LoadingStatus::FeasOpt)
     {
 
-        //std::cout<<"FeasOpt\n";
+        // std::cout<<"FeasOpt\n";
         containerLoadingCP.PrintSolution(vetPos, fk, fFA, fRA, fTA, vetSumAreasLeft);
     }
 
@@ -95,12 +94,12 @@ LoadingChecker::ConstraintProgrammingSolver(PackingType                  packing
     return status;
 }
 
-LoadingStatus LoadingChecker::ConstraintProgrammingSolverGetPacking(
-    PackingType                  packingType,
-    const Container             &container,
-    const Collections::IdVector &stopIds,
-    std::vector<Cuboid>         &items,
-    double                       maxRuntime) const
+LoadingStatus
+LoadingChecker::ConstraintProgrammingSolverGetPacking(PackingType                  packingType,
+                                                      const Container             &container,
+                                                      const Collections::IdVector &stopIds,
+                                                      std::vector<Cuboid>         &items,
+                                                      double                       maxRuntime) const
 {
     if(maxRuntime < 0.0 + 1e-5)
     {
@@ -135,11 +134,11 @@ LoadingStatus LoadingChecker::ConstraintProgrammingSolverGetPacking(
     return status;
 }
 
-LoadingStatus
-LoadingChecker::RunLoadingHeuristic(PackingType      packingType [[maybe_unused]],
-                                    const Container &container [[maybe_unused]],
-                                    const Collections::IdVector &stopIds [[maybe_unused]],
-                                    const std::vector<Cuboid>   &items [[maybe_unused]])
+LoadingStatus LoadingChecker::RunLoadingHeuristic(PackingType      packingType [[maybe_unused]],
+                                                  const Container &container [[maybe_unused]],
+                                                  const Collections::IdVector &stopIds
+                                                  [[maybe_unused]],
+                                                  const std::vector<Cuboid> &items [[maybe_unused]])
 {
     // Implement heuristic here.
     return LoadingStatus::Invalid;
@@ -169,21 +168,14 @@ bool LoadingChecker::SequenceIsHeuristicallyInfeasibleEP(
     return mEPHeurInfSequences.contains(sequence);
 }
 
-void LoadingChecker::AddInfeasibleCombination(
-    const boost::dynamic_bitset<> &customersInRoute)
+void LoadingChecker::AddInfeasibleCombination(const boost::dynamic_bitset<> &customersInRoute)
 {
     mInfeasibleCustomerCombinations.emplace_back(customersInRoute);
 }
 
-Collections::SequenceVector LoadingChecker::GetFeasibleRoutes() const
-{
-    return mCompleteFeasSeq;
-};
+Collections::SequenceVector LoadingChecker::GetFeasibleRoutes() const { return mCompleteFeasSeq; };
 
-size_t LoadingChecker::GetNumberOfFeasibleRoutes() const
-{
-    return mCompleteFeasSeq.size();
-};
+size_t LoadingChecker::GetNumberOfFeasibleRoutes() const { return mCompleteFeasSeq.size(); };
 
 size_t LoadingChecker::GetSizeInfeasibleCombinations() const
 {
@@ -210,8 +202,8 @@ bool LoadingChecker::SequenceIsCheckedTwoOpt(const Collections::IdVector &sequen
     return mTwoOptCheckedSequences.contains(sequence);
 }
 
-boost::dynamic_bitset<>
-LoadingChecker::MakeBitset(size_t size, const Collections::IdVector &sequence) const
+boost::dynamic_bitset<> LoadingChecker::MakeBitset(size_t                       size,
+                                                   const Collections::IdVector &sequence) const
 {
     boost::dynamic_bitset<> set(size);
     for(const auto i : sequence)
@@ -352,7 +344,7 @@ LoadingFlag LoadingChecker::BuildMask(PackingType type) const
 LoadingStatus LoadingChecker::GetPrecheckStatusCP(const Collections::IdVector   &sequence,
                                                   const boost::dynamic_bitset<> &set,
                                                   const LoadingFlag              mask,
-                                                  const bool isCallTypeExact)
+                                                  const bool                     isCallTypeExact)
 {
     if(IsSet(mask, LoadingFlag::Sequence))
     {

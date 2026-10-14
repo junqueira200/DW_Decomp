@@ -25,7 +25,6 @@ template <typename T> class Vector : public std::vector<T>
 
     Vector(size_t n, const T &value) : std::vector<T>(n, value) {}
 
-
     template <class InputIterator>
     Vector(InputIterator first, InputIterator last) : std::vector<T>(first, last)
     {
@@ -100,8 +99,6 @@ template <typename T> class Vector : public std::vector<T>
 
         return str;
     }
-
-
 };
 
 typedef Vector<double>  VectorD;
@@ -109,8 +106,7 @@ typedef Vector<int>     VectorI;
 typedef Vector<int64_t> VectorI64;
 
 template <typename T>
-inline __attribute__((always_inline)) std::ostream &operator<<(std::ostream    &os,
-                                                               const Vector<T> &v)
+inline __attribute__((always_inline)) std::ostream &operator<<(std::ostream &os, const Vector<T> &v)
 {
     for(unsigned i = 0; i < v.size(); ++i)
     {

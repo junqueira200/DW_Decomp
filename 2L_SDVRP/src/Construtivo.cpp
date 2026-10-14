@@ -10,8 +10,8 @@
 #include "Construtivo.h"
 #include "ConstrutivoBin.h"
 #include "Instancia.h"
-#include "rand.h"
 #include "c_api.h"
+#include "rand.h"
 
 using namespace InstanceNS;
 using namespace SolucaoNS;
@@ -20,9 +20,7 @@ using namespace RandNs;
 
 typedef std::list<ConstrutivoNS::Estado>::iterator EstadoIt;
 
-bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao,
-                                   double              alphaVrp,
-                                   double              alphaBin)
+bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao, double alphaVrp, double alphaBin)
 {
 
     /*
@@ -59,8 +57,8 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao,
 
     int numIt = 0;
 
-    //std::cout<<"vetClieAtend: "<<vetClieAtend<<"\n\n";
-    //std::cout<<"vetClieCarga: "<<vetClieCarga<<"\n\n";
+    // std::cout<<"vetClieAtend: "<<vetClieAtend<<"\n\n";
+    // std::cout<<"vetClieCarga: "<<vetClieCarga<<"\n\n";
 
     static Vector<int8_t> vetCustomerWithCandRoute(instanciaG.numClientes);
     vetCustomerWithCandRoute.setAll(0);
@@ -73,12 +71,12 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao,
         // Prencher a tabela
         for(int i = 1; i < instanciaG.numClientes; ++i)
         {
-            if(vetClieAtend[i])// || vetCustomerWithCandRoute[i])
+            if(vetClieAtend[i]) // || vetCustomerWithCandRoute[i])
                 continue;
 
-            const int rotaIdIni = getRandInt(0, instanciaG.numVeiculos-1);
-            int rotaId = rotaIdIni;
-            //for(int rotaId = 0; rotaId < instanciaG.numVeiculos; ++rotaId)
+            const int rotaIdIni = getRandInt(0, instanciaG.numVeiculos - 1);
+            int       rotaId = rotaIdIni;
+            // for(int rotaId = 0; rotaId < instanciaG.numVeiculos; ++rotaId)
             do
             {
 
@@ -86,14 +84,14 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao,
 
                 if(doubleEqual(rota.binPtr->demandaTotal, instanciaG.maxPayload))
                 {
-                    rotaId = (rotaId+1)%instanciaG.numVeiculos;
+                    rotaId = (rotaId + 1) % instanciaG.numVeiculos;
                     continue;
                 }
 
                 // Verifica se a entrada da mat esta preenchida
                 if(matEstado.get(rotaId, i))
                 {
-                    rotaId = (rotaId+1)%instanciaG.numVeiculos;
+                    rotaId = (rotaId + 1) % instanciaG.numVeiculos;
                     continue;
                 }
 
@@ -101,7 +99,7 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao,
                 if((rota.binPtr->demandaTotal + instanciaG.vetDemandaCliente[i]) >
                    instanciaG.maxPayload)
                 {
-                    rotaId = (rotaId+1)%instanciaG.numVeiculos;
+                    rotaId = (rotaId + 1) % instanciaG.numVeiculos;
                     continue;
                 }
 
@@ -120,15 +118,13 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao,
                     matEstado.get(rotaId, i) = estadoPtr;
                     estadoPtr->it = listaCand.end();
                     estadoPtr->it--;
-                    //vetCustomerWithCandRoute[i] = 1;
-                    //break;
+                    // vetCustomerWithCandRoute[i] = 1;
+                    // break;
                 }
 
-                rotaId = (rotaId+1)%instanciaG.numVeiculos;
+                rotaId = (rotaId + 1) % instanciaG.numVeiculos;
 
-            }
-            while(rotaId != rotaIdIni);
-
+            } while(rotaId != rotaIdIni);
         }
 
         if(listaCand.empty())
@@ -148,7 +144,7 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao,
 
         if(!insereCandidato(solucao, *chosenPtr, alphaBin))
         {
-            //PRINT_THROW();
+            // PRINT_THROW();
 
             listaCand.erase(chosenPtr->it);
             matEstado.get(chosenPtr->rotaId, chosenPtr->cliente) = nullptr;
@@ -157,8 +153,7 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao,
 
         numCustInSol += 1;
 
-        vetClieCarga[chosenPtr->cliente] +=
-            instanciaG.vetDemandaCliente[chosenPtr->cliente];
+        vetClieCarga[chosenPtr->cliente] += instanciaG.vetDemandaCliente[chosenPtr->cliente];
         vetClieAtend[chosenPtr->cliente] = 1;
 
         // Remove todos os candidatos com o cliente que acabou de ser inserido
@@ -169,8 +164,8 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao,
         {
             if(matEstado(i, cliente))
             {
-                Estado* ptr = matEstado(i, cliente);
-                //std::printf("cliente: %d\n", ptr->cliente);
+                Estado *ptr = matEstado(i, cliente);
+                // std::printf("cliente: %d\n", ptr->cliente);
 
                 listaCand.erase(matEstado(i, cliente)->it);
                 matEstado.get(i, cliente) = nullptr;
@@ -191,13 +186,12 @@ bool ConstrutivoNS::construtivoVrp(SolucaoNS::Solucao &solucao,
             }
         }
 
-    }
-    while(!todosClieAtendidos(vetClieCarga));
+    } while(!todosClieAtendidos(vetClieCarga));
 
     if(todosClieAtendidos(vetClieCarga))
     {
-        //std::cout<<"vetClieAtend: "<<vetClieAtend<<"\n\n";
-        //std::cout<<"vetClieCarga: "<<vetClieCarga<<"\n\n";
+        // std::cout<<"vetClieAtend: "<<vetClieAtend<<"\n\n";
+        // std::cout<<"vetClieCarga: "<<vetClieCarga<<"\n\n";
         return true;
     }
 
@@ -217,34 +211,35 @@ void ConstrutivoNS::melhorInsercao(SolucaoNS::Rota &rota,
     inc = INF_Double;
 
     static Rota rotaAux;
-    //if(!verificaInsercaoItensNoBin(*rota.binPtr, clie, alphaBin))
+    // if(!verificaInsercaoItensNoBin(*rota.binPtr, clie, alphaBin))
     //{
-    //    return;
-    //}
+    //     return;
+    // }
 
-    //std::printf("Route: %s\n\n", rota.printRota().c_str());
+    // std::printf("Route: %s\n\n", rota.printRota().c_str());
 
     for(int i = 0; i < (rota.numPos - 1); ++i)
     {
-        double incI = -instanciaG.matDist(rota.vetRota[i], rota.vetRota[i+1]);
+        double incI = -instanciaG.matDist(rota.vetRota[i], rota.vetRota[i + 1]);
         incI += instanciaG.matDist(rota.vetRota[i], clie);
-        incI += instanciaG.matDist(clie, rota.vetRota[i+1]);
+        incI += instanciaG.matDist(clie, rota.vetRota[i + 1]);
 
         if(incI < inc)
         {
             copiaRota(rota, rotaAux);
             rotaAux.numPos += 1;
 
-            for(int t=rota.numPos-1; t > i; --t)
-                rotaAux.vetRota[t+1] = rotaAux.vetRota[t];
+            for(int t = rota.numPos - 1; t > i; --t)
+                rotaAux.vetRota[t + 1] = rotaAux.vetRota[t];
 
-            rotaAux.vetRota[i+1] = clie;
+            rotaAux.vetRota[i + 1] = clie;
 
-            //std::printf("\tpos: %d\n\tNova Rota: %s\n\n\n", i, rotaAux.printRota(false).c_str());
+            // std::printf("\tpos: %d\n\tNova Rota: %s\n\n\n", i, rotaAux.printRota(false).c_str());
 
             if(testRoute(&rotaAux.vetRota[0], rotaAux.numPos, true))
             {
-                //std::printf("\tpos: %d\n\tNova Rota: %s\n\n\n", i, rotaAux.printRota(false).c_str());
+                // std::printf("\tpos: %d\n\tNova Rota: %s\n\n\n", i,
+                // rotaAux.printRota(false).c_str());
                 inc = incI;
                 pos = i;
             }
@@ -299,8 +294,8 @@ bool ConstrutivoNS::insereCandidato(SolucaoNS::Solucao &solucao,
 {
 
     static VectorI vetItens(instanciaG.numItens);
-    static Bin binAux;
-    static Rota rotaAux;
+    static Bin     binAux;
+    static Rota    rotaAux;
 
     vetItens.setAll(-1);
     binAux.reset();
@@ -308,19 +303,17 @@ bool ConstrutivoNS::insereCandidato(SolucaoNS::Solucao &solucao,
 
     // Verifica a demanda
     Rota  &rota = solucao.vetRota[estado.rotaId];
-    double newDem =
-        rota.binPtr->demandaTotal + instanciaG.vetDemandaCliente[estado.cliente];
+    double newDem = rota.binPtr->demandaTotal + instanciaG.vetDemandaCliente[estado.cliente];
     if(newDem > instanciaG.maxPayload)
     {
-        std::cout << "ERROR\n Veiculo com demanda(" << newDem
-                  << ") maior que o permitido(" << instanciaG.maxPayload << ")\n";
+        std::cout << "ERROR\n Veiculo com demanda(" << newDem << ") maior que o permitido("
+                  << instanciaG.maxPayload << ")\n";
         PRINT_DEBUGG("", "");
         throw "ERROR";
     }
 
     // Verifica o incremento
-    double inc =
-        -instanciaG.matDist(rota.vetRota[estado.pos], rota.vetRota[estado.pos + 1]);
+    double inc = -instanciaG.matDist(rota.vetRota[estado.pos], rota.vetRota[estado.pos + 1]);
     inc += instanciaG.matDist(rota.vetRota[estado.pos], estado.cliente);
     inc += instanciaG.matDist(estado.cliente, rota.vetRota[estado.pos + 1]);
 
@@ -359,17 +352,19 @@ bool ConstrutivoNS::insereCandidato(SolucaoNS::Solucao &solucao,
     rotaAux.vetDemClie[estado.cliente] = instanciaG.vetDemandaCliente[estado.cliente];
 
     // Tenta construir um empacotamento em ate 10 tentativas
-    //if(!construtivoBinPacking(*rota.binPtr, vetItens, tam, alphaBin, 10))
+    // if(!construtivoBinPacking(*rota.binPtr, vetItens, tam, alphaBin, 10))
     if(!testRoute(&rotaAux.vetRota[0], rotaAux.numPos, true))
     {
         std::printf("ERROR? It shuld be feasible!");
 
-        std::printf("Rota: %s;\npos: %d\nCliente:%d\n\n", rota.printRota(false).c_str(), estado.pos, estado.cliente);
+        std::printf("Rota: %s;\npos: %d\nCliente:%d\n\n",
+                    rota.printRota(false).c_str(),
+                    estado.pos,
+                    estado.cliente);
         std::printf("New route: %s\n\n", rotaAux.printRota(false).c_str());
         PRINT_THROW();
         return false;
     }
-
 
     // Atualiza paramentros
     // rota.demTotal     += instanciaG.vetDemandaCliente[estado.cliente];

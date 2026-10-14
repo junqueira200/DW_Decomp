@@ -18,8 +18,8 @@ namespace ConstrutivoBinNS
 
 struct EpRot
 {
-    int                  epId   = 0;
-    InstanceNS::Rotation r      = InstanceNS::Rot0;
+    int                  epId = 0;
+    InstanceNS::Rotation r = InstanceNS::Rot0;
     SolucaoNS::Ponto     point;
     double               maxDif = 0.0;
 
@@ -40,19 +40,18 @@ struct EpRot
         }
         else
             return point.vetDim[2] < outro.point.vetDim[2];
-
     }
 };
 
 struct ItemRandom
 {
-    int itemId    = -1;
-    int randomKey =  0;
+    int itemId = -1;
+    int randomKey = 0;
 
-    //ItemRandom(int itemId_, int randomKey_):itemId(itemId_), randomKey(randomKey_){}
+    // ItemRandom(int itemId_, int randomKey_):itemId(itemId_), randomKey(randomKey_){}
 
     INLINE
-    bool operator<(const ItemRandom& other)const{return randomKey < other.randomKey;}
+    bool operator<(const ItemRandom &other) const { return randomKey < other.randomKey; }
 };
 
 bool canInsert(const SolucaoNS::Ponto &ep,
@@ -60,11 +59,11 @@ bool canInsert(const SolucaoNS::Ponto &ep,
                const SolucaoNS::Bin   &bin,
                InstanceNS::Rotation    r,
                double                 &maxDif,
-               double				   wightLimit);
+               double                  wightLimit);
 
-bool epColideItem(const SolucaoNS::Ponto 	&ep,
-                  const SolucaoNS::Ponto 	&ponto,
-                  const int               	 itemId,
+bool epColideItem(const SolucaoNS::Ponto    &ep,
+                  const SolucaoNS::Ponto    &ponto,
+                  const int                  itemId,
                   const InstanceNS::Rotation r);
 
 int construtivoBinPacking(Vector<SolucaoNS::Bin> &vetBin,
@@ -87,7 +86,7 @@ double computeXY_Overlap(InstanceNS::Item       &item0,
                          InstanceNS::Rotation    r1,
                          const SolucaoNS::Ponto &p1);
 
-void sortVetItemsByCustomer(VectorI& vetItems, int size);
+void sortVetItemsByCustomer(VectorI &vetItems, int size);
 
 enum PackingErro
 {
@@ -98,10 +97,9 @@ enum PackingErro
     PackingErroLoadBalancing,
     PackingErroCompactness,
     PackingErroFragility
-
 };
 
-constexpr int PackingErroSize = PackingErroFragility+1;
+constexpr int PackingErroSize = PackingErroFragility + 1;
 
 inline Array<int, PackingErroSize> vetPackinErros;
 
@@ -109,30 +107,18 @@ INLINE
 std::string plotVetPackinErros()
 {
     std::string str;
-    const char* PackingErroNames[] =
-        {
-            "Geometric",
-            "Lifo",
-            "Support",
-            "AxleWights",
-            "LoadBalancing",
-            "Compactness",
-            "Fragility"
-        };
+    const char *PackingErroNames[] = {
+        "Geometric", "Lifo", "Support", "AxleWights", "LoadBalancing", "Compactness", "Fragility"};
 
-    for (int i = 0; i < PackingErroSize; ++i)
+    for(int i = 0; i < PackingErroSize; ++i)
     {
-        str += std::format("{}: \t {}\n",
-                            PackingErroNames[i],
-                            vetPackinErros[i]);
+        str += std::format("{}: \t {}\n", PackingErroNames[i], vetPackinErros[i]);
     }
 
     return str;
 }
 
-bool checkIfPackedAllTheItems(const SolucaoNS::Bin& bin,
-                              const VectorI& vetItems,
-                              int numItems);
+bool checkIfPackedAllTheItems(const SolucaoNS::Bin &bin, const VectorI &vetItems, int numItems);
 
 } // namespace ConstrutivoBinNS
 

@@ -17,11 +17,7 @@ using namespace InstanceVRPTW_NS;
 
 // Helper function to find all combinations
 // of size r in an array of size n
-void TestNS::combinationUtil(int              ind,
-                             int              r,
-                             VectorI         &data,
-                             Vector<VectorI> &result,
-                             VectorI         &arr)
+void TestNS::combinationUtil(int ind, int r, VectorI &data, Vector<VectorI> &result, VectorI &arr)
 {
     int n = arr.size();
 
@@ -115,8 +111,7 @@ void TestNS::enumerateRoutes(InstanceVRPTW_NS::InstanceVRPTW &instVrp,
 
     if(numInsert != (int)routeHash.size())
     {
-        std::cout << "ERROR\nnumInser(" << numInsert << "); size(" << routeHash.size()
-                  << ")\n";
+        std::cout << "ERROR\nnumInser(" << numInsert << "); size(" << routeHash.size() << ")\n";
     }
     else
         std::cout << "All routes(" << numInsert << ") were inserted in the hash\n";
@@ -165,8 +160,7 @@ bool TestNS::Route::operator==(const Route &route) const
     return true;
 }
 
-FloatType TestNS::computeReducedCost(const Route              &route,
-                                     const Eigen::RowVectorXd &vetRowPi)
+FloatType TestNS::computeReducedCost(const Route &route, const Eigen::RowVectorXd &vetRowPi)
 {
     double redCost = -vetRowPi[0] + route.dist;
 

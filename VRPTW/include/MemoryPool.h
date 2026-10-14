@@ -65,10 +65,7 @@ template <typename T> class Pool
     long getNumDel() const { return nextPosVetSolDel; }
     long getNumBuckets() const { return listT.size(); }
 
-    Pool(int bucketSizePage, int vetDelSizePage)
-    {
-        startPool(bucketSizePage, vetDelSizePage);
-    }
+    Pool(int bucketSizePage, int vetDelSizePage) { startPool(bucketSizePage, vetDelSizePage); }
 
     void startPool(const int bucketSizePage = 1, const int vetDelSizePage = 4)
     {
@@ -137,8 +134,7 @@ template <typename T> class Pool
 
             // std::cout<<"Net bucket\n";
             T *p_tNew = nullptr;
-            assertm(posix_memalign((void **)&p_tNew, pageSize, bucketSize),
-                    "Bay more memory!");
+            assertm(posix_memalign((void **)&p_tNew, pageSize, bucketSize), "Bay more memory!");
 
             // #ifdef POOL_SET_MEM_PAGES
             memset(p_tNew, 0, bucketSize);

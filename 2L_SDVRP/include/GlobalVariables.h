@@ -52,9 +52,8 @@ inline void computaAcertosE_Erros()
     std::cout << "BitSet ajudou " << numAcertosBitSet << " vezes!\n";
 
     std::ofstream file("resultados.csv", std::ios::out | std::ios::app);
-    file << ParseInputNS::input.strInst << "; " << numAcertos << "; " << mediaItensAcerto
-         << "; " << numErros << "; " << mediaItensErro << "; " << numAcertosBitSet
-         << "\n";
+    file << ParseInputNS::input.strInst << "; " << numAcertos << "; " << mediaItensAcerto << "; "
+         << numErros << "; " << mediaItensErro << "; " << numAcertosBitSet << "\n";
     file.close();
 
     std::cout << ParseInputNS::input.strInst << "\n";

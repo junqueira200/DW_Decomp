@@ -6,8 +6,8 @@
 
 std::ostream &operator<<(std::ostream &os, const std::tuple<int, int, int> &tuple)
 {
-    os << "(" << std::get<0>(tuple) << "; " << std::get<1>(tuple) << "; "
-       << std::get<2>(tuple) << ") ";
+    os << "(" << std::get<0>(tuple) << "; " << std::get<1>(tuple) << "; " << std::get<2>(tuple)
+       << ") ";
 
     return os;
 }

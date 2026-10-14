@@ -152,15 +152,11 @@ bool buscaIntraRota(SolucaoNS::Solucao &solucao,
 }
 
 template <typename T>
-bool buscaInterRotas(SolucaoNS::Solucao &solucao,
-                     MV                  mv,
-                     double              alphaBin,
-                     T                   Func(SolucaoNS::Solucao &sol,
-                                              double              alphaBin,
-                                              int                 idRota0,
-                                              int                 pos0,
-                                              int                 idRota1,
-                                              int                 pos1))
+bool buscaInterRotas(
+    SolucaoNS::Solucao &solucao,
+    MV                  mv,
+    double              alphaBin,
+    T Func(SolucaoNS::Solucao &sol, double alphaBin, int idRota0, int pos0, int idRota1, int pos1))
 {
     std::string error;
 

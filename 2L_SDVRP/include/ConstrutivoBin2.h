@@ -37,19 +37,19 @@ bool packRoute(SolucaoNS::Rota &rota, VectorI _itemIds, bool print = false);
 /**
  * @brief Attempts to pack a specific list of items into a bin using a given sorting strategy.
  */
-bool packItemsIntoBin(SolucaoNS::Bin          &bin,
-                      SolucaoNS::Rota         &rota,
-                      const VectorI           &itemIds,
-                      int					   numItems,
-                      bool					   sortItemIds 	= true,
-                      bool                     print 		= false,
-                      SolucaoNS::Penalty*	   penalty		= nullptr);
+bool packItemsIntoBin(SolucaoNS::Bin     &bin,
+                      SolucaoNS::Rota    &rota,
+                      const VectorI      &itemIds,
+                      int                 numItems,
+                      bool                sortItemIds = true,
+                      bool                print = false,
+                      SolucaoNS::Penalty *penalty = nullptr);
 
 /**
  * @brief Collects all item IDs associated with the customers along the route.
  */
 void getRouteItems(const SolucaoNS::Rota &rota, VectorI &outItemIds);
 
-} // namespace ConstrutivoBinNS
+} // namespace ConstrutivoBin2NS
 
 #endif // INC_2L_SDVRP_CONSTRUTIVOBIN_H

@@ -39,8 +39,7 @@ int InstanceVRPTW_NS::InstanceVRPTW::sumDem()
     return sum;
 }
 
-void InstanceVRPTW_NS::leInstanciaSalomon(const std::string &strFile,
-                                          InstanceVRPTW     &instVrpTw)
+void InstanceVRPTW_NS::leInstanciaSalomon(const std::string &strFile, InstanceVRPTW &instVrpTw)
 {
     std::cout << "leInstanciaSalomon\n";
 
@@ -98,10 +97,8 @@ void InstanceVRPTW_NS::leInstanciaSalomon(const std::string &strFile,
         for(int j = i + 1; j < numClie + 1; ++j)
         {
 
-            double distI_J = calculateDistance(matData(i, XCoord),
-                                               matData(i, XCoord),
-                                               matData(j, XCoord),
-                                               matData(j, YCoord));
+            double distI_J = calculateDistance(
+                matData(i, XCoord), matData(i, XCoord), matData(j, XCoord), matData(j, YCoord));
 
             instVrpTw.matDist(i, j) = distI_J;
             instVrpTw.matDist(j, i) = distI_J;
@@ -116,8 +113,8 @@ void InstanceVRPTW_NS::leInstanciaSalomon(const std::string &strFile,
 
         std::cout << i << ": [" << instVrpTw.vetClieTime[i].readyTime << ";"
                   << instVrpTw.vetClieTime[i].dueTime << "]; servTime("
-                  << instVrpTw.vetClieTime[i].servTime << "); dem("
-                  << instVrpTw.vetClieDem[i] << ")\n";
+                  << instVrpTw.vetClieTime[i].servTime << "); dem(" << instVrpTw.vetClieDem[i]
+                  << ")\n";
     }
 
     instVrpTw.numVeic = std::ceil(double(totalDem) / instVrpTw.capVeic);
@@ -129,8 +126,7 @@ void InstanceVRPTW_NS::leInstanciaSalomon(const std::string &strFile,
     instVrpTw.numClientes -= 1;
 }
 
-void InstanceVRPTW_NS::leInstanciaAugerat(const std::string &strFile,
-                                          InstanceVRPTW     &instCvrp)
+void InstanceVRPTW_NS::leInstanciaAugerat(const std::string &strFile, InstanceVRPTW &instCvrp)
 {
 
     std::cout << "leInstanciaAugerat";
@@ -187,8 +183,7 @@ void InstanceVRPTW_NS::leInstanciaAugerat(const std::string &strFile,
 
         for(int j = i + 1; j < numClientes + 1; ++j)
         {
-            double temp =
-                (sqrt(pow(vetorX[i] - vetorX[j], 2) + pow(vetorY[i] - vetorY[j], 2)));
+            double temp = (sqrt(pow(vetorX[i] - vetorX[j], 2) + pow(vetorY[i] - vetorY[j], 2)));
             instCvrp.matDist(i, j) = static_cast<int>(std::round(temp));
             instCvrp.matDist(j, i) = instCvrp.matDist(i, j);
         }

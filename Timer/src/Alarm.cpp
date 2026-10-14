@@ -1,29 +1,29 @@
 #include "../include/Alarm.h"
 
 sig_atomic_t alarm_stopG = 0;
-sig_atomic_t alarmSet    = 0;
+sig_atomic_t alarmSet = 0;
 
 void on_alarm(int signal)
 {
     alarm_stopG = 1;
     alarmSet = 0;
-    //std::cout << "TIME OUT!; alarm_stopG: "<<alarm_stopG<<"\n";
+    // std::cout << "TIME OUT!; alarm_stopG: "<<alarm_stopG<<"\n";
 }
 
 bool doStop()
 {
-    //std::printf("alarm_stopG: %d\n", alarm_stopG);
-    return alarm_stopG==1;
+    // std::printf("alarm_stopG: %d\n", alarm_stopG);
+    return alarm_stopG == 1;
 }
 
-//inline
+// inline
 void setAlarm(unsigned int alarmPeriod)
 {
-    //static bool alarmSet = false;
+    // static bool alarmSet = false;
     static bool setSignal = true;
     if(alarmSet == 0)
     {
-        //if(setSignal)
+        // if(setSignal)
         {
             signal(SIGALRM, on_alarm);
             setSignal = false;
@@ -38,7 +38,6 @@ void setAlarm(unsigned int alarmPeriod)
         throw "ERROR";
     }
 }
-
 
 void setOffAlarm()
 {

@@ -9,15 +9,15 @@
 #include "BinPackingCP.h"
 #include "Construtivo.h"
 #include "ConstrutivoBin.h"
+#include "DualFeasibleFunctions.h"
 #include "IBM_CpOptimizer.h"
 #include "Ig.h"
 #include "InputOutput.h"
 #include "Instancia.h"
 #include "MILP.h"
 #include "TesteOroloc3D.h"
-#include "rand.h"
 #include "c_api.h"
-#include "DualFeasibleFunctions.h"
+#include "rand.h"
 
 #include "AuxT.h"
 #include "BCRoutingParams.h"
@@ -41,19 +41,18 @@ using namespace VehicleRouting;
 using namespace VehicleRouting::Algorithms;
 using namespace MILP_NS;
 
-
 void testMLIFO()
 {
     std::printf("*****************************************\n");
     std::printf("**************TESTING MLIFO**************\n\n");
     PRINT_THROW();
 
-    static Eigen::Matrix<int, -1, -1, Eigen::RowMajor>
-        matSupportItems(instanciaG.numItens, instanciaG.numItens);
+    static Eigen::Matrix<int, -1, -1, Eigen::RowMajor> matSupportItems(
+        instanciaG.numItens, instanciaG.numItens);
     matSupportItems.setConstant(0);
 
-    int index0 = instanciaG.matCliItensIniFim(1, 0);
-    int index1 = instanciaG.matCliItensIniFim(2, 0);
+    int        index0 = instanciaG.matCliItensIniFim(1, 0);
+    int        index1 = instanciaG.matCliItensIniFim(2, 0);
     const Item item0 = instanciaG.vetItens[index0];
     const Item item1 = instanciaG.vetItens[index1];
 
@@ -92,7 +91,6 @@ void testMLIFO()
     else
         std::printf("Not Pass\n");
 
-
     bin.vetPosItem[0].set(400.0, 130.75, 0.0);
     bin.vetPosItem[1].set(400.0, 75.0, 0.0);
     if(SolucaoNS::checkUnloadingSequence(bin, rota, matSupportItems))
@@ -107,14 +105,12 @@ void testMLIFO()
     else
         std::printf("Pass\n");
 
-
     bin.vetPosItem[0].set(400.0, 75.0, 61.0);
     bin.vetPosItem[1].set(400.0, 75.0, 0.0);
     if(SolucaoNS::checkUnloadingSequence(bin, rota, matSupportItems))
         std::printf("Pass\n");
     else
         std::printf("Not Pass\n");
-
 
     bin.vetPosItem[0].set(400.0, 75.0, 0.0);
     bin.vetPosItem[1].set(400.0, 75.0, 61.0);
@@ -136,9 +132,6 @@ void testMLIFO()
     else
         std::printf("Not Pass\n");
 
-
-
-
     PRINT_THROW();
 }
 
@@ -149,8 +142,7 @@ int main(int argc, const char *argv[])
 
     std::cout << "OR-Tools version: "
               //<< operations_research::OrToolsMajorVersion()
-              << operations_research::OrToolsVersionString()
-              << std::endl;
+              << operations_research::OrToolsVersionString() << std::endl;
 
     // std::cout<<"main\n";
     // Item item(1, 2, 3, 1);
@@ -160,9 +152,8 @@ int main(int argc, const char *argv[])
 
     ParseInputNS::parseInput(argc, argv);
     output.setup();
-    std::cout << "INST: " << input.strInst << " SEED: " << RandNs::estado_ << " "
-              << output.data << "";
-
+    std::cout << "INST: " << input.strInst << " SEED: " << RandNs::estado_ << " " << output.data
+              << "";
 
     if(input.instOroloc3D_2)
         InstanceNS::readOroloc3D3(input.strInstCompleto);
@@ -173,14 +164,13 @@ int main(int argc, const char *argv[])
     else
         InstanceNS::read3dInstance(input.strInstCompleto);
 
-    //testMLIFO();
+    // testMLIFO();
 
-    for(int i=0; i < instanciaG.numItens; ++i)
+    for(int i = 0; i < instanciaG.numItens; ++i)
     {
-        //Item &item = instanciaG.vetItens[i];
-        //for(int d=0; d < 3; ++d)
-        //    maxDim = std::max(maxDim, item.vetDim[d]);
-
+        // Item &item = instanciaG.vetItens[i];
+        // for(int d=0; d < 3; ++d)
+        //     maxDim = std::max(maxDim, item.vetDim[d]);
 
         if(i != instanciaG.vetItens[i].itemId)
         {
@@ -188,13 +178,13 @@ int main(int argc, const char *argv[])
             PRINT_THROW();
         }
 
-        //std::printf("%d: %s\n", i, instanciaG.vetItens[i].print(InstanceNS::Rot0, true).c_str());
+        // std::printf("%d: %s\n", i, instanciaG.vetItens[i].print(InstanceNS::Rot0, true).c_str());
     }
 
-    double vol = 0.0;
-    double volNormal = 0.0;
-    const double volVeich = instanciaG.vetDimVeiculo[0]*instanciaG.vetDimVeiculo[1]*
-                            instanciaG.vetDimVeiculo[2];
+    double       vol = 0.0;
+    double       volNormal = 0.0;
+    const double volVeich =
+        instanciaG.vetDimVeiculo[0] * instanciaG.vetDimVeiculo[1] * instanciaG.vetDimVeiculo[2];
 
     const double maxDim = std::cbrt(volVeich);
 
@@ -202,27 +192,27 @@ int main(int argc, const char *argv[])
     double m1 = 4;
     double m2 = 1;
 
-    const double volVeichNor = (instanciaG.vetDimVeiculo[0]/maxDim)*(instanciaG.vetDimVeiculo[1]/maxDim)*
-                               (instanciaG.vetDimVeiculo[2]/maxDim);
+    const double volVeichNor = (instanciaG.vetDimVeiculo[0] / maxDim) *
+                               (instanciaG.vetDimVeiculo[1] / maxDim) *
+                               (instanciaG.vetDimVeiculo[2] / maxDim);
 
     std::printf("Max dim: %.1f\n", maxDim);
     std::printf("volVeichNor: %.1f\n\n", volVeichNor);
 
-
     VectorI vetItems2;
 
-    for(int i=0; i < instanciaG.numItens; ++i)
+    for(int i = 0; i < instanciaG.numItens; ++i)
     {
         vetItems2.push_back(i);
         Item &item = instanciaG.vetItens[i];
 
-        double dim0 = item.vetDim[0]/maxDim;
-        double dim1 = item.vetDim[1]/maxDim;
-        double dim2 = item.vetDim[2]/maxDim;
+        double dim0 = item.vetDim[0] / maxDim;
+        double dim1 = item.vetDim[1] / maxDim;
+        double dim2 = item.vetDim[2] / maxDim;
 
-        vol += item.vetDim[0]*item.vetDim[1]*item.vetDim[2];
-        volNormal += funcionU((1.0/8), dim0) * funcionU((1.0/7), dim1) *
-                     funcionU((1.0/9), dim2);
+        vol += item.vetDim[0] * item.vetDim[1] * item.vetDim[2];
+        volNormal +=
+            funcionU((1.0 / 8), dim0) * funcionU((1.0 / 7), dim1) * funcionU((1.0 / 9), dim2);
         bool doBreak = false;
 
         if(vol > volVeich)
@@ -249,7 +239,6 @@ int main(int argc, const char *argv[])
         PRINT_THROW();
     }
 
-
     /*
     int route[] = {0, 2, 12, 10, 0};
 
@@ -274,11 +263,10 @@ int main(int argc, const char *argv[])
     {
         setClassical3DPackingProblem(true);
 
-        //bool result = testRoute(&vetItems2[0], vetItems2.size(), 0);
-        //std::printf("Resultado: %d\n", (int)result);
+        // bool result = testRoute(&vetItems2[0], vetItems2.size(), 0);
+        // std::printf("Resultado: %d\n", (int)result);
 
-        //exit(0);
-
+        // exit(0);
 
         Solucao sol(instanciaG);
         Solucao best(instanciaG);
@@ -300,7 +288,7 @@ int main(int argc, const char *argv[])
         bool heuristicSol;
         bool updateBest = false;
 
-        for(int i=0; i < 5000; ++i)
+        for(int i = 0; i < 5000; ++i)
         {
 
             sol.reset();
@@ -318,8 +306,6 @@ int main(int argc, const char *argv[])
         {
             std::printf("Did find a feasible solution");
             std::printf("Dist; %.1f\nSol:\n\n%s\n\n", best.distTotal, best.printSol().c_str());
-
-
         }
         else
         {
@@ -360,22 +346,12 @@ int main(int argc, const char *argv[])
 
     testeOroloc3D_2();
 
-    const char* PackingErroNames[] =
-        {
-            "Geometric",
-            "Lifo",
-            "Support",
-            "AxleWights",
-            "LoadBalancing",
-            "Compactness",
-            "Fragility"
-        };
+    const char *PackingErroNames[] = {
+        "Geometric", "Lifo", "Support", "AxleWights", "LoadBalancing", "Compactness", "Fragility"};
 
-    for (int i = 0; i < PackingErroSize; ++i)
+    for(int i = 0; i < PackingErroSize; ++i)
     {
-        std::printf("%s: \t %d\n",
-                    PackingErroNames[i],
-                    vetPackinErros[i]);
+        std::printf("%s: \t %d\n", PackingErroNames[i], vetPackinErros[i]);
     }
 
     // IBM_CpOptimizerNS::testSCIP();
@@ -427,8 +403,7 @@ int main(int argc, const char *argv[])
     {
         for(auto r : vetRot)
         {
-            std::printf(
-                "r[%i, %i] = %.0f\n", i, (int)r, variables.matRot.getX_value(i, (int)r));
+            std::printf("r[%i, %i] = %.0f\n", i, (int)r, variables.matRot.getX_value(i, (int)r));
         }
     }
 

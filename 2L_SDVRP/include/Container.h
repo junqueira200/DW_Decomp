@@ -86,10 +86,7 @@ struct IDimension
 
     Model::Rotation Rotated = Model::Rotation::None;
 
-    void SetOrientation(int             dx,
-                        int             dy,
-                        int             dz,
-                        Model::Rotation rotation = Model::Rotation::None);
+    void SetOrientation(int dx, int dy, int dz, Model::Rotation rotation = Model::Rotation::None);
 
   protected:
     IDimension() = default;
@@ -178,17 +175,15 @@ class Cuboid : public ICuboid
            size_t           groupId,
            double           weight,
            int              pos_ = -1)
-        : ICuboid(0, 0, 0, dx, dy, dz), InternId(internId), ExternId(externId),
-          GroupId(groupId), Weight(weight),
-          EnableHorizontalRotation(enableHorizontalRotation), Fragility(fragility),
+        : ICuboid(0, 0, 0, dx, dy, dz), InternId(internId), ExternId(externId), GroupId(groupId),
+          Weight(weight), EnableHorizontalRotation(enableHorizontalRotation), Fragility(fragility),
           pos(pos_)
     {
     }
 
     virtual ~Cuboid() = default;
 
-    [[nodiscard]] std::tuple<int, int, int>
-    DetermineDimensions(Orientation orientation) const;
+    [[nodiscard]] std::tuple<int, int, int> DetermineDimensions(Orientation orientation) const;
 
     [[nodiscard]] int MinimumRotatableDimension(Axis axis) const override;
 };

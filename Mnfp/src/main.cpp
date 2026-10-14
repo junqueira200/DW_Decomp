@@ -39,8 +39,8 @@ int main()
         }*/
 
     mestre.write("mestre.lp");
-    auto vetPairSubProb = std::vector<std::pair<int, int>>{
-        std::make_pair(0, N * N), std::make_pair(N * N, N * N)};
+    auto vetPairSubProb =
+        std::vector<std::pair<int, int>>{std::make_pair(0, N * N), std::make_pair(N * N, N * N)};
 
     DW_DecompNS::dwDecomp(env,
                           mestre,

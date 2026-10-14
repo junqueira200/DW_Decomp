@@ -24,9 +24,7 @@ IloEnv *CpOptimizer::envPtr = nullptr;
  * ******************************************************************************
  */
 
-CpOptimizer::CpOptimizer(const VectorI         &vetItems_,
-                         int                    numItems_,
-                         const SolucaoNS::Rota &rota_)
+CpOptimizer::CpOptimizer(const VectorI &vetItems_, int numItems_, const SolucaoNS::Rota &rota_)
     : vetItems(vetItems_), numItems(numItems_), rota(rota_)
 {
 }
@@ -98,8 +96,7 @@ bool CpOptimizer::solve(SolucaoNS::Bin &bin)
                     d, (InstanceNS::Rotation)rot);
                 if(dimD != array[d])
                 {
-                    std::printf(
-                        "Error: dimensios are diferents\n%d != %d\n", dimD, array[d]);
+                    std::printf("Error: dimensios are diferents\n%d != %d\n", dimD, array[d]);
                     EXIT_PRINT();
                 }
 
@@ -503,10 +500,8 @@ void CpOptimizer::CreateSupportItem()
             IloBoolVar isVerticallyAdjacent(*envPtr);
             // model.add(IloIfThen(*envPtr, isVerticallyAdjacent==1,
             // mEndPositionsZ[j]==mStartPositionsZ[i]));
-            model.add(((isVerticallyAdjacent == 1) &&
-                       (mEndPositionsZ[j] == mStartPositionsZ[i])) ||
-                      (isVerticallyAdjacent == 0) &&
-                          (mEndPositionsZ[j] != mStartPositionsZ[i]));
+            model.add(((isVerticallyAdjacent == 1) && (mEndPositionsZ[j] == mStartPositionsZ[i])) ||
+                      (isVerticallyAdjacent == 0) && (mEndPositionsZ[j] != mStartPositionsZ[i]));
 
             // model.add(IloIfThen(*envPtr, isVerticallyAdjacent==0,
             // mEndPositionsZ[j]!=mStartPositionsZ[i]));
@@ -525,9 +520,8 @@ void CpOptimizer::CreateSupportItem()
                               (1 - mItemsOverlapsXY[i][position]) >=
                           1);
 
-                model.add(
-                    ((mItemsOverlapsXY[i][position] == 0) && mSupportXY[i][j] == 0) ||
-                    (mItemsOverlapsXY[i][position] == 1));
+                model.add(((mItemsOverlapsXY[i][position] == 0) && mSupportXY[i][j] == 0) ||
+                          (mItemsOverlapsXY[i][position] == 1));
                 //                model.add(IloIfThen(*envPtr,
                 //                mItemsOverlapsXY[i][position]==0, mSupportXY[i][j]==0));
             }
@@ -540,9 +534,8 @@ void CpOptimizer::CreateSupportItem()
                           1);
                 // model.add(IloIfThen(*envPtr, mItemsOverlapsXY[j][position]==0,
                 // mSupportXY[i][j]==0));
-                model.add(
-                    ((mItemsOverlapsXY[j][position] == 0) && mSupportXY[i][j] == 0) ||
-                    (mItemsOverlapsXY[j][position] == 1));
+                model.add(((mItemsOverlapsXY[j][position] == 0) && mSupportXY[i][j] == 0) ||
+                          (mItemsOverlapsXY[j][position] == 1));
             }
         }
     }
@@ -596,8 +589,8 @@ void CpOptimizer::CreateSupportArea()
     for(size_t i = 0; i < numItems; ++i)
     {
         IloExpr supportedAreaExpr(*envPtr);
-        int     areaI = instanciaG.vetItens[vetItems[i]].vetDim[0] *
-                        instanciaG.vetItens[vetItems[i]].vetDim[1];
+        int     areaI =
+            instanciaG.vetItens[vetItems[i]].vetDim[0] * instanciaG.vetItens[vetItems[i]].vetDim[1];
         for(size_t j = 0; j < numItems; ++j)
         {
             if(i == j)
@@ -623,8 +616,7 @@ void CpOptimizer::CreateSupportArea()
 
             //            model.add(IloIfThen(*envPtr, mSupportXY[i][j]==0,
             //            usableArea==0));
-            model.add(((mSupportXY[i][j] == 0) && (usableArea == 0)) ||
-                      (mSupportXY[i][j] == 1));
+            model.add(((mSupportXY[i][j] == 0) && (usableArea == 0)) || (mSupportXY[i][j] == 1));
             supportedAreaExpr += usableArea;
         }
 
@@ -635,9 +627,9 @@ void CpOptimizer::CreateSupportArea()
         // model.add(IloIfThen(*envPtr, mPlacedOnFloor[i] == 0, supportedArea ==
         // supportedAreaExpr));
 
-        int minArea = (int)std::ceil(input.minSupportArea *
-                                     instanciaG.vetItens[vetItems[i]].vetDim[0] *
-                                     instanciaG.vetItens[vetItems[i]].vetDim[1]);
+        int minArea =
+            (int)std::ceil(input.minSupportArea * instanciaG.vetItens[vetItems[i]].vetDim[0] *
+                           instanciaG.vetItens[vetItems[i]].vetDim[1]);
 
         model.add(((mPlacedOnFloor[i] == 0) && (supportedAreaExpr >= minArea)) ||
                   (mPlacedOnFloor[i] == 1));
@@ -660,8 +652,7 @@ void CpOptimizer::CreateXYIntersectionBool()
 
             // TODO Posible wrong!
             model.add(mItemsOverlapsXY[i][positionJ] + mRelativeDirections[i][j][LeftY] +
-                          mRelativeDirections[i][j][RightY] +
-                          mRelativeDirections[i][j][BehindX] +
+                          mRelativeDirections[i][j][RightY] + mRelativeDirections[i][j][BehindX] +
                           mRelativeDirections[i][j][InFrontX] >=
                       1);
 
@@ -719,8 +710,7 @@ void CpOptimizer::CreateXYIntersectionArea()
                            (diffXji == mEndPositionsX[j] - mStartPositionsX[i])) ||
                           (mItemsOverlapsXY[i][positionJ] == 0));
 
-                IloExpr min =
-                    IloMin(IloMin(diffXij, diffXji), IloMin(mLengths[i], mLengths[j]));
+                IloExpr min = IloMin(IloMin(diffXij, diffXji), IloMin(mLengths[i], mLengths[j]));
 
                 IloIntVar xOverlap(*envPtr, 0, instanciaG.vetDimVeiculo[0]);
                 model.add(((mItemsOverlapsXY[i][positionJ] == 1) && (xOverlap == min)) ||
@@ -755,8 +745,7 @@ void CpOptimizer::CreateXYIntersectionArea()
                 //                                                                 (mEndPositionsY[j]-mStartPositionsY[i])));
 
                 IloIntVar yOverlap(*envPtr, 0, instanciaG.vetDimVeiculo[1]);
-                IloExpr   min2 =
-                    IloMin(IloMin(diffYij, diffYji), IloMin(mWidths[i], mWidths[j]));
+                IloExpr   min2 = IloMin(IloMin(diffYij, diffYji), IloMin(mWidths[i], mWidths[j]));
                 model.add(((mItemsOverlapsXY[i][positionJ] == 1) && (yOverlap == min2)) ||
                           (mItemsOverlapsXY[i][positionJ] == 0));
 

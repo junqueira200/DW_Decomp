@@ -2,9 +2,9 @@
 // #define AXLEWEIGHTS_H
 #pragma once
 
+#include "InputOutput.h"
 #include "Instancia.h"
 #include "Solucao.h"
-#include "InputOutput.h"
 
 namespace AxleWeightsNS
 {
@@ -15,13 +15,13 @@ class AxleData
     AxleData() {};
     virtual ~AxleData() {};
     virtual bool checkAxleWeights(SolucaoNS::Bin &bin,
-                                  bool            print 	= false,
-                                  double*         fk    	= nullptr,
-                                  double*         fFa   	= nullptr,
-                                  double*         fRa   	= nullptr,
-                                  double*	      fTa   	= nullptr,
-                                  double*         ptrSumF  	= nullptr,
-                                  double*		  ptrSumM  	= nullptr) const = 0;
+                                  bool            print = false,
+                                  double         *fk = nullptr,
+                                  double         *fFa = nullptr,
+                                  double         *fRa = nullptr,
+                                  double         *fTa = nullptr,
+                                  double         *ptrSumF = nullptr,
+                                  double         *ptrSumM = nullptr) const = 0;
 };
 
 class SemiTrailer : public AxleData
@@ -32,25 +32,22 @@ class SemiTrailer : public AxleData
         if(ParseInputNS::input.useCm)
             return;
 
-        wheelBase                      *= 10;
-        distanceKingpinRearAxle        *= 10;
-        distanceKingpinTrailerAxle     *= 10;
-        distanceCargoSpaceTrailerAxle  *= 10;
-        distanceMassTractorRearAxle    *= 10;
+        wheelBase *= 10;
+        distanceKingpinRearAxle *= 10;
+        distanceKingpinTrailerAxle *= 10;
+        distanceCargoSpaceTrailerAxle *= 10;
+        distanceMassTractorRearAxle *= 10;
         distanceMassTrailerTrailerAxle *= 10;
-
-
-
     }
     ~SemiTrailer() {}
-    bool   checkAxleWeights(SolucaoNS::Bin &bin,
-                            bool            print    = false,
-                            double*         ptrFk    = nullptr,
-                            double*         ptrFFa   = nullptr,
-                            double*         ptrFRa   = nullptr,
-                            double*			ptrFTa   = nullptr,
-                            double*         ptrSumF  = nullptr,
-                            double*			ptrSumM  = nullptr) const override;
+    bool checkAxleWeights(SolucaoNS::Bin &bin,
+                          bool            print = false,
+                          double         *ptrFk = nullptr,
+                          double         *ptrFFa = nullptr,
+                          double         *ptrFRa = nullptr,
+                          double         *ptrFTa = nullptr,
+                          double         *ptrSumF = nullptr,
+                          double         *ptrSumM = nullptr) const override;
 
     double computeMaxFK(SolucaoNS::Bin &bin) const;
 

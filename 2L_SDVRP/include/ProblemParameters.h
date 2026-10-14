@@ -55,8 +55,8 @@ struct LoadingProblemParams
         case VariantType::Weight:
             return "Weight";
         default:
-            std::string message = "Variant " + std::to_string((int)Variant) +
-                                  " is an invalid problem variant.";
+            std::string message =
+                "Variant " + std::to_string((int)Variant) + " is an invalid problem variant.";
             throw std::runtime_error(message.c_str());
         }
     }

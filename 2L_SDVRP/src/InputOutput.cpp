@@ -26,11 +26,8 @@ void ParseInputNS::parseInput(int argc, const char *argv[])
         auto &options = *allocated;
         options.positional_help("[optional args]").show_positional_help();
 
-        options.set_width(70)
-            .set_tab_expansion()
-            .allow_unrecognised_options()
-            .add_options()(
-                "i,inst", "inst", cxxopts::value<std::string>(input.strInstCompleto))
+        options.set_width(70).set_tab_expansion().allow_unrecognised_options().add_options()(
+            "i,inst", "inst", cxxopts::value<std::string>(input.strInstCompleto))
             //("s,split", "Indicate if the instance allows split delevery",
             // cxxopts::value<bool>(input.splitInstancia))
             ("alphaBin",
@@ -64,9 +61,7 @@ void ParseInputNS::parseInput(int argc, const char *argv[])
             //("cpSatTime", "Tempo limite para o cp-sat",
             // cxxopts::value<double>(input.cpSatTime))
             ("filo", "", cxxopts::value<bool>(input.lifo))(
-                "lTaype",
-                "Labeling Type (0, 1, 2)",
-                cxxopts::value<int>(input.labelingType))(
+                "lTaype", "Labeling Type (0, 1, 2)", cxxopts::value<int>(input.labelingType))(
                 "2d",
                 "Indicates if the instance is 2d. Default is 3d!",
                 cxxopts::value<bool>(input.inst2d))(
@@ -85,8 +80,8 @@ void ParseInputNS::parseInput(int argc, const char *argv[])
                 "balancedLoadingD",
                 "Parameter D to compute balanced Loading",
                 cxxopts::value<double>(input.balancedLoadingD))
-                //("useCm","", cxxopts::value<bool>(input.useCm))
-                ;
+            //("useCm","", cxxopts::value<bool>(input.useCm))
+            ;
         // SolOroloc3D_output
         auto result = options.parse(argc, argv);
 
@@ -115,8 +110,8 @@ void ParseInputNS::parseInput(int argc, const char *argv[])
         if(result.count("oroloc3D_2") == 1 && result.count("solOroloc3D_2") == 0)
             assertm(true, "Missing param solOroloc3D_2");
 
-        //if(result.count("oroloc3D_2") == 1 && result.count("solOroloc3D_output") == 0)
-            //assertm(true, "Missing param solOroloc3D_output");
+        // if(result.count("oroloc3D_2") == 1 && result.count("solOroloc3D_output") == 0)
+        // assertm(true, "Missing param solOroloc3D_output");
 
         RandNs::startEngine(output.semente, bool(result.count("seed") == 1));
     }
@@ -180,8 +175,7 @@ void ParseInputNS::escreveFileResulCsv(const SolucaoNS::Solucao &sol,
         if(!file.is_open())
         {
 
-            std::cout << "Error, nao foi possivel abrir o arquivo: " << fileResulCSV
-                      << "\n";
+            std::cout << "Error, nao foi possivel abrir o arquivo: " << fileResulCSV << "\n";
             throw std::ifstream::failure(fileResulCSV);
         }
 
@@ -197,8 +191,8 @@ void ParseInputNS::escreveFileResulCsv(const SolucaoNS::Solucao &sol,
         throw std::ifstream::failure(fileResulCSV);
     }
 
-    file << sol.distTotal << ", " << tempoCpu << ", " << sol.getUtilizacaoMedianaBins()
-         << ", " << sol.getTamMedianaRota() << ", " << output.semente << "\n";
+    file << sol.distTotal << ", " << tempoCpu << ", " << sol.getUtilizacaoMedianaBins() << ", "
+         << sol.getTamMedianaRota() << ", " << output.semente << "\n";
     file.close();
 }
 
@@ -220,8 +214,7 @@ void ParseInputNS::escreveFileSeed(const std::string &fileSeed)
     seedFile << std::to_string(output.semente) << "\n";
 }
 
-void ParseInputNS::escreveFileSol(const SolucaoNS::Solucao &sol,
-                                  const std::string        &fileSol)
+void ParseInputNS::escreveFileSol(const SolucaoNS::Solucao &sol, const std::string &fileSol)
 {
 
     if(fileSol.empty())
@@ -235,8 +228,7 @@ void ParseInputNS::escreveFileSol(const SolucaoNS::Solucao &sol,
     file.close();
 }
 
-void ParseInputNS::escreveFileSolPrint(const SolucaoNS::Solucao &sol,
-                                       const std::string        &fileSol)
+void ParseInputNS::escreveFileSolPrint(const SolucaoNS::Solucao &sol, const std::string &fileSol)
 {
 
     if(fileSol.empty())

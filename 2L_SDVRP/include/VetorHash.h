@@ -89,10 +89,9 @@ class HashFunc
     size_t operator()(const HashVector &vetorHash) const { return vetorHash.valHash; }
 };
 
-inline void writeSetToFile(
-    std::unordered_set<NS_Igor_HashVector::HashVector, NS_Igor_HashVector::HashFunc>
-                 &ig_hashPacking,
-    std::string &&file)
+inline void writeSetToFile(std::unordered_set<NS_Igor_HashVector::HashVector,
+                                              NS_Igor_HashVector::HashFunc> &ig_hashPacking,
+                           std::string                                     &&file)
 {
     std::fstream fileFs;
     fileFs.open(file, std::ios::out);
@@ -105,8 +104,7 @@ inline void writeSetToFile(
     fileFs.close();
 }
 
-inline void writeVectorOfRoutesToFile(std::vector<std::vector<int>> &vetRoutes,
-                                      std::string                  &&file)
+inline void writeVectorOfRoutesToFile(std::vector<std::vector<int>> &vetRoutes, std::string &&file)
 {
     std::cout << "Ini\n";
     std::fstream fileFs;

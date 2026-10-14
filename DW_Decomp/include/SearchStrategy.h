@@ -37,8 +37,8 @@ class DepthFirst : public SearchDataInter
 
     bool                        empty() override { return nodeList.empty(); };
     DW_DecompNS::DW_DecompNode *pop() override;
-    void insert(DW_DecompNS::DW_DecompNode *node) override { nodeList.push_back(node); };
-    int  size() override { return int(nodeList.size()); };
+    void   insert(DW_DecompNS::DW_DecompNode *node) override { nodeList.push_back(node); };
+    int    size() override { return int(nodeList.size()); };
     double getMin() override;
     double getMax() override;
     ~DepthFirst() override;
@@ -51,8 +51,8 @@ class BreadthFirst : public SearchDataInter
 
     bool                        empty() override { return nodeList.empty(); };
     DW_DecompNS::DW_DecompNode *pop() override;
-    void insert(DW_DecompNS::DW_DecompNode *node) override { nodeList.push_back(node); };
-    int  size() override { return int(nodeList.size()); };
+    void   insert(DW_DecompNS::DW_DecompNode *node) override { nodeList.push_back(node); };
+    int    size() override { return int(nodeList.size()); };
     double getMin() override;
     double getMax() override;
     ~BreadthFirst() override;
@@ -61,8 +61,7 @@ class BreadthFirst : public SearchDataInter
 class DecompNodeCompMin
 {
   public:
-    bool operator()(DW_DecompNS::DW_DecompNode *node0,
-                    DW_DecompNS::DW_DecompNode *node1) const
+    bool operator()(DW_DecompNS::DW_DecompNode *node0, DW_DecompNS::DW_DecompNode *node1) const
     {
         return node0->funcObj < node1->funcObj;
     }
@@ -75,10 +74,7 @@ class MinFuncObj : public SearchDataInter
 
     bool                        empty() override { return setDecompNode.empty(); };
     DW_DecompNS::DW_DecompNode *pop() override;
-    void                        insert(DW_DecompNS::DW_DecompNode *node) override
-    {
-        setDecompNode.insert(node);
-    };
+    void   insert(DW_DecompNS::DW_DecompNode *node) override { setDecompNode.insert(node); };
     int    size() override { return int(setDecompNode.size()); };
     double getMin() override;
     double getMax() override;

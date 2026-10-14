@@ -79,7 +79,7 @@ class LabelCmp
                                         /*
                                         if(MinHeap)
                                             return l0->HEAP_KEY < l1->HEAP_KEY;// && l0->vetResources[1] <
-                                        l1->vetResources[1];                                 else                                 return l0->HEAP_KEY >
+                                        l1->vetResources[1];                                 else return l0->HEAP_KEY >
                                         l1->HEAP_KEY;
                                         */
     }

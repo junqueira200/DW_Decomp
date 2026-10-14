@@ -90,8 +90,7 @@ void BranchAndPriceNS::addMasterCut(const RobustCut            &cut,
 
         for(int rmId : vetRmColumns)
         {
-            decompNode.setVarLamdaCol.erase(
-                SolXHash((*decompNode.vetVarLambdaCol[rmId])));
+            decompNode.setVarLamdaCol.erase(SolXHash((*decompNode.vetVarLambdaCol[rmId])));
             decompNode.vetVarLambdaCol.erase(decompNode.vetVarLambdaCol.begin() + rmId);
             decompNode.uRmlp->remove(varRmlp[rmId]);
         }
@@ -141,8 +140,7 @@ void BranchAndPriceNS::addMasterCut(const RobustCut            &cut,
         if(numVars != int(decompNode.vetVarLambdaCol.size()))
         {
             std::cout << "Num Vars is wrong;\n\t Model: " << numVars
-                      << "; vetVarLamdaCol: " << decompNode.vetVarLambdaCol.size()
-                      << "\n";
+                      << "; vetVarLamdaCol: " << decompNode.vetVarLambdaCol.size() << "\n";
             PRINT_DEBUG("", "");
             throw "ERROR";
         }
@@ -157,8 +155,8 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
                                                  SearchDataInter            *searchD,
                                                  PrimalHeuristicInter       *ptrPrimalH,
                                                  BranchInter                *branch,
-                                                 RobustCutGenerator *robustCutGenerator,
-                                                 StatisticsData     &statisticD)
+                                                 RobustCutGenerator         *robustCutGenerator,
+                                                 StatisticsData             &statisticD)
 {
 
     clock_t start = clock();
@@ -263,8 +261,7 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
         if(ptrPrimalH && !isInteger(ptrDecomNode->vetSolX))
         {
             std::cout << "Diving Heuristic\n";
-            DW_DecompNode *primalNode =
-                (*ptrPrimalH)(ptrDecomNode, auxVectors, upperBound);
+            DW_DecompNode *primalNode = (*ptrPrimalH)(ptrDecomNode, auxVectors, upperBound);
             if(primalNode)
             {
                 if(primalNode->funcObj < upperBound)
@@ -282,8 +279,8 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
         end = clock();
 
         std::cout << "it(" << it << ") \t LB(" << lowerBound << ") \t UB(" << upperBound
-                  << ") \t gap(" << gap << "%) \t T("
-                  << double(end - start) / CLOCKS_PER_SEC << " s)\n";
+                  << ") \t gap(" << gap << "%) \t T(" << double(end - start) / CLOCKS_PER_SEC
+                  << " s)\n";
 
         std::cout << "Processando NO: " << ptrDecomNode << "\n\n";
         // listDecomNode.pop_back();
@@ -384,8 +381,8 @@ Eigen::VectorXd BranchAndPriceNS::branchAndPrice(DW_DecompNS::DW_DecompNode &cRo
     statisticD.timeLimit = doStop();
     statisticD.numIt = numIt;
 
-    std::cout << "it(" << it << ") \t LB(" << lowerBound << ") \t UB(" << upperBound
-              << ") \t gap(" << gap << "%)\n";
+    std::cout << "it(" << it << ") \t LB(" << lowerBound << ") \t UB(" << upperBound << ") \t gap("
+              << gap << "%)\n";
 
     return vetX_best;
 }
@@ -401,10 +398,7 @@ bool BranchAndPriceNS::isInteger(const Eigen::VectorXd &vet)
     return true;
 }
 
-double BranchAndPriceNS::computeGap(double lb, double ub)
-{
-    return ((ub - lb) / lb) * 100.0;
-}
+double BranchAndPriceNS::computeGap(double lb, double ub) { return ((ub - lb) / lb) * 100.0; }
 
 void BranchAndPriceNS::writeToFile(StatisticsNS::StatisticsData &statisticsD,
                                    const std::string            &fileStr,
@@ -443,8 +437,8 @@ void BranchAndPriceNS::writeToFile(StatisticsNS::StatisticsData &statisticsD,
         }
 
         file << "#" << statisticsD.date << "\n";
-        file << "inst; rootLB; rootTime; LB; UB; gap; totalTime; numNodes; rootInt; "
-             << extraHead << "\n";
+        file << "inst; rootLB; rootTime; LB; UB; gap; totalTime; numNodes; rootInt; " << extraHead
+             << "\n";
     }
 
     file << statisticsD.inst << "; "

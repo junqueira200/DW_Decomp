@@ -44,8 +44,8 @@ class VectorGRBVar
 #if VAR_VECTOR_SANITY_CHECK
         if(indexI >= num || indexI < 0)
         {
-            std::cout << "Error indice i: " << indexI
-                      << " is wrong to vector of size: " << num << "\n";
+            std::cout << "Error indice i: " << indexI << " is wrong to vector of size: " << num
+                      << "\n";
             throw std::out_of_range("");
         }
 #endif
@@ -66,8 +66,8 @@ class VectorGRBVar
 #if VAR_VECTOR_SANITY_CHECK
         if(indexI >= num || indexI < 0)
         {
-            std::cout << "Error indice i: " << indexI
-                      << " is wrong to vector of size: " << num << "\n";
+            std::cout << "Error indice i: " << indexI << " is wrong to vector of size: " << num
+                      << "\n";
             throw std::out_of_range("");
         }
 #endif
@@ -112,22 +112,21 @@ class MatrixGRBVar
                bool                zeroI_EqualJ);
 
     ~MatrixGRBVar() { delete[] vetVar; };
-    inline __attribute__((always_inline)) GRBVar &operator()(const int indexI,
-                                                             const int indexJ)
+    inline __attribute__((always_inline)) GRBVar &operator()(const int indexI, const int indexJ)
     {
 
 #if VAR_VECTOR_SANITY_CHECK
         if(indexI >= numLin || indexI < 0)
         {
-            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam "
-                      << numLin << " x " << numCol << "\n";
+            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam " << numLin
+                      << " x " << numCol << "\n";
             throw std::out_of_range("");
         }
 
         if(indexJ >= numCol || indexJ < 0)
         {
-            std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam "
-                      << numLin << " x " << numCol << "\n";
+            std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam " << numLin
+                      << " x " << numCol << "\n";
             throw std::out_of_range("");
         }
 #endif
@@ -135,8 +134,7 @@ class MatrixGRBVar
         return vetVar[indexI * numCol + indexJ];
     }
 
-    inline __attribute__((always_inline)) double getX_value(const int indexI,
-                                                            const int indexJ)
+    inline __attribute__((always_inline)) double getX_value(const int indexI, const int indexJ)
     {
         if(vetDoubleAttr_X == nullptr)
         {
@@ -146,15 +144,15 @@ class MatrixGRBVar
 #if VAR_VECTOR_SANITY_CHECK
         if(indexI >= numLin || indexI < 0)
         {
-            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam "
-                      << numLin << " x " << numCol << "\n";
+            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam " << numLin
+                      << " x " << numCol << "\n";
             throw std::out_of_range("");
         }
 
         if(indexJ >= numCol)
         {
-            std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam "
-                      << numLin << " x " << numCol << "\n";
+            std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam " << numLin
+                      << " x " << numCol << "\n";
             throw std::out_of_range("");
         }
 #endif

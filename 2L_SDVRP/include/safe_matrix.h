@@ -56,8 +56,7 @@ template <typename T, typename M = M_Linha> class Matrix : public std::vector<T>
         }
     }
 
-    Matrix(size_t n_, size_t m_, const T &value)
-        : std::vector<T>(n_ * m_, value), n(n_), m(m_)
+    Matrix(size_t n_, size_t m_, const T &value) : std::vector<T>(n_ * m_, value), n(n_), m(m_)
     {
         if(std::is_same<M, M_TrianngInf>() || std::is_same<M, M_TrianngSup>())
         {
@@ -69,8 +68,7 @@ template <typename T, typename M = M_Linha> class Matrix : public std::vector<T>
 
     Matrix(size_t n) : std::vector<T>(n) {}
 
-    Matrix(const Matrix<T, M> &temp)
-        : n(temp.n), m(temp.n), std::vector<T>(temp.n * temp.m)
+    Matrix(const Matrix<T, M> &temp) : n(temp.n), m(temp.n), std::vector<T>(temp.n * temp.m)
     {
         for(int i = 0; i < n * m; ++i)
             std::vector<T>::operator[](i) = temp.get(i);
@@ -85,8 +83,7 @@ template <typename T, typename M = M_Linha> class Matrix : public std::vector<T>
     T       &operator[](size_t index) = delete;
     const T &operator[](size_t index) const = delete;
 
-    virtual inline __attribute__((always_inline)) T operator()(size_t indexI,
-                                                               size_t indexJ) const
+    virtual inline __attribute__((always_inline)) T operator()(size_t indexI, size_t indexJ) const
     {
         if constexpr(std::is_same_v<M, M_Coluna>)
             std::swap(indexI, indexJ);
@@ -96,15 +93,15 @@ template <typename T, typename M = M_Linha> class Matrix : public std::vector<T>
 #if VAR_VECTOR_SANITY_CHECK
         if(indexI >= n)
         {
-            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam "
-                      << n << " x " << m << "\n";
+            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam " << n
+                      << " x " << m << "\n";
             throw std::out_of_range("");
         }
 
         if(indexJ >= m)
         {
-            std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam "
-                      << n << " x " << m << "\n";
+            std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam " << n
+                      << " x " << m << "\n";
             throw std::out_of_range("");
         }
 
@@ -134,15 +131,15 @@ template <typename T, typename M = M_Linha> class Matrix : public std::vector<T>
 #if VAR_VECTOR_SANITY_CHECK
         if(indexI >= n)
         {
-            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam "
-                      << n << " x " << m << "\n";
+            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam " << n
+                      << " x " << m << "\n";
             throw std::out_of_range("");
         }
 
         if(indexJ >= m)
         {
-            std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam "
-                      << n << " x " << m << "\n";
+            std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam " << n
+                      << " x " << m << "\n";
             throw std::out_of_range("");
         }
 
@@ -162,14 +159,12 @@ template <typename T, typename M = M_Linha> class Matrix : public std::vector<T>
         return std::vector<T>::operator[](index);
     }
 
-    [[nodiscard]] virtual size_t inline __attribute__((always_inline))
-    getNumLinhas() const
+    [[nodiscard]] virtual size_t inline __attribute__((always_inline)) getNumLinhas() const
     {
         return n;
     }
 
-    [[nodiscard]] virtual size_t inline __attribute__((always_inline))
-    getNumColunas() const
+    [[nodiscard]] virtual size_t inline __attribute__((always_inline)) getNumColunas() const
     {
         return m;
     }
@@ -198,15 +193,15 @@ template <typename T, typename M = M_Linha> class Matrix : public std::vector<T>
 #if VAR_VECTOR_SANITY_CHECK
         if(indexI >= n)
         {
-            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam "
-                      << n << " x " << m << "\n";
+            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam " << n
+                      << " x " << m << "\n";
             throw std::out_of_range("");
         }
 
         if(indexJ >= m)
         {
-            std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam "
-                      << n << " x " << m << "\n";
+            std::cout << "Erro indice j: " << indexJ << " esta errado para matrix de tam " << n
+                      << " x " << m << "\n";
             throw std::out_of_range("");
         }
 #endif
@@ -291,8 +286,8 @@ template <typename T, typename M = M_TrianngSup> class MatrixTriangular : public
 #if VAR_VECTOR_SANITY_CHECK
         if(indexI >= n)
         {
-            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam "
-                      << n << " x " << n << "\n";
+            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam " << n
+                      << " x " << n << "\n";
             throw std::out_of_range("");
         }
 
@@ -329,8 +324,8 @@ template <typename T, typename M = M_TrianngSup> class MatrixTriangular : public
 #if VAR_VECTOR_SANITY_CHECK
         if(indexI >= n)
         {
-            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam "
-                      << n << " x " << n << "\n";
+            std::cout << "Erro indice i: " << indexI << " esta errado para matrix de tam " << n
+                      << " x " << n << "\n";
             throw std::out_of_range("");
         }
 
@@ -339,15 +334,9 @@ template <typename T, typename M = M_TrianngSup> class MatrixTriangular : public
         return std::vector<T>::operator[](index);
     }
 
-    [[nodiscard]] size_t inline __attribute__((always_inline)) getNumLinhas() const
-    {
-        return n;
-    }
+    [[nodiscard]] size_t inline __attribute__((always_inline)) getNumLinhas() const { return n; }
 
-    [[nodiscard]] size_t inline __attribute__((always_inline)) getNumColunas() const
-    {
-        return n;
-    }
+    [[nodiscard]] size_t inline __attribute__((always_inline)) getNumColunas() const { return n; }
 
     /*
     void setVal(const T &val)
@@ -411,8 +400,7 @@ template <typename T, typename M = M_TrianngSup> class MatrixTriangular : public
 };
 
 template <typename T, typename M>
-inline __attribute__((always_inline)) std::ostream &operator<<(std::ostream &os,
-                                                               Matrix<T, M> &mat)
+inline __attribute__((always_inline)) std::ostream &operator<<(std::ostream &os, Matrix<T, M> &mat)
 {
     for(size_t i = 0; i < mat.getNumLinhas(); ++i)
     {
@@ -433,8 +421,7 @@ bool matrixsIguais(const Matrix<T, M> &mat0, const Matrix<T, M> &mat1)
 {
     const T epsilon = 1E-5;
 
-    if(mat0.getNumLinhas() != mat1.getNumLinhas() ||
-       mat0.getNumColunas() != mat1.getNumColunas())
+    if(mat0.getNumLinhas() != mat1.getNumLinhas() || mat0.getNumColunas() != mat1.getNumColunas())
         return false;
 
     if constexpr(std::is_same_v<M, M_Linha>)

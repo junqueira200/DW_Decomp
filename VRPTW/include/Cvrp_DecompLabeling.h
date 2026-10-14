@@ -57,37 +57,34 @@ class CvrpLabelingSubProb : public DW_DecompNS::SubProb
 
     int getNumConvConstr() override { return 1; }
     CvrpLabelingSubProb();
-    explicit CvrpLabelingSubProb(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
-                                 double                           startDis);
+    explicit CvrpLabelingSubProb(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, double startDis);
     // int64_t getNumberOfConvConstr() override{return 0;};// {return numSubProb;}
     ~CvrpLabelingSubProb() override = default;
     void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
 
-    int resolveSubProb(const Eigen::VectorXd     &vetC,
-                       Eigen::RowVectorXd        &vetRowPi,
-                       GRBModel                  &mestre,
-                       int                        itCG,
-                       bool                      &custoRedNeg,
-                       void                      *data,
-                       const int                  iniConv,
-                       int                        indSubProb,
-                       Eigen::VectorXd           &vetCooefRestConv,
-                       const std::pair<int, int> &pairSubProb,
-                       Eigen::MatrixXd           &matColX,
-                       int                       &numSol,
+    int resolveSubProb(const Eigen::VectorXd                                  &vetC,
+                       Eigen::RowVectorXd                                     &vetRowPi,
+                       GRBModel                                               &mestre,
+                       int                                                     itCG,
+                       bool                                                   &custoRedNeg,
+                       void                                                   *data,
+                       const int                                               iniConv,
+                       int                                                     indSubProb,
+                       Eigen::VectorXd                                        &vetCooefRestConv,
+                       const std::pair<int, int>                              &pairSubProb,
+                       Eigen::MatrixXd                                        &matColX,
+                       int                                                    &numSol,
                        Eigen::Array<double, 1, DW_DecompNS::NumMaxSolSubProb> &vetRedCost,
-                       double                   constPiValue,
-                       const VectorI           &vetVar0,
-                       const VectorI           &vetVar1,
-                       DW_DecompNS::PhaseStatus phaseStatus,
-                       bool                     exact) override;
+                       double                                                  constPiValue,
+                       const VectorI                                          &vetVar0,
+                       const VectorI                                          &vetVar1,
+                       DW_DecompNS::PhaseStatus                                phaseStatus,
+                       bool                                                    exact) override;
 
     bool checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi);
-    bool checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi,
-                                  Eigen::MatrixXd    &matColX,
-                                  int                &numSol);
-    void convertRouteIntoLabel(const TestNS::Route        &route,
-                               LabelingAlgorithmNS::Label *label);
+    bool
+    checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol);
+    void convertRouteIntoLabel(const TestNS::Route &route, LabelingAlgorithmNS::Label *label);
     void createMaster(GRBModel &model);
 
 }; // END MySubProb
@@ -110,10 +107,7 @@ class CapacityCut : public BranchAndPriceNS::RobustCutGenerator
     std::map<std::pair<int, int>, int> *mapArcToIndex;
     Eigen::VectorXi                     list;
 
-    CapacityCut(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
-                int                              dim_,
-                int                              maxNoOfCuts_,
-                double                           eps);
+    CapacityCut(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, int dim_, int maxNoOfCuts_, double eps);
     ~CapacityCut();
     int  operator()(DW_DecompNS::DW_DecompNode &decompNode) override;
     void createInducedSubGraphArcs(int listSize, BranchAndPriceNS::RobustCut &cut);

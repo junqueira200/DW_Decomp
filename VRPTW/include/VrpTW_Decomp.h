@@ -12,8 +12,7 @@ namespace VrpTW_DecompNS
 {
 
 void   criaMestre(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model);
-void   criaVRP_TW_CompleteModel(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
-                                GRBModel                              &model);
+void   criaVRP_TW_CompleteModel(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model);
 int    getIndex(int i, int j, int numClie);
 double geraSolHeuristica(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
                          Eigen::VectorXd                       &vetRedCost,

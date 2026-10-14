@@ -82,7 +82,7 @@ int BranchNS::StrongBranch::operator()(const DW_DecompNS::DW_DecompNode *const n
 }
 
 int BranchNS::SimpleStrongBranch::operator()(const DW_DecompNS::DW_DecompNode *const node,
-                                             AuxData &auxVet)
+                                             AuxData                                &auxVet)
 {
 
     return getMostFractionVariable(node->vetSolX);

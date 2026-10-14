@@ -42,8 +42,7 @@ Cvrp_DecompLabelingNS::CvrpLabelingSubProb::CvrpLabelingSubProb(
 
     labelingData = LabelingAlgorithmNS::LabelingData(
         vetStepSize, 2, instVrpTw->numClientes + 1, arrayMaxResorces);
-    vetMatResCostForward =
-        Vet3D_ResCost(instVrpTw->numClientes + 1, instVrpTw->numClientes + 1, 2);
+    vetMatResCostForward = Vet3D_ResCost(instVrpTw->numClientes + 1, instVrpTw->numClientes + 1, 2);
     vetMatResCostForward.setVal(0.0);
 
     vetMatResCostBackward =
@@ -688,17 +687,15 @@ void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::convertRouteIntoLabel(
     label->tamRoute = (int)route.vetRoute.size();
 }
 
-Cvrp_DecompLabelingNS::CapacityCut::CapacityCut(
-    InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
-    int                              dim_,
-    int                              maxNoOfCuts_,
-    double                           eps)
+Cvrp_DecompLabelingNS::CapacityCut::CapacityCut(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
+                                                int                              dim_,
+                                                int                              maxNoOfCuts_,
+                                                double                           eps)
 {
     std::printf("*****************************CREATE_CAPACITY_CUT************************"
                 "*****\n");
-    std::printf(
-        "**************************************************************************"
-        "***\n\n");
+    std::printf("**************************************************************************"
+                "***\n\n");
 
     capacity = instVrpTw.capVeic;
     dim = dim_;
@@ -752,9 +749,8 @@ Cvrp_DecompLabelingNS::CapacityCut::CapacityCut(
 
     std::printf("************************************************************************"
                 "*****\n");
-    std::printf(
-        "**************************************************************************"
-        "***\n\n");
+    std::printf("**************************************************************************"
+                "***\n\n");
 }
 
 Cvrp_DecompLabelingNS::CapacityCut::~CapacityCut()
@@ -769,10 +765,8 @@ Cvrp_DecompLabelingNS::CapacityCut::~CapacityCut()
 }
 int Cvrp_DecompLabelingNS::CapacityCut::operator()(DW_DecompNS::DW_DecompNode &decompNode)
 {
-    std::printf(
-        "*************************************************************************\n");
-    std::printf(
-        "***************************CAPACITY_CUT**********************************\n\n");
+    std::printf("*************************************************************************\n");
+    std::printf("***************************CAPACITY_CUT**********************************\n\n");
 
     for(int i = 0; i < edgeSize; ++i)
         edgeX[i] = 0.0;
@@ -833,9 +827,8 @@ int Cvrp_DecompLabelingNS::CapacityCut::operator()(DW_DecompNS::DW_DecompNode &d
     return size;
 };
 
-void Cvrp_DecompLabelingNS::CapacityCut::createInducedSubGraphArcs(
-    int                          listSize,
-    BranchAndPriceNS::RobustCut &cut)
+void Cvrp_DecompLabelingNS::CapacityCut::createInducedSubGraphArcs(int listSize,
+                                                                   BranchAndPriceNS::RobustCut &cut)
 {
 
     for(int i = 0; i < listSize; ++i)

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "ortools/sat/cp_model.h"
-#include <vector>
 #include "safe_vector.h"
+#include <vector>
 
 using ORIntervalVars = Vector<operations_research::sat::IntervalVar>;
 using ORIntVars1D = Vector<operations_research::sat::IntVar>;

@@ -8,17 +8,17 @@
  * ****************************************/
 
 #include "ConstrutivoBin2.h"
-#include "AxleWeights.h"
-#include "ConstrutivoBin.h"
+#include "Alarm.h"
 #include "AuxGeometry.h"
 #include "AuxT.h"
+#include "AxleWeights.h"
+#include "ConstrutivoBin.h"
 #include "InputOutput.h"
+#include "c_api.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <limits>
-#include "c_api.h"
-#include "Alarm.h"
 #include <set>
 
 using namespace InstanceNS;
@@ -33,16 +33,16 @@ void getRouteItems(const SolucaoNS::Rota &rota, VectorI &outItemIds)
 {
     outItemIds.clear();
 
-           // Iterate through all customer stops (excluding depot at 0 and numPos - 1)
+    // Iterate through all customer stops (excluding depot at 0 and numPos - 1)
     for(int pos = 1; pos < rota.numPos - 1; ++pos)
     {
         int customer = rota.vetRota[pos];
         if(customer <= 0 || customer >= instanciaG.numClientes)
             continue;
 
-               // Collect items from instance customer range
+        // Collect items from instance customer range
         int firstItem = instanciaG.matCliItensIniFim(customer, 0);
-        int lastItem  = instanciaG.matCliItensIniFim(customer, 1);
+        int lastItem = instanciaG.matCliItensIniFim(customer, 1);
 
         for(int itemId = firstItem; itemId <= lastItem; ++itemId)
         {
@@ -52,22 +52,22 @@ void getRouteItems(const SolucaoNS::Rota &rota, VectorI &outItemIds)
     }
 }
 
-
 /**
  * @brief Evaluates whether placing itemId at point p with rotation r is locally feasible.
  */
-static bool isPlacementFeasible(const Bin                 &bin,
-                                Rota                      &rota,
-                                int                        itemId,
-                                const Ponto               &p,
-                                InstanceNS::Rotation       r,
-                                //Eigen::Matrix<int, -1, -1, Eigen::RowMajor> &matSupportItems, // Now unused in this function
-                                double 					   sumM,
-                                double					   sumF)
+static bool isPlacementFeasible(
+    const Bin           &bin,
+    Rota                &rota,
+    int                  itemId,
+    const Ponto         &p,
+    InstanceNS::Rotation r,
+    // Eigen::Matrix<int, -1, -1, Eigen::RowMajor> &matSupportItems, // Now unused in this function
+    double sumM,
+    double sumF)
 {
     Item &item = instanciaG.vetItens[itemId];
 
-           // 1. Boundary check
+    // 1. Boundary check
     for(int d = 0; d < instanciaG.numDim; ++d)
     {
         double dimR = item.getDimRotacionada(d, r);
@@ -107,29 +107,29 @@ static bool isPlacementFeasible(const Bin                 &bin,
           return false;
       */
 
-           // 2. Collision check with all already-packed items
+    // 2. Collision check with all already-packed items
     for(int k = 0; k < bin.numItens; ++k)
     {
-        if(verificaColisaoDoisItens(itemId, bin.vetItemId[k], p, bin.vetPosItem[k], r,
-                                    bin.vetRotacao[k]))
+        if(verificaColisaoDoisItens(
+               itemId, bin.vetItemId[k], p, bin.vetPosItem[k], r, bin.vetRotacao[k]))
         {
             vetPackinErros[PackingErroGeometric] += 1;
             return false;
         }
     }
 
-           // 3. Bottom Support & Fragility check (if 3D and item is not resting on the floor)
+    // 3. Bottom Support & Fragility check (if 3D and item is not resting on the floor)
     if(instanciaG.numDim == 3 && ParseInputNS::input.support && p.vetDim[2] > 1e-4)
     {
         double supportedArea = 0.0;
-        double itemBaseArea  = item.getDimRotacionada(0, r) * item.getDimRotacionada(1, r);
+        double itemBaseArea = item.getDimRotacionada(0, r) * item.getDimRotacionada(1, r);
 
         for(int k = 0; k < bin.numItens; ++k)
         {
-            int placedId = bin.vetItemId[k];
-            Item &placedItem = instanciaG.vetItens[placedId];
-            double topZ = bin.vetPosItem[k].vetDim[2] +
-                          placedItem.getDimRotacionada(2, bin.vetRotacao[k]);
+            int    placedId = bin.vetItemId[k];
+            Item  &placedItem = instanciaG.vetItens[placedId];
+            double topZ =
+                bin.vetPosItem[k].vetDim[2] + placedItem.getDimRotacionada(2, bin.vetRotacao[k]);
 
             if(doubleEqual(topZ, p.vetDim[2], 1e-4))
             {
@@ -150,7 +150,7 @@ static bool isPlacementFeasible(const Bin                 &bin,
             }
         }
 
-        if(supportedArea < (ParseInputNS::input.minSupportArea*itemBaseArea))
+        if(supportedArea < std::ceil(ParseInputNS::input.minSupportArea * itemBaseArea))
         {
             vetPackinErros[PackingErroSupport] += 1;
             return false;
@@ -160,14 +160,14 @@ static bool isPlacementFeasible(const Bin                 &bin,
     // 4. LIFO / Unloading sequence check with already packed items
     if(ParseInputNS::input.lifo)
     {
-        int posNew = findPos(rota, itemId);
+        int    posNew = findPos(rota, itemId);
         double topNew = p.vetDim[2] + item.getDimRotacionada(2, r);
 
         for(int k = 0; k < bin.numItens; ++k)
         {
-            int placedId = bin.vetItemId[k];
-            Item &placedItem = instanciaG.vetItens[placedId];
-            Ponto pPlaced = bin.vetPosItem[k];
+            int      placedId = bin.vetItemId[k];
+            Item    &placedItem = instanciaG.vetItens[placedId];
+            Ponto    pPlaced = bin.vetPosItem[k];
             Rotation rPlaced = bin.vetRotacao[k];
 
             if(item.customer == placedItem.customer)
@@ -178,18 +178,20 @@ static bool isPlacementFeasible(const Bin                 &bin,
                 continue;
 
             // --- NEW: DYNAMICALLY CALCULATE VERTICAL SUPPORT ---
-            bool new_supports_placed = false;
-            bool placed_supports_new = false;
+            bool   new_supports_placed = false;
+            bool   placed_supports_new = false;
             double topPlaced = pPlaced.vetDim[2] + placedItem.getDimRotacionada(2, rPlaced);
 
-                   // Does candidate support placedItem? (Candidate is directly under placedItem)
-            if(doubleEqual(topNew, pPlaced.vetDim[2], 1e-4)) {
+            // Does candidate support placedItem? (Candidate is directly under placedItem)
+            if(doubleEqual(topNew, pPlaced.vetDim[2], 1e-4))
+            {
                 if(computeXY_Overlap(item, r, p, placedItem, rPlaced, pPlaced) > 0.0)
                     new_supports_placed = true;
             }
 
-                   // Does placedItem support candidate? (placedItem is directly under Candidate)
-            if(doubleEqual(topPlaced, p.vetDim[2], 1e-4)) {
+            // Does placedItem support candidate? (placedItem is directly under Candidate)
+            if(doubleEqual(topPlaced, p.vetDim[2], 1e-4))
+            {
                 if(computeXY_Overlap(item, r, p, placedItem, rPlaced, pPlaced) > 0.0)
                     placed_supports_new = true;
             }
@@ -198,10 +200,16 @@ static bool isPlacementFeasible(const Bin                 &bin,
             if(posNew < posPlaced)
             {
                 Item tempNew = item;
-                if(!lifo(tempNew, p, r, placedItem, pPlaced, rPlaced,
-                         ParseInputNS::input.mlifo, ParseInputNS::input.removeFromShortSide,
-                         placed_supports_new,    // item1_supports_item0
-                         new_supports_placed))   // item0_supports_item1
+                if(!lifo(tempNew,
+                         p,
+                         r,
+                         placedItem,
+                         pPlaced,
+                         rPlaced,
+                         ParseInputNS::input.mlifo,
+                         ParseInputNS::input.removeFromShortSide,
+                         placed_supports_new,  // item1_supports_item0
+                         new_supports_placed)) // item0_supports_item1
                 {
                     vetPackinErros[PackingErroLifo] += 1;
                     return false;
@@ -210,10 +218,16 @@ static bool isPlacementFeasible(const Bin                 &bin,
             else
             {
                 Item tempNew = item;
-                if(!lifo(placedItem, pPlaced, rPlaced, tempNew, p, r,
-                         ParseInputNS::input.mlifo, ParseInputNS::input.removeFromShortSide,
-                         new_supports_placed,    // item1_supports_item0
-                         placed_supports_new))   // item0_supports_item1
+                if(!lifo(placedItem,
+                         pPlaced,
+                         rPlaced,
+                         tempNew,
+                         p,
+                         r,
+                         ParseInputNS::input.mlifo,
+                         ParseInputNS::input.removeFromShortSide,
+                         new_supports_placed,  // item1_supports_item0
+                         placed_supports_new)) // item0_supports_item1
                 {
                     vetPackinErros[PackingErroLifo] += 1;
                     return false;
@@ -222,14 +236,15 @@ static bool isPlacementFeasible(const Bin                 &bin,
         }
     }
 
-           // 5. Lateral load balance check
+    // 5. Lateral load balance check
     if(ParseInputNS::input.balancedLoading && !ParseInputNS::input.comprimentoAlturaIguais1)
     {
         double width = item.getDimRotacionada(1, r);
-        double left  = computeLeftBalancedLoading(p.vetDim[1], width, item.weight);
+        double left = computeLeftBalancedLoading(p.vetDim[1], width, item.weight);
         double right = item.weight - left;
 
-        double limit = std::ceil(ParseInputNS::input.balancedLoadingD * (bin.demandaTotal + item.weight));
+        double limit =
+            std::ceil(ParseInputNS::input.balancedLoadingD * (bin.demandaTotal + item.weight));
         if((bin.sumLeftBalancedLoading + left) > limit ||
            (bin.sumRightBalancedLoading + right) > limit)
         {
@@ -238,7 +253,7 @@ static bool isPlacementFeasible(const Bin                 &bin,
         }
     }
 
-           // 6. Left Compactness Check (Prevent floating gaps on the left side)
+    // 6. Left Compactness Check (Prevent floating gaps on the left side)
     if(ParseInputNS::input.compactness && p.vetDim[0] > 1e-4) // Not touching the left truck wall
     {
         double dy = item.getDimRotacionada(1, r);
@@ -248,14 +263,14 @@ static bool isPlacementFeasible(const Bin                 &bin,
 
         for(int k = 0; k < bin.numItens; ++k)
         {
-            int placedId = bin.vetItemId[k];
+            int   placedId = bin.vetItemId[k];
             Item &placedItem = instanciaG.vetItens[placedId];
 
             double placedDx = placedItem.getDimRotacionada(0, bin.vetRotacao[k]);
             double placedMaxX = bin.vetPosItem[k].vetDim[0] + placedDx;
 
-                   // If placed item touches the left face of the new candidate item
-            if(doubleEqual(placedMaxX, p.vetDim[0], 1e-4))
+            double dif = p.vetDim[0] - placedMaxX;
+            if(dif >= 0.0 && dif <= DifDistColision)
             {
                 double placedDy = placedItem.getDimRotacionada(1, bin.vetRotacao[k]);
                 double placedDz = placedItem.getDimRotacionada(2, bin.vetRotacao[k]);
@@ -265,15 +280,17 @@ static bool isPlacementFeasible(const Bin                 &bin,
                 double pZ = p.vetDim[2];
                 double pkZ = bin.vetPosItem[k].vetDim[2];
 
-                       // Calculate overlap area in the Y-Z plane
-                double overlapY = std::max(0.0, std::min(pY + dy, pkY + placedDy) - std::max(pY, pkY));
-                double overlapZ = std::max(0.0, std::min(pZ + dz, pkZ + placedDz) - std::max(pZ, pkZ));
+                // Calculate overlap area in the Y-Z plane
+                double overlapY =
+                    std::max(0.0, std::min(pY + dy, pkY + placedDy) - std::max(pY, pkY));
+                double overlapZ =
+                    std::max(0.0, std::min(pZ + dz, pkZ + placedDz) - std::max(pZ, pkZ));
 
                 leftSupport += overlapY * overlapZ;
             }
         }
 
-        if(leftSupport < std::ceil(ParseInputNS::input.minLeftSupportArea*leftAreaTotal))
+        if(leftSupport < std::ceil(ParseInputNS::input.minLeftSupportArea * leftAreaTotal))
         {
             vetPackinErros[PackingErroCompactness] += 1;
             return false;
@@ -287,7 +304,8 @@ static bool isPlacementFeasible(const Bin                 &bin,
  * @brief Computes placement score using Deepest-Bottom-Left (DBL) and contact surface area.
  * Lower score is preferred.
  */
-static double computePlacementScore(const Bin &bin, int itemId, const Ponto &p, InstanceNS::Rotation r)
+static double
+computePlacementScore(const Bin &bin, int itemId, const Ponto &p, InstanceNS::Rotation r)
 {
     Item &item = instanciaG.vetItens[itemId];
 
@@ -295,72 +313,73 @@ static double computePlacementScore(const Bin &bin, int itemId, const Ponto &p, 
     double dy = item.getDimRotacionada(1, r);
     double dz = item.getDimRotacionada(2, r);
 
-           // Calculate contact area with container walls
+    // Calculate contact area with container walls
     double contactArea = 0.0;
-    if(p.vetDim[0] <= 1e-4) contactArea += dy * dz;                               // Left wall
-    if(doubleEqual(p.vetDim[0] + dx, bin.binDim[0], 1e-4)) contactArea += dy * dz; // Right wall
-    if(p.vetDim[1] <= 1e-4) contactArea += dx * dz;                               // Back wall
-    if(doubleEqual(p.vetDim[1] + dy, bin.binDim[1], 1e-4)) contactArea += dx * dz; // Front wall
-    if(p.vetDim[2] <= 1e-4) contactArea += dx * dy;                               // Floor
+    if(p.vetDim[0] <= 1e-4)
+        contactArea += dy * dz; // Left wall
+    if(doubleEqual(p.vetDim[0] + dx, bin.binDim[0], 1e-4))
+        contactArea += dy * dz; // Right wall
+    if(p.vetDim[1] <= 1e-4)
+        contactArea += dx * dz; // Back wall
+    if(doubleEqual(p.vetDim[1] + dy, bin.binDim[1], 1e-4))
+        contactArea += dx * dz; // Front wall
+    if(p.vetDim[2] <= 1e-4)
+        contactArea += dx * dy; // Floor
 
     // DBL weights: prioritize minimum Z (floor), then minimum Y (depth), then minimum X (lateral)
-    double score = 1000.0 * p.vetDim[2] + 10.0 * p.vetDim[1] + 1.0 * p.vetDim[0] - 0.05 * contactArea;
+    double score =
+        1000.0 * p.vetDim[2] + 10.0 * p.vetDim[1] + 1.0 * p.vetDim[0] - 0.05 * contactArea;
     return score;
 }
 
 struct PlacementCandidate
 {
-    double score;
-    int epIdx;
+    double               score;
+    int                  epIdx;
     InstanceNS::Rotation rot;
 };
 
-bool packItemsIntoBin(SolucaoNS::Bin          &bin,
-                      SolucaoNS::Rota         &rota,
-                      const VectorI           &itemIds,
-                      int					   numItems,
-                      bool					   sortItemIds,
-                      bool                     print,
-                      SolucaoNS::Penalty*	   penalty)
+bool packItemsIntoBin(SolucaoNS::Bin     &bin,
+                      SolucaoNS::Rota    &rota,
+                      const VectorI      &itemIds,
+                      int                 numItems,
+                      bool                sortItemIds,
+                      bool                print,
+                      SolucaoNS::Penalty *penalty)
 {
 
     static VectorI sortedItems(MaxNumItemsBin);
     assertm(numItems > MaxNumItemsBin, "Error, numItems is greater them MaxNumItemsBin\n");
 
-    //std::printf("size itemIds: %d\nItems: ", numItems);
+    // std::printf("size itemIds: %d\nItems: ", numItems);
 
-    //for(int i=0; i < numItems; ++i)
+    // for(int i=0; i < numItems; ++i)
     //	std::printf("%d ", itemIds[i]);
-    //std::printf("\n\n");
+    // std::printf("\n\n");
 
-    uint64_t it=0;
+    uint64_t it = 0;
     uint64_t itMax = 10000;
 
-
-    if(input.maxTimePackingHeuristic > 0)
+    if(input.maxTimePackingHeuristic > 0 && sortItemIds)
     {
         itMax = std::numeric_limits<uint64_t>::max();
         setOffAlarm();
         setAlarm(input.maxTimePackingHeuristic);
     }
 
-
-    static const SortStrategy strategies[] =
-    {
-        SortStrategy::ReverseRoute_AreaDesc,
-        SortStrategy::ReverseRoute_VolumeDesc,
-        SortStrategy::ReverseRoute_WeightDesc
-    };
+    static const SortStrategy strategies[] = {SortStrategy::ReverseRoute_AreaDesc,
+                                              SortStrategy::ReverseRoute_VolumeDesc,
+                                              SortStrategy::ReverseRoute_WeightDesc};
 
     if(!sortItemIds)
         itMax = 1;
 
-    for(it=0; it < itMax; ++it)
+    for(it = 0; it < itMax; ++it)
     {
-        //std::printf("it: %lld\n", it);
+        // std::printf("it: %lld\n", it);
         if(input.maxTimePackingHeuristic > 0 && doStop() && sortItemIds)
         {
-            //std::printf("doStop: %d\n", doStop());
+            // std::printf("doStop: %d\n", doStop());
             break;
         }
 
@@ -373,76 +392,86 @@ bool packItemsIntoBin(SolucaoNS::Bin          &bin,
 
             // Working copy of items to sort
             copyVet(itemIds, sortedItems, numItems);
-            //std::vector<int> sortedItems(itemIds.begin(), itemIds.begin()+numItems);
+            // std::vector<int> sortedItems(itemIds.begin(), itemIds.begin()+numItems);
 
             // 1. Generate persistent random noise for this packing pass (+/- 10%)
-            // This allows randomized sorting while maintaining strict weak ordering rules for std::sort.
+            // This allows randomized sorting while maintaining strict weak ordering rules for
+            // std::sort.
             static Vector<double> noise(instanciaG.numItens);
-            for(int i=0; i < numItems; ++i)
+            for(int i = 0; i < numItems; ++i)
                 noise[sortedItems[i]] = RandNs::getRandDouble();
-
 
             // Sort items: primary key is reverse delivery position along the route (deepest first)
             if(sortItemIds)
             {
-                std::sort(sortedItems.begin(), sortedItems.begin()+numItems, [&](int a, int b)
-                {
-                    int posA = findPos(rota, a);
-                    int posB = findPos(rota, b);
-                    if(posA != posB)
-                        return posA > posB; // Higher delivery pos -> pack earlier (deeper in truck)
-
-                    Item &itemA = instanciaG.vetItens[a];
-                    Item &itemB = instanciaG.vetItens[b];
-
-                       // Non-fragile before fragile (fragile on top)
-                    if(itemA.fragility != itemB.fragility)
-                        return !itemA.fragility;
-
-                       // Randomized tie-breaking for items in the same delivery tier
-                    switch(strategy)
+                std::sort(
+                    sortedItems.begin(),
+                    sortedItems.begin() + numItems,
+                    [&](int a, int b)
                     {
-                    case SortStrategy::ReverseRoute_AreaDesc: {
-                        double areaA = (itemA.vetDim[0] * itemA.vetDim[1]) * noise[a];
-                        double areaB = (itemB.vetDim[0] * itemB.vetDim[1]) * noise[b];
-                        if(!doubleEqual(areaA, areaB, 1e-4)) return areaA > areaB;
-                        return (itemA.volume * noise[a]) > (itemB.volume * noise[b]);
-                    }
-                    case SortStrategy::ReverseRoute_VolumeDesc: {
-                        double volA = itemA.volume * noise[a];
-                        double volB = itemB.volume * noise[b];
-                        if(!doubleEqual(volA, volB, 1e-4)) return volA > volB;
+                        int posA = findPos(rota, a);
+                        int posB = findPos(rota, b);
+                        if(posA != posB)
+                            return posA >
+                                   posB; // Higher delivery pos -> pack earlier (deeper in truck)
 
-                        return (itemA.weight * noise[a]) > (itemB.weight * noise[b]);
-                    }
-                    case SortStrategy::ReverseRoute_WeightDesc: {
-                        double wA = itemA.weight * noise[a];
-                        double wB = itemB.weight * noise[b];
-                        if(!doubleEqual(wA, wB, 1e-4)) return wA > wB;
+                        Item &itemA = instanciaG.vetItens[a];
+                        Item &itemB = instanciaG.vetItens[b];
 
-                        return (itemA.volume * noise[a]) > (itemB.volume * noise[b]);
-                    }
-                    }
-                    return a < b; // stable fallback
-                });
+                        // Non-fragile before fragile (fragile on top)
+                        if(itemA.fragility != itemB.fragility)
+                            return !itemA.fragility;
 
+                        // Randomized tie-breaking for items in the same delivery tier
+                        switch(strategy)
+                        {
+                        case SortStrategy::ReverseRoute_AreaDesc:
+                        {
+                            double areaA = (itemA.vetDim[0] * itemA.vetDim[1]) * noise[a];
+                            double areaB = (itemB.vetDim[0] * itemB.vetDim[1]) * noise[b];
+                            if(!doubleEqual(areaA, areaB, 1e-4))
+                                return areaA > areaB;
+                            return (itemA.volume * noise[a]) > (itemB.volume * noise[b]);
+                        }
+                        case SortStrategy::ReverseRoute_VolumeDesc:
+                        {
+                            double volA = itemA.volume * noise[a];
+                            double volB = itemB.volume * noise[b];
+                            if(!doubleEqual(volA, volB, 1e-4))
+                                return volA > volB;
+
+                            return (itemA.weight * noise[a]) > (itemB.weight * noise[b]);
+                        }
+                        case SortStrategy::ReverseRoute_WeightDesc:
+                        {
+                            double wA = itemA.weight * noise[a];
+                            double wB = itemB.weight * noise[b];
+                            if(!doubleEqual(wA, wB, 1e-4))
+                                return wA > wB;
+
+                            return (itemA.volume * noise[a]) > (itemB.volume * noise[b]);
+                        }
+                        }
+                        return a < b; // stable fallback
+                    });
             }
 
-                   // Scratch support matrix for LIFO check
-            //static Eigen::Matrix<int, -1, -1, Eigen::RowMajor>
-            //    matSupportItems(instanciaG.numItens, instanciaG.numItens);
+            // Scratch support matrix for LIFO check
+            // static Eigen::Matrix<int, -1, -1, Eigen::RowMajor>
+            //     matSupportItems(instanciaG.numItens, instanciaG.numItens);
 
-            //matSupportItems.setConstant(0);
+            // matSupportItems.setConstant(0);
 
-                   // Number of rotations to try (2 if vertical stability only, or up to 6 if 3D rotation allowed)
-            int numRotationsToTry = (instanciaG.numRotation >= 6) ? 6 : 2;
+            // Number of rotations to try (2 if vertical stability only, or up to 6 if 3D rotation
+            // allowed)
+            int  numRotationsToTry = (instanciaG.numRotation >= 6) ? 6 : 2;
             bool isInfeasible = false;
 
             double fk(0.0), fFA(0.0), fRA(0.0), fTA(0.0), sumM(0.0), sumF(0.0);
 
             int lastItem = -1;
 
-            for(int i=0; i < numItems; ++i)
+            for(int i = 0; i < numItems; ++i)
             {
                 /*
                 if(i > 0)
@@ -452,17 +481,16 @@ bool packItemsIntoBin(SolucaoNS::Bin          &bin,
                 }
                 */
 
-                int itemId = sortedItems[i];
+                int                               itemId = sortedItems[i];
                 static Vector<PlacementCandidate> candidates(NumEpPorBin);
-                int numOfCandidates = 0;
-                assertm(bin.numEps > NumEpPorBin,
-                        "Error, bin.numEps is greter them NumEpPorBin\n")
+                int                               numOfCandidates = 0;
+                assertm(bin.numEps > NumEpPorBin, "Error, bin.numEps is greter them NumEpPorBin\n")
 
-                // Evaluate all active Extreme Points
-                //std::printf("bin.numEps %d\n", bin.numEps);
-                for(int epIdx = 0; epIdx < bin.numEps; ++epIdx)
+                    // Evaluate all active Extreme Points
+                    // std::printf("bin.numEps %d\n", bin.numEps);
+                    for(int epIdx = 0; epIdx < bin.numEps; ++epIdx)
                 {
-                    //std::printf("\tepIdx: %d\n", epIdx);
+                    // std::printf("\tepIdx: %d\n", epIdx);
                     const Ponto &ep = bin.vetEp[epIdx];
 
                     for(int rIdx = 0; rIdx < vetRot.size(); ++rIdx)
@@ -482,27 +510,30 @@ bool packItemsIntoBin(SolucaoNS::Bin          &bin,
                 if(numOfCandidates == 0)
                 {
                     if(print)
-                        std::printf("Failed to pack item %d (cust: %d)\n", itemId, instanciaG.vetItens[itemId].customer);
+                        std::printf("Failed to pack item %d (cust: %d)\n",
+                                    itemId,
+                                    instanciaG.vetItens[itemId].customer);
 
                     isInfeasible = true;
                     lastItem = i;
                     break;
-                    //return false;
+                    // return false;
                 }
 
                 // 2. Restricted Candidate List (RCL)
-                std::sort(candidates.begin(), candidates.begin()+numOfCandidates,
+                std::sort(candidates.begin(),
+                          candidates.begin() + numOfCandidates,
                           [](const PlacementCandidate &a, const PlacementCandidate &b)
-                          {return a.score < b.score;});
+                          { return a.score < b.score; });
 
-                int rclSize = std::max(1, (int)(numOfCandidates*input.aphaBinEscolhaEp));
-                //std::printf("\t\trclSize: %d\n", rclSize);
-                int chosen  = RandNs::getRandInt(0, rclSize-1);
+                int rclSize = std::max(1, (int)(numOfCandidates * input.aphaBinEscolhaEp));
+                // std::printf("\t\trclSize: %d\n", rclSize);
+                int chosen = RandNs::getRandInt(0, rclSize - 1);
 
                 if(!sortItemIds)
                     chosen = 0;
 
-                //std::printf("\t\tchosen: %d\n", chosen);
+                // std::printf("\t\tchosen: %d\n", chosen);
 
                 // Place the item (this automatically updates EPs, dimensions, and loads)
                 bin.addItem(candidates[chosen].epIdx, itemId, candidates[chosen].rot);
@@ -513,15 +544,15 @@ bool packItemsIntoBin(SolucaoNS::Bin          &bin,
 
             if(isInfeasible && !sortItemIds && penalty)
             {
-                if(lastItem < 0 || lastItem >= sortedItems.size() )
+                if(lastItem < 0 || lastItem >= sortedItems.size())
                 {
-                    std::printf("Error, isInfeasible: %d; lastItem: %d\n\n", isInfeasible, lastItem);
+                    std::printf(
+                        "Error, isInfeasible: %d; lastItem: %d\n\n", isInfeasible, lastItem);
                     PRINT_THROW();
                 }
 
-
                 double vol = 0.0;
-                for(int i=lastItem; i < numItems; ++i)
+                for(int i = lastItem; i < numItems; ++i)
                 {
                     vol += instanciaG.vetItens[sortedItems[i]].volume;
                 }
@@ -529,14 +560,13 @@ bool packItemsIntoBin(SolucaoNS::Bin          &bin,
                 penalizeSolution(rota, bin, *penalty);
                 penalty->set(SolucaoNS::Penalty::TypePenalty::VolItemsNotPacked, vol);
 
-
                 return false;
             }
 
             // Comprehensive final feasibility check (axle weights, compactness, support, LIFO)
 
             // TODO remover
-            //Penalty penalty;
+            // Penalty penalty;
 
             if(bin.checkFeasibility(&rota, false, print))
             {
@@ -549,7 +579,7 @@ bool packItemsIntoBin(SolucaoNS::Bin          &bin,
                 }
 
                 std::set<int> setItems;
-                for(int i=0; i < numItems; ++i)
+                for(int i = 0; i < numItems; ++i)
                 {
                     if(setItems.contains(itemIds[i]))
                     {
@@ -560,7 +590,7 @@ bool packItemsIntoBin(SolucaoNS::Bin          &bin,
                         setItems.insert(itemIds[i]);
                 }
 
-                for(int i=0; i < numItems; ++i)
+                for(int i = 0; i < numItems; ++i)
                 {
                     if(!setItems.contains(bin.vetItemId[i]))
                     {
@@ -573,7 +603,6 @@ bool packItemsIntoBin(SolucaoNS::Bin          &bin,
                     }
                 }
 
-
                 return true;
             }
             else if(!sortItemIds && penalty)
@@ -582,10 +611,8 @@ bool packItemsIntoBin(SolucaoNS::Bin          &bin,
                 penalizeSolution(rota, bin, *penalty);
                 penalty->set(SolucaoNS::Penalty::TypePenalty::VolItemsNotPacked, 0.0);
 
-
                 return false;
             }
-
 
             if(!sortItemIds)
                 return false;
@@ -602,16 +629,16 @@ bool packRoute(SolucaoNS::Rota &rota, VectorI _itemIds, bool print)
     if(!capVolFeas)
         return false;
 
-
     if(!rota.binPtr)
     {
-        if(print) std::printf("Error: rota.binPtr is null\n");
+        if(print)
+            std::printf("Error: rota.binPtr is null\n");
         return false;
     }
 
     Bin &bin = *rota.binPtr;
     bin.reset();
-           // Route has no customers (only depot visits 0 -> 0)
+    // Route has no customers (only depot visits 0 -> 0)
     if(rota.numPos <= 2)
     {
         bin.reset();
@@ -620,7 +647,7 @@ bool packRoute(SolucaoNS::Rota &rota, VectorI _itemIds, bool print)
 
     // 1. Collect all items demanded by customers in this route
     VectorI itemIds;
-    int numItems;
+    int     numItems;
 
     if(!_itemIds.empty())
     {
@@ -638,8 +665,6 @@ bool packRoute(SolucaoNS::Rota &rota, VectorI _itemIds, bool print)
 
     return packItemsIntoBin(bin, rota, itemIds, numItems, true, false);
 
-
-
 } // namespace ConstrutivoBinNS
 
-}
+} // namespace ConstrutivoBin2NS

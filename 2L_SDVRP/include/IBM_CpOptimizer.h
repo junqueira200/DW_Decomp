@@ -67,9 +67,8 @@ class CpOptimizer
     IloArray<IloBoolVarArray>
         mSupportXY; // mSupportXY[i][j], bool, 1, if item i is supported by item j
                     // xy-plane ? -> items intersect AND item j is directly below item i
-    IloArray<IloIntVarArray>
-        mOverlapAreasXY; // mOverlapAreasXY[i][j], integer, size of intersection area in
-                         // xy-plane of items i and j
+    IloArray<IloIntVarArray> mOverlapAreasXY; // mOverlapAreasXY[i][j], integer, size of
+                                              // intersection area in xy-plane of items i and j
     IloArray<IloBoolVarArray> mOrientation;
 
     std::vector<Dimension> mDimensions = {{AxisY, RightY, LeftY},

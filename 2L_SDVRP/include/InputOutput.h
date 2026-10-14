@@ -30,50 +30,51 @@ class File
 class Input
 {
   public:
-
-    Array<double, static_cast<size_t>(SolucaoNS::Penalty::TypePenalty::Count)>
-        arrayPenaltyWeight;
+    Array<double, static_cast<size_t>(SolucaoNS::Penalty::TypePenalty::Count)> arrayPenaltyWeight;
 
     std::string strInstCompleto;
     std::string strInst;
-    bool        splitInstancia 				= false;
-    bool        splitVrp 					= false;
-    double      aphaBin 					= 0.1; // 0.15
-    double      aphaBinEscolhaEp 			= 0.2; // 0.6
-    double      alphaVrp 					= 0.45;  // 0.45
-    int         numItIG 					= 3000; // 500
-    double      gapIgReset 					= 0.2; // 0.2
-    bool        comprimentoAlturaIguais1 	= false;
-    bool        cpSat 						= true;
-    double      cpSatTime 					= 600.0; // 600
+    bool        splitInstancia = false;
+    bool        splitVrp = false;
+    double      aphaBin = 0.1;          // 0.15
+    double      aphaBinEscolhaEp = 0.2; // 0.6
+    double      alphaVrp = 0.45;        // 0.45
+    int         numItIG = 3000;         // 500
+    double      gapIgReset = 0.2;       // 0.2
+    bool        comprimentoAlturaIguais1 = false;
+    bool        cpSat = true;
+    double      cpSatTime = 600.0; // 600
     // 0 Forward, 1 Backard, 2 Bidirectional
-    int         labelingType 				= 0;
-    bool        lifo 						= true;
-    bool        mlifo 						= true;
-    bool        removeFromShortSide 		= false;
-    bool        inst2d 						= false;
-    bool        instOroloc3D 				= false;
-    bool        instOroloc3D_2 				= false;
+    int         labelingType = 0;
+    bool        lifo = true;
+    bool        mlifo = true;
+    bool        removeFromShortSide = false;
+    bool        inst2d = false;
+    bool        instOroloc3D = false;
+    bool        instOroloc3D_2 = false;
     std::string strSolOroloc3D_2;
     std::string strSolOroloc3D_output;
-    bool        support                     = true;
-    double      minSupportArea 				= 0.75;
-    bool        compactness					= true;
-    double      minLeftSupportArea 			= 0.45;
-    bool        axleWights 					= true;
-    int         supportLimit 				= 0;
-    double      balancedLoadingD 			= 0.65;
-    bool        balancedLoading             = true;
-    double 		maxTimePackingHeuristic 	= 3.0;
-    bool        fragility				    = true;
-    bool        useCm						= true;
+    bool        support = true;
+    double      minSupportArea = 0.75;
+    bool        compactness = true;
+    double      minLeftSupportArea = 0.45;
+    bool        axleWights = true;
+    int         supportLimit = 0;
+    double      balancedLoadingD = 0.65;
+    bool        balancedLoading = true;
+    double      maxTimePackingHeuristic = 3.0;
+    bool        fragility = true;
+    bool        useCm = true;
 
+    int    gaPopulationSize = 400; // 200
+    int    gaNumberOfGenerations = 1000;
+    double gaDiscartPercetence = 0.2; // 0.05 // 0.2
+    double gaElitePercetence = 0.2;   // 0.10 // 0.2
+    double gaProbToInheritFromElite = 0.8;
+    int    gaNumberOfIslands = 4; // 8
+    int    gaMigrationInterval = 20;
+    double gaMigrationRate = 0.04;
 
-    int			gaPopulationSize			= 400;  // 200
-    int			gaNumberOfGenerations		= 1000;
-    double		gaDiscartPercetence			= 0.2; // 0.05 // 0.2
-    double		gaElitePercetence			= 0.2; // 0.10 // 0.2
-    double		gaProbToInheritFromElite    = 0.8;
     // bool		inst3d                   = true;
 
     File file;
@@ -99,9 +100,9 @@ class Output
     void setup()
     {
         semente = RandNs::estado_;
-        std::time_t result = duration_cast<std::chrono::seconds>(
-                                 std::chrono::system_clock::now().time_since_epoch())
-                                 .count();
+        std::time_t result =
+            duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
+                .count();
         data = std::string(std::asctime(std::localtime(&result)));
     }
 };

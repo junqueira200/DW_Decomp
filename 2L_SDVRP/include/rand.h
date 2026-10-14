@@ -38,8 +38,7 @@ inline __attribute__((always_inline)) double getRandDouble()
 }
 
 // val aleatorio entre [ini; fim)
-inline __attribute__((always_inline)) double getRandDouble(const double ini,
-                                                           const double fim)
+inline __attribute__((always_inline)) double getRandDouble(const double ini, const double fim)
 {
     std::uniform_real_distribution unif(ini, fim);
     return unif(engine_);

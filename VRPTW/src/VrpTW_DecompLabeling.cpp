@@ -44,8 +44,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
     labelingData = LabelingAlgorithmNS::LabelingData(
         vetStepSize, 2, instVrpTw->numClientes + 1, vetMaxResouces);
     labelingData.matDist = instVrpTw->matDist;
-    vetMatResCostForward =
-        Vet3D_ResCost(instVrpTw->numClientes + 1, instVrpTw->numClientes + 1, 2);
+    vetMatResCostForward = Vet3D_ResCost(instVrpTw->numClientes + 1, instVrpTw->numClientes + 1, 2);
     vetMatResCostForward.setVal(0.0);
 
     vetMatResCostBackward =
@@ -211,8 +210,7 @@ bool VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesMid(
                 PRINT_EXIT();
             }
 
-            label->vetResources[0] +=
-                instVrpTw->matDist(lastCust, cliJ) - vetRowPi[cliJ + 1];
+            label->vetResources[0] += instVrpTw->matDist(lastCust, cliJ) - vetRowPi[cliJ + 1];
             label->vetResources[1] += instVrpTw->vetClieDem[cliJ];
             label->vetRoute[label->tamRoute] = cliJ;
             label->tamRoute += 1;
@@ -232,8 +230,8 @@ bool VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesMid(
     Bucket &bucket = labelingData.vetMatBucketForward[instVrpTw->numClientes].mat(0, 0);
     if(bucket.sizeVetPtrLabel != numSol)
     {
-        std::cout << "Error, bucket size(" << bucket.sizeVetPtrLabel
-                  << ") is different from " << numSol << "\n\n";
+        std::cout << "Error, bucket size(" << bucket.sizeVetPtrLabel << ") is different from "
+                  << numSol << "\n\n";
         PRINT_EXIT();
     }
 
@@ -346,8 +344,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(
 
             if(phaseStatus != DW_DecompNS::PhaseStatus::PhaseStatusTwoPhase)
             {
-                value0 +=
-                    (FloatType)instVrpTw->matDist(i, j); // - (FloatType)vetRowPi[j];
+                value0 += (FloatType)instVrpTw->matDist(i, j); // - (FloatType)vetRowPi[j];
             }
 
             vetMatResCostForward.get(i, j, 0) = value0;
@@ -730,12 +727,11 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(
     return 0;
 }
 
-bool VrpTW_DecompLabelingNS::exactPricing(
-    const LabelingAlgorithmNS::Vet3D_ResCost      &vetMatResCost,
-    const FloatType                                startVal,
-    Eigen::Matrix<double, -1, 1, Eigen::ColMajor> &vetColSolX,
-    InstanceVRPTW_NS::InstanceVRPTW               &instVrpTw,
-    double                                        &cost)
+bool VrpTW_DecompLabelingNS::exactPricing(const LabelingAlgorithmNS::Vet3D_ResCost &vetMatResCost,
+                                          const FloatType                           startVal,
+                                          Eigen::Matrix<double, -1, 1, Eigen::ColMajor> &vetColSolX,
+                                          InstanceVRPTW_NS::InstanceVRPTW               &instVrpTw,
+                                          double                                        &cost)
 {
 
     static GRBEnv    env;
@@ -747,8 +743,7 @@ bool VrpTW_DecompLabelingNS::exactPricing(
     {
 
         ptrModel = new GRBModel(env);
-        vetVarX =
-            ptrModel->addVars(instVrpTw.numClientes * instVrpTw.numClientes, GRB_BINARY);
+        vetVarX = ptrModel->addVars(instVrpTw.numClientes * instVrpTw.numClientes, GRB_BINARY);
         vetVarU = ptrModel->addVars(instVrpTw.numClientes, GRB_CONTINUOUS);
 
         GRBLinExpr linExpr;
@@ -804,9 +799,8 @@ bool VrpTW_DecompLabelingNS::exactPricing(
                     GRBLinExpr linExpr = 0;
 
                     // uj - ui + Q(1-xijk)>=  qj
-                    linExpr =
-                        -vetVarU[i] + vetVarU[j] +
-                        capacidade * (1 - vetVarX[getIndex(i, j, instVrpTw.numClientes)]);
+                    linExpr = -vetVarU[i] + vetVarU[j] +
+                              capacidade * (1 - vetVarX[getIndex(i, j, instVrpTw.numClientes)]);
                     double rhs = instVrpTw.vetClieDem[j];
                     ptrModel->addConstr(
                         linExpr >= rhs,
@@ -923,11 +917,10 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::convertRouteIntoLabel(
     label->tamRoute = (int)route.vetRoute.size();
 }
 
-VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(
-    InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
-    int                              dim_,
-    int                              maxNoOfCuts_,
-    double                           eps)
+VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
+                                                 int                              dim_,
+                                                 int                              maxNoOfCuts_,
+                                                 double                           eps)
 {
     capacity = instVrpTw.capVeic;
     dim = dim_;
@@ -1000,13 +993,10 @@ VrpTW_DecompLabelingNS::CapacityCut::~CapacityCut()
     CMGR_FreeMemCMgr(&cutsCMP);
     CMGR_FreeMemCMgr(&oldCutsCMP);
 }
-int VrpTW_DecompLabelingNS::CapacityCut::operator()(
-    DW_DecompNS::DW_DecompNode &decompNode)
+int VrpTW_DecompLabelingNS::CapacityCut::operator()(DW_DecompNS::DW_DecompNode &decompNode)
 {
-    std::printf(
-        "*************************************************************************\n");
-    std::printf(
-        "***************************CAPACITY_CUT**********************************\n\n");
+    std::printf("*************************************************************************\n");
+    std::printf("***************************CAPACITY_CUT**********************************\n\n");
 
     // Convert the arc solution for the edge one
     convertArcSolution(decompNode.vetSolX);
@@ -1088,11 +1078,9 @@ void VrpTW_DecompLabelingNS::CapacityCut::convertArcSolution(const Eigen::Vector
             if(edgeX[index] > 1.0)
             {
                 if(j > i)
-                    std::cout << "Edge: (" << i << ", " << j
-                              << ") have a value greter then 1\n";
+                    std::cout << "Edge: (" << i << ", " << j << ") have a value greter then 1\n";
                 else
-                    std::cout << "Edge: (" << j << ", " << i
-                              << ") have a value greter then 1\n";
+                    std::cout << "Edge: (" << j << ", " << i << ") have a value greter then 1\n";
             }
         }
     }

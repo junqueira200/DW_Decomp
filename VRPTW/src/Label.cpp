@@ -29,9 +29,8 @@ void LabelingAlgorithmNS::LabelingData::checkVetMatBucketBackward()
                                       << *bucket.vetPtrLabel[t] << "\n"
                                       << *bucket.vetPtrLabel[tt] << "\n";
                             std::cout << a << "\n" << b << "\n";
-                            std::cout << "doubleGreater("
-                                      << doubleGreater(a, b, (FloatType)1E-3) << "); >"
-                                      << (a > b) << "\n";
+                            std::cout << "doubleGreater(" << doubleGreater(a, b, (FloatType)1E-3)
+                                      << "); >" << (a > b) << "\n";
 
                             std::cout << bucket.print(2) << "\n";
 
@@ -114,9 +113,8 @@ void LabelHeap::decreaseKey(int i, KEY_TYPE val)
     int iParent = parent(i);
 
     while(i != 0 &&
-          labelCmp.isGreater(
-              vet[iParent],
-              vet[i])) // vet[iParent]->vetResources[0] > vet[i]->vetResources[0])
+          labelCmp.isGreater(vet[iParent],
+                             vet[i])) // vet[iParent]->vetResources[0] > vet[i]->vetResources[0])
     {
         std::swap(vet[i], vet[iParent]);
         std::swap(vet[i]->posHeap, vet[iParent]->posHeap);
@@ -141,8 +139,7 @@ void LabelHeap::deleteKey(int i)
 
     if(labelI != label)
     {
-        std::cout << "labelI(" << labelI << ") diffrent from top label (" << label
-                  << ")\n\n";
+        std::cout << "labelI(" << labelI << ") diffrent from top label (" << label << ")\n\n";
         std::cout << "Size: " << heapSize << "\n\n";
         PRINT_EXIT();
     }
@@ -193,8 +190,7 @@ void LabelHeap::insertKey(Label *label)
     vet[i] = label;
     label->posHeap = i;
 
-    while(i != 0 &&
-          labelCmp.isGreater(vet[iParent], vet[i])) //! labelCmp(vet[iParent], vet[i]))
+    while(i != 0 && labelCmp.isGreater(vet[iParent], vet[i])) //! labelCmp(vet[iParent], vet[i]))
     {
         std::swap(vet[i], vet[iParent]);
         std::swap(vet[i]->posHeap, vet[iParent]->posHeap);
@@ -322,10 +318,8 @@ std::string LabelingAlgorithmNS::printIndex(const Index &index)
 {
     std::string str;
 
-    str += "[" + std::to_string(index.start(0)) + "; " + std::to_string(index.end(0)) +
-           "]\n";
-    str += "[" + std::to_string(index.start(1)) + "; " + std::to_string(index.end(1)) +
-           "]\n";
+    str += "[" + std::to_string(index.start(0)) + "; " + std::to_string(index.end(0)) + "]\n";
+    str += "[" + std::to_string(index.start(1)) + "; " + std::to_string(index.end(1)) + "]\n";
 
     return str;
 }
@@ -419,13 +413,8 @@ int LabelingAlgorithmNS::LabelingData::doMerge(Label                *label,
                 }
 
                 int     correctPos = -1;
-                Bucket *bucket = dominanceIntraBucketSlow(result->cust,
-                                                          result,
-                                                          *this,
-                                                          nullptr,
-                                                          numResorces,
-                                                          result->cust,
-                                                          correctPos);
+                Bucket *bucket = dominanceIntraBucketSlow(
+                    result->cust, result, *this, nullptr, numResorces, result->cust, correctPos);
 
                 // TODO menory leek! :(
                 if(!bucket)
@@ -487,20 +476,19 @@ void LabelingAlgorithmNS::LabelingData::checkLabels()
                         Label *label = bucket.vetPtrLabel[l];
                         if(label->typeLabel != type)
                         {
-                            std::cout << "Error in label of (" << k << "), pos: (" << i
-                                      << ", " << j << ")\n";
-                            std::cout << "Label Type(" << label->typeLabel
-                                      << ") shuld be: " << type << "\n\n";
+                            std::cout << "Error in label of (" << k << "), pos: (" << i << ", " << j
+                                      << ")\n";
+                            std::cout << "Label Type(" << label->typeLabel << ") shuld be: " << type
+                                      << "\n\n";
                             std::cout << *label << "\n\n";
                             PRINT_EXIT();
                         }
 
                         if(label->cust != k)
                         {
-                            std::cout << "Error in label of (" << k << "), pos: (" << i
-                                      << ", " << j << ")\n";
-                            std::cout << "Cust(" << label->cust << ") shuld be " << k
-                                      << "\n";
+                            std::cout << "Error in label of (" << k << "), pos: (" << i << ", " << j
+                                      << ")\n";
+                            std::cout << "Cust(" << label->cust << ") shuld be " << k << "\n";
                             std::cout << *label << "\n\n";
                             PRINT_EXIT();
                         }

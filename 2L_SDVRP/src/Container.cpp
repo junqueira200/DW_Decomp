@@ -72,8 +72,8 @@ int Container::Dimension(Axis axis) const
 
 bool ICuboid::Contains(const ICoordinate &other) const
 {
-    return other.X >= X && other.X < X + Dx && other.Y >= Y && other.Y < Y + Dy &&
-           other.Z >= Z && other.Z < Z + Dz;
+    return other.X >= X && other.X < X + Dx && other.Y >= Y && other.Y < Y + Dy && other.Z >= Z &&
+           other.Z < Z + Dz;
 }
 
 } // namespace Model

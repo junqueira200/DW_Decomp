@@ -41,11 +41,10 @@ typedef std::pair<int, int>                      Edge;
  *  ******************************************************************************************
  *  ******************************************************************************************
  */
-bool LowerBoundNS::getDistLowerBound(
-    const LabelingAlgorithmNS::Vet3D_ResCost &vetMatResCost,
-    Eigen::VectorXd                          &vetDist,
-    int                                       dest,
-    LabelingAlgorithmNS::LabelingData        *lDataPtr)
+bool LowerBoundNS::getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost &vetMatResCost,
+                                     Eigen::VectorXd                          &vetDist,
+                                     int                                       dest,
+                                     LabelingAlgorithmNS::LabelingData        *lDataPtr)
 
 {
     // return false;
@@ -56,8 +55,7 @@ bool LowerBoundNS::getDistLowerBound(
     copyDistMat(vetMatResCost, distMat);
     static int                 numNodes = vetDist.size();
     static std::vector<Vertex> predecessor(numNodes);
-    static std::vector<double> distance(
-        numNodes, std::numeric_limits<double>::infinity());
+    static std::vector<double> distance(numNodes, std::numeric_limits<double>::infinity());
 
     // std::cout<<distMat<<"\n";
 

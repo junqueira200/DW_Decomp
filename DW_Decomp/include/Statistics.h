@@ -35,9 +35,9 @@ class StatisticsData
 
     StatisticsData()
     {
-        std::time_t result = duration_cast<std::chrono::seconds>(
-                                 std::chrono::system_clock::now().time_since_epoch())
-                                 .count();
+        std::time_t result =
+            duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch())
+                .count();
         date = std::string(std::asctime(std::localtime(&result)));
     };
 };

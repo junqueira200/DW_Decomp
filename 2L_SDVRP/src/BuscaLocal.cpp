@@ -11,8 +11,8 @@
 #include "Construtivo.h"
 #include "ConstrutivoBin.h"
 #include "InputOutput.h"
-#include "rand.h"
 #include "c_api.h"
+#include "rand.h"
 
 using namespace SolucaoNS;
 using namespace RandNs;
@@ -30,7 +30,7 @@ bool BuscaLocalNS::intraRotaShift(SolucaoNS::Solucao &sol, int rotaR, int pos0, 
     if((pos0 + 1) == pos1 || pos0 == pos1 || pos1 <= 0)
         return false;
 
-    Rota &rota = sol.vetRota[rotaR];
+    Rota       &rota = sol.vetRota[rotaR];
     static Rota rotaTemp;
 
     // std::cout<<"\t"<<rota.printRota()<<"\n";
@@ -51,7 +51,7 @@ bool BuscaLocalNS::intraRotaShift(SolucaoNS::Solucao &sol, int rotaR, int pos0, 
     novaDist -= instanciaG.matDist(rota.vetRota[pos0], rota.vetRota[pos0 + 1]);
     novaDist += instanciaG.matDist(rota.vetRota[pos0], clientePos1);
     novaDist += instanciaG.matDist(clientePos1, rota.vetRota[pos0 + 1]);
-    novaDist += instanciaG.matDist(rota.vetRota[pos1-1], rota.vetRota[pos1 + 1]);
+    novaDist += instanciaG.matDist(rota.vetRota[pos1 - 1], rota.vetRota[pos1 + 1]);
 
     // std::cout<<"\tNova Dist: "<<novaDist<<"\n";
 
@@ -73,16 +73,16 @@ bool BuscaLocalNS::intraRotaShift(SolucaoNS::Solucao &sol, int rotaR, int pos0, 
         {
             // std::cout<<"\tpos0<pos1\n";
             for(int i = pos1; i > pos0; --i)
-                rotaTemp.vetRota[i] = rotaTemp.vetRota[i-1];
+                rotaTemp.vetRota[i] = rotaTemp.vetRota[i - 1];
 
-            rotaTemp.vetRota[pos0+1] = clientePos1;
+            rotaTemp.vetRota[pos0 + 1] = clientePos1;
         }
         else
         {
             // std::cout<<"\tpos1<pos0\n";
             for(int i = pos1; i < pos0; ++i)
             {
-                rotaTemp.vetRota[i] = rotaTemp.vetRota[i+1];
+                rotaTemp.vetRota[i] = rotaTemp.vetRota[i + 1];
             }
 
             rotaTemp.vetRota[pos0] = clientePos1;
@@ -99,10 +99,7 @@ bool BuscaLocalNS::intraRotaShift(SolucaoNS::Solucao &sol, int rotaR, int pos0, 
             return true;
         }
 
-
-
         // std::cout<<"\t"<<rota.printRota()<<"\n\n";
-
     }
 
     return false;
@@ -176,7 +173,6 @@ bool BuscaLocalNS::mvIntraRotaSwap(SolucaoNS::Solucao &sol, int rotaR, int pos0,
         }
 
         // std::cout<<"\t"<<rota.printRota()<<"\n\n";
-
     }
 
     return false;
@@ -188,7 +184,7 @@ bool BuscaLocalNS::mvIntraRota2opt(SolucaoNS::Solucao &sol, int rotaR, int pos0,
     if(pos0 <= 0 || pos1 <= 0 || pos0 > pos1)
         return false;
 
-    Rota &rota = sol.vetRota[rotaR];
+    Rota       &rota = sol.vetRota[rotaR];
     static Rota rotaTemp;
 
     if(pos0 >= (rota.numPos - 1) || pos1 >= (rota.numPos - 1))
@@ -217,8 +213,7 @@ bool BuscaLocalNS::mvIntraRota2opt(SolucaoNS::Solucao &sol, int rotaR, int pos0,
         rotaTemp.reset();
         copiaRota(rota, rotaTemp);
 
-        std::reverse((rotaTemp.vetRota.begin() + pos0),
-                     (rotaTemp.vetRota.begin() + pos1 + 1));
+        std::reverse((rotaTemp.vetRota.begin() + pos0), (rotaTemp.vetRota.begin() + pos1 + 1));
 
         if(testRoute(&rotaTemp.vetRota[0], rotaTemp.numPos, 1))
         {
@@ -281,7 +276,6 @@ bool BuscaLocalNS::mvInterRotasShift(SolucaoNS::Solucao &sol,
     if(!doubleLess((novaDistRota0 + novaDistRota1), (rota0.distTotal + rota1.distTotal)))
         return false;
 
-
     copiaRota(rota0, rotaAux0);
     copiaRota(rota1, rotaAux1);
 
@@ -336,10 +330,10 @@ bool BuscaLocalNS::mvInterRotasSwap(SolucaoNS::Solucao &sol,
                                     int                 pos1)
 {
 
-    //static Vector<Bin> bin1(1);
-    //static Vector<Bin> bin0(1);
-    //static VectorI     vetItens0(instanciaG.maxNumItensPorClie);
-    //static VectorI     vetItens1(instanciaG.maxNumItensPorClie);
+    // static Vector<Bin> bin1(1);
+    // static Vector<Bin> bin0(1);
+    // static VectorI     vetItens0(instanciaG.maxNumItensPorClie);
+    // static VectorI     vetItens1(instanciaG.maxNumItensPorClie);
 
     Rota &rota0 = sol.vetRota[idRota0];
     Rota &rota1 = sol.vetRota[idRota1];
@@ -423,22 +417,22 @@ bool BuscaLocalNS::mvInterRotasCross(SolucaoNS::Solucao &sol,
 
     static VectorI vetClientesRota0(TamRota);
     static VectorI vetClientesRota1(TamRota);
-    //static VectorI vetItensRota0(NumItensPorBin);
-    //static VectorI vetItensRota1(NumItensPorBin);
+    // static VectorI vetItensRota0(NumItensPorBin);
+    // static VectorI vetItensRota1(NumItensPorBin);
 
     static Rota rotaAux0;
     static Rota rotaAux1;
 
-    //static Vector<Bin> bin0(1);
-    //static Vector<Bin> bin1(1);
+    // static Vector<Bin> bin0(1);
+    // static Vector<Bin> bin1(1);
 
     int tamVetC_Rota0 = 0;
     int tamVetC_Rota1 = 0;
     int numItensRota0 = 0;
     int numItensRota1 = 0;
 
-    double distSubRota0  = 0.0;
-    double distSubRota1  = 0.0;
+    double distSubRota0 = 0.0;
+    double distSubRota1 = 0.0;
     double novaDistRota0 = 0.0;
     double novaDistRota1 = 0.0;
 
@@ -469,7 +463,7 @@ bool BuscaLocalNS::mvInterRotasCross(SolucaoNS::Solucao &sol,
 
     // Pega todos os clientes da rota0 apos pos0 e seus itens
     getClientes(rota0, vetClientesRota0, tamVetC_Rota0, pos0 + 1);
-    //numItensRota0 = copiaItensClientes(vetClientesRota0, tamVetC_Rota0, vetItensRota0);
+    // numItensRota0 = copiaItensClientes(vetClientesRota0, tamVetC_Rota0, vetItensRota0);
     vetClientesRota0[tamVetC_Rota0] = 0;
     tamVetC_Rota0 += 1;
     distSubRota0 = calculaDistancia(vetClientesRota0, tamVetC_Rota0);
@@ -480,7 +474,7 @@ bool BuscaLocalNS::mvInterRotasCross(SolucaoNS::Solucao &sol,
 
     // Pega todos os clientes da rota1 apos pos1 e seus itens
     getClientes(rota1, vetClientesRota1, tamVetC_Rota1, pos1 + 1);
-    //numItensRota1 = copiaItensClientes(vetClientesRota1, tamVetC_Rota1, vetItensRota1);
+    // numItensRota1 = copiaItensClientes(vetClientesRota1, tamVetC_Rota1, vetItensRota1);
     vetClientesRota1[tamVetC_Rota1] = 0;
     tamVetC_Rota1 += 1;
     distSubRota1 = calculaDistancia(vetClientesRota1, tamVetC_Rota1);
@@ -522,7 +516,6 @@ bool BuscaLocalNS::mvInterRotasCross(SolucaoNS::Solucao &sol,
 
     if(!doubleLess((novaDistRota0 + novaDistRota1), (rota0.distTotal + rota1.distTotal)))
         return false;
-
 
     copiaRota(rota0, rotaAux0);
     copiaRota(rota1, rotaAux1);
@@ -591,11 +584,9 @@ bool BuscaLocalNS::mvInterRotasCross(SolucaoNS::Solucao &sol,
 
 void BuscaLocalNS::rvnd(SolucaoNS::Solucao &sol)
 {
-    //NumMv
+    // NumMv
     static Array<MV, NumMv> arrayMv;
     // arrayMv[0] = MvInterRotasCross;
-
-
 
     for(int i = 0; i < NumMv; ++i)
     {
@@ -613,15 +604,12 @@ void BuscaLocalNS::rvnd(SolucaoNS::Solucao &sol)
 
         do
         {
-            arrayMv[i] = static_cast<MV>(getRandInt(0, (NumMv-1)));
-        }
-        while(!checkFuncm());
+            arrayMv[i] = static_cast<MV>(getRandInt(0, (NumMv - 1)));
+        } while(!checkFuncm());
     }
-
 
     bool improve = true;
     int  k = 0;
-
 
     while(k < NumMv)
     {
@@ -641,18 +629,15 @@ void BuscaLocalNS::rvnd(SolucaoNS::Solucao &sol)
             break;
 
         case MvInterRotasShifit:
-            improve = buscaInterRotas(
-                sol, MvInterRotasShifit, input.aphaBin, mvInterRotasShift);
+            improve = buscaInterRotas(sol, MvInterRotasShifit, input.aphaBin, mvInterRotasShift);
             break;
 
         case MvInterRotasSwap:
-            improve =
-                buscaInterRotas(sol, MvInterRotasSwap, input.aphaBin, mvInterRotasSwap);
+            improve = buscaInterRotas(sol, MvInterRotasSwap, input.aphaBin, mvInterRotasSwap);
             break;
 
         case MvInterRotasCross:
-            improve =
-                buscaInterRotas(sol, MvInterRotasCross, input.aphaBin, mvInterRotasCross);
+            improve = buscaInterRotas(sol, MvInterRotasCross, input.aphaBin, mvInterRotasCross);
             break;
         }
 

@@ -12,9 +12,9 @@
 #include "Construtivo.h"
 #include "InputOutput.h"
 #include "Instancia.h"
-#include "rand.h"
 #include "c_api.h"
-#include "SetPartition.h"
+#include "rand.h"
+// #include "SetPartition.h"
 
 using namespace SolucaoNS;
 using namespace ConstrutivoNS;
@@ -22,7 +22,7 @@ using namespace InstanceNS;
 using namespace ParseInputNS;
 using namespace RandNs;
 using namespace BuscaLocalNS;
-using namespace SetPartitionNS;
+// using namespace SetPartitionNS;
 
 bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
 {
@@ -57,12 +57,12 @@ bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
     }
 
     std::printf("Dist; %.1f\n\n", best.distTotal);
-    static int numRm = 0.2*instanciaG.numVeiculos+1;
+    static int numRm = 0.2 * instanciaG.numVeiculos + 1;
     std::printf("Number of veich to remove: %d\n\n", numRm);
 
     for(int i = 0; i < input.numItIG; ++i)
     {
-        if(i%100 == 0 && i > 0)
+        if(i % 100 == 0 && i > 0)
             std::printf("IT: %d; Number of Routes: %ld\n", i, routeData.routeSetFeasible.size());
 
         for(int k = 0; k < numRm; ++k)
@@ -98,25 +98,23 @@ bool IgNs::metaheuristicaIg(SolucaoNS::Solucao &best)
 
             // std::cout<<"\t"<<sol.distTotal<<"\n\n";
         }
-
     }
 
-    for(int i=0; i < best.vetRota.size(); ++i)
+    for(int i = 0; i < best.vetRota.size(); ++i)
     {
-        Rota& rota = best.vetRota[i];
+        Rota &rota = best.vetRota[i];
         if(rota.numPos <= 2)
             continue;
 
         if(testRoute(&rota.vetRota[0], rota.numPos, 1) == 0)
         {
-            std::printf("Error, packing for route: %s not found\n",
-                        rota.printRota(false).c_str());
+            std::printf("Error, packing for route: %s not found\n", rota.printRota(false).c_str());
             PRINT_THROW();
         }
     }
 
-    Solucao setPartitionSol(instanciaG);
-    SetPartitionNS::setPatition(best, setPartitionSol);
+    // Solucao setPartitionSol(instanciaG);
+    // SetPartitionNS::setPatition(best, setPartitionSol);
 
     // std::cout<<"MELHOR SOL: "<<best.distTotal<<"\n\n";
     return sol.verificaSol(strError);

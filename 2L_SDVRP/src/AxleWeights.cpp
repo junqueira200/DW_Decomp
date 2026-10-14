@@ -19,13 +19,13 @@ using namespace InstanceNS;
  */
 
 bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin,
-                                                   bool           print,
-                                                   double*        ptrFk,
-                                                   double*        ptrFFa,
-                                                   double*        ptrFRa,
-                                                   double*		  ptrFTa,
-                                                   double*        ptrSumF,
-                                                   double*		  ptrSumM) const
+                                                  bool            print,
+                                                  double         *ptrFk,
+                                                  double         *ptrFFa,
+                                                  double         *ptrFRa,
+                                                  double         *ptrFTa,
+                                                  double         *ptrSumF,
+                                                  double         *ptrSumM) const
 {
     /*
     if(print)
@@ -44,38 +44,37 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin,
     double sumF = 0.0;
     double sumM = 0.0;
 
-    //if(print)
-    //    std::printf("SemiTrailer\nR: ");
+    // if(print)
+    //     std::printf("SemiTrailer\nR: ");
 
-    //std::printf("bin.numItens: %d\n", bin.numItens);
+    // std::printf("bin.numItens: %d\n", bin.numItens);
 
     for(int i = 0; i < bin.numItens; ++i)
     {
 
         double f = instanciaG.vetItens[bin.vetItemId[i]].weight * GravityCm;
         sumF += f;
-        double r = (double)distanceCargoSpaceTrailerAxle - bin.vetPosItem[i].vetDim[0] -
-                   instanciaG.vetItens[bin.vetItemId[i]].getDimRotacionada(
-                       0, bin.vetRotacao[i]) / 2.0;
+        double r =
+            (double)distanceCargoSpaceTrailerAxle - bin.vetPosItem[i].vetDim[0] -
+            instanciaG.vetItens[bin.vetItemId[i]].getDimRotacionada(0, bin.vetRotacao[i]) / 2.0;
 
-        //r = std::round(r);
+        // r = std::round(r);
 
-        //if(print)
-        //    std::printf("%d: %.1f; ", bin.vetItemId[i], r);
+        // if(print)
+        //     std::printf("%d: %.1f; ", bin.vetItemId[i], r);
 
         sumM += f * r;
     }
 
-    //if(print)
-    //    std::printf("\n\nsumF: %.1f\n", sumF);
-
+    // if(print)
+    //     std::printf("\n\nsumF: %.1f\n", sumF);
 
     fK = (1.0 / (double)distanceKingpinTrailerAxle) *
          (sumM + (double)massTrailer * GravityCm * distanceMassTrailerTrailerAxle);
 
-    fFA = (1.0 / (double)wheelBase) *
-          (fK * (double)distanceKingpinRearAxle +
-           (double)massTractor * GravityCm * distanceMassTractorRearAxle);
+    fFA =
+        (1.0 / (double)wheelBase) * (fK * (double)distanceKingpinRearAxle +
+                                     (double)massTractor * GravityCm * distanceMassTractorRearAxle);
 
     fRA = fK + (double)massTractor * GravityCm - fFA;
 
@@ -85,10 +84,10 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin,
     if(print)
     {
         std::printf("GravityMM: %.1f\n", GravityCm);
-        std::printf("FROM AxleWeights: \nfK: %.1f; \nfFA:\n\t%.1f ; Limit: \n\t%.1f \n\n fRA:\n\t%.1f; Limit: \n\t%.1f \n\n fTA:\n\t%.1f; Limit: \n\t%.1f\n\n",
-                    fK, fFA, (double)maxMassFrontAxle * GravityCm,
-                    fRA, (double)maxMassRearAxle * GravityCm,
-                    fTA, (double)maxMassTrailerAxle * GravityCm);
+        std::printf("FROM AxleWeights: \nfK: %.1f; \nfFA:\n\t%.1f ; Limit: \n\t%.1f \n\n
+    fRA:\n\t%.1f; Limit: \n\t%.1f \n\n fTA:\n\t%.1f; Limit: \n\t%.1f\n\n", fK, fFA,
+    (double)maxMassFrontAxle * GravityCm, fRA, (double)maxMassRearAxle * GravityCm, fTA,
+    (double)maxMassTrailerAxle * GravityCm);
     }
     */
 
@@ -111,7 +110,7 @@ bool AxleWeightsNS::SemiTrailer::checkAxleWeights(SolucaoNS::Bin &bin,
         *ptrSumM = sumM;
 
     // 1.01
-    if(fFA > (double)maxMassFrontAxle* GravityCm)
+    if(fFA > (double)maxMassFrontAxle * GravityCm)
     {
         if(print)
             std::printf("fFA\n");
@@ -146,8 +145,8 @@ double AxleWeightsNS::SemiTrailer::computeMaxFK(SolucaoNS::Bin &bin) const
         Item &item = instanciaG.vetItens[bin.vetItens[i]];
 
         double f = item.weight * 10;
-        double r = (double)
-            distanceCargoSpaceTrailerAxle; // - std::min(item.vetDim[0], item.vetDim[1]);
+        double r =
+            (double)distanceCargoSpaceTrailerAxle; // - std::min(item.vetDim[0], item.vetDim[1]);
         maxFK += f * r;
     }
 

@@ -14,7 +14,7 @@
 
 namespace SetPartitionNS
 {
-    void setPatition(SolucaoNS::Solucao& startSol, SolucaoNS::Solucao& outPutSol);
+void setPatition(SolucaoNS::Solucao &startSol, SolucaoNS::Solucao &outPutSol);
 }
 
 #endif // SETPARTITION_H

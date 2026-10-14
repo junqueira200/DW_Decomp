@@ -20,12 +20,11 @@ void MnfpDecompNS::criaSubProbFlow(const MNFP::MNFP_Inst &mnfp, GRBModel &model,
     {
         for(int j = 0; j < N; ++j)
         {
-            vetX[getId(i, j, N)].set(GRB_StringAttr_VarName,
-                                     "x_" + std::to_string(k) + "_" + std::to_string(i) +
-                                         "_" + std::to_string(j));
+            vetX[getId(i, j, N)].set(
+                GRB_StringAttr_VarName,
+                "x_" + std::to_string(k) + "_" + std::to_string(i) + "_" + std::to_string(j));
 
-            std::cout << "(" << k << "," << i << "," << j << "): " << getId(i, j, N)
-                      << "\n";
+            std::cout << "(" << k << "," << i << "," << j << "): " << getId(i, j, N) << "\n";
         }
 
         std::cout << "\n";
@@ -81,13 +80,11 @@ void MnfpDecompNS::criaMestre(const MNFP::MNFP_Inst &mnfp, GRBModel &model)
         {
             for(int j = 0; j < N; ++j)
             {
-                (vetX(k))[getId(i, j, N)].set(GRB_StringAttr_VarName,
-                                              "x_" + std::to_string(k) + "_" +
-                                                  std::to_string(i) + "_" +
-                                                  std::to_string(j));
+                (vetX(k))[getId(i, j, N)].set(
+                    GRB_StringAttr_VarName,
+                    "x_" + std::to_string(k) + "_" + std::to_string(i) + "_" + std::to_string(j));
 
-                std::cout << "(" << k << "," << i << "," << j << "): " << getId(i, j, N)
-                          << "\n";
+                std::cout << "(" << k << "," << i << "," << j << "): " << getId(i, j, N) << "\n";
             }
 
             std::cout << "\n";
@@ -124,9 +121,7 @@ void MnfpDecompNS::criaMestre(const MNFP::MNFP_Inst &mnfp, GRBModel &model)
     }
 }
 
-void MnfpDecompNS::MySubProbFlow::iniConvConstr(GRBModel    &rmlp,
-                                                void        *data,
-                                                const double custoVarA)
+void MnfpDecompNS::MySubProbFlow::iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA)
 {
     if(convConstIni)
         return;
@@ -165,15 +160,15 @@ void MnfpDecompNS::MySubProbFlow::iniConvConstr(GRBModel    &rmlp,
  *  ************************************************************************
  *  ************************************************************************
  */
-int MnfpDecompNS::MySubProbFlow::resolveSubProb(Eigen::VectorXd &subProbCooef,
-                                                GRBModel        &mestre,
-                                                Eigen::VectorXd &vetX,
-                                                int              itCG,
-                                                bool            &custoRedNeg,
-                                                void            *data,
-                                                const int        iniConv,
-                                                int              indSubProb,
-                                                Eigen::VectorXd &vetCooefRestConv,
+int MnfpDecompNS::MySubProbFlow::resolveSubProb(Eigen::VectorXd           &subProbCooef,
+                                                GRBModel                  &mestre,
+                                                Eigen::VectorXd           &vetX,
+                                                int                        itCG,
+                                                bool                      &custoRedNeg,
+                                                void                      *data,
+                                                const int                  iniConv,
+                                                int                        indSubProb,
+                                                Eigen::VectorXd           &vetCooefRestConv,
                                                 const std::pair<int, int> &pairSubProb)
 {
     if(!convConstIni)
@@ -195,8 +190,8 @@ int MnfpDecompNS::MySubProbFlow::resolveSubProb(Eigen::VectorXd &subProbCooef,
     subProbCooef[pairSubProb.second] = -constr.get(GRB_DoubleAttr_Pi);
 
     std::cout << "Funcao resolveSubProb\n\n\n";
-    std::cout << "subProbCooef: "
-              << subProbCooef.segment(0, (pairSubProb.second + 1)).transpose() << "\n\n";
+    std::cout << "subProbCooef: " << subProbCooef.segment(0, (pairSubProb.second + 1)).transpose()
+              << "\n\n";
     std::cout << "vetX.size(): " << vetX.size() << "\n";
     // throw "ERROR";
 
@@ -207,18 +202,15 @@ int MnfpDecompNS::MySubProbFlow::resolveSubProb(Eigen::VectorXd &subProbCooef,
     model.update();
     GRBVar *varX = model.getVars();
 
-    std::cout << "num var subprob " << k << ": " << model.get(GRB_IntAttr_NumVars)
-              << "\n";
+    std::cout << "num var subprob " << k << ": " << model.get(GRB_IntAttr_NumVars) << "\n";
     std::cout << "num var subprob: " << (pairSubProb.second + 1) << "\n";
 
     try
     {
 
-        model.set(
-            GRB_DoubleAttr_Obj, varX, &subProbCooef(0), model.get(GRB_IntAttr_NumVars));
+        model.set(GRB_DoubleAttr_Obj, varX, &subProbCooef(0), model.get(GRB_IntAttr_NumVars));
         model.update();
-        model.write("colGen_subProb_" + std::to_string(k) + "_it_" +
-                    std::to_string(itCG) + ".lp");
+        model.write("colGen_subProb_" + std::to_string(k) + "_it_" + std::to_string(itCG) + ".lp");
         model.optimize();
 
         int s = model.get(GRB_IntAttr_Status);
@@ -242,8 +234,7 @@ int MnfpDecompNS::MySubProbFlow::resolveSubProb(Eigen::VectorXd &subProbCooef,
                 vetCooefRestConv[k] = 1;
 
                 std::cout << "subProb(" << k
-                          << ") X: " << vetX.segment(0, pairSubProb.second).transpose()
-                          << "\n\n";
+                          << ") X: " << vetX.segment(0, pairSubProb.second).transpose() << "\n\n";
 
                 std::cout << "FIM resolve sub prob.\n";
 
@@ -281,9 +272,7 @@ int MnfpDecompNS::MySubProbFlow::resolveSubProb(Eigen::VectorXd &subProbCooef,
 
 } // FIM resolveSubProb
 
-void MnfpDecompNS::MySubProbPath::iniConvConstr(GRBModel    &rmlp,
-                                                void        *data,
-                                                const double custoVarA)
+void MnfpDecompNS::MySubProbPath::iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA)
 {
     std::cout << "iniConvConstr\nmatDem: \n";
     std::cout << mnfp.matVertexDem << "\n";
@@ -309,8 +298,8 @@ void MnfpDecompNS::MySubProbPath::iniConvConstr(GRBModel    &rmlp,
 
                     std::string name = std::to_string(k) + "_" + std::to_string(i);
 
-                    GRBVar var = rmlp.addVar(
-                        0, GRB_INFINITY, custoVarA, GRB_CONTINUOUS, "a_" + name);
+                    GRBVar var =
+                        rmlp.addVar(0, GRB_INFINITY, custoVarA, GRB_CONTINUOUS, "a_" + name);
                     var.set(GRB_StringAttr_VarName, "a_" + name);
                     GRBLinExpr exp;
                     exp += var;
@@ -348,15 +337,15 @@ void MnfpDecompNS::MySubProbPath::restoreGraphModCost(int64_t k)
  * @param pairSubProb pair representa o indice do inicio das variaveis do sub problema e o
  * seu tamanho
  */
-int MnfpDecompNS::MySubProbPath::resolveSubProb(Eigen::VectorXd &subProbCooef,
-                                                GRBModel        &rmlp,
-                                                Eigen::VectorXd &vetX,
-                                                int              itCG,
-                                                bool            &custoRedNeg,
-                                                void            *data,
-                                                const int        iniConv,
-                                                int              indSubProb,
-                                                Eigen::VectorXd &vetCooefRestConv,
+int MnfpDecompNS::MySubProbPath::resolveSubProb(Eigen::VectorXd           &subProbCooef,
+                                                GRBModel                  &rmlp,
+                                                Eigen::VectorXd           &vetX,
+                                                int                        itCG,
+                                                bool                      &custoRedNeg,
+                                                void                      *data,
+                                                const int                  iniConv,
+                                                int                        indSubProb,
+                                                Eigen::VectorXd           &vetCooefRestConv,
                                                 const std::pair<int, int> &pairSubProb)
 
 {

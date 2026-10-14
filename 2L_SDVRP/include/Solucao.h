@@ -20,7 +20,6 @@
 namespace SolucaoNS
 {
 
-
 class Penalty
 {
   public:
@@ -39,60 +38,58 @@ class Penalty
 
   private:
     Array<double, (std::size_t)TypePenalty::Count> penalties{};
-    static constexpr
-    std::array<std::string_view, static_cast<std::size_t>(TypePenalty::Count)> Names = {
-        "Collision",
-        "Support",
-        "Axle Weights",
-        "Load Balancing",
-        "Compactness",
-        "LIFO",
-        "Fragility",
-        "VolItemsNotPacked"
-    };
+    static constexpr std::array<std::string_view, static_cast<std::size_t>(TypePenalty::Count)>
+        Names = {"Collision",
+                 "Support",
+                 "Axle Weights",
+                 "Load Balancing",
+                 "Compactness",
+                 "LIFO",
+                 "Fragility",
+                 "VolItemsNotPacked"};
 
   public:
-
     // Default constructor (initializes all values to 0.0)
     Penalty() { penalties.fill(0.0); }
 
     // Parameterized constructor
-    Penalty(double collision, double support, double axleWeights,
-            double loadBalancing, double compactness, double lifo, double fragility,
+    Penalty(double collision,
+            double support,
+            double axleWeights,
+            double loadBalancing,
+            double compactness,
+            double lifo,
+            double fragility,
             double volItemsNotPacked)
-        : penalties{collision, support, axleWeights,
-                    loadBalancing, compactness, lifo, fragility, volItemsNotPacked} {}
+        : penalties{collision,
+                    support,
+                    axleWeights,
+                    loadBalancing,
+                    compactness,
+                    lifo,
+                    fragility,
+                    volItemsNotPacked}
+    {
+    }
 
     // Getter using Enum
-    double get(TypePenalty type) const
-    {
-        return penalties[static_cast<std::size_t>(type)];
-    }
+    double get(TypePenalty type) const { return penalties[static_cast<std::size_t>(type)]; }
 
     // Setter using Enum
-    void set(TypePenalty type, double value)
-    {
-        penalties[static_cast<std::size_t>(type)] = value;
-    }
+    void set(TypePenalty type, double value) { penalties[static_cast<std::size_t>(type)] = value; }
 
     // Array subscript operator overloads for convenient syntax: p[Penalty::Type::Collision]
-    double operator[](TypePenalty type) const
-    {
-        return penalties[static_cast<std::size_t>(type)];
-    }
+    double operator[](TypePenalty type) const { return penalties[static_cast<std::size_t>(type)]; }
 
-    double& operator[](TypePenalty type)
-    {
-        return penalties[static_cast<std::size_t>(type)];
-    }
+    double &operator[](TypePenalty type) { return penalties[static_cast<std::size_t>(type)]; }
 
-    void set0(){penalties.setAll(0.0);}
+    void set0() { penalties.setAll(0.0); }
 
     double getValue();
-    void print() const
+    void   print() const
     {
         std::cout << "--- Penalty Breakdown ---\n";
-        for (std::size_t i = 0; i < static_cast<std::size_t>(TypePenalty::Count); ++i)
+        for(std::size_t i = 0; i < static_cast<std::size_t>(TypePenalty::Count); ++i)
         {
             std::printf("%-16.*s : %.2f\n",
                         static_cast<int>(Names[i].length()),
@@ -103,7 +100,6 @@ class Penalty
         std::printf("\n");
     }
 };
-
 
 struct Ponto
 {
@@ -165,8 +161,7 @@ enum Face
     Right    // x
 };
 
-inline std::vector<std::string> vetFaceStr =
-    {"Top", "Bottom", "Front", "Back", "Left", "Right"};
+inline std::vector<std::string> vetFaceStr = {"Top", "Bottom", "Front", "Back", "Left", "Right"};
 
 class Rota;
 
@@ -179,23 +174,24 @@ struct Bin
 
     Vector<Ponto> vetPosItem; // Indica as posicoes do canto inferior esquerdo onde o item
                               // eh posicionado no bin
-    Vector<Ponto>                vetEp;     // Indica as posicoes dos pontos extremos
-    VectorI                      vetItemId; // Indica o id do iº item
+    Vector<Ponto> vetEp;      // Indica as posicoes dos pontos extremos
+    VectorI       vetItemId;  // Indica o id do iº item
     Vector<InstanceNS::Rotation> vetRotacao;
     Vector<int8_t>               vetItens; // Indica se o bin empacota o i° item
     Array<double, 3>             binDim;
+    Rota                        *ptrRota = nullptr;
     double                       volumeTotal = 0.0;
     double                       volumeOcupado = 0.0;
     double                       demandaTotal = 0.0;
-    int                          numItens = 0;
-    int                          numEps = 0; // Numero de pontos extremos
     double                       sumLeftBalancedLoading = 0.0;
     double                       sumRightBalancedLoading = 0.0;
+    int                          numItens = 0;
+    int                          numEps = 0; // Numero de pontos extremos
 
     void        addItem(int idEp, int idItem, InstanceNS::Rotation r);
     void        addEp(const Ponto &ep);
     std::string printPlot();
-    Ponto projectEP(double x, double y, double sourceZ);
+    Ponto       projectEP(double x, double y, double sourceZ);
 
     inline __attribute__((always_inline)) void
     setItem(int pos, int itemId, double x, double y, double z)
@@ -212,8 +208,7 @@ struct Bin
         vetItemId[pos] = itemId;
     };
 
-    inline __attribute__((always_inline)) void
-    setEp(int pos, double x, double y, double z)
+    inline __attribute__((always_inline)) void setEp(int pos, double x, double y, double z)
     {
 
 #if VAR_SOLUTION_BORROW_CHECKER
@@ -233,17 +228,17 @@ struct Bin
 
     void reset();
     int  getEpComMenorCoord(const VectorI &vetIdEp, int tam);
-    bool checkFeasibility(Rota *rota = nullptr,
-                          bool fromCp = false,
-                          bool print=false,
-                          VectorI* 	vetSumAreasLeftPtr=nullptr);
+    bool checkFeasibility(Rota    *rota = nullptr,
+                          bool     fromCp = false,
+                          bool     print = false,
+                          VectorI *vetSumAreasLeftPtr = nullptr);
 
     void rmItens(const VectorI &vetItensRm, const int tam);
 
     double getPorcentagemUtilizacao() const;
     void   computeLoadingBalancing();
 
-    bool isEqual(const Bin& bin, std::string* error);
+    bool isEqual(const Bin &bin, std::string *error);
 
     Bin();
     Bin(const Bin &bin) = delete;
@@ -259,7 +254,7 @@ class Rota
     Rota();
     Rota(const Rota &rota);
     void        reset();
-    std::string printRota(bool printDist=true);
+    std::string printRota(bool printDist = true);
     void        computeDistance();
 
     VectorI        vetRota;
@@ -273,7 +268,7 @@ class Rota
     size_t hashVal = 0;
 
     INLINE
-    bool operator==(const Rota& r) const
+    bool operator==(const Rota &r) const
     {
         if(hashVal != r.hashVal)
             return false;
@@ -281,7 +276,7 @@ class Rota
         if(numPos != r.numPos)
             return false;
 
-        for(int i=0; i < numPos; ++i)
+        for(int i = 0; i < numPos; ++i)
         {
             if(vetRota[i] != r.vetRota[i])
                 return false;
@@ -289,25 +284,24 @@ class Rota
 
         return true;
     }
-
 };
 #define __PRETTYFILE__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 class HashRoute
 {
   public:
     INLINE
-    std::size_t operator()(const Rota& r) const
+    std::size_t operator()(const Rota &r) const
     {
-        //std::cout<<"FILE: " << __PRETTYFILE__            \
-        //    << "  FUNC: " << __PRETTY_FUNCTION__ << "  LINHA: " << __LINE__ << "\n";
+        // std::cout<<"FILE: " << __PRETTYFILE__            \
+        //     << "  FUNC: " << __PRETTY_FUNCTION__ << "  LINHA: " << __LINE__ << "\n";
 
-        //std::printf("numPos: %d\n", r.numPos);
-        //https://cseweb.ucsd.edu/~kube/cls/100/Lectures/lec16/lec16-16.html
-        // ELF Hash algorithms
+        // std::printf("numPos: %d\n", r.numPos);
+        // https://cseweb.ucsd.edu/~kube/cls/100/Lectures/lec16/lec16-16.html
+        //  ELF Hash algorithms
         size_t valHash = 0;
-        for(int i=0; i < r.numPos; ++i)
-        {   //         valHash * 16
-            valHash = (valHash<<4) + r.vetRota[i];
+        for(int i = 0; i < r.numPos; ++i)
+        { //         valHash * 16
+            valHash = (valHash << 4) + r.vetRota[i];
             uint64_t g = valHash & 0xF0000000L;
 
             if(g != 0)
@@ -315,9 +309,9 @@ class HashRoute
             valHash &= ~g;
         }
 
-        void* ptr = (void*)&r.hashVal;
+        void *ptr = (void *)&r.hashVal;
 
-        size_t* size_tPtr = (size_t*)ptr;
+        size_t *size_tPtr = (size_t *)ptr;
         *size_tPtr = valHash;
 
         return valHash;
@@ -332,18 +326,18 @@ class Solucao
     Vector<Bin>  vetBin;
     Vector<Rota> vetRota;
     double       distTotal = 0.0;
-    size_t		 hashVal   = 0;
+    size_t       hashVal = 0;
 
     Solucao();
     explicit Solucao(const InstanceNS::Instance &instancia);
 
-    bool   verificaSol(std::string &error);
-    int    getBinVazio();
-    void   copiaSolucao(const Solucao &sol);
-    void   reset();
-    double getUtilizacaoMediaBins() const;
-    double getUtilizacaoMedianaBins() const;
-    double getTamMedianaRota() const;
+    bool        verificaSol(std::string &error);
+    int         getBinVazio();
+    void        copiaSolucao(const Solucao &sol);
+    void        reset();
+    double      getUtilizacaoMediaBins() const;
+    double      getUtilizacaoMedianaBins() const;
+    double      getTamMedianaRota() const;
     std::string printSol();
 };
 
@@ -373,7 +367,7 @@ int    calculaNumBinOcupados(const Solucao &solucao);
 double calculaVolumeOcupado(const Solucao &solucao);
 double calculaVolumeLivre(const Solucao &solucao);
 double calculaMenorAreaLivre(const Solucao &solucao);
-void penalizeSolution(Rota& route, Bin& bin, Penalty& penalty);
+void   penalizeSolution(Rota &route, Bin &bin, Penalty &penalty);
 
 inline __attribute__((always_inline)) bool pontosIguais(const Ponto &p0, const Ponto &p1)
 {
@@ -387,8 +381,8 @@ inline __attribute__((always_inline)) bool pontosIguais(const Ponto &p0, const P
     return true;
 }
 
-bool checkUnloadingSequence(Bin 										&bin,
-                            Rota 										&rota,
+bool checkUnloadingSequence(Bin                                         &bin,
+                            Rota                                        &rota,
                             Eigen::Matrix<int, -1, -1, Eigen::RowMajor> &matSupportItems);
 
 inline __attribute__((always_inline)) int findPos(Rota &rota, int itemId)
@@ -443,17 +437,17 @@ inline __attribute__((always_inline)) bool isBelow(InstanceNS::Item    &item0,
 }
 
 INLINE
-bool lifo(InstanceNS::Item    							&item0,
-          Ponto                							p0,
-          InstanceNS::Rotation 							r0,
-          InstanceNS::Item    							&item1,
-          Ponto                							p1,
-          InstanceNS::Rotation 							r1,
-          bool                 						   	mlifo,
-          bool						                   	removeFromShortSide,
-          bool 											item1_supports_item0,
-          bool											item0_supports_item1)
-          //Eigen::Matrix<int, -1, -1, Eigen::RowMajor> 	&matSupportItems)
+bool lifo(InstanceNS::Item    &item0,
+          Ponto                p0,
+          InstanceNS::Rotation r0,
+          InstanceNS::Item    &item1,
+          Ponto                p1,
+          InstanceNS::Rotation r1,
+          bool                 mlifo,
+          bool                 removeFromShortSide,
+          bool                 item1_supports_item0,
+          bool                 item0_supports_item1)
+// Eigen::Matrix<int, -1, -1, Eigen::RowMajor> 	&matSupportItems)
 {
     // Item0 is delevery first
 
@@ -469,17 +463,17 @@ bool lifo(InstanceNS::Item    							&item0,
     bool overlapY = !(maxY0 <= p1.vetDim[1] || maxY1 <= p0.vetDim[1]);
 
     // matSupportItems[i][j] = 1 → j supports i
-    //bool item1_supports_item0 = matSupportItems(item0.itemId, item1.itemId);
-    //bool item0_supports_item1 = matSupportItems(item1.itemId, item0.itemId);
+    // bool item1_supports_item0 = matSupportItems(item0.itemId, item1.itemId);
+    // bool item0_supports_item1 = matSupportItems(item1.itemId, item0.itemId);
 
     if(mlifo && !removeFromShortSide)
     {
-        if (overlapX)
+        if(overlapX)
         {
-//std::printf("\toverlapX\n");
+            // std::printf("\toverlapX\n");
             bool above = p0.vetDim[2] >= maxZ1;
             bool below = p1.vetDim[2] >= maxZ0;
-            bool left  = p0.vetDim[1] >= maxY1;
+            bool left = p0.vetDim[1] >= maxY1;
 
             /*
             if(left)
@@ -500,13 +494,13 @@ bool lifo(InstanceNS::Item    							&item0,
 
         return true;
     }
-    else if (!mlifo && removeFromShortSide)
+    else if(!mlifo && removeFromShortSide)
     {
-        if (overlapY)
+        if(overlapY)
         {
             // <=
             bool infront = (maxX1 <= p0.vetDim[0]);
-            bool above  =  (maxZ1 <= p0.vetDim[2]);
+            bool above = (maxZ1 <= p0.vetDim[2]);
             return infront || above;
         }
 
@@ -514,9 +508,9 @@ bool lifo(InstanceNS::Item    							&item0,
     }
     else if(!mlifo && !removeFromShortSide)
     {
-        if (overlapX)
+        if(overlapX)
         {
-            bool left  =  (maxY1 <= p0.vetDim[1]);
+            bool left = (maxY1 <= p0.vetDim[1]);
             bool below = (maxZ1 <= p0.vetDim[2]);
             return left || below;
         }
@@ -525,7 +519,7 @@ bool lifo(InstanceNS::Item    							&item0,
     }
     else if(mlifo && removeFromShortSide)
     {
-        if (overlapY)
+        if(overlapY)
         {
             bool behind_block = (maxX1 < p0.vetDim[0]);
             bool vertical_block = item1_supports_item0;
@@ -538,8 +532,6 @@ bool lifo(InstanceNS::Item    							&item0,
         std::printf("ERROR in LIFO or removeFromShortSide parameters!\n");
         PRINT_THROW();
     }
-
-
 }
 
 inline const Ponto PontoZero(0.0, 0.0, 0.0);
@@ -549,17 +541,15 @@ double computeLeftBalancedLoading(double y, double width, int mass)
 {
     static const double center = (InstanceNS::instanciaG.vetDimVeiculo[1] / 2.0);
     // center -
-    //std::printf("m(%d)/w(%.2f): %.2f\n", mass, width, (mass / width));
-    return (mass / width) *
-           (std::max(0.0, center - y) - std::max(0.0, center - (y + width)));
+    // std::printf("m(%d)/w(%.2f): %.2f\n", mass, width, (mass / width));
+    return (mass / width) * (std::max(0.0, center - y) - std::max(0.0, center - (y + width)));
 }
 
 INLINE
 double computeRightBalancedLoading(double y, double width, int mass)
 {
     static const double center = (InstanceNS::instanciaG.vetDimVeiculo[1] / 2.0);
-    return (mass / width) *
-           (std::max(0.0, (y + width) - center) - std::max(0.0, y - center));
+    return (mass / width) * (std::max(0.0, (y + width) - center) - std::max(0.0, y - center));
 }
 
 double getIntercetion(int                  item0,
@@ -574,8 +564,7 @@ double getIntercetion(int                  item0,
 INLINE
 bool tochRightSideOfTruck(int item, Ponto p, InstanceNS::Rotation r)
 {
-    double maxY =
-        p.vetDim[0] + InstanceNS::instanciaG.vetItens[item].getDimRotacionada(0, r);
+    double maxY = p.vetDim[0] + InstanceNS::instanciaG.vetItens[item].getDimRotacionada(0, r);
 
     return doubleEqual(maxY, InstanceNS::instanciaG.vetDimVeiculo[0], DifDistColision);
 }
@@ -595,14 +584,15 @@ bool tochBackSideOfTruck(int item, Ponto p, InstanceNS::Rotation r)
 INLINE
 bool tochFrontSideOfTruck(int item, Ponto p, InstanceNS::Rotation r)
 {
-    double maxX =
-        p.vetDim[1] + InstanceNS::instanciaG.vetItens[item].getDimRotacionada(1, r);
+    double maxX = p.vetDim[1] + InstanceNS::instanciaG.vetItens[item].getDimRotacionada(1, r);
 
     return doubleEqual(maxX, InstanceNS::instanciaG.vetDimVeiculo[1], DifDistColision);
 }
 
-bool checkCompactness(Bin &bin, const VectorI &vetTop, std::string *strError = nullptr,
-                      VectorI* 	vetSumAreasLeftPtr=nullptr);
+bool checkCompactness(Bin           &bin,
+                      const VectorI &vetTop,
+                      std::string   *strError = nullptr,
+                      VectorI       *vetSumAreasLeftPtr = nullptr);
 } // namespace SolucaoNS
 
 #endif // INC_2L_SDVRP_SOLUCAO_H

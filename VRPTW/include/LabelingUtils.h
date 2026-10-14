@@ -16,9 +16,7 @@ void whiteLabelIndex(Label *label);
 
 void removeCycles(Label &label, const int numCust);
 void removeCycles2(Label &label, const int numCust);
-void updateLabelCost(Label               &label,
-                     const Vet3D_ResCost &vetMatResCost,
-                     FloatType            labelStart);
+void updateLabelCost(Label &label, const Vet3D_ResCost &vetMatResCost, FloatType labelStart);
 
 // Linear index for a nxn matrix
 inline __attribute__((always_inline)) int getIndex(int i, int j, int numClie)
