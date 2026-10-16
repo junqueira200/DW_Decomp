@@ -582,12 +582,12 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
             }
 
             // std::printf("\n\nAfter\n");
-            useValuesFromHeuristic = false;
+            //useValuesFromHeuristic = false;
         }
         else
         {
             useValuesFromHeuristic = false;
-            // continue;
+            continue;
         }
 
         double ompEnd = omp_get_wtime();

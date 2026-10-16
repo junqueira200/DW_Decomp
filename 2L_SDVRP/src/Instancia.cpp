@@ -1131,7 +1131,7 @@ void InstanceNS::readOroloc3D3(const std::string &strFile)
         for(int j = 0; j < numCust; ++j)
         {
             file >> custI >> custJ >> dist;
-            std::printf("%d %d %d\n", custI, custJ, dist);
+            //std::printf("%d %d %d\n", custI, custJ, dist);
             instanciaG.matDist.get(custI, custJ) = (double)dist;
         }
     }
@@ -1156,7 +1156,7 @@ void InstanceNS::readOroloc3D3(const std::string &strFile)
         file >> bt >> delivery_address >> order_id >> vetDimMass[0] >> vetDimMass[1] >>
             vetDimMass[2] >> vetDimMass[3];
         std::getline(file, trash);
-        std::printf("BT: %s\n", bt.c_str());
+        //std::printf("BT: %s\n", bt.c_str());
 
         bt.erase(0, 2);
         // std::printf("%d\n", std::stoi(bt));

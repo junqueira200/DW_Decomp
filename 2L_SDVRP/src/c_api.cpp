@@ -961,13 +961,13 @@ void setOroloc3DProblem(int doPrint)
     if(doPrint)
         std::printf("Seting parameters for Oroloc3D loading\n");
 
-    input.instOroloc3D_2 = true;
-    input.axleWights = true;
-    input.balancedLoading = true;
-    input.compactness = true;
-    input.lifo = true;
-    input.mlifo = true;
-    input.removeFromShortSide = false;
+    input.instOroloc3D_2 		= true;
+    input.axleWights 			= true;
+    input.balancedLoading 		= true;
+    input.compactness 			= true;
+    input.lifo 					= true;
+    input.mlifo 				= false;
+    input.removeFromShortSide 	= false;
     // input.useCm					= false;
 
     std::printf("Solving Problem:\n\taxleWights: \t\t %d \n", input.axleWights);

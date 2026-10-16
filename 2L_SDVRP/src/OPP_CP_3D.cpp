@@ -1542,8 +1542,8 @@ void ContainerLoadingCP::CreateLifoSequence()
                 else if(!input.mlifo && !input.removeFromShortSide)
                 {
                     mModelCP
-                        .AddAtLeastOne(
-                            {mRelativeDirections[i][j][LeftY], mRelativeDirections[i][j][BelowZ]})
+                        .AddAtLeastOne({mRelativeDirections[i][j][RightY],
+                                        mRelativeDirections[i][j][AboveZ]})
                         .OnlyEnforceIf({mRelativeDirections[i][j][InFrontX].Not(),
                                         mRelativeDirections[i][j][BehindX].Not()});
                 }

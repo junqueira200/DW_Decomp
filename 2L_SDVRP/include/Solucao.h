@@ -475,20 +475,6 @@ bool lifo(InstanceNS::Item    &item0,
             bool below = p1.vetDim[2] >= maxZ0;
             bool left = p0.vetDim[1] >= maxY1;
 
-            /*
-            if(left)
-                std::printf("\tleft\n");
-
-            if(above)
-                std::printf("\tabove\n");
-
-            if(below)
-                std::printf("\tbelow\n");
-
-            if(!item0_supports_item1)
-                std::printf("!item0_supports_item1\n");
-            */
-
             return left || above || (below && !item0_supports_item1);
         }
 
@@ -510,9 +496,10 @@ bool lifo(InstanceNS::Item    &item0,
     {
         if(overlapX)
         {
-            bool left = (maxY1 <= p0.vetDim[1]);
-            bool below = (maxZ1 <= p0.vetDim[2]);
-            return left || below;
+            bool above = p0.vetDim[2] >= maxZ1;
+            bool left = p0.vetDim[1] >= maxY1;
+
+            return left || above;
         }
 
         return true;
