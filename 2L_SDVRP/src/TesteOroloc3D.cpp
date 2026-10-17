@@ -421,14 +421,14 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
     // PackingType::Complete}; //, PackingType::NoSupport, PackingType::LoadingOnly};
 
     std::map<PackingType, std::string> mapPackingTypeToString;
-    mapPackingTypeToString[PackingType::Complete] = "Complete";
-    mapPackingTypeToString[PackingType::NoSupport] = "NoSupport";
-    mapPackingTypeToString[PackingType::LoadingOnly] = "LoadingOnly";
+    mapPackingTypeToString[PackingType::Complete] 		= "Complete";
+    mapPackingTypeToString[PackingType::NoSupport] 		= "NoSupport";
+    mapPackingTypeToString[PackingType::LoadingOnly] 	= "LoadingOnly";
 
     std::map<StatusOroloc3D, std::string> mapStatusOroloc3D_ToString;
-    mapStatusOroloc3D_ToString[INFEASIBLE] = "INFEASIBLE";
-    mapStatusOroloc3D_ToString[TIME_LIMIT] = "TIME_LIMIT";
-    mapStatusOroloc3D_ToString[FEASIBLE] = "FEASIBLE";
+    mapStatusOroloc3D_ToString[INFEASIBLE] 	= "INFEASIBLE";
+    mapStatusOroloc3D_ToString[TIME_LIMIT] 	= "TIME_LIMIT";
+    mapStatusOroloc3D_ToString[FEASIBLE] 	= "FEASIBLE";
 
     int numCompleteFeasible = 0;
 
@@ -438,7 +438,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     for(int veic = 0; veic < sol.vetBin.size(); ++veic)
     {
-        // if(veic != 9)
+        //if(veic != 5)
         //    continue;
 
         Bin &bin = sol.vetBin[veic];
@@ -485,7 +485,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         VectorI vetSumAreasLeft2(numItems, 0);
 
         double ompStartGA = omp_get_wtime();
-        bool   resultRandKey = ga(bin2, solCp.vetRota[veic], &vetItems, numItems);
+        bool   resultRandKey = false;//ga(bin2, solCp.vetRota[veic], &vetItems, numItems);
         double timeGA = omp_get_wtime() - ompStartGA;
 
         if(resultRandKey)
@@ -582,12 +582,12 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
             }
 
             // std::printf("\n\nAfter\n");
-            //useValuesFromHeuristic = false;
+            useValuesFromHeuristic = false;
         }
         else
         {
             useValuesFromHeuristic = false;
-            continue;
+            //continue;
         }
 
         double ompEnd = omp_get_wtime();
@@ -736,6 +736,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
                     bool error = false;
 
+                    /*
                     if(abs(int_fk - fk) >= tol)
                     {
                         std::printf("Error in FK, computed: %.1f, model: %.1f\n", fk, int_fk);
@@ -759,7 +760,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                         std::printf("Error in FTA, computed: %.1f, model: %.1f\n", fTA, int_fTA);
                         error = true;
                     }
-
+                    */
                     if(error)
                     {
                         std::printf("\nError in F\n");
@@ -770,6 +771,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
                     // binCp.numItens = numItems;
                     // std::printf("CP:\n");
+
                     if(binCp.checkFeasibility(&rota, false, true, &vetSumAreasLeft2))
                     {
                         if(useValuesFromHeuristic)

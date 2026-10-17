@@ -15,6 +15,7 @@
 #include "safe_matrix.h"
 #include "safe_vector.h"
 #include <Eigen/Eigen>
+#include <set>
 // #include "InputOutput.h"
 
 namespace SolucaoNS
@@ -177,6 +178,8 @@ struct Bin
     Vector<Ponto> vetEp;      // Indica as posicoes dos pontos extremos
     VectorI       vetItemId;  // Indica o id do iº item
     Vector<InstanceNS::Rotation> vetRotacao;
+    Vector<int>					 vetStop;
+    Vector<std::set<int>>		 vetStopsSet;
     Vector<int8_t>               vetItens; // Indica se o bin empacota o i° item
     Array<double, 3>             binDim;
     Rota                        *ptrRota = nullptr;
@@ -187,11 +190,14 @@ struct Bin
     double                       sumRightBalancedLoading = 0.0;
     int                          numItens = 0;
     int                          numEps = 0; // Numero de pontos extremos
+    int 						 numStops = 0;
 
     void        addItem(int idEp, int idItem, InstanceNS::Rotation r);
     void        addEp(const Ponto &ep);
     std::string printPlot();
     Ponto       projectEP(double x, double y, double sourceZ);
+
+    void updateStops(Rota& rota);
 
     inline __attribute__((always_inline)) void
     setItem(int pos, int itemId, double x, double y, double z)

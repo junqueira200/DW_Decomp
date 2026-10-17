@@ -25,16 +25,17 @@ using namespace AuxGeometryNS;
 
 SolucaoNS::Bin::Bin()
 {
+    vetStop 	= Vector<int>(NumItensPorBin);
+    vetPosItem 	= Vector<Ponto>(NumItensPorBin);
+    vetEp 		= Vector<Ponto>(NumEpPorBin);
+    vetItemId 	= VectorI(NumItensPorBin);
+    vetRotacao  = Vector<Rotation>(NumItensPorBin);
+    vetItens 	= Vector<int8_t>(instanciaG.numItens);
 
-    vetPosItem = Vector<Ponto>(NumItensPorBin);
-    vetEp = Vector<Ponto>(NumEpPorBin);
-    vetItemId = VectorI(NumItensPorBin);
-    vetPosItem.setAll(Ponto());
-    vetRotacao = Vector<Rotation>(NumItensPorBin);
-    vetRotacao.setAll(Rot0);
-
-    vetItens = Vector<int8_t>(instanciaG.numItens);
     vetItens.setAll((int8_t)0);
+    vetRotacao.setAll(Rot0);
+    vetPosItem.setAll(Ponto());
+    vetStop.setAll(-1);
 
 #pragma GCC uroll 3
     for(int d = 0; d < 3; ++d)
@@ -207,6 +208,7 @@ void SolucaoNS::Bin::reset()
 
     sumLeftBalancedLoading = 0.0;
     sumRightBalancedLoading = 0.0;
+
 }
 
 bool SolucaoNS::Bin::rmI_Item(int i)
@@ -314,6 +316,48 @@ std::string SolucaoNS::Bin::printPlot()
     }
 
     return str;
+}
+
+void SolucaoNS::Bin::updateStops(Rota &rota)
+{
+    int pos = 0;
+    std::unordered_map<int, int> mapCustPos;
+    mapCustPos.reserve(rota.numPos-2);
+    numStops = 0;
+
+    for(int i=1; i < (rota.numPos-1); ++i)
+    {
+        mapCustPos[rota.vetRota[i]] = pos;
+        pos += 1;
+    }
+
+    numStops = pos;
+
+    vetStopsSet = Vector<std::set<int>>(numStops);
+
+    for(int i=0; i < numItens; ++i)
+    {
+        Item &item = instanciaG.vetItens[vetItemId[i]];
+        int stop   = mapCustPos[item.customer];
+        vetStop[i] = stop;
+        vetStopsSet[stop].insert(vetItemId[i]);
+
+        //std::printf("%d: %d; %.1f\n", vetItemId[i], stop, item.weight);
+    }
+
+    //std::printf("\n\n");
+    //std::printf("IN bin\n\n");
+
+    for(int s=0; s < numStops; ++s)
+    {
+        //std::printf("Stop %d\n\n\t", s);
+
+        for(int s2=s+1; s2 < numStops; ++s2)
+            vetStopsSet[s].insert(vetStopsSet[s2].begin(), vetStopsSet[s2].end());
+    }
+
+
+    //PRINT_THROW();
 }
 
 SolucaoNS::Ponto SolucaoNS::Bin::projectEP(double x, double y, double sourceZ)
@@ -786,8 +830,13 @@ bool SolucaoNS::Bin::checkFeasibility(Rota    *rota,
     if(vazio() || input.comprimentoAlturaIguais1)
         return true;
 
-    double sumLeftTemp = 0.0;
-    double sumRightTemp = 0.0;
+    updateStops(*rota);
+
+    static Vector<double> sumLeftTemp(TamRota);
+    static Vector<double> sumRightTemp(TamRota);
+
+    sumLeftTemp.setAll(0.0);
+    sumRightTemp.setAll(0.0);
 
     /// matTop(i,t) == j; Indicates if custorm i is on top of j
     // static Matrix<int> matTop(instanciaG.numClientes, instanciaG.numClientes);
@@ -931,9 +980,17 @@ bool SolucaoNS::Bin::checkFeasibility(Rota    *rota,
         double w = instanciaG.vetItens[itemId].getDimRotacionada(1, vetRotacao[i]);
         double left = computeLeftBalancedLoading(
             vetPosItem[i].vetDim[1], w, instanciaG.vetItens[itemId].weight);
-        sumLeftTemp += left;
+
         double right = instanciaG.vetItens[itemId].weight - left;
-        sumRightTemp += right;
+
+        for(int s=0; s < numStops; ++s)
+        {
+            if(vetStopsSet[s].contains(itemId))
+            {
+                sumLeftTemp[s] += left;
+                sumRightTemp[s] += right;
+            }
+        }
     }
 
     // std::printf("\nsumLeftTemp: %.2f\n", sumLeftTemp);
@@ -960,14 +1017,30 @@ bool SolucaoNS::Bin::checkFeasibility(Rota    *rota,
             feasible = false;
         }
         */
-        double limit = std::ceil(input.balancedLoadingD * this->demandaTotal); //* 1.05;
-        if(sumLeftTemp > limit || sumRightTemp > limit)
-        {
-            if(print)
-                std::printf("Balanced Loading Limit\n");
 
-            vetPackinErros[PackingErroLoadBalancing] += 1;
-            feasible = false;
+        for(int s=0; s < numStops; ++s)
+        {
+            double sumDemand = 0.0;
+            for(int item:vetStopsSet[s])
+                sumDemand += instanciaG.vetItens[item].weight;
+
+            //std::printf("sumDemand stop(%d): %.1f\n", s, sumDemand);
+
+            double limit = std::ceil(input.balancedLoadingD * sumDemand); //* 1.05;
+            if(sumLeftTemp[s] > limit || sumRightTemp[s] > limit)
+            {
+                if(print)
+                    std::printf("Balanced Loading Limit\n");
+
+                vetPackinErros[PackingErroLoadBalancing] += 1;
+                feasible = false;
+
+                //std::printf("stop: %d; sumLeftTemp: %.2f; limit: %.2f\n", s, sumLeftTemp[s], limit);
+                //std::printf("stop: %d; sumRightTemp: %.2f; limit: %.2f\n", s, sumRightTemp[s], limit);
+            }
+
+            if(input.modelType == 0)
+                break;
         }
     }
 

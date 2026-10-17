@@ -36,7 +36,7 @@ class ContainerLoadingCP
 
     ContainerLoadingCP(const CPSolverParams      &params,
                        const Container           &container,
-                       const std::vector<Cuboid> &items,
+                       std::vector<Cuboid> 		 &items,
                        const size_t               numberCustomers,
                        const LoadingFlag          loadingMask,
                        const double               supportArea,
@@ -59,8 +59,10 @@ class ContainerLoadingCP
   private:
     const CPSolverParams      &mParams;
     const Container           &mContainer;
-    const std::vector<Cuboid> &mItems;
+    std::vector<Cuboid> &mItems;
     size_t                     mNumberCustomers;
+
+    int numStops = -1;
 
     const bool mEnableFragility;
     const bool mEnableLifo;
@@ -132,8 +134,9 @@ class ContainerLoadingCP
     ORIntVars1D mR; // Distance between to the trailer axle
     // ORIntVars1D mItemsForce;
 
-    operations_research::sat::IntVar forceK, forceRA, forceTA, forceFA, sumRightBalancedLoading,
-        sumLeftBalancedLoading;
+    Vector<operations_research::sat::IntVar> forceK, forceRA, forceTA, forceFA;
+    Vector<operations_research::sat::IntVar> sumRightBalancedLoading;
+    Vector<operations_research::sat::IntVar> sumLeftBalancedLoading;
 
     ORBoolVars1D mPlacedOnFloor;
     ORBoolVars1D mPlacedOnLeft;
@@ -148,6 +151,8 @@ class ContainerLoadingCP
 
     operations_research::sat::IntVar mMaxLength;
     operations_research::sat::IntVar mMinX;
+
+    Vector<std::set<int>> vetOfStops;
 
     void BuildModel();
     void AddConstraints();

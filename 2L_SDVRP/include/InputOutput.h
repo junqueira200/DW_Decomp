@@ -65,15 +65,18 @@ class Input
     double      maxTimePackingHeuristic 	= 3.0;
     bool        fragility 					= true;
     bool        useCm 						= true;
+    // 0 valid only in the beginning; 1 valid at all stops, without change positions;
+    // 2 valid at all stops with change in positions
+    int			modelType					= 1;
 
-    int    gaPopulationSize = 400; // 200
-    int    gaNumberOfGenerations = 1000;
-    double gaDiscartPercetence = 0.2; // 0.05 // 0.2
-    double gaElitePercetence = 0.2;   // 0.10 // 0.2
-    double gaProbToInheritFromElite = 0.8;
-    int    gaNumberOfIslands = 4; // 8
-    int    gaMigrationInterval = 20;
-    double gaMigrationRate = 0.04;
+    int    		gaPopulationSize 			= 400; // 200
+    int    		gaNumberOfGenerations 		= 1000;
+    double 		gaDiscartPercetence			= 0.2; // 0.05 // 0.2
+    double 		gaElitePercetence 			= 0.2;   // 0.10 // 0.2
+    double 		gaProbToInheritFromElite 	= 0.8;
+    int    		gaNumberOfIslands 			= 4; // 8
+    int    		gaMigrationInterval			= 20;
+    double 		gaMigrationRate				= 0.04;
 
     // bool		inst3d                   = true;
 

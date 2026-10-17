@@ -44,7 +44,7 @@ LoadingStatus LoadingChecker::ConstraintProgrammingSolver(PackingType      packi
                                                           const Container &container,
                                                           // const boost::dynamic_bitset<>& set,
                                                           const Collections::IdVector &stopIds,
-                                                          const std::vector<Cuboid>   &items,
+                                                          std::vector<Cuboid>   	 &items,
                                                           double                      maxRuntimeSec,
                                                           std::vector<Array<int, 4>> &vetPos,
                                                           double                     &fk,
