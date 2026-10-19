@@ -12,12 +12,13 @@
 #define DW_LABELINGALGORITHM_H
 
 #include "Aux.h"
-#include "DW_Decomp.h"
+//#include "DW_Decomp.h"
 #include "LabelingConstants.h"
 #include <Eigen/Eigen>
 #include <bitset>
 #include <boost/array.hpp>
 #include <boost/container/set.hpp>
+#include <boost/unordered_set.hpp>
 // #include <bits/stdc++.h>
 #include "Label.h"
 #include "NgSet.h"

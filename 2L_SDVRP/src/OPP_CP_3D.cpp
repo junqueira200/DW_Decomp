@@ -248,14 +248,23 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
         // std::printf("FROM CP: fK: %.f; fFA: %.f; fRA: %.f; fTA: %.f\n", fk, fFA, fRA, fTA);
     }
 
-    double fK_ = 0.0;
-    double fFA_ = 0.0;
-    double fRA_ = 0.0;
-    double fTA_ = 0.0;
+    Vector<double> fK_(numStops);
+    Vector<double> fFA_(numStops);
+    Vector<double> fRA_(numStops);
+    Vector<double> fTA_(numStops);
 
-    double  sumF = 0.0;
-    double  sumM = 0.0;
-    int64_t sumM_int = 0;
+    fK_.setAll(0.0);
+    fFA_.setAll(0.0);
+    fRA_.setAll(0.0);
+    fTA_.setAll(0.0);
+
+    Vector<double>  sumF(numStops);
+    Vector<double>  sumM(numStops);
+    Vector<int64_t> sumM_int(numStops);
+
+    sumF.setAll(0.0);
+    sumM.setAll(0.0);
+    sumM_int.setAll(0);
 
     // std::printf("\nR: ");
 
@@ -281,10 +290,20 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
             // std::printf("%ld: %.1f; ", mItems[i].ExternId, r);
 
             double f = mItems[i].Weight * GravityCmConst;
-            sumF += f;
-            sumM += f * r;
 
-            sumM_int += r_int * ((int64_t)mItems[i].Weight * GravityCmConst);
+            for(int s=0; s < numStops; ++s)
+            {
+                if(vetOfStops[s].contains(i))
+                {
+                    sumF[s] += f;
+                    sumM[s] += f * r;
+
+                    sumM_int[s] += r_int * ((int64_t)mItems[i].Weight * GravityCmConst);
+                }
+
+                if(input.modelType == 0)
+                    break;
+            }
         }
         // bool top = operations_research::sat::SolutionBooleanValue(mResponse, mTopBool[i]);
         // if(top)
@@ -447,17 +466,17 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
     if(!input.axleWights)
         return;
 
-    std::printf("axleWights NOT CHECKET\n\n");
-    return;
+    //std::printf("axleWights NOT CHECKET\n\n");
+    //return;
 
     //     mModelCP
     //.AddGreaterOrEqual(semiTrailer.distanceKingpinTrailerAxle * forceK,
     //                   sumMoments +  scale * semiTrailer.massTrailer * GravityCmConst *
     //                                    semiTrailer.distanceMassTrailerTrailerAxle - scale)
 
-    int64_t lhs = semiTrailer.distanceKingpinTrailerAxle * fk_int;
-    int64_t rhs = sumM_int + scale * semiTrailer.massTrailer * GravityCmConst *
-                                 semiTrailer.distanceMassTrailerTrailerAxle;
+    //int64_t lhs = semiTrailer.distanceKingpinTrailerAxle * fk_int;
+    //int64_t rhs = sumM_int + scale * semiTrailer.massTrailer * GravityCmConst *
+    //                             semiTrailer.distanceMassTrailerTrailerAxle;
 
     /*
     std::printf("\n\nlhs: \t %lld\nrhs: \t %lld\n\n", lhs, rhs);
@@ -480,9 +499,9 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
     int64_t trailerMoment = (int64_t)scale * (int64_t)semiTrailer.massTrailer *
                             (int64_t)GravityCmConst *
                             (int64_t)semiTrailer.distanceMassTrailerTrailerAxle;
-    lhs = (int64_t)semiTrailer.distanceKingpinTrailerAxle * fk_int;
+    //lhs = (int64_t)semiTrailer.distanceKingpinTrailerAxle * fk_int;
 
-    rhs = sumM_int + trailerMoment;
+    //rhs = sumM_int + trailerMoment;
 
     /*
     printf("############\n\nlhs          = %lld\n", lhs);
@@ -491,50 +510,67 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
     printf("rhs          = %lld\n", rhs);
     printf("difference   = %lld\n\n#############\n", lhs-rhs);
     */
-
-    fK_ = (1.0 / (double)semiTrailer.distanceKingpinTrailerAxle) *
-          (sumM + (double)semiTrailer.massTrailer * GravityCm *
-                      semiTrailer.distanceMassTrailerTrailerAxle);
-
-    fFA_ = (1.0 / (double)semiTrailer.wheelBase) *
-           (fK_ * (double)semiTrailer.distanceKingpinRearAxle +
-            (double)semiTrailer.massTractor * GravityCm * semiTrailer.distanceMassTractorRearAxle);
-
-    fRA_ = fK_ + (double)semiTrailer.massTractor * GravityCm - fFA_;
-
-    fTA_ = sumF + (double)semiTrailer.massTrailer * GravityCm - fK_;
-
-    // std::printf("\n\n");
-
-    // std::printf(
-    //     "Computed with r from model: \n\nfk_: \t %.1f\nfFA_ \t %.1f\nfRA_: \t %.1f\nfTA_: \t
-    //     %.1f\n\n",
-    //             fK_, fFA_, fRA_, fTA_);
-
-    const int tolF = 5;
-
-    if(std::abs(fk - fK_) >= tolF)
+    for(int s=0; s < numStops; ++s)
     {
-        std::printf("Error, \n\tFK_int: \t%.2f\n\tFK: \t%.2f", fk, fK_);
-        PRINT_THROW();
-    }
 
-    if(std::abs(fFA - fFA_) >= tolF)
-    {
-        std::printf("Error, \n\tfFA_int: \t%.2f\n\tfFA: \t%.2f", fFA, fFA_);
-        PRINT_THROW();
-    }
+        double fk = operations_research::sat::SolutionIntegerValue(mResponse, forceK[s]) /
+                    (double)scale;
 
-    if(std::abs(fRA - fRA_) >= tolF)
-    {
-        std::printf("Error, \n\tfRA_int: \t%.2f\n\tfRA: \t%.2f", fRA, fRA_);
-        PRINT_THROW();
-    }
+        double fFA = operations_research::sat::SolutionIntegerValue(mResponse, forceFA[s]) /
+                     (double)scale;
 
-    if(std::abs(fTA - fTA_) >= tolF)
-    {
-        std::printf("Error, \n\tfRA_int: \t%.2f\n\tfRA: \t%.2f", fTA, fTA_);
-        PRINT_THROW();
+        double fRA = operations_research::sat::SolutionIntegerValue(mResponse, forceRA[s]) /
+                     (double)scale;
+
+        double fTA = operations_research::sat::SolutionIntegerValue(mResponse, forceTA[s]) /
+                     (double)scale;
+
+
+        fK_[s] = (1.0 / (double)semiTrailer.distanceKingpinTrailerAxle) *
+                 (sumM[s] + (double)semiTrailer.massTrailer * GravityCm *
+                                semiTrailer.distanceMassTrailerTrailerAxle);
+
+        fFA_[s] = (1.0 / (double)semiTrailer.wheelBase) *
+                  (fK_[s] * (double)semiTrailer.distanceKingpinRearAxle +
+                   (double)semiTrailer.massTractor * GravityCm *
+                       semiTrailer.distanceMassTractorRearAxle);
+
+        fRA_[s] = fK_[s] + (double)semiTrailer.massTractor * GravityCm - fFA_[s];
+
+        fTA_[s] = sumF[s] + (double)semiTrailer.massTrailer * GravityCm - fK_[s];
+
+               // std::printf("\n\n");
+
+               // std::printf(
+               //     "Computed with r from model: \n\nfk_: \t %.1f\nfFA_ \t %.1f\nfRA_: \t %.1f\nfTA_: \t
+               //     %.1f\n\n",
+               //             fK_, fFA_, fRA_, fTA_);
+
+        const int tolF = 5;
+
+        if(std::abs(fk - fK_[s]) >= tolF)
+        {
+            std::printf("Error, \n\tFK_int: \t%.2f\n\tFK: \t%.2f", fk, fK_[s]);
+            PRINT_THROW();
+        }
+
+        if(std::abs(fFA - fFA_[s]) >= tolF)
+        {
+            std::printf("Error, \n\tfFA_int: \t%.2f\n\tfFA: \t%.2f", fFA, fFA_[s]);
+            PRINT_THROW();
+        }
+
+        if(std::abs(fRA - fRA_[s]) >= tolF)
+        {
+            std::printf("Error, \n\tfRA_int: \t%.2f\n\tfRA: \t%.2f", fRA, fRA_[s]);
+            PRINT_THROW();
+        }
+
+        if(std::abs(fTA - fTA_[s]) >= tolF)
+        {
+            std::printf("Error, \n\tfRA_int: \t%.2f\n\tfRA: \t%.2f", fTA, fTA_[s]);
+            PRINT_THROW();
+        }
     }
 
     // std::printf("mMinX: %d",

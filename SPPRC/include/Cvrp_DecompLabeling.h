@@ -11,17 +11,18 @@
 #ifndef CVRP_DECOMPLABELING_H
 #define CVRP_DECOMPLABELING_H
 
-#include "BranchAndPrice.h"
-#include "DW_Decomp.h"
+//#include "BranchAndPrice.h"
+//#include "DW_Decomp.h"
 #include "InstanceVRPTW.h"
 #include "LabelingAlgorithm.h"
 #include "Test.h"
+#include "VrpTW_DecompLabeling.h"
 
 extern "C"
 {
-#include "basegrph.h"
-#include "capsep.h"
-#include "cnstrmgr.h"
+//#include "basegrph.h"
+//#include "capsep.h"
+//#include "cnstrmgr.h"
 #include <stdio.h>
 }
 
@@ -32,7 +33,7 @@ inline __attribute__((always_inline)) int computeIndexEdge(int i, int j, int n)
     return (((2 * n - i - 1) * i) / 2) + (j - i - 1);
 }
 
-class CvrpLabelingSubProb : public DW_DecompNS::SubProb
+class CvrpLabelingSubProb
 {
   public:
     std::map<std::pair<int, int>, int> mapEdgeToLinearIndex;
@@ -55,16 +56,16 @@ class CvrpLabelingSubProb : public DW_DecompNS::SubProb
     void setTypeLabelToForward();
     void setTypeLabelToBackward();
 
-    int getNumConvConstr() override { return 1; }
+    int getNumConvConstr()  { return 1; }
     CvrpLabelingSubProb();
     explicit CvrpLabelingSubProb(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, double startDis);
     // int64_t getNumberOfConvConstr() override{return 0;};// {return numSubProb;}
-    ~CvrpLabelingSubProb() override = default;
-    void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
+    ~CvrpLabelingSubProb() = default;
+    //void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
 
     int resolveSubProb(const Eigen::VectorXd                                  &vetC,
                        Eigen::RowVectorXd                                     &vetRowPi,
-                       GRBModel                                               &mestre,
+                       //GRBModel                                               &mestre,
                        int                                                     itCG,
                        bool                                                   &custoRedNeg,
                        void                                                   *data,
@@ -74,21 +75,22 @@ class CvrpLabelingSubProb : public DW_DecompNS::SubProb
                        const std::pair<int, int>                              &pairSubProb,
                        Eigen::MatrixXd                                        &matColX,
                        int                                                    &numSol,
-                       Eigen::Array<double, 1, DW_DecompNS::NumMaxSolSubProb> &vetRedCost,
+                       VrpTW_DecompLabelingNS::ArrayReducedCost               &vetRedCost,
                        double                                                  constPiValue,
                        const VectorI                                          &vetVar0,
                        const VectorI                                          &vetVar1,
-                       DW_DecompNS::PhaseStatus                                phaseStatus,
-                       bool                                                    exact) override;
+                       //DW_DecompNS::PhaseStatus                                phaseStatus,
+                       bool                                                    exact);
 
     bool checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi);
     bool
     checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol);
     void convertRouteIntoLabel(const TestNS::Route &route, LabelingAlgorithmNS::Label *label);
-    void createMaster(GRBModel &model);
+    //void createMaster(GRBModel &model);
 
 }; // END MySubProb
 
+/*
 class CapacityCut : public BranchAndPriceNS::RobustCutGenerator
 {
 
@@ -113,6 +115,7 @@ class CapacityCut : public BranchAndPriceNS::RobustCutGenerator
     void createInducedSubGraphArcs(int listSize, BranchAndPriceNS::RobustCut &cut);
 
 }; // END CapacityCut
+*/
 
 } // namespace Cvrp_DecompLabelingNS
 

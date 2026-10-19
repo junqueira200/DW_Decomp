@@ -9,10 +9,11 @@
  *  *****************************************************************/
 
 #include "Cvrp_DecompLabeling.h"
+#include <set>
 
 using namespace LabelingAlgorithmNS;
 using namespace TestNS;
-using namespace BranchAndPriceNS;
+//using namespace BranchAndPriceNS;
 
 Cvrp_DecompLabelingNS::CvrpLabelingSubProb::CvrpLabelingSubProb(
     InstanceVRPTW_NS::InstanceVRPTW &instVrpTw_,
@@ -113,6 +114,7 @@ Cvrp_DecompLabelingNS::CvrpLabelingSubProb::CvrpLabelingSubProb(
     }
 }
 
+/*
 void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::iniConvConstr(GRBModel    &rmlp,
                                                                void        *data,
                                                                const double custoVarA)
@@ -124,6 +126,7 @@ void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::iniConvConstr(GRBModel    &rmlp
 
     rmlp.addConstr(linExpr, '<', instVrpTw->numVeic, "convConstr");
 }
+*/
 
 Cvrp_DecompLabelingNS::CvrpLabelingSubProb::CvrpLabelingSubProb()
 {
@@ -272,7 +275,7 @@ bool Cvrp_DecompLabelingNS::CvrpLabelingSubProb::checkEnumeratedRoutesMid(
 int Cvrp_DecompLabelingNS::CvrpLabelingSubProb::resolveSubProb(
     const Eigen::VectorXd                                  &vetC,
     Eigen::RowVectorXd                                     &vetRowPi,
-    GRBModel                                               &mestre,
+    //GRBModel                                               &mestre,
     int                                                     itCG,
     bool                                                   &custoRedNeg,
     void                                                   *data,
@@ -282,16 +285,16 @@ int Cvrp_DecompLabelingNS::CvrpLabelingSubProb::resolveSubProb(
     const std::pair<int, int>                              &pairSubProb,
     Eigen::MatrixXd                                        &matColX,
     int                                                    &numSol,
-    Eigen::Array<double, 1, DW_DecompNS::NumMaxSolSubProb> &vetRedCost,
+    VrpTW_DecompLabelingNS::ArrayReducedCost			   &vetRedCost,
     double                                                  constPiValue,
     const VectorI                                          &vetVar0,
     const VectorI                                          &vetVar1,
-    DW_DecompNS::PhaseStatus                                phaseStatus,
+    //DW_DecompNS::PhaseStatus                                phaseStatus,
     bool                                                    exact)
 {
     // std::cout<<"star value: "<<constPiValue<<"\n\n";
 
-    static DW_DecompNS::PhaseStatus phase = phaseStatus;
+    //static DW_DecompNS::PhaseStatus phase = phaseStatus;
 
     // if(phase != phaseStatus && phaseStatus ==
     // DW_DecompNS::PhaseStatus::PhaseStatusColGen)
@@ -301,10 +304,10 @@ int Cvrp_DecompLabelingNS::CvrpLabelingSubProb::resolveSubProb(
         maxDistG = std::numeric_limits<FloatType>::min();
     }
 
-    phase = phaseStatus;
+    //phase = phaseStatus;
 
     // std::cout<<"constPiValue: "<<constPiValue<<"\n";
-    static Eigen::VectorX<FloatType> vetRedCostFT(DW_DecompNS::NumMaxSolSubProb);
+    static Eigen::VectorX<FloatType> vetRedCostFT(NumMaxSolSubProb);
 
     // vetMatResCost.setVal(0.0);
     // constPiValue += -vetRowPi[0];
@@ -319,7 +322,7 @@ int Cvrp_DecompLabelingNS::CvrpLabelingSubProb::resolveSubProb(
 
             FloatType value = -(FloatType)((vetRowPi[j + 1])); // + vetRowPi[i+1])/2.0);
 
-            if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusColGen)
+            //if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusColGen)
                 value += (FloatType)instVrpTw->matDist(i, j);
 
             vetMatResCostForward.get(i, j, 0) = value;
@@ -332,7 +335,7 @@ int Cvrp_DecompLabelingNS::CvrpLabelingSubProb::resolveSubProb(
             FloatType value = 0.0; //-(FloatType)((vetRowPi[1] + vetRowPi[i+1])/2.0);
 
             // vetMatResCost[0](i, 0) = instVrpTw->matDist(i, 0);
-            if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusColGen)
+            //if(phaseStatus == DW_DecompNS::PhaseStatus::PhaseStatusColGen)
                 value += (FloatType)instVrpTw->matDist(i, 0);
 
             vetMatResCostForward.get(i, instVrpTw->numClientes, 0) = value;
@@ -687,6 +690,8 @@ void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::convertRouteIntoLabel(
     label->tamRoute = (int)route.vetRoute.size();
 }
 
+
+/*
 Cvrp_DecompLabelingNS::CapacityCut::CapacityCut(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
                                                 int                              dim_,
                                                 int                              maxNoOfCuts_,
@@ -894,3 +899,4 @@ void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::createMaster(GRBModel &model)
 
     model.update();
 }
+*/

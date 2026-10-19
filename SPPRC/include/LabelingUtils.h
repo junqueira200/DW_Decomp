@@ -1,7 +1,7 @@
 #ifndef LABELINGUTILS_H
 #define LABELINGUTILS_H
 
-#include "DW_Decomp.h"
+//#include "DW_Decomp.h"
 #include "Label.h"
 
 namespace LabelingAlgorithmNS
@@ -25,7 +25,7 @@ inline __attribute__((always_inline)) int getIndex(int i, int j, int numClie)
 }
 
 bool checkDistance(const Eigen::Matrix<FloatType, -1, -1, Eigen::RowMajor> &matDist);
-bool containRoute(const Eigen::Array<Label *, 1, DW_DecompNS::NumMaxSolSubProb> &vetLabel,
+bool containRoute(const Eigen::Array<Label *, 1, NumMaxSolSubProb> &vetLabel,
                   int                                                            numSol,
                   Label                                                         *label);
 

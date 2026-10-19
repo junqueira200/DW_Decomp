@@ -1,5 +1,5 @@
 #include "Label.h"
-#include "DW_Decomp.h"
+//#include "DW_Decomp.h"
 #include "LabelingAlgorithm.h"
 
 using namespace LabelingAlgorithmNS;
@@ -276,7 +276,7 @@ Index LabelingAlgorithmNS::LabelingData::getListOfIndexForMerge(const Label &lab
         double lb = vetMatBound[0](i, 0).lowerBound;
         // std::printf("lb(%.2f), res(%.2f)\n", lb, label.vetResources[0]);
         if(lb == -std::numeric_limits<double>::infinity() ||
-           (lb + label.vetResources[0]) < -DW_DecompNS::TolObjSubProb)
+           (lb + label.vetResources[0]) < -TolObjSubProb)
         {
             indexEnd(0) = i;
             break;

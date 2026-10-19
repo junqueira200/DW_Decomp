@@ -11,17 +11,17 @@
 #ifndef DW_VRPTW_DECOMPLABELING_H
 #define DW_VRPTW_DECOMPLABELING_H
 
-#include "BranchAndPrice.h"
-#include "DW_Decomp.h"
+//#include "BranchAndPrice.h"
+//#include "DW_Decomp.h"
 #include "InstanceVRPTW.h"
 #include "LabelingAlgorithm.h"
 #include "Test.h"
 
 extern "C"
 {
-#include "basegrph.h"
-#include "capsep.h"
-#include "cnstrmgr.h"
+//#include "basegrph.h"
+//#include "capsep.h"
+//#include "cnstrmgr.h"
 #include <stdio.h>
 }
 
@@ -41,7 +41,9 @@ inline __attribute__((always_inline)) void reverseIndex(int index, int numClie, 
     j = index % numClie;
 }
 
-class VrpLabelingSubProb : public DW_DecompNS::SubProb
+typedef Eigen::Array<double, 1, LabelingAlgorithmNS::NumMaxSolSubProb> ArrayReducedCost;
+
+class VrpLabelingSubProb// : public DW_DecompNS::SubProb
 {
   public:
     int                              numSubProb = 1;
@@ -67,33 +69,33 @@ class VrpLabelingSubProb : public DW_DecompNS::SubProb
     void setTypeLabelToBackward();
     void setTypeLabelToBidirectional();
 
-    int getNumConvConstr() override { return 1; }
+    //int getNumConvConstr() override { return 1; }
     VrpLabelingSubProb();
     explicit VrpLabelingSubProb(InstanceVRPTW_NS::InstanceVRPTW     &instVrpTw,
                                 double                               startDis,
                                 LabelingAlgorithmNS::ArrayResources &vetMaxResouces);
     // int64_t getNumberOfConvConstr() override{return 0;};// {return numSubProb;}
-    ~VrpLabelingSubProb() override = default;
-    void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
+    ~VrpLabelingSubProb() = default;
+    //void iniConvConstr(GRBModel &rmlp, void *data, const double custoVarA) override;
 
-    int resolveSubProb(const Eigen::VectorXd                                  &vetC,
-                       Eigen::RowVectorXd                                     &vetRowPi,
-                       GRBModel                                               &mestre,
-                       int                                                     itCG,
-                       bool                                                   &custoRedNeg,
-                       void                                                   *data,
-                       const int                                               iniConv,
-                       int                                                     indSubProb,
-                       Eigen::VectorXd                                        &vetCooefRestConv,
-                       const std::pair<int, int>                              &pairSubProb,
-                       Eigen::MatrixXd                                        &matColX,
-                       int                                                    &numSol,
-                       Eigen::Array<double, 1, DW_DecompNS::NumMaxSolSubProb> &vetRedCost,
-                       double                                                  constPiValue,
-                       const VectorI                                          &vetVar0,
-                       const VectorI                                          &vetVar1,
-                       DW_DecompNS::PhaseStatus                                phaseStatus,
-                       bool                                                    exact) override;
+    int resolveSubProb(const Eigen::VectorXd	&vetC,
+                       Eigen::RowVectorXd      	&vetRowPi,
+                       //GRBModel                                               &mestre,
+                       int                       itCG,
+                       bool                     &custoRedNeg,
+                       void                     *data,
+                       const int                 iniConv,
+                       int                       indSubProb,
+                       Eigen::VectorXd           &vetCooefRestConv,
+                       const std::pair<int, int> &pairSubProb,
+                       Eigen::MatrixXd           &matColX,
+                       int                       &numSol,
+                       ArrayReducedCost 	     &vetRedCost,
+                       double                     constPiValue,
+                       const VectorI             &vetVar0,
+                       const VectorI             &vetVar1,
+                       //DW_DecompNS::PhaseStatus                                phaseStatus,
+                       bool                       exact);
 
     bool checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi);
     bool
@@ -102,6 +104,7 @@ class VrpLabelingSubProb : public DW_DecompNS::SubProb
 
 }; // END MySubProb
 
+/*
 class CapacityCut : public BranchAndPriceNS::RobustCutGenerator
 {
 
@@ -127,6 +130,8 @@ class CapacityCut : public BranchAndPriceNS::RobustCutGenerator
     std::pair<int, int> getEdge(int i, int j);
     void                createInducedSubGraphArcs(int listSize, BranchAndPriceNS::RobustCut &cut);
 };
+
+*/
 
 bool exactPricing(const LabelingAlgorithmNS::Vet3D_ResCost      &vetMatResCost,
                   const FloatType                                startVal,

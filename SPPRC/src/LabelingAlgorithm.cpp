@@ -229,6 +229,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
 {
     static Vet3D_ResCost vetMatResCostForward(vetMatResCostForwardConst);
 
+    /*
     if(percentage <= .99)
     {
         std::printf("selectXArcs\n");
@@ -236,7 +237,8 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
         selectXArcs(vetMatResCostForwardConst, vetMatResCostForward, percentage, numCust);
     }
     else
-        vetMatResCostForward.copy(vetMatResCostForwardConst);
+    */
+    vetMatResCostForward.copy(vetMatResCostForwardConst);
 
     // vetRoteG = {19, 18, 5, 10, 1, 12, 9, 17, 9, 17, 9, 17};
 
@@ -255,7 +257,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
     // std::cout<<"NumMaxLabePerBucket: "<<NumMaxLabePerBucket<<"\n\n";
 
     numSol = 0;
-    static Eigen::Array<Label *, 1, DW_DecompNS::NumMaxSolSubProb> vetLabel;
+    static Eigen::Array<Label *, 1, NumMaxSolSubProb> vetLabel;
     vetLabel.setZero();
 
     maxDist = -std::numeric_limits<FloatType>::max();
@@ -363,7 +365,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
         }
 
         vetMaxResourcesSet = true;
-        lData.vetMatBucketForward[dest].mat(0, 0).vetPtrLabel.resize(DW_DecompNS::NumMaxSolSubProb +
+        lData.vetMatBucketForward[dest].mat(0, 0).vetPtrLabel.resize(NumMaxSolSubProb +
                                                                      5);
     }
 
@@ -373,7 +375,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
     // std::cout<<"Max Resources: "<<vetMaxResources<<"\n";
 
     while(!labelHeap.empty() && ((lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel <
-                                  DW_DecompNS::NumMaxSolSubProb)))
+                                  NumMaxSolSubProb)))
     {
         // std::cout<<"While\n";
         //  																 10
@@ -558,7 +560,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
                 if(vetLowerBoundRedCost)
                 {
                     if((labelPtrAux->vetResources[0] + (*vetLowerBoundRedCost)[t]) >=
-                       -DW_DecompNS::TolObjSubProb)
+                       -TolObjSubProb)
                     {
                         static bool print = false;
                         if(!print)
@@ -574,7 +576,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
 
                 if(t == dest && labelPtrAux->typeLabel == Forward)
                 {
-                    if(labelPtrAux->vetResources[0] >= -DW_DecompNS::TolObjSubProb)
+                    if(labelPtrAux->vetResources[0] >= -TolObjSubProb)
                     {
 
                         labelPoolG.delT(labelPtrAux);
@@ -599,7 +601,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
                 {
 
                     // applyLabelMask(labelPtrAux, numRes, vetBackwardMask);
-                    if(labelPtrAux->vetResources[0] >= -DW_DecompNS::TolObjSubProb)
+                    if(labelPtrAux->vetResources[0] >= -TolObjSubProb)
                     {
                         labelPoolG.delT(labelPtrAux);
                         continue;
@@ -613,7 +615,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
 
                     // updateLabelCost(*labelPtrAux, vetMatResCostForward, labelStart);
 
-                    if(labelPtrAux->vetResources[0] >= -DW_DecompNS::TolObjSubProb)
+                    if(labelPtrAux->vetResources[0] >= -TolObjSubProb)
                     {
 
                         labelPoolG.delT(labelPtrAux);
@@ -812,7 +814,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
                         int    numSol =
                             lData.doMerge(labelPtr, vetMaxResources, matBoundRes, numRes, ngSet);
 
-                        if(numSol >= DW_DecompNS::NumMaxSolSubProb)
+                        if(numSol >= NumMaxSolSubProb)
                         {
                             stop = true;
                             break;
@@ -835,7 +837,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
     if(lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel > 0)
     {
         numSol = std::min(lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel,
-                          DW_DecompNS::NumMaxSolSubProb);
+                          NumMaxSolSubProb);
         for(int l = 0; l < numSol; ++l)
         {
             Label *label = lData.vetMatBucketForward[dest].mat(0, 0).vetPtrLabel[l];
@@ -1469,7 +1471,7 @@ LabelingAlgorithmNS::Label *LabelingAlgorithmNS::LabelingData::getBestLabel(int 
             {
                 // TODO: FIX
                 Label *label = bucket.vetPtrLabel[t];
-                if(label->vetResources[0] < -DW_DecompNS::TolObjSubProb && !labelBest)
+                if(label->vetResources[0] < -TolObjSubProb && !labelBest)
                 {
                     labelBest = label;
                 }
@@ -1662,7 +1664,7 @@ bool LabelingAlgorithmNS::checkDistance(
 }
 
 bool LabelingAlgorithmNS::containRoute(
-    const Eigen::Array<Label *, 1, DW_DecompNS::NumMaxSolSubProb> &vetLabel,
+    const Eigen::Array<Label *, 1, NumMaxSolSubProb> &vetLabel,
     int                                                            numSol,
     Label                                                         *label)
 {
@@ -3170,7 +3172,7 @@ Label *LabelingAlgorithmNS::mergeForwardAndBackward(Label                *forwar
     result->typeLabel = Forward;
     result->vetResources[0] = forward.vetResources[0] + backward.vetResources[0];
 
-    if(result->vetResources[0] >= -DW_DecompNS::TolObjSubProb)
+    if(result->vetResources[0] >= -TolObjSubProb)
     {
         labelPoolG.delT(result);
         return nullptr;
@@ -3227,7 +3229,7 @@ Label *LabelingAlgorithmNS::mergeForwardAndBackward(Label                *forwar
     // removeCycles2(*result, numCust);
     // updateLabelCost(*result, vetMatResCostForward, startLabel);
 
-    if(result->vetResources[0] >= -DW_DecompNS::TolObjSubProb)
+    if(result->vetResources[0] >= -TolObjSubProb)
     {
         labelPoolG.delT(result);
         result = nullptr;

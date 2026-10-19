@@ -5,14 +5,14 @@
 #ifndef DW_VRPTW_DECOMP_H
 #define DW_VRPTW_DECOMP_H
 
-#include "DW_Decomp.h"
+//#include "DW_Decomp.h"
 #include "InstanceVRPTW.h"
 
 namespace VrpTW_DecompNS
 {
 
-void   criaMestre(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model);
-void   criaVRP_TW_CompleteModel(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model);
+//void   criaMestre(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model);
+//void   criaVRP_TW_CompleteModel(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model);
 int    getIndex(int i, int j, int numClie);
 double geraSolHeuristica(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
                          Eigen::VectorXd                       &vetRedCost,
