@@ -438,7 +438,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     for(int veic = 0; veic < sol.vetBin.size(); ++veic)
     {
-        //if(veic != 5)
+        //if(veic != 1)
         //    continue;
 
         Bin &bin = sol.vetBin[veic];
@@ -447,6 +447,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         Bin  &bin2 = solHeur.vetBin[veic];
         Rota &rota = solCp.vetRota[veic];
         bin2.reset();
+        binCp.reset();
 
         if(bin.vazio() && sol.vetRota[veic].numPos <= 2)
         {
@@ -485,7 +486,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         VectorI vetSumAreasLeft2(numItems, 0);
 
         double ompStartGA = omp_get_wtime();
-        bool   resultRandKey = false;//ga(bin2, solCp.vetRota[veic], &vetItems, numItems);
+        bool   resultRandKey = ga(bin2, solCp.vetRota[veic], &vetItems, numItems);
         double timeGA = omp_get_wtime() - ompStartGA;
 
         if(resultRandKey)
@@ -514,9 +515,12 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         }
         else
         {
+            bin2.reset();
             // binCp.numItens = 0;
             // continue;
         }
+
+
 
         std::printf("GA: %d; time: %f\n\n", (int)resultRandKey, timeGA);
 
@@ -888,16 +892,13 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
     writeSoltionOroloc2(solCp, "model");
     writeSoltionOroloc2(solHeur, "brkga");
 
-    // std::cout<<solHeur.printSol()<<"\n\n";
+    //std::cout<<solHeur.printSol()<<"\n\n";
     std::string strSolHeur = solHeur.printSol();
     std::string strModel = solCp.printSol();
 
-    writeToFile(strSolHeur, "../Oroloc3D_Sol/Heuristic/"+input.strInst+".txt");
-    writeToFile(strModel, "../Oroloc3D_Sol/Model/"+input.strInst+".txt");
+    writeToFile(strSolHeur, input.strOutputFolder+"/Plot/Heuristic/"+input.strInst+".txt");
+    writeToFile(strModel,   input.strOutputFolder+"/Plot/Model/"+input.strInst+".txt");
 
-    // writePlot(solHeur, "../Oroloc3D_Sol/Plot");
-
-    // printSol(solCp);
 }
 
 void TesteOroloc3D_NS::readSolOroloc3D_2(SolucaoNS::Solucao &sol)
@@ -1166,7 +1167,7 @@ void TesteOroloc3D_NS::writeSoltionOroloc2(const SolucaoNS::Solucao &solution,
                                            const std::string        &out)
 {
 
-    std::ofstream file("../Solution/" + input.strInst + "_" + out + ".csv");
+    std::ofstream file(input.strOutputFolder+"/CSV/" + input.strInst + "_" + out + ".csv");
     file << "item_id; truck_id; unload; px; py; pz; dx; dy; dz\n";
 
     for(int i = 0; i < solution.vetRota.size(); ++i)

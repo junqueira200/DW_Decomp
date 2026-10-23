@@ -214,9 +214,9 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
                                                  const int            dest,
                                                  const NgSet         &ngSet,
                                                  LabelingData        &lData,
-                                                 Eigen::MatrixXd     &matColX,
+                                                 //Eigen::MatrixXd     &matColX,
                                                  int                 &numSol,
-                                                 const FloatType      labelStart,
+                                                 //const FloatType      labelStart,
                                                  int                  NumMaxLabePerBucket,
                                                  bool                 dominaceCheck,
                                                  FloatType           &maxDist,
@@ -225,7 +225,9 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
                                                  LabelingTypeAlg            labelingTypeAlg,
                                                  bool                       arc,
                                                  Eigen::VectorXd           *vetLowerBoundRedCost,
-                                                 double                     percentage)
+                                                 double                     percentage,
+                                                 int*					   vetSol,
+                                                 int					   &sizeVetSol)
 {
     static Vet3D_ResCost vetMatResCostForward(vetMatResCostForwardConst);
 
@@ -289,7 +291,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
     // labelPtr->vetResources.setZero();
     // labelBackwardPtr->vetResources.setZero();
 
-    int i = lData.getIndex(0, labelStart);
+    int i = lData.getIndex(0, 0.0);
     int j = lData.getIndex(1, 0.0);
 
     int nextIndex = 0;
@@ -302,7 +304,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
         labelPtr->vetRoute[0] = 0;
         // labelPtr->vetResources.setZero();
         setVetResources0(*labelPtr);
-        labelPtr->vetResources[0] = labelStart;
+        labelPtr->vetResources[0] = 0.0;
         labelPtr->bitSetNg = 0;
         labelPtr->bitSetNg[0] = true;
 
@@ -324,7 +326,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
     if(labelingTypeAlg == AlgBackward || labelingTypeAlg == AlgBidirectional)
     {
         startBackwardLabel(
-            labelBackwardPtr, vetBackwardMask, matBoundRes, numRes, dest, labelStart, i, lData);
+            labelBackwardPtr, vetBackwardMask, matBoundRes, numRes, dest, 0.0, i, lData);
         labelHeap.insertKey(labelBackwardPtr);
         invertRoutes(vetRoutesG);
         labelBackwardPtr->index = nextIndex++;
@@ -838,6 +840,7 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
     {
         numSol = std::min(lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel,
                           NumMaxSolSubProb);
+        int next = 0;
         for(int l = 0; l < numSol; ++l)
         {
             Label *label = lData.vetMatBucketForward[dest].mat(0, 0).vetPtrLabel[l];
@@ -845,15 +848,33 @@ bool LabelingAlgorithmNS::bidirectionalAlgorithm(const int            numRes,
             label->vetRoute[label->tamRoute - 1] = label->vetRoute[0];
             auto &vetRoute = label->vetRoute;
 
+            //std::cout<<*label<<"\n\n";
+
+            for(int i=0; i < label->tamRoute; ++i)
+            {
+                if(next >= NumMaxSolSubProb*NumMaxRoute)
+                {
+                    std::printf("Error, next(%d) >= max(%d)\n", next, NumMaxSolSubProb*NumMaxRoute);
+                    PRINT_THROW();
+                }
+
+                vetSol[next] = label->vetRoute[i];
+                next += 1;
+            }
+
+            /*
             for(int i = 0; i < (label->tamRoute - 1); ++i)
             {
                 int index = getIndex(vetRoute[i], vetRoute[i + 1], numCust - 1);
                 matColX(index, l) += 1.0;
             }
+            */
 
             vetRedCost[l] = label->vetResources[0];
         }
-        std::cout << numSol << "; " << localNumMaxLabel << "\n";
+        std::cout << "numSol: " <<numSol << "; localNumMaxLabel: " << localNumMaxLabel << "\n";
+
+        sizeVetSol = next;
 
         // TODO remover
         // exit(-1);

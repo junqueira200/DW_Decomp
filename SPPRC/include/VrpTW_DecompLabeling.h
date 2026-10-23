@@ -30,12 +30,14 @@ constexpr int NumNodesMaxEnumerate = 15;
 namespace VrpTW_DecompLabelingNS
 {
 // Linear index for a nxn matrix
-inline __attribute__((always_inline)) int getIndex(int i, int j, int numClie)
+inline __attribute__((always_inline))
+int getIndex(int i, int j, int numClie)
 {
     return i * numClie + j;
 }
 
-inline __attribute__((always_inline)) void reverseIndex(int index, int numClie, int &i, int &j)
+inline __attribute__((always_inline))
+void reverseIndex(int index, int numClie, int &i, int &j)
 {
     i = index / numClie;
     j = index % numClie;
@@ -96,6 +98,12 @@ class VrpLabelingSubProb// : public DW_DecompNS::SubProb
                        const VectorI             &vetVar1,
                        //DW_DecompNS::PhaseStatus                                phaseStatus,
                        bool                       exact);
+
+    int resolveSubProbColuna(double* 			vetReducedCostInput,
+                             int*				vetRoutesOut,
+                             int               &sizeVetRoutesOut,
+                             ArrayReducedCost  &vetRedCost,
+                             bool				exact);
 
     bool checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi);
     bool

@@ -7,13 +7,16 @@
 
 //#include "DW_Decomp.h"
 #include "InstanceVRPTW.h"
+#include "LabelingUtils.h"
+
+//using namespace LabelingAlgorithmNS;
 
 namespace VrpTW_DecompNS
 {
 
 //void   criaMestre(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model);
 //void   criaVRP_TW_CompleteModel(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw, GRBModel &model);
-int    getIndex(int i, int j, int numClie);
+//int    getIndex(int i, int j, int numClie);
 double geraSolHeuristica(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
                          Eigen::VectorXd                       &vetRedCost,
                          Eigen::VectorXi                       &rota,

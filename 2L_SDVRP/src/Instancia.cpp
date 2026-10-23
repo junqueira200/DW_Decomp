@@ -1060,7 +1060,7 @@ void InstanceNS::convertInstanceToCm(Instance &instance)
     for(Item &item : instance.vetItens)
     {
         for(int i = 0; i < 3; ++i)
-            item.vetDim[i] = (int)((item.vetDim[i] * 0.1) + 0.5);
+            item.vetDim[i] = (int)(std::ceil(item.vetDim[i] * 0.1));
 
         item.volume = item.vetDim[0] * item.vetDim[1] * item.vetDim[2];
 

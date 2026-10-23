@@ -54,10 +54,11 @@ class Input
     bool        instOroloc3D_2 				= false;
     std::string strSolOroloc3D_2;
     std::string strSolOroloc3D_output;
+    std::string strOutputFolder;
     bool        support 					= true;
     double      minSupportArea 				= 0.75;
     bool        compactness 				= true;
-    double      minLeftSupportArea 			= 0.45;
+    double      minLeftSupportArea 			= 0.15;
     bool        axleWights 					= true;
     int         supportLimit 				= 0;
     double      balancedLoadingD 			= 0.65;
@@ -67,7 +68,7 @@ class Input
     bool        useCm 						= true;
     // 0 valid only in the beginning; 1 valid at all stops, without change positions;
     // 2 valid at all stops with change in positions
-    int			modelType					= 1;
+    int			modelType					= 0;
 
     int    		gaPopulationSize 			= 400; // 200
     int    		gaNumberOfGenerations 		= 1000;

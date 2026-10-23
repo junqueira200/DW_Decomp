@@ -64,6 +64,8 @@ target_sources(${PROJECT_NAME}
     src/VrpTW_Decomp.cpp
 	src/Grafo.cpp
     src/rand.cpp
+    src/Test.cpp
+    src/c_api.cpp
 )
 
 
@@ -122,6 +124,7 @@ set(public_headers
     include/InstanceVRPTW.h
     include/sefe_array.h
     include/rand.h
+    include/c_api.h
 )
 
 # where to find our CMake modules

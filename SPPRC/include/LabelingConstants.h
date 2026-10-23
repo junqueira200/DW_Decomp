@@ -7,7 +7,7 @@
 #include <iostream>
 #include <vector>
 
-typedef float FloatType;
+typedef double FloatType;
 
 #define HEAP_KEY index
 #define KEY_TYPE int64_t
@@ -27,7 +27,7 @@ inline bool      PrintG = false;
 constexpr int       NumMaxResources = 2;
 constexpr int       NumMaxRoute = 100;
 constexpr int       NumMaxCust = 100; // 100
-constexpr int       NgSetSize = 4;    // 8
+constexpr int       NgSetSize = 8;    // 8
 constexpr int       NumBuckets = 10;
 constexpr int       vetPtrLabelSize = 10;
 constexpr bool      NullFlush = false;

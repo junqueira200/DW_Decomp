@@ -109,9 +109,9 @@ bool bidirectionalAlgorithm(int                        numRes,
                             int                        dest,
                             const NgSet               &ngSet,
                             LabelingData              &lData,
-                            Eigen::MatrixXd           &matColX,
+                            //Eigen::MatrixXd           &matColX,
                             int                       &numSol,
-                            FloatType                  labelStart,
+                            //FloatType                  labelStart,
                             int                        NumMaxLabePerBucket,
                             bool                       dominaceCheck,
                             FloatType                 &maxDist,
@@ -120,7 +120,9 @@ bool bidirectionalAlgorithm(int                        numRes,
                             LabelingTypeAlg            labelingTypeAlg,
                             bool                       arc,
                             Eigen::VectorXd           *vetLowerBoundRedCost,
-                            double                     percentage);
+                            double                     percentage,
+                            int*					   vetSol,
+                            int					   &sizeVetSol);
 
 // inline __attribute__((always_inline))
 bool checkCompleteDominance(const Label &l0, const Label &l1, int numResources);

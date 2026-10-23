@@ -22,6 +22,8 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
     double                               startDist,
     LabelingAlgorithmNS::ArrayResources &vetMaxResouces)
 {
+    PRINT_DEBUG("", "");
+
     if(instVrpTw_.numClientes > NumMaxCust)
     {
         PRINT_DEBUG("",
@@ -31,12 +33,12 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
     }
 
     instVrpTw = &instVrpTw_;
-    double numSteps = 5.0; // 2
+    double numSteps = 2.0; // 2
 
     // vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 99999.0; // 999999
-    vetStepSize[0].start = -200;       // -70
-    vetStepSize[0].end = 200;          // 200
+    vetStepSize[0].stepSize = 200.0; // 999999
+    vetStepSize[0].start = -500;       // -70
+    vetStepSize[0].end = 500;          // 200
 
     vetStepSize[1].stepSize = instVrpTw->capVeic / numSteps; // 50
     vetStepSize[1].start = 0;
@@ -495,6 +497,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(
             std::cout << i << ": ";
             // std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
             matColX.setZero();
+            /*
             custoRedNeg = bidirectionalAlgorithm(2,
                                                  (instVrpTw->numClientes + 1),
                                                  vetMatResCostForward,
@@ -515,6 +518,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(
                                                  true,
                                                  ptrVetDist,
                                                  1.0);
+            */
 
             it += 1;
             if(custoRedNeg && numSol >= NumMaxSolSubProb) // 20
@@ -525,6 +529,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(
     if(!custoRedNeg || numSol < NumMaxSolSubProb)
     {
         matColX.setZero();
+        /*
         custoRedNeg = bidirectionalAlgorithm(2,
                                              (instVrpTw->numClientes + 1),
                                              vetMatResCostForward,
@@ -545,6 +550,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(
                                              true,
                                              ptrVetDist,
                                              .6);
+        */
     }
 
     if(!custoRedNeg)
@@ -561,6 +567,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(
         */
 
         matColX.setZero();
+        /*
         custoRedNeg = bidirectionalAlgorithm(2,
                                              (instVrpTw->numClientes + 1),
                                              vetMatResCostForward,
@@ -581,6 +588,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(
                                              true,
                                              ptrVetDist,
                                              1.0);
+        */
     }
 
     if(!custoRedNeg)
@@ -727,6 +735,99 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(
     // std::cout<<"["<<minDistG<<", "<<maxDistG<<"]; numSol("<<numSol<<")\n";
 
     return 0;
+}
+
+int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
+    resolveSubProbColuna(double 		  *vetReducedCostInput,
+                         int              *vetRoutesOut,
+                         int              &sizeVetRoutesOut,
+                         ArrayReducedCost &vetRedCost,
+                         bool			   exact)
+{
+
+    static Eigen::VectorX<FloatType> vetRedCostFT(NumMaxSolSubProb);
+    static Eigen::VectorXd vetDist(instVrpTw->numClientes + 1);
+    Eigen::VectorXd       *ptrVetDist = nullptr; //&vetDist;
+    vetDist.setConstant(-MaxFloatType);
+
+    for(int i = 0; i < instVrpTw->numClientes; ++i)
+    {
+        for(int j = 0; j < instVrpTw->numClientes; ++j)
+        {
+
+            int k = getIndex(i, j, instVrpTw->numClientes);
+            vetMatResCostForward.get(i, j, 0) = vetReducedCostInput[k];
+
+        }
+    }
+
+    for(int i=1; i < instVrpTw->numClientes; ++i)
+    {
+        int k = getIndex(i, 0, instVrpTw->numClientes);
+        vetMatResCostForward.get(i, instVrpTw->numClientes, 0) = vetReducedCostInput[k];
+    }
+
+    int numSol;
+    FloatType maxDist;
+
+    if(!exact)
+    {
+        for(int i=1; i <= 2; ++i)
+        {
+            bool reducedCostNeg =
+            bidirectionalAlgorithm(2,
+                                   (instVrpTw->numClientes + 1),
+                                   vetMatResCostForward,
+                                   vetMatResCostBackward,
+                                   vetVetResBound,
+                                   instVrpTw->numClientes,
+                                   ngSet,
+                                   labelingData,
+                                   //matColX,
+                                   numSol,
+                                   //(FloatType)constPiValue,
+                                   i,
+                                   true,
+                                   maxDist,
+                                   vetRedCostFT,
+                                   exact,
+                                   typeLabel,
+                                   true,
+                                   ptrVetDist,
+                                   1.0,
+                                   vetRoutesOut,
+                                   sizeVetRoutesOut);
+
+            if(reducedCostNeg)
+                return numSol;
+        }
+    }
+
+    bidirectionalAlgorithm(2,
+                           (instVrpTw->numClientes + 1),
+                           vetMatResCostForward,
+                           vetMatResCostBackward,
+                           vetVetResBound,
+                           instVrpTw->numClientes,
+                           ngSet,
+                           labelingData,
+                           //matColX,
+                           numSol,
+                           //(FloatType)constPiValue,
+                           MaxInt,
+                           true,
+                           maxDist,
+                           vetRedCostFT,
+                           exact,
+                           typeLabel,
+                           true,
+                           ptrVetDist,
+                           1.0,
+                           vetRoutesOut,
+                           sizeVetRoutesOut);
+
+    return numSol;
+
 }
 
 

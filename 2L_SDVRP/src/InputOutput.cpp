@@ -83,7 +83,11 @@ void ParseInputNS::parseInput(int argc, const char *argv[])
                 "modelType",
                 "0 to valid only in the beginning; 1 to valid at every stop,"
                 " 2 to valid at every stop with change in positions",
-                cxxopts::value<int>(input.modelType))
+                cxxopts::value<int>(input.modelType))(
+                "strOutputFolder",
+                "",
+                cxxopts::value<std::string>(input.strOutputFolder)
+                )
 
             //("useCm","", cxxopts::value<bool>(input.useCm))
             ;
@@ -114,6 +118,10 @@ void ParseInputNS::parseInput(int argc, const char *argv[])
 
         if(result.count("oroloc3D_2") == 1 && result.count("solOroloc3D_2") == 0)
             assertm(true, "Missing param solOroloc3D_2");
+
+
+        assertm((result.count("strOutputFolder") == 0), "Missing strOutputFolder")
+
 
         // if(result.count("oroloc3D_2") == 1 && result.count("solOroloc3D_output") == 0)
         // assertm(true, "Missing param solOroloc3D_output");

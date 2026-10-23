@@ -6,6 +6,7 @@
 #include "InstanceVRPTW.h"
 #include <iostream>
 
+using namespace LabelingAlgorithmNS;
 
 double VrpTW_DecompNS::geraSolHeuristica(const InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
                                           Eigen::VectorXd                       &vetRedCost,

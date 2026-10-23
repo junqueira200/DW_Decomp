@@ -1082,6 +1082,8 @@ bool SolucaoNS::Bin::checkFeasibility(Rota    *rota,
     if(!compactness && print)
     {
         std::printf("compactness fails: %s\n", error.c_str());
+
+        //PRINT_THROW();
     }
 
     feasible = feasible * compactness;
@@ -1450,121 +1452,81 @@ bool SolucaoNS::checkCompactness(Bin           &bin,
     if(bin.vazio())
         return true;
 
-    // Check front
-    double minDist = INF_Double;
+    std::unordered_map<int, int> mapItemIdToIndexI;
     for(int i = 0; i < bin.numItens; ++i)
-    {
-        if(bin.vetPosItem[i].vetDim[1] < minDist)
-            minDist = bin.vetPosItem[i].vetDim[1];
-    }
+        mapItemIdToIndexI[bin.vetItemId[i]] = i;
 
-    /*
-    if(minDist > DistCompactnessFront)
+    for(int s=0; s < bin.numStops; ++s)
     {
-        // std::printf("Compactness, minDist(%.1f) is gretter then limit (%.1f)\n",
-        // minDist, DistCompactnessFront);
-        if(strError)
-            *strError += std::format(
-                "Compactness, minDist({:.1f}) is gretter then limit ({:.1f})\n",
-                minDist,
-                DistCompactnessFront);
-        return false;
-    }
-    */
-    // return true;
+        //std::printf("\n\nSTOP %d\n\n", s);
 
-    /*
-    double sumAreas = 0.0;
-    for(int i=0; i < bin.numItens; ++i)
-    {
-        //
-    5 cm if(std::abs(bin.vetPosItem[i].vetDim[0]-minDist) <= 50)
+        for(int itemI:bin.vetStopsSet[s])
         {
-            double dy = instanciaG.vetItens[bin.vetItens[i]].getDimRotacionada(1,
-    bin.vetRotacao[i]); double dz =
-    instanciaG.vetItens[bin.vetItens[i]].getDimRotacionada(2, bin.vetRotacao[i]);
-        }
-    }
-    */
+            //std::printf("\n\n\tItem: %d\n", itemI);
+            int i = mapItemIdToIndexI[itemI];
+            bool tochLeft = tochLeftSideOfTruck(bin.vetItemId[i], bin.vetPosItem[i],
+                                                bin.vetRotacao[i]);
 
-    for(int i = 0; i < bin.numItens; ++i)
-    {
-        // if(vetTop[i])
-        //     continue;
+            //const int      itemI = bin.vetItemId[i];
+            const Ponto    pI = bin.vetPosItem[i];
+            const Rotation rI = bin.vetRotacao[i];
 
-        // bool tochRight = tochRightSideOfTruck(bin.vetItemId[i], bin.vetPosItem[i],
-        // bin.vetRotacao[i]);
-        bool tochLeft = tochLeftSideOfTruck(bin.vetItemId[i], bin.vetPosItem[i], bin.vetRotacao[i]);
+            double sumAreasRight = 0.0;
+            double sumAreasLeft = 0.0;
 
-        const int      itemI = bin.vetItemId[i];
-        const Ponto    pI = bin.vetPosItem[i];
-        const Rotation rI = bin.vetRotacao[i];
-
-        double sumAreasRight = 0.0;
-        double sumAreasLeft = 0.0;
-
-        if(!tochLeft)
-        {
-            for(int j = 0; j < bin.numItens; ++j)
+            if(!tochLeft)
             {
-                if(i == j)
-                    continue;
-
-                const int      itemJ = bin.vetItemId[j];
-                const Ponto    pJ = bin.vetPosItem[j];
-                const Rotation rJ = bin.vetRotacao[j];
-                double         inter = getIntercetion(itemI, pI, rI, Left, itemJ, pJ, rJ, Right);
-                // if(inter > 0.0)
-                //     std::printf("\t(%d): %.2f\n", bin.vetItemId[j], inter);
-
-                sumAreasLeft += inter;
-            }
-        }
-
-        double dz = instanciaG.vetItens[itemI].getDimRotacionada(2, rI);
-        double dy = instanciaG.vetItens[itemI].getDimRotacionada(1, rI);
-        double areaTotal = dz * dy;
-
-        // std::printf("areaTotal: %.1f\n", areaTotal);
-
-        /*
-        if(!tochRight)
-        {
-            double ratio = sumAreasRight/areaTotal;
-            if(ratio < instanciaG.minLR_Support)
-            {
-                if(strError)
+                for(int itemJ:bin.vetStopsSet[s])
                 {
-                    (*strError) = std::format("There isn't enough right support({}%) for
-        the item({})", ratio, itemI); return false;
+                    //std::printf("\t\t\t%d\n", itemJ);
+                    int j = mapItemIdToIndexI[itemJ];
+
+                    if(i == j)
+                        continue;
+
+                    const Ponto    pJ = bin.vetPosItem[j];
+                    const Rotation rJ = bin.vetRotacao[j];
+                    double         inter = getIntercetion(itemI, pI, rI, Left, itemJ, pJ, rJ, Right);
+                    //if(inter > 0.0)
+                    //     std::printf("\t\t(%d): %.2f\n", bin.vetItemId[j], inter);
+
+
+
+                    sumAreasLeft += inter;
+                }
+
+                //std::printf("\tSUM:  %f\n", sumAreasLeft);
+            }
+
+            double dz = instanciaG.vetItens[itemI].getDimRotacionada(2, rI);
+            double dy = instanciaG.vetItens[itemI].getDimRotacionada(1, rI);
+            double areaTotal = dz * dy;
+
+                   // std::printf("sumAreasLeft(%d): %.2f\n\n", bin.vetItemId[i], sumAreasLeft);
+            //if(vetSumAreasLeftPtr)
+            //    (*vetSumAreasLeftPtr)[i] = sumAreasLeft;
+
+            if(!tochLeft)
+            {
+                if(sumAreasLeft < std::ceil(areaTotal*input.minLeftSupportArea))
+                {
+
+                    if(strError)
+                    {
+                        (*strError) = std::format(
+                            "There isn't enough left support({}%) for the item({})",
+                            sumAreasLeft / areaTotal, itemI);
+                    }
+                    //std::printf("Plot: \n%s\n", bin.printPlot().c_str());
+                    vetPackinErros[PackingErroCompactness] += 1;
+                    return false;
+
                 }
             }
         }
-        */
 
-        // std::printf("sumAreasLeft(%d): %.2f\n\n", bin.vetItemId[i], sumAreasLeft);
-        if(vetSumAreasLeftPtr)
-            (*vetSumAreasLeftPtr)[i] = sumAreasLeft;
-
-        if(!tochLeft)
-        {
-            if(sumAreasLeft < std::ceil(areaTotal*input.minLeftSupportArea))
-            {
-
-                if(strError)
-                {
-                    (*strError) = std::format(
-                        "There isn't enough left support({}%) for the item({})",
-                        sumAreasLeft / areaTotal, itemI);
-                }
-
-                vetPackinErros[PackingErroCompactness] += 1;
-                return false;
-
-                // if(!vetSumAreasLeftPtr)
-                //     return false;
-            }
-        }
+        if(input.modelType == 0)
+            break;
     }
 
     return true;
@@ -1579,8 +1541,11 @@ double SolucaoNS::getIntercetion(int                  item0,
                                  InstanceNS::Rotation r1,
                                  Face                 f1)
 {
-
-    // std::printf("item0(%d), p0(%s), f0(%s); ",   item0, p0.print().c_str(),
+    //if(item0==35 && item1==95)
+    //{
+    //    std::printf("item0(%d), p0(%s)\n",   item0, p0.print().c_str());
+    //    std::printf("item1(%d), p1(%s)\n",   item1, p1.print().c_str());
+    //}
     // vetFaceStr[f0].c_str()); std::printf("item1(%d), p1(%s), f1(%s)\n\n", item1,
     // p1.print().c_str(), vetFaceStr[f1].c_str());
 

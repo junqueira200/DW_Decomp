@@ -278,9 +278,9 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
 
     for(size_t i = 0; i < mItems.size(); ++i)
     {
-        // bool placedOnLeft = operations_research::sat::SolutionIntegerValue(mResponse,
-        //                                                                    mPlacedOnLeft[i]);
-        // std::printf("%d: %d\n", i, placedOnLeft);
+        bool placedOnLeft = operations_research::sat::SolutionIntegerValue(mResponse,
+                                                                            mPlacedOnLeft[i]);
+        //std::printf("%d: %d\n", mItems[i].InternId, placedOnLeft);
 
         if(input.axleWights)
         {
@@ -571,6 +571,9 @@ void ContainerLoadingCP::PrintSolution(std::vector<Array<int, 4>> &vetPos,
             std::printf("Error, \n\tfRA_int: \t%.2f\n\tfRA: \t%.2f", fTA, fTA_[s]);
             PRINT_THROW();
         }
+
+        if(input.modelType == 0)
+            break;
     }
 
     // std::printf("mMinX: %d",
@@ -713,6 +716,9 @@ void ContainerLoadingCP::CreateVariables()
 
             forceTA[s] = mModelCP.NewIntVar({0,
                             scale * (int64_t)(GravityCmConst * semiTrailer.maxMassTrailerAxle)});
+
+            if(input.modelType == 0)
+                break;
         }
 
         int max0 =
@@ -742,6 +748,9 @@ void ContainerLoadingCP::CreateVariables()
         {
             sumRightBalancedLoading[s] = mModelCP.NewIntVar({0, limitWight});
             sumLeftBalancedLoading[s]  = mModelCP.NewIntVar({0, limitWight});
+
+            if(input.modelType == 0)
+                break;
         }
     }
 
@@ -996,7 +1005,10 @@ void ContainerLoadingCP::CreateVariables()
     mMaxLength = mModelCP.NewIntVar({0, mContainer.Dx});
 
     if(input.compactness)
+    {
         mMinX = mModelCP.NewIntVar({0, 0});
+        mModelCP.AddEquality(mMinX, 0);
+    }
 
     if(useValuesFromHeuristic)
     {
@@ -1203,6 +1215,8 @@ void ContainerLoadingCP::CreateAxleWeights()
                 (int64_t)scale * (int64_t)semiTrailer.massTrailer * (int64_t)GravityCmConst
                 - forceK[s] + scale);
 
+        if(input.modelType == 0)
+            break;
     }
 }
 
@@ -1800,84 +1814,90 @@ void ContainerLoadingCP::CreateCompactnessItem()
 // Check it
 void ContainerLoadingCP::CreateCompactnessArea()
 {
-    for(size_t i = 0; i < mItems.size(); ++i)
+    for(int s=0; s < numStops; ++s)
     {
-        ORLinExpr supportedAreaExpr;
-        // int       areaI = mItems[i].Dy * mItems[i].Dx;
-        // int minAreaI = mItems[i].Dz * std::min(mItems[i].Dx, mItems[i].Dy);
-        int maxAreaI = mItems[i].Dz * std::max(mItems[i].Dx, mItems[i].Dy);
-
-        // operations_research::sat::IntVar areaI = mModelCP.NewIntVar({minAreaI, maxAreaI});
-        // mModelCP.AddMultiplicationEquality(areaI, {mHeights[i], mLengths[i]});
-
-        for(size_t j = 0; j < mItems.size(); ++j)
+        for(size_t i:vetOfStops[s])
         {
-            if(i == j)
+            ORLinExpr supportedAreaExpr;
+            // int       areaI = mItems[i].Dy * mItems[i].Dx;
+            // int minAreaI = mItems[i].Dz * std::min(mItems[i].Dx, mItems[i].Dy);
+            int maxAreaI = mItems[i].Dz * std::max(mItems[i].Dx, mItems[i].Dy);
+
+                   // operations_research::sat::IntVar areaI = mModelCP.NewIntVar({minAreaI, maxAreaI});
+                   // mModelCP.AddMultiplicationEquality(areaI, {mHeights[i], mLengths[i]});
+
+            for(size_t j:vetOfStops[s])
             {
-                continue;
-            }
-
-            // if(!mEnableFragility || mItems[j].Fragility == Fragility::None ||
-            //    (mItems[j].Fragility == Fragility::Fragile &&
-            //     mItems[i].Fragility == Fragility::Fragile))
-            {
-                // int minAreaJ = mItems[j].Dz * std::min(mItems[j].Dx, mItems[j].Dy);
-                int maxAreaJ = mItems[j].Dz * std::max(mItems[j].Dx, mItems[j].Dy);
-
-                // mModelCP.AddMultiplicationEquality(areaJ, {mHeights[j], mLengths[j]});
-
-                operations_research::sat::IntVar usableArea =
-                    mModelCP.NewIntVar({0, std::max(maxAreaI, maxAreaJ)});
-                int position;
-                if(i < j)
+                if(i == j)
                 {
-                    position = j - i - 1;
-                    // mModelCP.AddMultiplicationEquality(
-                    //     usableArea, {mOverlapAreasYZ[i][position], mLeftYZ[i][j]});
-                    mModelCP.AddEquality(usableArea, mOverlapAreasYZ[i][position])
-                        .OnlyEnforceIf(mLeftYZ[i][j]);
-                }
-                else
-                {
-                    position = i - j - 1;
-                    mModelCP.AddEquality(usableArea, mOverlapAreasYZ[j][position])
-                        .OnlyEnforceIf(mLeftYZ[i][j]);
+                    continue;
                 }
 
-                // mModelCP.AddEquality(usableArea, mOverlapAreasYZ[i][position]).
-                //     OnlyEnforceIf(mLeftYZ[i][j]);
+                       // if(!mEnableFragility || mItems[j].Fragility == Fragility::None ||
+                       //    (mItems[j].Fragility == Fragility::Fragile &&
+                       //     mItems[i].Fragility == Fragility::Fragile))
+                {
+                    // int minAreaJ = mItems[j].Dz * std::min(mItems[j].Dx, mItems[j].Dy);
+                    int maxAreaJ = mItems[j].Dz * std::max(mItems[j].Dx, mItems[j].Dy);
 
-                mModelCP.AddEquality(usableArea, 0).OnlyEnforceIf(mLeftYZ[i][j].Not());
-                supportedAreaExpr += usableArea;
+                           // mModelCP.AddMultiplicationEquality(areaJ, {mHeights[j], mLengths[j]});
+
+                    operations_research::sat::IntVar usableArea =
+                        mModelCP.NewIntVar({0, std::max(maxAreaI, maxAreaJ)});
+                    int position;
+                    if(i < j)
+                    {
+                        position = j - i - 1;
+                        // mModelCP.AddMultiplicationEquality(
+                        //     usableArea, {mOverlapAreasYZ[i][position], mLeftYZ[i][j]});
+                        mModelCP.AddEquality(usableArea, mOverlapAreasYZ[i][position])
+                            .OnlyEnforceIf(mLeftYZ[i][j]);
+                    }
+                    else
+                    {
+                        position = i - j - 1;
+                        mModelCP.AddEquality(usableArea, mOverlapAreasYZ[j][position])
+                            .OnlyEnforceIf(mLeftYZ[i][j]);
+                    }
+
+                           // mModelCP.AddEquality(usableArea, mOverlapAreasYZ[i][position]).
+                           //     OnlyEnforceIf(mLeftYZ[i][j]);
+
+                    mModelCP.AddEquality(usableArea, 0).OnlyEnforceIf(mLeftYZ[i][j].Not());
+                    supportedAreaExpr += usableArea;
+                }
             }
+
+                   // operations_research::sat::IntVar supportedArea = mModelCP.NewIntVar({0, maxAreaI});
+                   // mModelCP.AddEquality(supportedArea, supportedAreaExpr)
+                   //     .OnlyEnforceIf(mPlacedOnLeft[i].Not());
+
+            //mModelCP.AddEquality(sumAreaCompactness[i], supportedAreaExpr);
+
+            /*
+            if(rot[i] == 0)
+                std::printf("i(%d): %d\n", (int)i, (int)(msupportAreaLeft * mItems[i].Dy *
+            mItems[i].Dz)); else std::printf("i(%d): %d\n", (int)i, (int)(msupportAreaLeft *
+            mItems[i].Dx * mItems[i].Dz));
+            */
+
+            mModelCP
+                .AddGreaterOrEqual(
+                    supportedAreaExpr,
+                    static_cast<int64_t>(std::ceil(msupportAreaLeft * mItems[i].Dy * mItems[i].Dz)))
+                .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][NoRotation]});
+            // mTopBool[i].Not()});
+
+            mModelCP
+                .AddGreaterOrEqual(
+                    supportedAreaExpr,
+                    static_cast<int64_t>(std::ceil(msupportAreaLeft * mItems[i].Dx * mItems[i].Dz)))
+                .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][RotationZ]});
+            // mTopBool[i].Not()});
         }
 
-        // operations_research::sat::IntVar supportedArea = mModelCP.NewIntVar({0, maxAreaI});
-        // mModelCP.AddEquality(supportedArea, supportedAreaExpr)
-        //     .OnlyEnforceIf(mPlacedOnLeft[i].Not());
-
-        mModelCP.AddEquality(sumAreaCompactness[i], supportedAreaExpr);
-
-        /*
-        if(rot[i] == 0)
-            std::printf("i(%d): %d\n", (int)i, (int)(msupportAreaLeft * mItems[i].Dy *
-        mItems[i].Dz)); else std::printf("i(%d): %d\n", (int)i, (int)(msupportAreaLeft *
-        mItems[i].Dx * mItems[i].Dz));
-        */
-
-        mModelCP
-            .AddGreaterOrEqual(
-                supportedAreaExpr,
-                static_cast<int64_t>(std::ceil(msupportAreaLeft * mItems[i].Dy * mItems[i].Dz)))
-            .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][NoRotation]});
-        // mTopBool[i].Not()});
-
-        mModelCP
-            .AddGreaterOrEqual(
-                supportedAreaExpr,
-                static_cast<int64_t>(std::ceil(msupportAreaLeft * mItems[i].Dx * mItems[i].Dz)))
-            .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][RotationZ]});
-        // mTopBool[i].Not()});
+        if(input.modelType == 0)
+            break;
     }
 
     // std::printf("\n");
@@ -1993,8 +2013,8 @@ void ContainerLoadingCP::CreateOnLeftConstraints()
 
     for(size_t i = 0; i < mItems.size(); ++i)
     {
-        mModelCP.AddEquality(mStartPositionsX[i], mMinX).OnlyEnforceIf(mPlacedOnLeft[i]);
-        mModelCP.AddGreaterThan(mStartPositionsX[i], mMinX).OnlyEnforceIf(mPlacedOnLeft[i].Not());
+        mModelCP.AddEquality(mStartPositionsX[i], 0).OnlyEnforceIf(mPlacedOnLeft[i]);
+        mModelCP.AddGreaterThan(mStartPositionsX[i], 0).OnlyEnforceIf(mPlacedOnLeft[i].Not());
     }
 }
 

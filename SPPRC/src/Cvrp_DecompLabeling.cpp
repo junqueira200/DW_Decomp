@@ -147,7 +147,7 @@ bool Cvrp_DecompLabelingNS::CvrpLabelingSubProb::checkEnumeratedRoutesFinal(
         if(t < 10)
             std::cout << redCost << "\n";
         t += 1;
-        if(redCost < -DW_DecompNS::TolObjSubProb)
+        if(redCost < -TolObjSubProb)
         {
             std::cout << "Route(" << route.vetRoute << ") have a NEGATIVE(" << redCost
                       << ") reduced cost!\n";
@@ -272,6 +272,7 @@ bool Cvrp_DecompLabelingNS::CvrpLabelingSubProb::checkEnumeratedRoutesMid(
      */
 }
 
+/*
 int Cvrp_DecompLabelingNS::CvrpLabelingSubProb::resolveSubProb(
     const Eigen::VectorXd                                  &vetC,
     Eigen::RowVectorXd                                     &vetRowPi,
@@ -372,56 +373,6 @@ int Cvrp_DecompLabelingNS::CvrpLabelingSubProb::resolveSubProb(
     std::set<int> setI;
     int           t = 0;
 
-    /*
-    for(int varId:vetVar1)
-    {
-        int i = varId/instVrpTw->numClientes;
-        int j = varId%instVrpTw->numClientes;
-
-        //std::cout<<i<<" "<<j<<"\n\n";
-
-        if(setI.contains(i))
-        {
-            vetMatResCost[0](i, j) = (FloatType)instVrpTw->matDist(i, j) -
-    (FloatType)(vetRowPi[j+1] + vetRowPi[1+instVrpTw->numClientes+t]); if(j == 0)
-                vetMatResCost[0](i, instVrpTw->numClientes) = vetMatResCost[0](i, j);
-        }
-        else
-        {
-            for(int ii=0; ii < instVrpTw->numClientes+1; ++ii)
-            {
-                if(ii == i)
-                    continue;
-
-                vetMatResCost[0](ii, j) = std::numeric_limits<FloatType>::infinity();
-            }
-
-
-            if(j == 0)
-            {
-
-                for(int ii=0; ii < instVrpTw->numClientes; ++ii)
-                {
-                    if(ii == i)
-                        continue;
-
-                    vetMatResCost[0](ii, instVrpTw->numClientes) =
-    std::numeric_limits<FloatType>::infinity();
-                }
-            }
-
-            //vetMatResCost[0](i, j) += -vetRowPi[1+instVrpTw->numClientes+t];
-            vetMatResCost[0](i, j) = (FloatType)instVrpTw->matDist(i, j) -
-    (FloatType)(vetRowPi[j+1] + vetRowPi[1+instVrpTw->numClientes+t]); if(j == 0)
-                vetMatResCost[0](i, instVrpTw->numClientes) = vetMatResCost[0](i, j);
-
-            setI.insert(i);
-        }
-
-        t += 1;
-    }
-    */
-
     // std::cout<<"Custo Reduzido: \n"<<vetMatResCost[0]<<"\n\n";
     // std::cout<<"Peso: "<<vetMatResCost[1]<<"\n\n";
 
@@ -519,138 +470,18 @@ int Cvrp_DecompLabelingNS::CvrpLabelingSubProb::resolveSubProb(
     }
     else
     {
-        /*
-        if(checkEnumeratedRoutesMid(vetRowPi, matColX, numSol))
-        {
-            numSol = 0;
-            custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1),
-        vetMatResCostForward, vetMatResCostBackward, vetVetResBound,
-        instVrpTw->numClientes, ngSet, labelingData, matColX, numSol,
-        (FloatType)constPiValue, -1, true, maxDist, vetRedCostFT, exact, typeLabel,
-        false);
-
-            //std::println("**************************************\n");
-            //PRINT_EXIT();
-        }
-        */
-    }
-
-    /*
-    if(!custoRedNeg)
-    {
-        std::cout<<"Change Alg Type\n";
-        changeTypeAlg(typeLabel);
-
-        custoRedNeg = bidirectionalAlgorithm(2, (instVrpTw->numClientes+1),
-    vetMatResCostForward, vetMatResCostBackward, vetVetResBound, instVrpTw->numClientes,
-    ngSet, labelingData, matColX, numSol, (FloatType)constPiValue, -1, true, maxDist,
-    vetRedCostFT, exact, typeLabel);
-
-        if(custoRedNeg)
-        {
-            std::cout<<"ERROR, alterar o algoritimo fez com que fosse gerado uma coluna
-    com custo red. neg.\n";
-        }
-
-        changeTypeAlg(typeLabel);
 
     }
-    */
+
+
 
     // redCost = (double)redCostFT;
     vetCooefRestConv[0] = 1;
 
-    /*    if(numSol == 0)
-        {
-            std::cout<<"CALL EXACT PRICING!\n\n";
-
-            Eigen::Matrix<double, -1, 1, Eigen::ColMajor>
-       matCol(instVrpTw->numClientes*instVrpTw->numClientes, 1);
-
-            if(exactPricing(vetMatResCost, constPiValue, matCol, *instVrpTw,
-       vetRedCostFT[0]))
-            {
-
-                custoRedNeg = forwardLabelingAlgorithm(2,
-                                                       instVrpTw->numClientes+1,
-                                                       vetMatResCost,
-                                                       vetVetResBound,
-                                                       instVrpTw->numClientes,
-                                                       ngSet,
-                                                       labelingData,
-                                                       matColX,
-                                                       numSol,
-                                                       (FloatType)constPiValue,
-                                                       -1,
-                                                       true,
-                                                       maxDist,
-                                                       vetRedCostFT);
-
-                if(custoRedNeg)
-                {
-                    std::cout<<"WTF?\n";
-                    PRINT_DEBUG("", "");
-                    throw "ERROR";
-                }
-                else
-                {   std::cout<<"\nERROR, labeling falhou na ultima execucao!";
-                    PRINT_DEBUG("", "");
-                    throw "ERROR";
-                }
-
-
-                for(int i=0; i < instVrpTw->numClientes*instVrpTw->numClientes; ++i)
-                    matColX(i, 0) = matCol[i];
-
-                custoRedNeg = true;
-                numSol = 1;
-
-
-
-            }
-        }*/
-
-    // Check if solution have a negative reduced cost
-    /*
-    FloatType redCostTemp = 0.0;
-    for(int j=0; j < numSol; ++j)
-    {
-        redCostTemp = constPiValue;
-        //std::cout<<j<<": ";
-        for(int i=0; i < (instVrpTw->numClientes*instVrpTw->numClientes); ++i)
-        {
-            if(matColX(i,j) != 1.0)
-                continue;
-
-            int ii = i/instVrpTw->numClientes;
-            int jj = i%instVrpTw->numClientes;
-
-            redCostTemp += vetMatResCostForward(ii, jj, 0);//instVrpTw->matDist(ii, jj);
-            //std::cout<<"("<<ii<<","<<jj<<")["<<i<<"]; ";
-
-        }
-        //std::cout<<"\n\n";
-        if(redCostTemp >= -DW_DecompNS::TolObjSubProb || !doubleEqual(vetRedCostFT[j],
-    redCostTemp, 1E-3))
-        {
-            std::cout<<"\nERROR, custo reduzido calculado: ("<<redCostTemp<<") \n";
-            std::cout<<"dif: "<<(vetRedCostFT[j]-redCostTemp)<<"\n";
-            std::cout<<"redCost: "<<vetRedCostFT[j]<<"\n\n";
-            PRINT_DEBUG("", "");
-            std::cout<<"phaseStatus: "<<(int)phaseStatus<<"\n\n";
-            std::cout<<(redCostTemp >= -DW_DecompNS::TolObjSubProb)<<"\n";
-            throw "ERROR";
-        }
-
-    }
-
-    for(int i=0; i < numSol; ++i)
-        vetRedCost[i] = (double)vetRedCostFT[i];
-    */
-    // std::cout<<"["<<minDistG<<", "<<maxDistG<<"]; numSol("<<numSol<<")\n";
 
     return 0;
 }
+*/
 
 void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::setTypeLabelToForward()
 {
