@@ -101,36 +101,169 @@ bool checkIfRouteIsInSet(Label                 *label,
                          MultsetSortRoute      &multsetSourRoute,
                          const EigenMatrixRowD &matDist);
 
-bool bidirectionalAlgorithm(int                        numRes,
-                            int                        numCust,
-                            const Vet3D_ResCost       &vetMatResCostForwardConst,
-                            const Vet3D_ResCost       &vetMatResCostBackward,
-                            const MatBoundRes         &vetVetBound,
-                            int                        dest,
-                            const NgSet               &ngSet,
-                            LabelingData              &lData,
+bool bidirectionalAlgorithm(int                        	numRes,
+                            int                        	numCust,
+                            const Vet3D_ResCost       	&vetMatResCostForwardConst,
+                            const Vet3D_ResCost       	&vetMatResCostBackward,
+                            const MatBoundRes         	&vetVetBound,
+                            int                        	dest,
+                            const NgSet               	&ngSet,
+                            LabelingData              	&lData,
                             //Eigen::MatrixXd           &matColX,
-                            int                       &numSol,
+                            int                       	&numSol,
                             //FloatType                  labelStart,
-                            int                        NumMaxLabePerBucket,
-                            bool                       dominaceCheck,
-                            FloatType                 &maxDist,
-                            Eigen::VectorX<FloatType> &vetRedCost,
-                            bool                       exact,
-                            LabelingTypeAlg            labelingTypeAlg,
-                            bool                       arc,
-                            Eigen::VectorXd           *vetLowerBoundRedCost,
-                            double                     percentage,
-                            int*					   vetSol,
-                            int					   &sizeVetSol);
-
-// inline __attribute__((always_inline))
-bool checkCompleteDominance(const Label &l0, const Label &l1, int numResources);
+                            int                        	NumMaxLabePerBucket,
+                            bool                       	dominaceCheck,
+                            FloatType                 	&maxDist,
+                            Eigen::VectorX<FloatType> 	&vetRedCost,
+                            bool                       	exact,
+                            LabelingTypeAlg            	labelingTypeAlg,
+                            bool                       	arc,
+                            //Eigen::VectorXd           *vetLowerBoundRedCost,
+                            EigenMatrixRowD       		*ptrMatDp,
+                            double                     	percentage,
+                            int*					   	vetSol,
+                            int					   		&sizeVetSol,
+                            int							capacity_Q);
 
 inline __attribute__((always_inline)) bool checkDominanceSubSet(const Label &l0, const Label &l1)
 {
     return (l0.bitSetNg & l1.bitSetNg) == l0.bitSetNg;
 }
+
+// inline __attribute__((always_inline))
+std::pair<bool, bool> checkCompleteDominancePair(const Label &l0, const Label &l1, int numResources);
+
+
+// first index i with vet[i]->vetResources[0] >= value
+INLINE
+int lowerBoundIdx(FloatType value, const Bucket* bucket)
+{
+    int lo = 0, hi = bucket->sizeVetPtrLabel;
+    while (lo < hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+        if(bucket->vetPtrLabel[mid]->vetResources[0] < value)
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+    return lo;
+}
+
+// first index i with vet[i]->vetResources[0] > value
+INLINE
+int upperBoundIdx(FloatType value, const Bucket* bucket)
+{
+    int lo = 0, hi = bucket->sizeVetPtrLabel;
+    while (lo < hi)
+    {
+        int mid = lo + (hi - lo) / 2;
+        if(!(value < bucket->vetPtrLabel[mid]->vetResources[0]))
+            lo = mid + 1;
+        else
+            hi = mid;
+    }
+    return lo;
+}
+
+INLINE
+void removeBatchFromBucket(const VectorI& idx, int cnt, Bucket* bucket)
+{
+    if (!bucket || cnt <= 0) return;
+    const int n = bucket->sizeVetPtrLabel;
+    if (n <= 0 || idx[0] >= n) return;
+
+    assert(idx[0] >= 0 && "Index cannot be negative");
+    int w = idx[0];
+    int k = 0;
+    for (int r = idx[0]; r < n; ++r)
+    {
+        if (r == idx[k])
+        {
+            assert((k == 0 || idx[k] > idx[k - 1]) && "idx must be strictly ascending and unique");
+            if (bucket->vetPtrLabel[r])
+                bucket->vetPtrLabel[r]->active = false;
+            ++k;
+            if (k == cnt)
+            {
+                // All target elements removed! Bulk copy remaining pointers and exit.
+                ++r;
+                const int remaining = n - r;
+                if (remaining > 0)
+                {
+                    std::memmove(&bucket->vetPtrLabel[w],
+                                 &bucket->vetPtrLabel[r],
+                                 remaining * sizeof(bucket->vetPtrLabel[0]));
+                    w += remaining;
+                }
+                break;
+            }
+            continue;
+        }
+        bucket->vetPtrLabel[w++] = bucket->vetPtrLabel[r];
+    }
+
+    // Clear trailing pointers
+    for (int t = w; t < n; ++t)
+        bucket->vetPtrLabel[t] = nullptr;
+
+    bucket->sizeVetPtrLabel = w;
+}
+
+INLINE
+void removeFromBucket(int i, Bucket* bucket)
+{
+    Label* labelPtr = bucket->vetPtrLabel[i];
+    labelPtr->active = false;
+
+    for(int t=i; t < (bucket->sizeVetPtrLabel-1); ++t)
+        bucket->vetPtrLabel[t] = bucket->vetPtrLabel[t+1];
+
+    bucket->vetPtrLabel[bucket->sizeVetPtrLabel-1] = nullptr;
+    bucket->sizeVetPtrLabel -= 1;
+}
+
+INLINE
+bool checkCompleteDominance(const Label &l0, const Label &l1, int numResources)
+{
+    if(l0.cust != l1.cust)
+    {
+        std::cout << "ERROR, lo.cust(" << l0.cust << ") != l1.cust(" << l1.cust << ")\n\n";
+        PRINT_DEBUG("", "");
+        throw "ERROR";
+    }
+
+    if(l0.typeLabel == Forward) [[likely]]
+    {
+        if(doubleGreater(l0.vetResources[0], l1.vetResources[0], FloatEp) ||
+           doubleGreater(l0.vetResources[1], l1.vetResources[1], FloatEp))
+            return false;
+
+        for(int r=2; r < numResources; ++r)
+        {
+            if(doubleGreater(l0.vetResources[r], l1.vetResources[r], FloatEp))
+                return false;
+        }
+
+    }
+    else
+    {
+        if(doubleGreater(l0.vetResources[0], l1.vetResources[0], FloatEp) ||
+           doubleLess(l0.vetResources[1], l1.vetResources[1], FloatEp))
+            return false;
+
+        for(int r=2; r < numResources; ++r)
+        {
+            if(doubleLess(l0.vetResources[r], l1.vetResources[r], FloatEp))
+                return false;
+        }
+    }
+
+    return checkDominanceSubSet(l0, l1);
+
+}
+
 
 typedef Eigen::Array<FloatType, 1, NumMaxResources> VetBackwardMask;
 

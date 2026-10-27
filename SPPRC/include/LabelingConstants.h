@@ -9,8 +9,8 @@
 
 typedef double FloatType;
 
-#define HEAP_KEY index
-#define KEY_TYPE int64_t
+#define HEAP_KEY vetResources[0]
+#define KEY_TYPE FloatType
 #define KEY_EXTREME -std::numeric_limits<KEY_TYPE>::max()
 
 constexpr bool MinHeap = true;
@@ -27,20 +27,22 @@ inline bool      PrintG = false;
 constexpr int       NumMaxResources = 2;
 constexpr int       NumMaxRoute = 100;
 constexpr int       NumMaxCust = 100; // 100
-constexpr int       NgSetSize = 8;    // 8
+constexpr int       NgSetSize = 4;    // 8
 constexpr int       NumBuckets = 10;
 constexpr int       vetPtrLabelSize = 10;
 constexpr bool      NullFlush = false;
 constexpr bool      Print = false;
 constexpr int       numMaxLabelG = 40; // 2000
 constexpr bool      DominaIterBuckets = false;
-constexpr FloatType FloatEp = 1E-5;
+constexpr FloatType FloatEp = 1E-9;
 constexpr bool      TrackingRoutes = false;
 constexpr bool      SortLabels = false;
 
 constexpr double MaxFloatType = std::numeric_limits<FloatType>::max();
 constexpr double MinFloatType = std::numeric_limits<FloatType>::min();
 constexpr double InfFloatType = std::numeric_limits<FloatType>::infinity();
+
+constexpr double InfDouble    = std::numeric_limits<double>::infinity();
 
 constexpr int MaxInt = std::numeric_limits<int>::max();
 constexpr int MinInt = std::numeric_limits<int>::min();

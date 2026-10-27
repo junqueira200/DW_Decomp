@@ -14,7 +14,7 @@
 namespace LabelingAlgorithmNS
 {
 
-constexpr double TolObjSubProb = 1E-2;
+constexpr double TolObjSubProb = 1E-3;
 // TODO Retornar para 25!
 constexpr int    NumMaxSolSubProb = 25;     // 25;
 

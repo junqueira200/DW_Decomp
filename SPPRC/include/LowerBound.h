@@ -17,9 +17,10 @@ namespace LowerBoundNS
 {
 
 bool getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost &vetMatResCost,
-                       Eigen::VectorXd                          &vetDist,
                        int                                       dest,
-                       LabelingAlgorithmNS::LabelingData        *lDataPtr);
+                       const LabelingAlgorithmNS::MatBoundRes   &matBoundRes,
+                       EigenMatrixRowD 							&matDp);
+                       //LabelingAlgorithmNS::LabelingData        *lDataPtr);
 
 void copyDistMat(const LabelingAlgorithmNS::Vet3D_ResCost &vetMatResCost, Eigen::MatrixXd &distMat);
 

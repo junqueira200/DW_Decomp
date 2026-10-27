@@ -12,9 +12,11 @@
 #include "sefe_array.h"
 #include "LowerBound.h"
 #include <set>
+#include "LowerBound.h"
 
 using namespace LabelingAlgorithmNS;
 using namespace TestNS;
+using namespace LowerBoundNS;
 //using namespace BranchAndPriceNS;
 
 VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
@@ -33,16 +35,18 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
     }
 
     instVrpTw = &instVrpTw_;
-    double numSteps = 2.0; // 2
+    double numSteps = 35.0; // 2
 
     // vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 200.0; // 999999
-    vetStepSize[0].start = -500;       // -70
-    vetStepSize[0].end = 500;          // 200
+    vetStepSize[0].stepSize = 10000000.0; // 200
+    vetStepSize[0].start = -1000;       // -500
+    vetStepSize[0].end = 1000;          // 500
 
-    vetStepSize[1].stepSize = instVrpTw->capVeic / numSteps; // 50
+    std::printf("instVrpTw->capVeic: %d\n", instVrpTw->capVeic);
+
+    vetStepSize[1].stepSize = 1000;//instVrpTw->capVeic / numSteps; // 50
     vetStepSize[1].start = 0;
-    vetStepSize[1].end = (FloatType)instVrpTw->capVeic;
+    vetStepSize[1].end = (FloatType)instVrpTw->capVeic+1;
 
     labelingData = LabelingAlgorithmNS::LabelingData(
         vetStepSize, 2, instVrpTw->numClientes + 1, vetMaxResouces);
@@ -744,11 +748,13 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                          ArrayReducedCost &vetRedCost,
                          bool			   exact)
 {
-
+    //std::print("exact: {}\n", exact);
     static Eigen::VectorX<FloatType> vetRedCostFT(NumMaxSolSubProb);
     static Eigen::VectorXd vetDist(instVrpTw->numClientes + 1);
-    Eigen::VectorXd       *ptrVetDist = nullptr; //&vetDist;
+    static EigenMatrixRowD matDp(instVrpTw->numClientes + 1, instVrpTw->capVeic+1);
+    EigenMatrixRowD       *ptrMatDp = nullptr;
     vetDist.setConstant(-MaxFloatType);
+
 
     for(int i = 0; i < instVrpTw->numClientes; ++i)
     {
@@ -766,6 +772,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         int k = getIndex(i, 0, instVrpTw->numClientes);
         vetMatResCostForward.get(i, instVrpTw->numClientes, 0) = vetReducedCostInput[k];
     }
+
+    //getDistLowerBound(vetMatResCostForward, instVrpTw->numClientes, vetVetResBound, matDp);
 
     int numSol;
     FloatType maxDist;
@@ -793,14 +801,18 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                                    exact,
                                    typeLabel,
                                    true,
-                                   ptrVetDist,
+                                   ptrMatDp,
                                    1.0,
                                    vetRoutesOut,
-                                   sizeVetRoutesOut);
+                                   sizeVetRoutesOut,
+                                   instVrpTw->capVeic);
 
             if(reducedCostNeg)
                 return numSol;
         }
+
+        sizeVetRoutesOut = 0;
+        return 0;
     }
 
     bidirectionalAlgorithm(2,
@@ -821,10 +833,11 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                            exact,
                            typeLabel,
                            true,
-                           ptrVetDist,
+                           ptrMatDp,
                            1.0,
                            vetRoutesOut,
-                           sizeVetRoutesOut);
+                           sizeVetRoutesOut,
+                           instVrpTw->capVeic);
 
     return numSol;
 

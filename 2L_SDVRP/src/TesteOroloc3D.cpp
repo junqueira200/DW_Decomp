@@ -879,7 +879,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
             output += std::format("TIME_LIMIT; {:.4f} ", timeGA);
 
         std::cout << output << "\n";
-        appendToFile("../oroloc3D.csv", output);
+        appendToFile(input.strOutputFolder+"/oroloc3D.csv", output);
 
         std::printf("\n\n*************************************\n\n");
 

@@ -41,116 +41,73 @@ typedef std::pair<int, int>                      Edge;
  *  ******************************************************************************************
  *  ******************************************************************************************
  */
+
+
 bool LowerBoundNS::getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost &vetMatResCost,
-                                     Eigen::VectorXd                          &vetDist,
                                      int                                       dest,
-                                     LabelingAlgorithmNS::LabelingData        *lDataPtr)
-
+                                     const LabelingAlgorithmNS::MatBoundRes   &matBoundRes,
+                                     EigenMatrixRowD 						  &matDp)
 {
-    // return false;
-    // return false;
-    // std::cout<<"ini\n";
+    static int                 numNodes = matDp.rows();
+    static int 				   lastNode = numNodes - 1;
+    static bool allocateMat = false;
+    static int capacity_Q = -InfInt;
+    static Vector<int> demands(numNodes);
 
-    Eigen::MatrixXd distMat(vetDist.size(), vetDist.size());
-    copyDistMat(vetMatResCost, distMat);
-    static int                 numNodes = vetDist.size();
-    static std::vector<Vertex> predecessor(numNodes);
-    static std::vector<double> distance(numNodes, std::numeric_limits<double>::infinity());
+    demands[0] = 0;
 
-    // std::cout<<distMat<<"\n";
+    assert(matDp.cols() >= capacity_Q + 1);
 
-    // Create the graph
-    graph_t g(numNodes + 1);
-
-    /*
-    // Reverse graph: edges j -> i
-    for(int i=0; i < numNodes; ++i)
+    if(!allocateMat)
     {
-        for(int j=0; j < numNodes; ++j)
+        for(int i=1; i < (numNodes-1); ++i)
+            capacity_Q = std::max(capacity_Q, (int)matBoundRes(i, 1).upperBound);
+
+        for(int v=1; v < (numNodes-1); ++v)
+            demands[v] = (int)vetMatResCost(0, v, 1);
+
+        allocateMat = true;
+    }
+
+
+    matDp.setConstant(InfDouble);
+    //vetDist.setConstant(-InfDouble);
+
+    for(int i=0; i <= capacity_Q; ++i)
+        matDp(dest, i) = 0.0;
+
+    for(int r=1; r <= capacity_Q; ++r)
+    {
+        for(int u=0; u < lastNode; ++u)
         {
-            if(i == j) continue;
-            if(distMat(i, j) == std::numeric_limits<double>::infinity())
+            if(u == dest)
                 continue;
 
-            add_edge(i, j, EdgeWeightProperty(distMat(i,j)), g);
+            matDp(u, r) = std::min(matDp(u, r), vetMatResCost(u, dest, 0));
+
+            for(int v=1; v < lastNode; ++v)
+            {
+
+                if (v == u || v == dest)
+                    continue;
+
+                if(demands[v] <= r)
+                {
+                    int rem = r - demands[v];
+
+                    double arcCost = vetMatResCost(u, v, 0);
+                    double remCost = matDp(v, rem);
+
+                    if (arcCost < InfDouble / 2.0 && remCost < InfDouble / 2.0)
+                        matDp(u, r) = std::min(matDp(u, r), arcCost+remCost);
+                }
+            }
+
+            if(r > 0)
+                matDp(u, r) = std::min(matDp(u, r), matDp(u, r-1));
+
         }
     }
-
-
-  //    dijkstra_shortest_paths(g, dest,
-  predecessor_map(make_iterator_property_map(predecessor.begin(), get(vertex_index, g)))
-  //            .distance_map(make_iterator_property_map(distance.begin(),
-  get(vertex_index, g))));
-
-
-    bool ok = bellman_ford_shortest_paths(g, numNodes, weight_map(get(edge_weight,
-  g)).distance_map(make_iterator_property_map( distance.begin(), get(vertex_index, g))));
-
-
-    if(!ok)
-    {
-        vetDist.setConstant(-MaxFloatType);
-        return false;
-    }
-
-
-    // Copy result
-    for(int i = 0; i < numNodes; ++i)
-    {
-        vetDist[i] = distance[i];
-    }
-    */
-
-    for(int i = 0; i < numNodes + 1; ++i)
-    {
-        for(int j = 0; j < numNodes + 1; ++j)
-        {
-            if(i == j)
-                continue;
-            // std::cout<<i<<", "<<j<<"\n";
-            add_edge(i, j, EdgeWeightProperty(distMat(i, j)), g);
-        }
-    }
-
-    // std::cout<<"Create graph!\n";
-
-    for(int i = 0; i < numNodes; ++i)
-    {
-        // std::cout<<"Cust("<<i<<"\n";
-        Vertex source = i;
-        dijkstra_shortest_paths(g,
-                                source,
-                                predecessor_map(boost::make_iterator_property_map(
-                                    predecessor.begin(), get(boost::vertex_index, g))));
-        // std::cout<<"dijkstra\n";
-        Vertex  node = dest;
-        VectorI vetRoute;
-        vetRoute.reserve(5);
-        vetRoute.push_back(dest);
-        // std::cout<<"node: "<<dest<<"\n";
-        while(node != source)
-        {
-            node = predecessor[node];
-            // std::cout<<"node: "<<node<<"\n";
-            vetRoute.push_back(node);
-        }
-
-        // std::cout<<"\n";
-
-        std::reverse(vetRoute.begin(), vetRoute.end());
-        // std::cout<<vetRoute<<"\n\n";
-        double dist = 0.0;
-
-        for(int i = 0; i < (vetRoute.size() - 1); ++i)
-        {
-            dist += vetMatResCost(vetRoute[i], vetRoute[i + 1], 0);
-        }
-
-        vetDist[i] = dist;
-    }
-
-    std::cout << "Dist: " << vetDist.transpose() << "\n";
-    // PRINT_EXIT();
 
     return true;
 }
