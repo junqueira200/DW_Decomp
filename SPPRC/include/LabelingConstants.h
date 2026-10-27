@@ -27,14 +27,14 @@ inline bool      PrintG = false;
 constexpr int       NumMaxResources = 2;
 constexpr int       NumMaxRoute = 100;
 constexpr int       NumMaxCust = 100; // 100
-constexpr int       NgSetSize = 4;    // 8
+constexpr int       NgSetSize = 8;    // 8
 constexpr int       NumBuckets = 10;
 constexpr int       vetPtrLabelSize = 10;
 constexpr bool      NullFlush = false;
 constexpr bool      Print = false;
 constexpr int       numMaxLabelG = 40; // 2000
 constexpr bool      DominaIterBuckets = false;
-constexpr FloatType FloatEp = 1E-9;
+constexpr FloatType FloatEp = 1E-6;
 constexpr bool      TrackingRoutes = false;
 constexpr bool      SortLabels = false;
 

@@ -96,10 +96,6 @@ inline std::size_t hash_value(const HashSortRoute &solXHash) { return solXHash.h
 typedef Vector<std::unique_ptr<LabelingAlgorithmNS::SortRoute>>       VetSortRoute;
 typedef boost::unordered_multiset<LabelingAlgorithmNS::HashSortRoute> MultsetSortRoute;
 
-bool checkIfRouteIsInSet(Label                 *label,
-                         VetSortRoute          &vetSortRoute,
-                         MultsetSortRoute      &multsetSourRoute,
-                         const EigenMatrixRowD &matDist);
 
 bool bidirectionalAlgorithm(int                        	numRes,
                             int                        	numCust,
@@ -201,7 +197,9 @@ void removeBatchFromBucket(const VectorI& idx, int cnt, Bucket* bucket)
             }
             continue;
         }
-        bucket->vetPtrLabel[w++] = bucket->vetPtrLabel[r];
+        bucket->vetPtrLabel[w] = bucket->vetPtrLabel[r];
+        bucket->vetPtrLabel[w]->posBucket = w;
+        w += 1;
     }
 
     // Clear trailing pointers
@@ -267,8 +265,8 @@ bool checkCompleteDominance(const Label &l0, const Label &l1, int numResources)
 
 typedef Eigen::Array<FloatType, 1, NumMaxResources> VetBackwardMask;
 
-bool extendLabelForward(const Label         &label,
-                        Label               &newLabel,
+bool extendLabelForward(Label*         		label,
+                        Label*              newLabel,
                         const Vet3D_ResCost &vetMatResCost,
                         const MatBoundRes   &vetVetBound,
                         int                  custI,
@@ -276,8 +274,8 @@ bool extendLabelForward(const Label         &label,
                         const NgSet         &ngSet,
                         int                  numResources);
 
-bool extendLabelBackward(const Label           &label,
-                         Label                 &newLabel,
+bool extendLabelBackward(Label*		            label,
+                         Label*                 newLabel,
                          const Vet3D_ResCost   &vetMatResCost,
                          const MatBoundRes     &vetVetBound,
                          int                    custI,
@@ -286,8 +284,8 @@ bool extendLabelBackward(const Label           &label,
                          int                    numResources,
                          const VetBackwardMask &vetBackwardMask);
 
-inline __attribute__((always_inline)) bool extendLabel(const Label           &label,
-                                                       Label                 &newLabel,
+inline __attribute__((always_inline)) bool extendLabel(Label*                label,
+                                                       Label*                newLabel,
                                                        const Vet3D_ResCost   &vetMatResCostForward,
                                                        const Vet3D_ResCost   &vetMatResCostBackward,
                                                        const MatBoundRes     &vetVetBound,
@@ -297,9 +295,15 @@ inline __attribute__((always_inline)) bool extendLabel(const Label           &la
                                                        int                    numResources,
                                                        const VetBackwardMask &vetBackwardMask)
 {
-    if(label.typeLabel == Forward)
-        return extendLabelForward(
-            label, newLabel, vetMatResCostForward, vetVetBound, custI, t, ngSet, numResources);
+    if(label->typeLabel == Forward)
+        return extendLabelForward(label,
+                                  newLabel,
+                                  vetMatResCostForward,
+                                  vetVetBound,
+                                  custI,
+                                  t,
+                                  ngSet,
+                                  numResources);
     else
         return extendLabelBackward(label,
                                    newLabel,
@@ -379,12 +383,14 @@ bool dominanceInterBuckets(int           cust,
 
 void changeTypeAlg(LabelingTypeAlg &labelingTypeAlg);
 
+/*
 Label *mergeForwardAndBackward(Label                *forwardPtr,
                                Label                *backwardPtr,
                                const ArrayResources &vetMaxResources,
                                const MatBoundRes    &vetVetBound,
                                int                   numResorces,
                                const NgSet          &ngSet);
+*/
 
 /*
 {
@@ -400,7 +406,7 @@ void   rmLabel(Label *label);
 void   resetLabelPool();
 void   startPool();
 
-void        writeNgSet(Label *label, const NgSet &ngset);
+//void        writeNgSet(Label *label, const NgSet &ngset);
 void        startGlobalMemory(const Vector<VectorI> &vetRoutes);
 void        addToVetRoutesG(const VectorI &route);
 void        cleanVetRouteG();

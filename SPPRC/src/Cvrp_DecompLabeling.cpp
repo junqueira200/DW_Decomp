@@ -493,6 +493,7 @@ void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::setTypeLabelToBackward()
     typeLabel = LabelingAlgorithmNS::AlgBackward;
 }
 
+/*
 void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::convertRouteIntoLabel(
     const TestNS::Route        &route,
     LabelingAlgorithmNS::Label *label)
@@ -520,7 +521,7 @@ void Cvrp_DecompLabelingNS::CvrpLabelingSubProb::convertRouteIntoLabel(
 
     label->tamRoute = (int)route.vetRoute.size();
 }
-
+*/
 
 /*
 Cvrp_DecompLabelingNS::CapacityCut::CapacityCut(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,

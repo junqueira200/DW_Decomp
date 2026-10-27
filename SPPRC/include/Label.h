@@ -39,14 +39,15 @@ enum TypeLabel
 struct Label
 {
   public:
-    boost::array<int, NumMaxRoute>         vetRoute;
+    //boost::array<int, NumMaxRoute>         vetRoute;
     std::bitset<NumMaxCust>                bitSetNg;
     std::array<FloatType, NumMaxResources> vetResources;
-    int64_t                                index = -1;
+    Label*								   ptrLabel = nullptr;
+    int64_t                                index 	= -1;
     // Order of label's creation
     int posBucket = -1;
     // Position of the label from vetPtrLabel in Bucket class
-    int tamRoute = 0;
+    //int tamRoute = 0;
     int posHeap = -1;
     int cust = -1;
     // Second dimension for MatBucket
@@ -119,7 +120,7 @@ class LabelHeap
     void                 insertKey(Label *label);
 };
 
-std::ostream &operator<<(std::ostream &out, const Label &label);
+std::ostream &operator<<(std::ostream &out, Label &label);
 
 struct Bucket
 {
@@ -233,7 +234,7 @@ class LabelingData
                                TypeLabel                  typeLabel);
 
     void setupGraphBucket();
-    bool compareVetMatBucket(const ArrayResources &vetMaxResouces);
+    //bool compareVetMatBucket(const ArrayResources &vetMaxResouces);
 
     INLINE
     void whiteLabelIndex(Label *label)
@@ -264,7 +265,7 @@ class LabelingData
     void checkLabels();
 };
 
-bool        searchLabel(Label *label, Bucket &bucket);
+//bool        searchLabel(Label *label, Bucket &bucket);
 std::string printIndex(const Index &index);
 
 INLINE

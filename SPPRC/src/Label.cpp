@@ -199,8 +199,11 @@ void LabelHeap::insertKey(Label *label)
     }
 }
 
+
 std::string LabelingAlgorithmNS::Bucket::print(int numResorces)
 {
+    PRINT_THROW();
+
     std::string str;
 
     for(int i = 0; i < sizeVetPtrLabel; ++i)
@@ -213,8 +216,7 @@ std::string LabelingAlgorithmNS::Bucket::print(int numResorces)
             for(int t = 0; t < numResorces; ++t)
                 str += std::format("{:.5f}", label->vetResources[t]) + ", ";
             str += "]; ";
-            for(int t = 0; t < label->tamRoute; ++t)
-                str += std::to_string(label->vetRoute[t]) + " ";
+            //str += print(label) + " ";
             str += ");  ";
         }
     }
@@ -332,7 +334,8 @@ int LabelingAlgorithmNS::LabelingData::doMerge(Label                *label,
 {
 
     // checkLabels();
-
+    PRINT_THROW();
+    /*
     Index     *index = nullptr;
     MatBucket *matBucket = nullptr;
 
@@ -439,6 +442,7 @@ int LabelingAlgorithmNS::LabelingData::doMerge(Label                *label,
             }
         }
     }
+    */
 
     return getNumberOfSolutions();
 }

@@ -85,7 +85,7 @@ class CvrpLabelingSubProb
     bool checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi);
     bool
     checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol);
-    void convertRouteIntoLabel(const TestNS::Route &route, LabelingAlgorithmNS::Label *label);
+    //void convertRouteIntoLabel(const TestNS::Route &route, LabelingAlgorithmNS::Label *label);
     //void createMaster(GRBModel &model);
 
 }; // END MySubProb

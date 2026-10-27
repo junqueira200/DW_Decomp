@@ -303,8 +303,6 @@ bool LabelingAlgorithmNS::
     {
 
         // TODO create a start label
-        labelPtr->tamRoute = 1;
-        labelPtr->vetRoute[0] = 0;
         // labelPtr->vetResources.setZero();
         setVetResources0(*labelPtr);
         labelPtr->vetResources[0] = 0.0;
@@ -317,7 +315,8 @@ bool LabelingAlgorithmNS::
         labelPtr->active = true;
         labelPtr->posBucket = 0;
         labelPtr->typeLabel = Forward;
-        labelPtr->index = nextIndex++;
+        labelPtr->index = nextIndex;
+        nextIndex += 1;
 
         lData.vetMatBucketForward[0].mat(i, j).vetPtrLabel.resize(1);
         lData.vetMatBucketForward[0].mat(i, j).vetPtrLabel[0] = labelPtr;
@@ -332,7 +331,8 @@ bool LabelingAlgorithmNS::
             labelBackwardPtr, vetBackwardMask, matBoundRes, numRes, dest, 0.0, i, lData);
         labelHeap.insertKey(labelBackwardPtr);
         invertRoutes(vetRoutesG);
-        labelBackwardPtr->index = nextIndex++;
+        labelBackwardPtr->index = nextIndex;
+        nextIndex += 1;
 
         for(VectorI &route : vetRoutesG)
         {
@@ -518,6 +518,8 @@ bool LabelingAlgorithmNS::
         */
 
         // Extend label
+        bool rmLabel = true;
+
         for(int t = 0; t < numCust; ++t)
         {
             int tAux = t;
@@ -555,8 +557,8 @@ bool LabelingAlgorithmNS::
             }
             */
 
-            if(extendLabel(*labelPtr,
-                           *labelPtrAux,
+            if(extendLabel(labelPtr,
+                           labelPtrAux,
                            vetMatResCostForward,
                            vetMatResCostBackward,
                            matBoundRes,
@@ -566,6 +568,8 @@ bool LabelingAlgorithmNS::
                            numRes,
                            vetBackwardMask))
             {
+                rmLabel = false;
+
                 if(ptrMatDp)
                 {
                     int rem_cap = capacity_Q - labelPtrAux->vetResources[1];
@@ -588,6 +592,8 @@ bool LabelingAlgorithmNS::
                 }
 
                 labelPtrAux->index = nextIndex++;
+
+                /*
                 bool haveRoute = false;
                 if(TrackingRoutes)
                 {
@@ -596,6 +602,7 @@ bool LabelingAlgorithmNS::
                         std::cout << "\tFind route(" << printRoute(labelPtrAux)
                                   << ") in vector of routes; Parcial route created!\n";
                 }
+                */
 
                 if(Print && PrintG)
                     std::cout << "\t" << *labelPtrAux << "\n";
@@ -636,12 +643,6 @@ bool LabelingAlgorithmNS::
                     }
 
                     // removeCycles2(*labelPtrAux, numCust);
-
-                    // Reverse the array
-                    std::reverse(labelPtrAux->vetRoute.begin(),
-                                 labelPtrAux->vetRoute.begin() + labelPtrAux->tamRoute);
-
-                    // updateLabelCost(*labelPtrAux, vetMatResCostForward, labelStart);
 
                     if(labelPtrAux->vetResources[0] >= -TolObjSubProb)
                     {
@@ -806,7 +807,9 @@ bool LabelingAlgorithmNS::
             std::cout << "\n###################################################################"
                          "#####################\n\n";
 
-        labelPoolG.delT(labelPtr);
+        if(rmLabel)
+            labelPoolG.delT(labelPtr);
+
         numIt += 1;
 
         /*
@@ -874,7 +877,7 @@ bool LabelingAlgorithmNS::
         numSol = std::min(lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel,
                           NumMaxSolSubProb);
 
-        auto getReducedCost = [](Label* label)->double{return label->vetRoute[0];};
+        auto getReducedCost = [](Label* label)->double{return label->vetResources[0];};
         auto getNLabel = [&](int n)->Label*
         {return lData.vetMatBucketForward[dest].mat(0, 0).vetPtrLabel[n];};
 
@@ -902,14 +905,28 @@ bool LabelingAlgorithmNS::
         int next = 0;
         for(int l = 0; l < numSol; ++l)
         {
+            static VectorI vet(NumMaxRoute);
+            int size = 0;
+
             Label *label = lData.vetMatBucketForward[dest].mat(0, 0).vetPtrLabel[l];
-            // std::cout<<*label<<"\n";
-            label->vetRoute[label->tamRoute - 1] = label->vetRoute[0];
-            auto &vetRoute = label->vetRoute;
+            vetRedCost[l] = label->vetResources[0];
 
-            //std::cout<<*label<<"\n\n";
+            if(label->cust != dest)
+            {
+                std::printf("ERRO\n");
+                PRINT_THROW();
+            }
 
-            for(int i=0; i < label->tamRoute; ++i)
+            label->cust = 0;
+
+            while(label)
+            {
+                vet[size] = label->cust;
+                label = label->ptrLabel;
+                size += 1;
+            }
+
+            for(int i=size-1; i >= 0; --i)
             {
                 if(next >= NumMaxSolSubProb*NumMaxRoute)
                 {
@@ -917,27 +934,16 @@ bool LabelingAlgorithmNS::
                     PRINT_THROW();
                 }
 
-                vetSol[next] = label->vetRoute[i];
+                vetSol[next] = vet[i];
                 next += 1;
             }
 
-            /*
-            for(int i = 0; i < (label->tamRoute - 1); ++i)
-            {
-                int index = getIndex(vetRoute[i], vetRoute[i + 1], numCust - 1);
-                matColX(index, l) += 1.0;
-            }
-            */
-
-            vetRedCost[l] = label->vetResources[0];
         }
+
         //std::cout << "numSol: " <<numSol << "; localNumMaxLabel: " << localNumMaxLabel << "\n";
 
         sizeVetSol = next;
 
-        // TODO remover
-        // exit(-1);
-        // std::cout<<"*************************************************************************************\n\n";
         return true;
     }
     else
@@ -960,9 +966,22 @@ void LabelingAlgorithmNS::startPool()
 std::string LabelingAlgorithmNS::printRoute(Label *label)
 {
     std::string str;
+    static VectorI vet(NumMaxRoute);
+    int size = 0;
+    TypeLabel type = label->typeLabel;
 
-    for(int i = 0; i < label->tamRoute; ++i)
-        str += std::to_string(label->vetRoute[i]) + " ";
+    while(label)
+    {
+        vet[size] = label->cust;
+        size += 1;
+        label = label->ptrLabel;
+    }
+
+    if(type == Forward)
+        std::reverse(vet.begin(), vet.begin()+size);
+
+    for(int i = 0; i < size; ++i)
+        str += std::to_string(vet[i]) + " ";
 
     return str;
 }
@@ -993,8 +1012,8 @@ std::string LabelingAlgorithmNS::printRoute(Label *label)
  * **************************************************************************************
  * **************************************************************************************
  */
-bool LabelingAlgorithmNS::extendLabelForward(const Label         &label,
-                                             Label               &newLabel,
+bool LabelingAlgorithmNS::extendLabelForward(Label*				  label,
+                                             Label*				  newLabel,
                                              const Vet3D_ResCost &vetMatResCost,
                                              const MatBoundRes   &vetVetBound,
                                              int                  custI,
@@ -1008,22 +1027,20 @@ bool LabelingAlgorithmNS::extendLabelForward(const Label         &label,
 
     // newLabel.typeLabel = label.typeLabel;
 
-    newLabel.vetResources[0] = label.vetResources[0] + vetMatResCost(custI, t, 0);
-    boundOk = boundOk && (newLabel.vetResources[0] <= vetVetBound(t, 0).upperBound);
-    newLabel.vetResources[1] = label.vetResources[1] + vetMatResCost(custI, t, 1);
-    boundOk = boundOk && (newLabel.vetResources[1] <= vetVetBound(t, 1).upperBound);
+    newLabel->vetResources[0] = label->vetResources[0] + vetMatResCost(custI, t, 0);
+    boundOk = boundOk && (newLabel->vetResources[0] <= vetVetBound(t, 0).upperBound);
+    newLabel->vetResources[1] = label->vetResources[1] + vetMatResCost(custI, t, 1);
+    boundOk = boundOk && (newLabel->vetResources[1] <= vetVetBound(t, 1).upperBound);
 
     for(int i = 2; i < numResources; ++i) // NumMaxResources; ++i)
     {
         // Extend the iº resource
-        // std::cout<<"\t\tresource("<<label.vetResources[i]<<") + "<<vetMatResCost(custI,
-        // t, i)<<"\n";
-        newLabel.vetResources[i] = label.vetResources[i] + vetMatResCost(custI, t, i);
-        boundOk = boundOk && (newLabel.vetResources[i] <= vetVetBound(t, i).upperBound);
+        newLabel->vetResources[i] = label->vetResources[i] + vetMatResCost(custI, t, i);
+        boundOk = boundOk && (newLabel->vetResources[i] <= vetVetBound(t, i).upperBound);
     }
 
     if(numResources == 1)
-        newLabel.vetResources[1] = 0.0;
+        newLabel->vetResources[1] = 0.0;
 
     // std::cout<<"\n";
 
@@ -1032,34 +1049,22 @@ bool LabelingAlgorithmNS::extendLabelForward(const Label         &label,
         return false;
     }
 
-    newLabel.bitSetNg = label.bitSetNg;
+    newLabel->bitSetNg = label->bitSetNg;
 
     // Checks if custJ(t) its in custI ngSet
-    newLabel.bitSetNg[t] = ngSet.contain(t, custI);
+    newLabel->bitSetNg[t] = ngSet.contain(t, custI);
 
-    //    for(int i=0; i < label.tamRoute; ++i)
-    //        newLabel.vetRoute[i] = label.vetRoute[i];
-
-    memcpy(&newLabel.vetRoute[0], &label.vetRoute[0], label.tamRoute * sizeof(int));
-
-    if(label.tamRoute + 1 >= NumMaxRoute)
-    {
-        std::printf("Error in NumMaxRoute\n");
-        PRINT_THROW();
-    }
-
-
-    newLabel.vetRoute[label.tamRoute] = t;
-    newLabel.tamRoute = label.tamRoute + 1;
-    newLabel.active = true;
-    newLabel.typeLabel = Forward;
+    newLabel->ptrLabel = label;
+    //newLabel.tamRoute = label.tamRoute + 1;
+    newLabel->active = true;
+    newLabel->typeLabel = Forward;
 
     return true;
 }
 
 bool LabelingAlgorithmNS::extendLabelBackward(
-    const Label                                       &label,
-    Label                                             &newLabel,
+    Label*                                       	  label,
+    Label*                                            newLabel,
     const Vet3D_ResCost                               &vetMatResCostBackward,
     const MatBoundRes                                 &vetVetBound,
     int                                                custI,
@@ -1072,7 +1077,7 @@ bool LabelingAlgorithmNS::extendLabelBackward(
     // Goes through resources
     bool boundOk = true;
     // newLabel.typeLabel = label.typeLabel;
-    newLabel.vetResources[0] = label.vetResources[0] + vetMatResCostBackward(t, custI, 0);
+    newLabel->vetResources[0] = label->vetResources[0] + vetMatResCostBackward(t, custI, 0);
 
     if(Print && PrintG)
         std::cout << "\t\t(" << t << "," << custI << "): " << vetMatResCostBackward(t, custI, 0)
@@ -1087,28 +1092,21 @@ bool LabelingAlgorithmNS::extendLabelBackward(
                         vetVetBound(t, i).lowerBound);
 
         // Extend the iº resource
-        newLabel.vetResources[i] = label.vetResources[i] - vetMatResCostBackward(t, custI, i);
-        boundOk = boundOk && (newLabel.vetResources[i] <= vetVetBound(t, i).upperBound);
-        boundOk = boundOk && (newLabel.vetResources[i] >= vetVetBound(t, i).lowerBound);
+        newLabel->vetResources[i] = label->vetResources[i] - vetMatResCostBackward(t, custI, i);
+        boundOk = boundOk && (newLabel->vetResources[i] <= vetVetBound(t, i).upperBound);
+        boundOk = boundOk && (newLabel->vetResources[i] >= vetVetBound(t, i).lowerBound);
     }
 
     if(!boundOk)
         return false;
 
-    newLabel.bitSetNg = label.bitSetNg;
+    newLabel->bitSetNg = (label->bitSetNg & ngSet.vetNgSet[t]);
 
     // Checks if custJ(t) its in custI ngSet
-    newLabel.bitSetNg[t] = ngSet.contain(custI, t);
-
-    // for(int i=0; i < label.tamRoute; ++i)
-    //     newLabel.vetRoute[i] = label.vetRoute[i];
-
-    memcpy(&newLabel.vetRoute[0], &label.vetRoute[0], label.tamRoute * sizeof(int));
-
-    newLabel.vetRoute[label.tamRoute] = t;
-    newLabel.tamRoute = label.tamRoute + 1;
-    newLabel.active = true;
-    newLabel.typeLabel = Backward;
+    newLabel->bitSetNg.set(t);
+    newLabel->active 		= true;
+    newLabel->typeLabel 	= Backward;
+    newLabel->ptrLabel  	= label;
 
     return true;
 }
@@ -1122,8 +1120,8 @@ void LabelingAlgorithmNS::startBackwardLabel(Label             *labelPtr,
                                              int                i,
                                              LabelingData      &lData)
 {
-    labelPtr->tamRoute = 1;
-    labelPtr->vetRoute[0] = dest;
+    //labelPtr->tamRoute = 1;
+    //labelPtr->vetRoute[0] = dest;
     labelPtr->typeLabel = Backward;
     // labelPtr->vetResources.setZero();
     setVetResources0(*labelPtr);
@@ -1135,6 +1133,7 @@ void LabelingAlgorithmNS::startBackwardLabel(Label             *labelPtr,
     labelPtr->cust = dest;
     labelPtr->active = true;
     labelPtr->posBucket = 0;
+    labelPtr->ptrLabel = nullptr;
 
     vetBackwardMask.setOnes();
 
@@ -1456,22 +1455,19 @@ void LabelingAlgorithmNS::Bucket::addLabel(LabelingAlgorithmNS::Label *labelPtr)
     sizeVetPtrLabel += 1;
 }
 
-std::ostream &LabelingAlgorithmNS::operator<<(std::ostream &out, const Label &label)
+std::ostream &LabelingAlgorithmNS::operator<<(std::ostream &out, Label &label)
 {
 
     out << "Resouces(";
     for(int r = 0; r < NumMaxResources; ++r)
         out << label.vetResources[r] << " ";
-
-    out << "); Route(";
-    for(int i = 0; i < label.tamRoute; ++i)
-        out << label.vetRoute[i] << " ";
-
-    out << ")"; // bitSet(" << label.bitSetNg << ")";
+    printRoute(&label);
+    out << "); Route("<<printRoute(&label)<<")";
 
     return out;
 }
 
+/*
 void LabelingAlgorithmNS::removeCycles(Label &label, const int numCust)
 {
     static Eigen::VectorXi vetCust(numCust);
@@ -1504,44 +1500,7 @@ void LabelingAlgorithmNS::removeCycles(Label &label, const int numCust)
         }
     }
 }
-
-void LabelingAlgorithmNS::removeCycles2(Label &label, const int numCust)
-{
-
-    static Eigen::VectorXi vetCust(numCust);
-    vetCust.setConstant(-1);
-
-    static Eigen::VectorXi vetRoute(NumMaxRoute);
-    int                    num = 0;
-    vetRoute.fill(0);
-
-    for(int i = 0; i < label.tamRoute; ++i)
-    {
-        if(vetCust[label.vetRoute[i]] == -1)
-        {
-            vetCust[label.vetRoute[i]] = i;
-            vetRoute[num] = label.vetRoute[i];
-            num += 1;
-        }
-    }
-
-    for(int i = 0; i < num; ++i)
-        label.vetRoute[i] = vetRoute[i];
-
-    label.tamRoute = num;
-}
-
-void LabelingAlgorithmNS::updateLabelCost(Label               &label,
-                                          const Vet3D_ResCost &vetMatResCost,
-                                          FloatType            labelStart)
-{
-
-    label.vetResources[0] = labelStart;
-    for(int i = 0; i < (label.tamRoute - 1); ++i)
-    {
-        label.vetResources[0] += vetMatResCost(label.vetRoute[i], label.vetRoute[i + 1], 0);
-    }
-}
+*/
 
 LabelingAlgorithmNS::Label *LabelingAlgorithmNS::LabelingData::getBestLabel(int cust)
 {
@@ -1753,6 +1712,7 @@ bool LabelingAlgorithmNS::checkDistance(
     return true;
 }
 
+/*
 bool LabelingAlgorithmNS::containRoute(
     const Eigen::Array<Label *, 1, NumMaxSolSubProb> &vetLabel,
     int                                                            numSol,
@@ -1782,7 +1742,9 @@ bool LabelingAlgorithmNS::containRoute(
 
     return false;
 }
+*/
 
+/*
 bool LabelingAlgorithmNS::labelHaveRoute(Vector<VectorI> &vetRoute, Label *label)
 {
     if(vetRoute.empty() || !TrackingRoutes)
@@ -1800,6 +1762,7 @@ bool LabelingAlgorithmNS::labelHaveRoute(Vector<VectorI> &vetRoute, Label *label
 
     return true;
 }
+*/
 
 /** **************************************************************************************
  *  **************************************************************************************
@@ -2631,6 +2594,7 @@ void LabelingAlgorithmNS::convertLabelBackwardToForward(Label                *la
     label->typeLabel = Forward;
 }
 
+/*
 bool LabelingAlgorithmNS::LabelingData::compareVetMatBucket(const ArrayResources &vetMaxResouces)
 {
 
@@ -2668,9 +2632,11 @@ bool LabelingAlgorithmNS::LabelingData::compareVetMatBucket(const ArrayResources
 
     return true;
 }
+*/
 
 /// Search the label in the bucket. The variable label(pointer) is NOT in the bucket, it
 /// is search using the 	resorces and the route
+/*
 bool LabelingAlgorithmNS::searchLabel(Label *label, Bucket &bucket)
 {
     for(int i = 0; i < bucket.sizeVetPtrLabel; ++i)
@@ -2694,6 +2660,7 @@ bool LabelingAlgorithmNS::searchLabel(Label *label, Bucket &bucket)
 
     return false;
 }
+*/
 
 Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
                                                       Label        *label,
@@ -3250,6 +3217,7 @@ void LabelingAlgorithmNS::changeTypeAlg(LabelingTypeAlg &labelingTypeAlg)
         labelingTypeAlg = AlgForward;
 }
 
+/*
 void LabelingAlgorithmNS::writeNgSet(Label *label, const NgSet &ngSet)
 {
     label->bitSetNg = 0;
@@ -3262,7 +3230,9 @@ void LabelingAlgorithmNS::writeNgSet(Label *label, const NgSet &ngSet)
             label->bitSetNg[cliJ] = true;
     }
 }
+*/
 
+/*
 Label *LabelingAlgorithmNS::mergeForwardAndBackward(Label                *forwardPtr,
                                                     Label                *backwardPtr,
                                                     const ArrayResources &vetMaxResources,
@@ -3337,15 +3307,6 @@ Label *LabelingAlgorithmNS::mergeForwardAndBackward(Label                *forwar
     result->bitSetNg = forward.bitSetNg | backward.bitSetNg;
     result->bitSetNg[0] = true;
 
-    /*
-    for(int i=1; i < result->tamRoute; ++i)
-    {
-        int custI_1 = result->vetRoute[i-1];
-        int custI   = result->vetRoute[i];
-        result->bitSetNg[custI] = ngSet.contain(custI_1, custI);
-    }
-    */
-
     result->i = 0;
     result->j = 0;
     result->cust = result->vetRoute[tam - 1];
@@ -3363,6 +3324,7 @@ Label *LabelingAlgorithmNS::mergeForwardAndBackward(Label                *forwar
 
     return result;
 }
+*/
 
 void LabelingAlgorithmNS::resetLabelPool() { labelPoolG.resetPool(false); }
 
@@ -3382,56 +3344,6 @@ HashSortRoute::HashSortRoute(SortRoute &sortRoute_) : sortRoute(sortRoute_)
     }
 }
 
-bool LabelingAlgorithmNS::checkIfRouteIsInSet(Label                 *label,
-                                              VetSortRoute          &vetSortRoute,
-                                              MultsetSortRoute      &multsetSourRoute,
-                                              const EigenMatrixRowD &matDist)
-{
-    vetSortRoute.push_back(std::make_unique<SortRoute>());
-
-    LabelingAlgorithmNS::SortRoute &sortRoute = *vetSortRoute[vetSortRoute.size() - 1];
-    sortRoute.vetSortRoute.resize(label->tamRoute);
-    sortRoute.vetRoute.resize(label->tamRoute);
-
-    for(int i = 0; i < label->tamRoute; ++i)
-    {
-        int cust = label->vetRoute[i];
-        if(i == (label->tamRoute) || i == 0)
-            cust = 0;
-
-        sortRoute.vetRoute[i] = cust;
-        sortRoute.vetSortRoute[i] = cust;
-    }
-
-    sortRoute.computeDistance(matDist);
-
-    std::sort(sortRoute.vetSortRoute.begin(), sortRoute.vetSortRoute.end());
-    HashSortRoute hashSortRoute(sortRoute);
-
-    if(multsetSourRoute.count(hashSortRoute) >= 1)
-    {
-        auto it = multsetSourRoute.find(hashSortRoute);
-
-        bool equalDist = false;
-
-        while(it != multsetSourRoute.end())
-        {
-
-            if(doubleLessEqual((*it).sortRoute.dist, sortRoute.dist), 1E-5)
-            {
-                vetSortRoute.pop_back();
-                return true;
-            }
-
-            ++it;
-        }
-
-        std::cout << "Route Repeted\n";
-    }
-
-    multsetSourRoute.insert(hashSortRoute);
-    return false;
-}
 
 void LabelingAlgorithmNS::SortRoute::computeDistance(const EigenMatrixRowD &matDist)
 {

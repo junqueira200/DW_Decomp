@@ -106,9 +106,8 @@ class VrpLabelingSubProb// : public DW_DecompNS::SubProb
                              bool				exact);
 
     bool checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi);
-    bool
-    checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol);
-    void convertRouteIntoLabel(const TestNS::Route &route, LabelingAlgorithmNS::Label *label);
+    //bool checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol);
+    //void convertRouteIntoLabel(const TestNS::Route &route, LabelingAlgorithmNS::Label *label);
 
 }; // END MySubProb
 

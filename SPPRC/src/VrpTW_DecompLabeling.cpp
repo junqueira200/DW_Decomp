@@ -44,7 +44,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
 
     std::printf("instVrpTw->capVeic: %d\n", instVrpTw->capVeic);
 
-    vetStepSize[1].stepSize = 1000;//instVrpTw->capVeic / numSteps; // 50
+    vetStepSize[1].stepSize = 2000;//instVrpTw->capVeic / numSteps; // 50
     vetStepSize[1].start = 0;
     vetStepSize[1].end = (FloatType)instVrpTw->capVeic+1;
 
@@ -58,22 +58,29 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
         Vet3D_ResCost(instVrpTw->numClientes + 1, instVrpTw->numClientes + 1, 2);
     vetMatResCostBackward.setVal(0.0);
 
-    /*double val = vetStepSize[0].start;
+    double val = vetStepSize[0].start;
+    std::printf("Resorce 0: %d\n", labelingData.vetNumSteps(0));
+    std::printf("\nResorce 1: %d\n", labelingData.vetNumSteps(0));
+    std::printf("start: %f\n", vetStepSize[0].start);
+
     for(int i=0; i < labelingData.vetNumSteps(0); ++i)
     {
-        //std::cout<<"["<<val<<";"<<val+vetStepSize[0].stepSize<<") ";
+        std::cout<<"["<<val<<";"<<val+vetStepSize[0].stepSize<<") ";
         val += vetStepSize[0].stepSize;
     }
 
-    //std::cout<<"\n\n";
+    std::cout<<"\n\n";
+
+    std::printf("\nResorce 1: %d\n", labelingData.vetNumSteps(1));
+    std::printf("start: %f\n", vetStepSize[1].start);
 
     val = vetStepSize[1].start;
     for(int i=0; i < labelingData.vetNumSteps(1); ++i)
     {
-        //std::cout<<"["<<val<<";"<<val+vetStepSize[1].stepSize<<") ";
+        std::cout<<"["<<val<<";"<<val+vetStepSize[1].stepSize<<") ";
         val += vetStepSize[1].stepSize;
     }
-    */
+
     // std::cout<<"\n";
 
     for(int i = 0; i < instVrpTw->numClientes + 1; ++i)
@@ -174,6 +181,7 @@ bool VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesFinal(
     return ret;
 }
 
+/*
 bool VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesMid(
     Eigen::RowVectorXd &vetRowPi,
     Eigen::MatrixXd    &matColX,
@@ -287,6 +295,7 @@ bool VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesMid(
 
     return addRoute;
 }
+*/
 
 int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(
     const Eigen::VectorXd        &vetC,
@@ -808,10 +817,16 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                                    instVrpTw->capVeic);
 
             if(reducedCostNeg)
+            {
+                fflush(stdout);
+                std::cout.flush();
                 return numSol;
+            }
         }
 
         sizeVetRoutesOut = 0;
+        fflush(stdout);
+        std::cout.flush();
         return 0;
     }
 
@@ -839,6 +854,9 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                            sizeVetRoutesOut,
                            instVrpTw->capVeic);
 
+    fflush(stdout);
+    std::cout.flush();
+
     return numSol;
 
 }
@@ -859,6 +877,7 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::setTypeLabelToBidirectional()
     typeLabel = LabelingAlgorithmNS::AlgBidirectional;
 }
 
+/*
 void VrpTW_DecompLabelingNS::VrpLabelingSubProb::convertRouteIntoLabel(
     const TestNS::Route        &route,
     LabelingAlgorithmNS::Label *label)
@@ -886,6 +905,7 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::convertRouteIntoLabel(
 
     label->tamRoute = (int)route.vetRoute.size();
 }
+*/
 
 /*
 VrpTW_DecompLabelingNS::CapacityCut::CapacityCut(InstanceVRPTW_NS::InstanceVRPTW &instVrpTw,
