@@ -68,7 +68,7 @@ class Input
     bool        useCm 						= true;
     // 0 valid only in the beginning; 1 valid at all stops, without change positions;
     // 2 valid at all stops with change in positions
-    int			modelType					= 0;
+    int			modelType					= 1;
 
     int    		gaPopulationSize 			= 400; // 200
     int    		gaNumberOfGenerations 		= 1000;

@@ -55,15 +55,13 @@ void getRouteItems(const SolucaoNS::Rota &rota, VectorI &outItemIds)
 /**
  * @brief Evaluates whether placing itemId at point p with rotation r is locally feasible.
  */
-static bool isPlacementFeasible(
-    const Bin           &bin,
-    Rota                &rota,
-    int                  itemId,
-    const Ponto         &p,
-    InstanceNS::Rotation r,
-    // Eigen::Matrix<int, -1, -1, Eigen::RowMajor> &matSupportItems, // Now unused in this function
-    double sumM,
-    double sumF)
+static bool isPlacementFeasible(const Bin           &bin,
+                                Rota                &rota,
+                                int                  itemId,
+                                const Ponto         &p,
+                                InstanceNS::Rotation r,
+                                double sumM,
+                                double sumF)
 {
     Item &item = instanciaG.vetItens[itemId];
 
@@ -237,6 +235,7 @@ static bool isPlacementFeasible(
     }
 
     // 5. Lateral load balance check
+    /*
     if(ParseInputNS::input.balancedLoading && !ParseInputNS::input.comprimentoAlturaIguais1)
     {
         double width = item.getDimRotacionada(1, r);
@@ -252,6 +251,7 @@ static bool isPlacementFeasible(
             return false;
         }
     }
+    */
 
     // 6. Left Compactness Check (Prevent floating gaps on the left side)
     if(ParseInputNS::input.compactness && p.vetDim[0] > 1e-4) // Not touching the left truck wall
@@ -351,11 +351,11 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
     static VectorI sortedItems(MaxNumItemsBin);
     assertm(numItems > MaxNumItemsBin, "Error, numItems is greater them MaxNumItemsBin\n");
 
-    // std::printf("size itemIds: %d\nItems: ", numItems);
+    //std::printf("size itemIds: %d\nItems: ", numItems);
 
-    // for(int i=0; i < numItems; ++i)
-    //	std::printf("%d ", itemIds[i]);
-    // std::printf("\n\n");
+    //for(int i=0; i < numItems; ++i)
+    //    std::printf("%d ", itemIds[i]);
+    //std::printf("\n\n");
 
     uint64_t it = 0;
     uint64_t itMax = 10000;
@@ -376,7 +376,7 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
 
     for(it = 0; it < itMax; ++it)
     {
-        // std::printf("it: %lld\n", it);
+        //std::printf("it: %lld\n", it);
         if(input.maxTimePackingHeuristic > 0 && doStop() && sortItemIds)
         {
             // std::printf("doStop: %d\n", doStop());
