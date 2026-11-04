@@ -43,7 +43,8 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
                       int                 numItems,
                       bool                sortItemIds = true,
                       bool                print = false,
-                      SolucaoNS::Penalty *penalty = nullptr);
+                      SolucaoNS::Penalty *penalty = nullptr,
+                      bool				  resetBin = false);
 
 /**
  * @brief Collects all item IDs associated with the customers along the route.

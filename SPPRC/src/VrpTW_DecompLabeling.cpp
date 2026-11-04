@@ -35,7 +35,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
     }
 
     instVrpTw = &instVrpTw_;
-    double numSteps = 35.0; // 2
+    double numSteps = 20.0; // 2
 
     // vetStepSize[0].stepSize = 400;
     vetStepSize[0].stepSize = 10000000.0; // 200
@@ -44,7 +44,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
 
     std::printf("instVrpTw->capVeic: %d\n", instVrpTw->capVeic);
 
-    vetStepSize[1].stepSize = 2000;//instVrpTw->capVeic / numSteps; // 50
+    vetStepSize[1].stepSize = instVrpTw->capVeic / numSteps; // 50
     vetStepSize[1].start = 0;
     vetStepSize[1].end = (FloatType)instVrpTw->capVeic+1;
 
@@ -762,6 +762,10 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     static Eigen::VectorXd vetDist(instVrpTw->numClientes + 1);
     static EigenMatrixRowD matDp(instVrpTw->numClientes + 1, instVrpTw->capVeic+1);
     EigenMatrixRowD       *ptrMatDp = nullptr;
+
+    if(exact)
+        ptrMatDp = nullptr;
+
     vetDist.setConstant(-MaxFloatType);
 
 
@@ -789,7 +793,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     if(!exact)
     {
-        for(int i=1; i <= 2; ++i)
+        for(int i=1; i <= 4; ++i)
         {
             bool reducedCostNeg =
             bidirectionalAlgorithm(2,

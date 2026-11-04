@@ -103,6 +103,8 @@ constexpr int PackingErroSize = PackingErroFragility + 1;
 
 inline Array<int, PackingErroSize> vetPackinErros;
 
+void printVetPackingErros();
+
 INLINE
 std::string plotVetPackinErros()
 {

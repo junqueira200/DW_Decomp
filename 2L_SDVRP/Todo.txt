@@ -1,0 +1,2 @@
+- Re-run results for MODEL on problem version 3 and check with me before sending!
+- Try to build a heuristic with Claude on problem version 3

@@ -66,18 +66,19 @@ class Input
     double      maxTimePackingHeuristic 	= 3.0;
     bool        fragility 					= true;
     bool        useCm 						= true;
+    bool		useTopItem					= false;
     // 0 valid only in the beginning; 1 valid at all stops, without change positions;
     // 2 valid at all stops with change in positions
     int			modelType					= 1;
 
-    int    		gaPopulationSize 			= 400; // 200
-    int    		gaNumberOfGenerations 		= 1000;
-    double 		gaDiscartPercetence			= 0.2; // 0.05 // 0.2
-    double 		gaElitePercetence 			= 0.2;   // 0.10 // 0.2
+    int    		gaPopulationSize 			= 800; // 1000;
+    int    		gaNumberOfGenerations 		= 400; // 400
+    double 		gaDiscartPercetence			= 0.2;
+    double 		gaElitePercetence 			= 0.2;
     double 		gaProbToInheritFromElite 	= 0.8;
-    int    		gaNumberOfIslands 			= 4; // 8
-    int    		gaMigrationInterval			= 20;
-    double 		gaMigrationRate				= 0.04;
+    int    		gaNumberOfIslands 			= 4;
+    int    		gaMigrationInterval			= 50;
+    double 		gaMigrationRate				= 0.06;
 
     // bool		inst3d                   = true;
 
@@ -86,8 +87,10 @@ class Input
     Input()
     {
         arrayPenaltyWeight.fill(1.0);
-        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::Compactness] = 2.0;
+        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::Compactness] = 50.0;
         arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::AxleWeights] = 2.0;
+        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::Support]     = 20.0;
+        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::Lifo]		  = 10.0;
     }
 };
 

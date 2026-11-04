@@ -970,6 +970,7 @@ void setOroloc3DProblem(int doPrint)
     input.removeFromShortSide 	= false;
     // input.useCm					= false;
 
+    /*
     std::printf("Solving Problem:\n\taxleWights: \t\t %d \n", input.axleWights);
     std::printf("\tbalancedLoading: \t %d\n", input.balancedLoading);
     std::printf("\tcompactness: \t\t %d\n", input.compactness);
@@ -977,9 +978,73 @@ void setOroloc3DProblem(int doPrint)
     std::printf("\tmlifo: \t\t\t %d\n", input.mlifo);
     std::printf("\tuseCm: \t\t\t %d\n", input.useCm);
 
+
+    std::printf("--- Genetic Algorithm Configuration ---\n"
+                "Population Size:             %d\n"
+                "Number of Generations:       %d\n"
+                "Discard Percentage:          %.2f\n"
+                "Elite Percentage:            %.2f\n"
+                "Prob. to Inherit from Elite: %.2f\n"
+                "Number of Islands:           %d\n"
+                "Migration Interval:          %d\n"
+                "Migration Rate:              %.2f\n"
+                "---------------------------------------\n",
+                input.gaPopulationSize,
+                input.gaNumberOfGenerations,
+                input.gaDiscartPercetence,
+                input.gaElitePercetence,
+                input.gaProbToInheritFromElite,
+                input.gaNumberOfIslands,
+                input.gaMigrationInterval,
+                input.gaMigrationRate);
+
+    */
+
+    std::printf("Solving Problem:\n"
+                "\taxleWights:                  %d\n"
+                "\tbalancedLoading:             %d\n"
+                "\tcompactness:                 %d\n"
+                "\tlifo:                        %d\n"
+                "\tmlifo:                       %d\n"
+                "\tuseCm:                       %d\n"
+                "\tModelType:                   %d\n"
+                "--- Genetic Algorithm Configuration ---\n"
+                "\tPopulation Size:             %d\n"
+                "\tNumber of Generations:       %d\n"
+                "\tDiscard Percentage:          %.2f\n"
+                "\tElite Percentage:            %.2f\n"
+                "\tProb. to Inherit from Elite: %.2f\n"
+                "\tNumber of Islands:           %d\n"
+                "\tMigration Interval:          %d\n"
+                "\tMigration Rate:              %.2f\n"
+                "---------------------------------------\n\n",
+                input.axleWights,
+                input.balancedLoading,
+                input.compactness,
+                input.lifo,
+                input.mlifo,
+                input.useCm,
+                input.modelType,
+                input.gaPopulationSize,
+                input.gaNumberOfGenerations,
+                input.gaDiscartPercetence,
+                input.gaElitePercetence,
+                input.gaProbToInheritFromElite,
+                input.gaNumberOfIslands,
+                input.gaMigrationInterval,
+                input.gaMigrationRate);
+
+    std::printf("Model: %d\n\n", input.modelType);
+
     if(input.mlifo && !input.lifo)
     {
         std::printf("Error, lifo needs to be active when mlifo is!\n");
+        PRINT_THROW();
+    }
+
+    if(input.useTopItem && input.modelType >= 1)
+    {
+        std::printf("ERROR, useTopItem cant be active with modelType >= 1\n");
         PRINT_THROW();
     }
 }

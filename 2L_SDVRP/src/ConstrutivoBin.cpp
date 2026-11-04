@@ -808,3 +808,16 @@ bool ConstrutivoBinNS::checkIfPackedAllTheItems(const SolucaoNS::Bin &bin,
 
     return true;
 }
+
+void ConstrutivoBinNS::printVetPackingErros()
+{
+    const char *PackingErroNames[] = {
+                                      "Geometric", "Lifo  ", "Support", "AxleWights", "LoadBalancing", "Compactness", "Fragility"};
+
+    for(int i = 0; i < PackingErroSize; ++i)
+    {
+        std::printf("%s: \t %d\n", PackingErroNames[i], vetPackinErros[i]);
+    }
+
+    std::printf("\n\n");
+}

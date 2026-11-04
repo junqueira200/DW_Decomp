@@ -1108,7 +1108,10 @@ void ContainerLoadingCP::AddConstraints()
     if(input.compactness)
     {
         // std::printf("Ini Compactness\n");
-        // CreateTopItem();
+
+        if(input.useTopItem)
+            CreateTopItem();
+
         CreateCompactnessItem();
         // std::printf("Ini CreateOnLeftConstraints\n");
         CreateOnLeftConstraints();
@@ -1881,19 +1884,39 @@ void ContainerLoadingCP::CreateCompactnessArea()
             mItems[i].Dx * mItems[i].Dz));
             */
 
-            mModelCP
-                .AddGreaterOrEqual(
-                    supportedAreaExpr,
-                    static_cast<int64_t>(std::ceil(msupportAreaLeft * mItems[i].Dy * mItems[i].Dz)))
-                .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][NoRotation]});
-            // mTopBool[i].Not()});
+            if(!input.useTopItem)
+            {
+                mModelCP
+                    .AddGreaterOrEqual(
+                        supportedAreaExpr,
+                        static_cast<int64_t>(std::ceil(msupportAreaLeft * mItems[i].Dy * mItems[i].Dz)))
+                    .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][NoRotation]});
+                // mTopBool[i].Not()});
 
-            mModelCP
-                .AddGreaterOrEqual(
-                    supportedAreaExpr,
-                    static_cast<int64_t>(std::ceil(msupportAreaLeft * mItems[i].Dx * mItems[i].Dz)))
-                .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][RotationZ]});
-            // mTopBool[i].Not()});
+                mModelCP
+                    .AddGreaterOrEqual(
+                        supportedAreaExpr,
+                        static_cast<int64_t>(std::ceil(msupportAreaLeft * mItems[i].Dx * mItems[i].Dz)))
+                    .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][RotationZ]});
+                // mTopBool[i].Not()});
+
+            }
+            else
+            {
+                mModelCP
+                    .AddGreaterOrEqual(
+                        supportedAreaExpr,
+                        static_cast<int64_t>(std::ceil(msupportAreaLeft * mItems[i].Dy * mItems[i].Dz)))
+                    .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][NoRotation],
+                                    mTopBool[i].Not()});
+
+                mModelCP
+                    .AddGreaterOrEqual(
+                        supportedAreaExpr,
+                        static_cast<int64_t>(std::ceil(msupportAreaLeft * mItems[i].Dx * mItems[i].Dz)))
+                    .OnlyEnforceIf({mPlacedOnLeft[i].Not(), mOrientation[i][RotationZ],
+                                    mTopBool[i].Not()});
+            }
         }
 
         if(input.modelType == 0)

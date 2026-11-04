@@ -347,7 +347,7 @@ int main(int argc, const char *argv[])
     testeOroloc3D_2();
 
     const char *PackingErroNames[] = {
-        "Geometric", "Lifo", "Support", "AxleWights", "LoadBalancing", "Compactness", "Fragility"};
+        "Geometric", "Lifo  ", "Support", "AxleWights", "LoadBalancing", "Compactness", "Fragility"};
 
     for(int i = 0; i < PackingErroSize; ++i)
     {

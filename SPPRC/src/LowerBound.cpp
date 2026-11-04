@@ -76,6 +76,14 @@ bool LowerBoundNS::getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost &v
     for(int i=0; i <= capacity_Q; ++i)
         matDp(dest, i) = 0.0;
 
+    for (int u = 0; u < lastNode; ++u)
+    {
+        if (u != dest)
+        {
+            matDp(u, 0) = vetMatResCost(u, dest, 0);
+        }
+    }
+
     for(int r=1; r <= capacity_Q; ++r)
     {
         for(int u=0; u < lastNode; ++u)
@@ -103,8 +111,7 @@ bool LowerBoundNS::getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost &v
                 }
             }
 
-            if(r > 0)
-                matDp(u, r) = std::min(matDp(u, r), matDp(u, r-1));
+            matDp(u, r) = std::min(matDp(u, r), matDp(u, r-1));
 
         }
     }

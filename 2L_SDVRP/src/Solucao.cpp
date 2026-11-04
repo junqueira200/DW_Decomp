@@ -1965,3 +1965,34 @@ double SolucaoNS::Penalty::getValue()
     else
         return 0.0;
 }
+
+bool SolucaoNS::binAreEqual(Bin &bin0, Bin &bin1)
+{
+    if(bin0.numItens != bin1.numItens)
+        return false;
+
+    // Check points
+    for(int i=0; i < bin0.numItens; ++i)
+    {
+        bool found = false;
+        for(int j=0; j < bin1.numItens; ++j)
+        {
+            if(bin0.vetItemId[i] == bin1.vetItemId[j])
+            {
+                if(!pontosIguais(bin0.vetPosItem[i], bin1.vetPosItem[j]))
+                    return false;
+
+                if(bin0.vetRotacao[i] != bin1.vetRotacao[j])
+                    return false;
+
+                found = true;
+                break;
+            }
+        }
+
+        if(!found)
+            return false;
+    }
+
+    return true;
+}

@@ -586,6 +586,9 @@ bool checkCompactness(Bin           &bin,
                       const VectorI &vetTop,
                       std::string   *strError = nullptr,
                       VectorI       *vetSumAreasLeftPtr = nullptr);
+
+bool binAreEqual(Bin& bin0, Bin& bin1);
+
 } // namespace SolucaoNS
 
 #endif // INC_2L_SDVRP_SOLUCAO_H

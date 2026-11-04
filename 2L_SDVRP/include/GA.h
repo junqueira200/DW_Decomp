@@ -18,10 +18,12 @@ using RandomKeyPair = std::pair<double, RandomKeyNS::RandomKey *>;
 namespace GA_NS
 {
 
-bool ga(SolucaoNS::Bin      &bin,
-        SolucaoNS::Rota     &route,
-        const VectorI *const vetItems = nullptr,
-        int                  sizeVetItems = 0);
+bool ga(SolucaoNS::Bin      	&bin,
+        SolucaoNS::Rota     	&route,
+        const VectorI *const 	vetItems = nullptr,
+        int                  	sizeVetItems = 0,
+        Vector<SolucaoNS::Bin>	*ptrVetBin = nullptr);
+
 void startPopulation(Vector<RandomKeyPair> &vetRandKey, int vetItemsSize);
 } // namespace GA_NS
 

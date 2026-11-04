@@ -22,7 +22,8 @@ using namespace LowerBoundNS;
 
 // These routes will be tracked during the labeling algorithm
 inline Vector<VectorI>                                 vetRoutesG;
-inline MemoryPool_NS::Pool<LabelingAlgorithmNS::Label> labelPoolG;
+typedef MemoryPool_NS::Pool<LabelingAlgorithmNS::Label> LabelPool;
+inline Vector<LabelPool> vetLabelPoolG;
 inline bool                                            startLabelPoolG = false;
 
 void LabelingAlgorithmNS::startGlobalMemory(const Vector<VectorI> &vetRoutes)
@@ -98,10 +99,6 @@ void LabelingAlgorithmNS::NgSet::setNgSets(const EigenMatrixRowD &matDist)
             break;
     }
 }
-
-Label *LabelingAlgorithmNS::getLabel() { return labelPoolG.getT(); }
-
-void LabelingAlgorithmNS::rmLabel(Label *label) { labelPoolG.delT(label); }
 
 void LabelingAlgorithmNS::checkHeap(LabelHeap &heap, LabelingData &lData)
 {
@@ -278,18 +275,24 @@ bool LabelingAlgorithmNS::
     if(!startLabelPoolG)
     {
         startLabelPoolG = true;
-        labelPoolG.startPool(5, 100);
+        vetLabelPoolG = Vector<LabelPool>(dest+1);
+        for(LabelPool& pool:vetLabelPoolG)
+            pool.startPool(2, 100);
+    }
+    else
+    {
+        for(LabelPool& pool:vetLabelPoolG)
+            pool.resetPool(false);
     }
 
-    labelPoolG.resetPool(false);
     lData.flushLabel();
 
-    static LabelHeap labelHeap(100000);
+    //static LabelHeap labelHeap(100000);
     // labelHeap.vet.setAll(nullptr);
-    labelHeap.heapSize = 0;
+    //labelHeap.heapSize = 0;
 
-    Label *labelPtr = labelPoolG.getT();
-    Label *labelBackwardPtr = labelPoolG.getT();
+    Label *labelPtr = nullptr;//vetLabelPoolG[0].getT();
+    Label *labelBackwardPtr = nullptr;//vetLabelPoolG[dest].getT();
 
     // labelPtr->vetResources.setZero();
     // labelBackwardPtr->vetResources.setZero();
@@ -301,6 +304,7 @@ bool LabelingAlgorithmNS::
 
     if(labelingTypeAlg == AlgForward || labelingTypeAlg == AlgBidirectional)
     {
+        labelPtr = vetLabelPoolG[0].getT();
 
         // TODO create a start label
         // labelPtr->vetResources.setZero();
@@ -322,14 +326,16 @@ bool LabelingAlgorithmNS::
         lData.vetMatBucketForward[0].mat(i, j).vetPtrLabel[0] = labelPtr;
         lData.vetMatBucketForward[0].mat(i, j).sizeVetPtrLabel = 1;
 
-        labelHeap.insertKey(labelPtr);
+        //labelHeap.insertKey(labelPtr);
     }
 
     if(labelingTypeAlg == AlgBackward || labelingTypeAlg == AlgBidirectional)
     {
+        labelBackwardPtr = vetLabelPoolG[dest].getT();
+
         startBackwardLabel(
             labelBackwardPtr, vetBackwardMask, matBoundRes, numRes, dest, 0.0, i, lData);
-        labelHeap.insertKey(labelBackwardPtr);
+        //labelHeap.insertKey(labelBackwardPtr);
         invertRoutes(vetRoutesG);
         labelBackwardPtr->index = nextIndex;
         nextIndex += 1;
@@ -382,451 +388,465 @@ bool LabelingAlgorithmNS::
     int& sizeMatForwardDest = lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel;
     bool doPrint = true;
 
-    while(!labelHeap.empty() && ((sizeMatForwardDest < NumMaxSolSubProb) || exact))
+    auto funcStop = [&]()
     {
-        if(!exact && numIt >= 500 && sizeMatForwardDest >= 20)
-            break;
+        if(!exact && ((numIt >= 500 && sizeMatForwardDest >= 20)    ||
+                      (numIt >= 1000 && sizeMatForwardDest >= 15)   ||
+                      (numIt >= 10000 && sizeMatForwardDest >= 10)  ||
+                      (numIt >= 100000 && sizeMatForwardDest >= 5)  ||
+                      (numIt >= 1000000 && sizeMatForwardDest >= 1) ||
+                      (sizeMatForwardDest == NumMaxSolSubProb)))
+            return true;
 
-        if(!exact && numIt >= 1000 && sizeMatForwardDest >= 15)
-            break;
+        return false;
+    };
 
-        if(!exact && numIt >= 10000 && sizeMatForwardDest >= 10)
-            break;
+    bool doContinue = true;
+    while(doContinue)
+    {
+        doContinue = false;
 
-        if(!exact && numIt >= 100000 && sizeMatForwardDest >= 5)
-            break;
-
-        if(!exact && numIt >= 1000000 && sizeMatForwardDest >= 1)
-            break;
-
-        if(doPrint && exact && numIt >= 1000000)
+        for(int j=0; j < lData.vetNumSteps[1]; ++j)
         {
-            doPrint = false;
-            std::printf("numIt: %d\n", numIt);
-        }
-        // std::cout<<"While\n";
-        //  																 10
-        //  25
+            if(funcStop())
+                break;
 
-        /*
-        if((lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel >= 10 &&
-        labelHeap.heapSize >= 50 * numCust && !exact))
-        {
-            break;
-        }
-        */
-
-        // checkHeap(labelHeap, lData);
-        // lData.checkVetMatBucketBackward();
-
-        if(ptrLabelTarget)
-        {
-            std::cout << "ptrLabelTarget(" << ptrLabelTarget->active << "): " << *ptrLabelTarget
-                      << "\n\n";
-        }
-
-        if(labelHeap.heapSize > localNumMaxLabel && DominaIterBuckets)
-        {
-            lData.dominanceInterBuckets(
-                labelHeap, numRes, localNumMaxLabel, lData.vetMatBucketForward, Backward);
-
-            if(labelHeap.heapSize > localNumMaxLabel)
+            for(int i=0; i < lData.vetNumSteps[0]; ++i)
             {
-                int max = std::max(labelHeap.heapSize, localNumMaxLabel);
-                localNumMaxLabel = (int)(max * 2);
-            }
+                if(funcStop())
+                    break;
 
-            // if(exactLabelingG)
-            {
-                // std::cout << "heapSize: " << labelHeap.heapSize << "\n";//";
-                // maxHeapSize:" << localNumMaxLabel << "; maxDist:"
-                //<< maxDistG << "; minDist: " << minDistG << "\n";
-            }
-        }
-
-        localNumMaxLabel = std::max(localNumMaxLabel, (int)labelHeap.heapSize);
-
-        // lData.checkLabels();
-
-        maxSize = std::max(maxSize, labelHeap.heapSize);
-
-        if(Print && PrintG)
-            std::cout << "numIt: " << numIt << "\n";
-
-        labelPtr = labelHeap.extractTop();
-        if(labelPtr == nullptr)
-        {
-
-            std::cout << "listLabel have a nullptr\n";
-            PRINT_DEBUG("", "");
-            throw "ERRO";
-        }
-
-        if(!labelPtr->active)
-        {
-            // Remove labelPtr from vetMatBucket
-            //lData.removeLabel(labelPtr);
-
-            labelPoolG.delT(labelPtr);
-            continue;
-            //std::cout << "All labels shuld be active!\n";
-            //PRINT_EXIT();
-        }
-
-        // bool haveRoute = labelHaveRoute(vetRoutesG, labelPtr);
-
-        if((PrintG && Print) || exactLabelingG)
-        {
-            std::cout << "labelPtr: " << labelPtr << "\n";
-            std::cout << *labelPtr << "\n\n";
-        }
-
-        // std::cout<<"Extract label("<<labelPtr->vetRoute<<")\n";
-        int lastCust = labelPtr->cust;
-
-        /*
-        if(!labelPtr->active)
-        {
-            std::cout<<"labelPtr is not active!\n"<<*labelPtr<<"\n";
-            PRINT_DEBUG("", "");
-            throw "ERROR";
-
-            labelPoolG.delT(labelPtr);
-            continue;
-        }
-        */
-
-        if(lastCust == dest && labelPtr->typeLabel == Forward)
-        {
-            if(Print && PrintG)
-                std::cout << "lastCust==dest(" << dest << ")\n";
-            continue;
-        }
-
-        if(lastCust == 0 && labelPtr->typeLabel == Backward)
-            continue;
-
-        // Remove labelPtr from vetMatBucket
-        lData.removeLabel(labelPtr);
-
-        /*
-        if(labelPtr->tamRoute >= numCust + 1)
-        {
-            labelPoolG.delT(labelPtr);
-            continue;
-        }
-        */
-
-        // Extend label
-        bool rmLabel = true;
-
-        for(int t = 0; t < numCust; ++t)
-        {
-            int tAux = t;
-            // std::cout<<"t: "<<t<<"\n";
-            if(labelPtr->typeLabel == Forward &&
-               vetMatResCostForward(labelPtr->cust, t, 0) == InfFloatType)
-                continue;
-
-            else if(labelPtr->typeLabel == Backward &&
-                    vetMatResCostBackward(t, labelPtr->cust, 0) == InfFloatType)
-                continue;
-
-            if(labelPtr->bitSetNg[t] == 1 || t == labelPtr->cust)
-                continue;
-
-            if(labelPtr->typeLabel == Backward && t == (numCust - 1))
-                continue;
-
-            if(Print && PrintG)
-                std::cout << "\tt(" << t << ")\n";
-
-            Label *labelPtrAux = labelPoolG.getT();
-            if(labelPtrAux == nullptr)
-            {
-                std::cout << "Pool.getT return nullptr!";
-                PRINT_DEBUG("", "");
-                throw "ERRO";
-            }
-
-            /*
-            if(labelPtrAux->it == nullptr)
-            {
-                LabelSetIt* labelSetIt = new LabelSetIt;
-                labelPtrAux->it = (void*)labelSetIt;
-            }
-            */
-
-            if(extendLabel(labelPtr,
-                           labelPtrAux,
-                           vetMatResCostForward,
-                           vetMatResCostBackward,
-                           matBoundRes,
-                           labelPtr->cust,
-                           t,
-                           ngSet,
-                           numRes,
-                           vetBackwardMask))
-            {
-                rmLabel = false;
-
-                if(ptrMatDp)
+                for(int cust = 0; cust < dest; ++cust)
                 {
-                    int rem_cap = capacity_Q - labelPtrAux->vetResources[1];
+                    if(funcStop())
+                        break;
 
-                    double compBounds = (*ptrMatDp)(labelPtrAux->cust, rem_cap);
-                    if((labelPtrAux->vetResources[0]+compBounds) >= 0.0)
+                    MatBucket &matBucket = lData.vetMatBucketForward[cust];
+                    Bucket& bucket = matBucket.mat(i, j);
+                    for(int t=(bucket.sizeVetPtrLabel-1); t >= 0; --t)
                     {
-                        labelPoolG.delT(labelPtrAux);
-                        continue; // for t
-                    }
-                }
+                        if(funcStop())
+                            break;
 
-                if(extentToHalfCapacity && ((labelPtrAux->typeLabel == Forward &&
-                                             labelPtrAux->vetResources[1] > halfCapacity) ||
-                                            (labelPtrAux->typeLabel == Backward &&
-                                             labelPtrAux->vetResources[1] < halfCapacity)))
-                {
-                    labelPoolG.delT(labelPtrAux);
-                    continue; // for t
-                }
+                        if(ptrLabelTarget)
+                        {
+                            std::cout << "ptrLabelTarget(" << ptrLabelTarget->active << "): " << *ptrLabelTarget
+                                      << "\n\n";
+                        }
 
-                labelPtrAux->index = nextIndex++;
+                        /*
+                        if(labelHeap.heapSize > localNumMaxLabel && DominaIterBuckets)
+                        {
+                            lData.dominanceInterBuckets(
+                                labelHeap, numRes, localNumMaxLabel, lData.vetMatBucketForward, Backward);
 
-                /*
-                bool haveRoute = false;
-                if(TrackingRoutes)
-                {
-                    haveRoute = labelHaveRoute(vetRoutesG, labelPtrAux);
-                    if(haveRoute)
-                        std::cout << "\tFind route(" << printRoute(labelPtrAux)
-                                  << ") in vector of routes; Parcial route created!\n";
-                }
-                */
+                             if(labelHeap.heapSize > localNumMaxLabel)
+                             {
+                                 int max = std::max(labelHeap.heapSize, localNumMaxLabel);
+                                 localNumMaxLabel = (int)(max * 2);
+                             }
+                         }
+                         */
 
-                if(Print && PrintG)
-                    std::cout << "\t" << *labelPtrAux << "\n";
-
-                int correctPos = 0;
-
-                if(t == dest && labelPtrAux->typeLabel == Forward)
-                {
-                    if(labelPtrAux->vetResources[0] >= -TolObjSubProb)
-                    {
-
-                        labelPoolG.delT(labelPtrAux);
-                        continue;
-                    }
-
-                    /*
-                    removeCycles2(*labelPtrAux, numCust);
-                    updateLabelCost(*labelPtrAux, vetMatResCostForward, labelStart);
+                               //localNumMaxLabel = std::max(localNumMaxLabel, (int)labelHeap.heapSize);
 
 
-                    if(labelPtrAux->vetResources[0] >= -DW_DecompNS::TolObjSubProb)
-                    {
+                               //maxSize = std::max(maxSize, labelHeap.heapSize);
 
-                        labelPoolG.delT(labelPtrAux);
-                        continue;
-                    }
-                    */
-                }
+                        if(Print && PrintG)
+                            std::cout << "numIt: " << numIt << "\n";
 
-                if(t == 0 && labelPtrAux->typeLabel == Backward)
-                {
+                        labelPtr = bucket.vetPtrLabel[t];
+                        bucket.sizeVetPtrLabel -= 1;
 
-                    // applyLabelMask(labelPtrAux, numRes, vetBackwardMask);
-                    if(labelPtrAux->vetResources[0] >= -TolObjSubProb)
-                    {
-                        labelPoolG.delT(labelPtrAux);
-                        continue;
-                    }
-
-                    // removeCycles2(*labelPtrAux, numCust);
-
-                    if(labelPtrAux->vetResources[0] >= -TolObjSubProb)
-                    {
-
-                        labelPoolG.delT(labelPtrAux);
-                        continue;
-                    }
-
-                    // change the backward type to forward
-                    convertLabelBackwardToForward(labelPtrAux, vetMaxResources, numRes);
-                    labelPtrAux->cust = dest;
-                    labelPtrAux->i = 0;
-                    labelPtrAux->j = 0;
-                    tAux = dest;
-
-                    /*
-                    static int numP = 0;
-                    std::cout<<*labelPtrAux<<"\n\n";
-                    if(numP == 5)
-                        exit(-1);
-
-                    numP += 1;
-                    */
-                }
-
-                /*
-                if(tAux == dest)
-                {
-                    if(checkIfRouteIsInSet(labelPtrAux, vetSortRoute, multsetSourRoute,
-                lData.matDist))
-                    {
-                        labelPoolG.delT(labelPtrAux);
-                        continue;
-                    }
-                }
-                */
-
-                Bucket *bucket = nullptr;
-                if(SortLabels)
-                    bucket = dominanceIntraBucketFast0(
-                        tAux, labelPtrAux, lData, &labelHeap, numRes, dest, correctPos);
-                else
-                    bucket = dominanceIntraBucketSlow(
-                        tAux, labelPtrAux, lData, &labelHeap, numRes, dest, correctPos);
-
-                if(!bucket)
-                {
-                    // std::cout<<"bucket is null\n";
-                    labelPoolG.delT(labelPtrAux);
-                    continue;
-                }
-
-                if((vetValueOfReducedCostsG.size() + 1) < vetValueOfReducedCostsG.capacity())
-                    vetValueOfReducedCostsG.push_back(labelPtrAux->vetResources[0]);
-
-                if((bucket->sizeVetPtrLabel + 1) > NumMaxLabePerBucket && tAux != dest)
-                {
-                    if(SortLabels)
-                    {
-                        if(correctPos == (bucket->sizeVetPtrLabel))
+                        if(labelPtr == nullptr)
                         {
 
-                            labelPoolG.delT(labelPtrAux);
+                            std::cout << "listLabel have a nullptr\n";
+                            PRINT_DEBUG("", "");
+                            throw "ERRO";
+                        }
+
+                        if(!labelPtr->active)
+                        {
+                            // Remove labelPtr from vetMatBucket
+                            //lData.removeLabel(labelPtr);
+
+                            vetLabelPoolG[cust].delT(labelPtr);
+                            continue;
+                            //std::cout << "All labels shuld be active!\n";
+                            //PRINT_EXIT();
+                        }
+
+                               // bool haveRoute = labelHaveRoute(vetRoutesG, labelPtr);
+
+                        if((PrintG && Print) || exactLabelingG)
+                        {
+                            std::cout << "labelPtr: " << labelPtr << "\n";
+                            std::cout << *labelPtr << "\n\n";
+                        }
+
+                               // std::cout<<"Extract label("<<labelPtr->vetRoute<<")\n";
+                        int lastCust = labelPtr->cust;
+
+                        /*
+                        if(!labelPtr->active)
+                        {
+                            std::cout<<"labelPtr is not active!\n"<<*labelPtr<<"\n";
+                            PRINT_DEBUG("", "");
+                            throw "ERROR";
+
+                             labelPoolG.delT(labelPtr);
+                             continue;
+                         }
+                         */
+
+                        if(lastCust == dest && labelPtr->typeLabel == Forward)
+                        {
+                            if(Print && PrintG)
+                                std::cout << "lastCust==dest(" << dest << ")\n";
                             continue;
                         }
 
-                        Label *del = bucket->vetPtrLabel[bucket->sizeVetPtrLabel - 1];
-                        bucket->removeElement(bucket->sizeVetPtrLabel - 1);
-                        labelHeap.deleteKey(del->posHeap);
-                        labelPoolG.delT(del);
-                    }
-                    else
-                    {
-                        // labelPoolG.delT(labelPtrAux);
-                        // continue;
+                        if(lastCust == 0 && labelPtr->typeLabel == Backward)
+                            continue;
 
-                        int       indexGreater = 0;
-                        FloatType val = bucket->vetPtrLabel[0]->vetResources[0];
+                               // Remove labelPtr from vetMatBucket
+                        //lData.removeLabel(labelPtr);
 
-                        for(int i = 1; i < bucket->sizeVetPtrLabel; ++i)
+                        /*
+                        if(labelPtr->tamRoute >= numCust + 1)
                         {
-                            if(bucket->vetPtrLabel[i]->vetResources[0] > val)
-                            {
-                                val = bucket->vetPtrLabel[i]->vetResources[0];
-                                indexGreater = i;
-                            }
-                        }
-
-                        if(labelPtrAux->vetResources[0] > val)
-                        {
-                            labelPoolG.delT(labelPtrAux);
+                            labelPoolG.delT(labelPtr);
                             continue;
                         }
-                        else
+                        */
+
+                               // Extend label
+                        bool rmLabel = true;
+
+                        for(int newCust = 1; newCust < numCust; ++newCust)
                         {
+                            int tAux = newCust;
+                            // std::cout<<"t: "<<t<<"\n";
+                            if(labelPtr->typeLabel == Forward &&
+                               vetMatResCostForward(labelPtr->cust, newCust, 0) == InfFloatType)
+                                continue;
 
-                            Label *del = bucket->vetPtrLabel[indexGreater];
-                            bucket->removeElement(indexGreater);
+                            else if(labelPtr->typeLabel == Backward &&
+                                    vetMatResCostBackward(newCust, labelPtr->cust, 0) == InfFloatType)
+                                continue;
 
-                            if(del != labelHeap.vet[del->posHeap])
+                            if(labelPtr->bitSetNg[newCust] == 1 || newCust == labelPtr->cust)
+                                continue;
+
+                            if(labelPtr->typeLabel == Backward && newCust == (numCust - 1))
+                                continue;
+
+                            if(Print && PrintG)
+                                std::cout << "\tt(" << newCust << ")\n";
+
+                            Label *labelPtrAux = vetLabelPoolG[newCust].getT();
+                            if(labelPtrAux == nullptr)
                             {
-                                std::cout << "ERROR. labelHeap is Wrong";
-                                PRINT_EXIT();
+                                std::cout << "Pool.getT return nullptr!";
+                                PRINT_DEBUG("", "");
+                                throw "ERRO";
                             }
 
-                            labelHeap.deleteKey(del->posHeap);
-                            memset((void *)del, 0, sizeof(Label));
-                            labelPoolG.delT(del);
-                            // std::cout<<"Delete label greater the labelAuxPtr\n";
+                            /*
+                            if(labelPtrAux->it == nullptr)
+                            {
+                                LabelSetIt* labelSetIt = new LabelSetIt;
+                                labelPtrAux->it = (void*)labelSetIt;
+                            }
+                            */
+
+                            if(extendLabel(labelPtr,
+                                           labelPtrAux,
+                                           vetMatResCostForward,
+                                           vetMatResCostBackward,
+                                           matBoundRes,
+                                           labelPtr->cust,
+                                           newCust,
+                                           ngSet,
+                                           numRes,
+                                           vetBackwardMask))
+                            {
+                                rmLabel = false;
+                                doContinue = true;
+
+                                if(ptrMatDp)
+                                {
+                                    int rem_cap = capacity_Q - labelPtrAux->vetResources[1];
+
+                                    double compBounds = (*ptrMatDp)(labelPtrAux->cust, rem_cap);
+                                    if((labelPtrAux->vetResources[0]+compBounds) >= 0.0)
+                                    {
+                                        vetLabelPoolG[labelPtrAux->cust].delT(labelPtrAux);
+                                        continue; // for t
+                                    }
+                                }
+
+                                if(extentToHalfCapacity && ((labelPtrAux->typeLabel == Forward &&
+                                                             labelPtrAux->vetResources[1] > halfCapacity) ||
+                                                            (labelPtrAux->typeLabel == Backward &&
+                                                             labelPtrAux->vetResources[1] < halfCapacity)))
+                                {
+                                    vetLabelPoolG[newCust].delT(labelPtrAux);
+                                    continue; // for t
+                                }
+
+                                labelPtrAux->index = nextIndex++;
+
+                                /*
+                                bool haveRoute = false;
+                                if(TrackingRoutes)
+                                {
+                                    haveRoute = labelHaveRoute(vetRoutesG, labelPtrAux);
+                                    if(haveRoute)
+                                        std::cout << "\tFind route(" << printRoute(labelPtrAux)
+                                                  << ") in vector of routes; Parcial route created!\n";
+                                }
+                                */
+
+                                if(Print && PrintG)
+                                    std::cout << "\t" << *labelPtrAux << "\n";
+
+                                int correctPos = 0;
+
+                                if(newCust == dest && labelPtrAux->typeLabel == Forward)
+                                {
+                                    if(labelPtrAux->vetResources[0] >= -TolObjSubProb)
+                                    {
+
+                                        vetLabelPoolG[newCust].delT(labelPtrAux);
+                                        continue;
+                                    }
+
+                                    /*
+                                    removeCycles2(*labelPtrAux, numCust);
+                                    updateLabelCost(*labelPtrAux, vetMatResCostForward, labelStart);
+
+
+                                     if(labelPtrAux->vetResources[0] >= -DW_DecompNS::TolObjSubProb)
+                                     {
+
+                                         labelPoolG.delT(labelPtrAux);
+                                         continue;
+                                     }
+                                     */
+                                }
+
+                                if(newCust == 0 && labelPtrAux->typeLabel == Backward)
+                                {
+
+                                    // applyLabelMask(labelPtrAux, numRes, vetBackwardMask);
+                                    if(labelPtrAux->vetResources[0] >= -TolObjSubProb)
+                                    {
+                                        vetLabelPoolG[newCust].delT(labelPtrAux);
+                                        continue;
+                                    }
+
+                                           // removeCycles2(*labelPtrAux, numCust);
+
+                                    if(labelPtrAux->vetResources[0] >= -TolObjSubProb)
+                                    {
+
+                                        vetLabelPoolG[newCust].delT(labelPtrAux);
+                                        continue;
+                                    }
+
+                                           // change the backward type to forward
+                                    convertLabelBackwardToForward(labelPtrAux, vetMaxResources, numRes);
+                                    labelPtrAux->cust = dest;
+                                    labelPtrAux->i = 0;
+                                    labelPtrAux->j = 0;
+                                    tAux = dest;
+
+                                    /*
+                                    static int numP = 0;
+                                    std::cout<<*labelPtrAux<<"\n\n";
+                                    if(numP == 5)
+                                        exit(-1);
+
+                                     numP += 1;
+                                     */
+                                }
+
+                                /*
+                                if(tAux == dest)
+                                {
+                                    if(checkIfRouteIsInSet(labelPtrAux, vetSortRoute, multsetSourRoute,
+                                lData.matDist))
+                                    {
+                                        labelPoolG.delT(labelPtrAux);
+                                        continue;
+                                    }
+                                }
+                                */
+
+                                Bucket *bucket = nullptr;
+                                if(SortLabels)
+                                    bucket = dominanceIntraBucketFast0(
+                                        tAux, labelPtrAux, lData, nullptr, numRes, dest, correctPos);
+                                else
+                                    bucket = dominanceIntraBucketSlow(
+                                        tAux, labelPtrAux, lData, nullptr, numRes, dest, correctPos);
+
+                                if(!bucket)
+                                {
+                                    // std::cout<<"bucket is null\n";
+                                    vetLabelPoolG[labelPtrAux->cust].delT(labelPtrAux);
+                                    continue;
+                                }
+
+                                if((vetValueOfReducedCostsG.size() + 1) < vetValueOfReducedCostsG.capacity())
+                                    vetValueOfReducedCostsG.push_back(labelPtrAux->vetResources[0]);
+
+                                if((bucket->sizeVetPtrLabel + 1) > NumMaxLabePerBucket && tAux != dest)
+                                {
+                                    if(SortLabels)
+                                    {
+                                        if(correctPos == (bucket->sizeVetPtrLabel))
+                                        {
+
+                                            vetLabelPoolG[newCust].delT(labelPtrAux);
+                                            continue;
+                                        }
+
+                                        Label *del = bucket->vetPtrLabel[bucket->sizeVetPtrLabel - 1];
+                                        bucket->removeElement(bucket->sizeVetPtrLabel - 1);
+                                        //labelHeap.deleteKey(del->posHeap);
+                                        vetLabelPoolG[bucket->sizeVetPtrLabel - 1].delT(del);
+                                    }
+                                    else
+                                    {
+                                        // labelPoolG.delT(labelPtrAux);
+                                        // continue;
+
+                                        int       indexGreater = 0;
+                                        FloatType val = bucket->vetPtrLabel[0]->vetResources[0];
+
+                                        for(int i = 1; i < bucket->sizeVetPtrLabel; ++i)
+                                        {
+                                            if(bucket->vetPtrLabel[i]->vetResources[0] > val)
+                                            {
+                                                val = bucket->vetPtrLabel[i]->vetResources[0];
+                                                indexGreater = i;
+                                            }
+                                        }
+
+                                        if(labelPtrAux->vetResources[0] > val)
+                                        {
+                                            vetLabelPoolG[cust].delT(labelPtrAux);
+                                            continue;
+                                        }
+                                        else
+                                        {
+
+                                            Label *del = bucket->vetPtrLabel[indexGreater];
+                                            bucket->removeElement(indexGreater);
+
+                                            if(correctPos > indexGreater)
+                                                correctPos -= 1;
+
+                                            /*
+                                            if(del != labelHeap.vet[del->posHeap])
+                                            {
+                                                std::cout << "ERROR. labelHeap is Wrong";
+                                                PRINT_EXIT();
+                                            }
+                                            */
+
+                                            //labelHeap.deleteKey(del->posHeap);
+                                            //memset((void *)del, 0, sizeof(Label));
+                                            vetLabelPoolG[cust].delT(del);
+                                            // std::cout<<"Delete label greater the labelAuxPtr\n";
+                                        }
+
+                                        if(correctPos > bucket->sizeVetPtrLabel)
+                                            correctPos = bucket->sizeVetPtrLabel;
+                                    }
+                                }
+
+                                bucket->addElement(correctPos, labelPtrAux);
+
+                                       // std::cout<<"Insert in position: "<<correctPos<<"\n";
+
+                                       // std::cout<<"\tInsert in bucket\n";
+
+                                /*
+                                if(tAux != dest && labelPtrAux->typeLabel == Forward)
+                                {
+                                    labelHeap.insertKey(labelPtrAux);
+                                    // std::cout<<"Insert\n";
+                                }
+                                else if(labelPtrAux->typeLabel == Backward)
+                                    labelHeap.insertKey(labelPtrAux);
+                                */
+
+                                /*
+                                if((labelPtrAux->cust != 0 || labelPtrAux->cust != dest) &&
+                                labelingTypeAlg == AlgBidirectional)
+                                {
+                                    int numLabels = lData.doMerge(labelPtrAux, vetMaxResources,
+                                matBoundRes, numRes); if(numLabels >= DW_DecompNS::NumMaxSolSubProb &&
+                                !exact) break;
+                                }
+                                */
+
+                                /*
+                                if(!checkIfAllLabelsInHeapHaveA_Bucket(labelHeap, lData))
+                                {
+                                    std::cout<<"ERROR in processing label: \n"<<*labelPtrAux<<"\n";
+                                    PRINT_EXIT();
+                                }
+                                */
+
+                                       // checkHeap(labelHeap, lData);
+                            }
+                            else
+                            {
+                                vetLabelPoolG[cust].delT(labelPtrAux);
+                                if(Print && PrintG)
+                                    std::printf("\tFailed\n");
+                            }
                         }
 
-                        if(correctPos > bucket->sizeVetPtrLabel)
-                            correctPos = bucket->sizeVetPtrLabel;
+                               // std::cout<<"END Extend label\n";
+
+                        if(Print && PrintG)
+                            std::cout << "\n###################################################################"
+                                         "#####################\n\n";
+
+                        if(rmLabel)
+                            vetLabelPoolG[cust].delT(labelPtr);
+
+                        numIt += 1;
+
+                        /*
+                        if(numIt == 5)
+                        {
+                            std::cout<<"Error!\n";
+                            PRINT_DEBUG("", "");
+                            exit(-1);
+                        }
+                        */
+
+                               // std::cout<<"Is heap empty: "<<labelHeap.empty()<<"\n";
                     }
                 }
-
-                bucket->addElement(correctPos, labelPtrAux);
-
-                // std::cout<<"Insert in position: "<<correctPos<<"\n";
-
-                // std::cout<<"\tInsert in bucket\n";
-
-                if(tAux != dest && labelPtrAux->typeLabel == Forward)
-                {
-                    labelHeap.insertKey(labelPtrAux);
-                    // std::cout<<"Insert\n";
-                }
-                else if(labelPtrAux->typeLabel == Backward)
-                    labelHeap.insertKey(labelPtrAux);
-
-                /*
-                if((labelPtrAux->cust != 0 || labelPtrAux->cust != dest) &&
-                labelingTypeAlg == AlgBidirectional)
-                {
-                    int numLabels = lData.doMerge(labelPtrAux, vetMaxResources,
-                matBoundRes, numRes); if(numLabels >= DW_DecompNS::NumMaxSolSubProb &&
-                !exact) break;
-                }
-                */
-
-                /*
-                if(!checkIfAllLabelsInHeapHaveA_Bucket(labelHeap, lData))
-                {
-                    std::cout<<"ERROR in processing label: \n"<<*labelPtrAux<<"\n";
-                    PRINT_EXIT();
-                }
-                */
-
-                // checkHeap(labelHeap, lData);
-            }
-            else
-            {
-                labelPoolG.delT(labelPtrAux);
-                if(Print && PrintG)
-                    std::printf("\tFailed\n");
             }
         }
 
-        // std::cout<<"END Extend label\n";
+        doContinue = !funcStop() && doContinue;
 
-        if(Print && PrintG)
-            std::cout << "\n###################################################################"
-                         "#####################\n\n";
-
-        if(rmLabel)
-            labelPoolG.delT(labelPtr);
-
-        numIt += 1;
-
-        /*
-        if(numIt == 5)
-        {
-            std::cout<<"Error!\n";
-            PRINT_DEBUG("", "");
-            exit(-1);
-        }
-        */
-
-        // std::cout<<"Is heap empty: "<<labelHeap.empty()<<"\n";
     }
 
-    if(labelHeap.empty())
+    if(sizeMatForwardDest <= 0)
     {
-        std::printf("Heap is empty\n");
+        std::printf("Empty\n");
     }
 
     std::cout << "numIt: " << numIt << "\n";
@@ -905,7 +925,7 @@ bool LabelingAlgorithmNS::
         int next = 0;
         for(int l = 0; l < numSol; ++l)
         {
-            static VectorI vet(NumMaxRoute);
+            static VectorI vet(5*NumMaxRoute);
             int size = 0;
 
             Label *label = lData.vetMatBucketForward[dest].mat(0, 0).vetPtrLabel[l];
@@ -953,15 +973,6 @@ bool LabelingAlgorithmNS::
     }
 }
 
-void LabelingAlgorithmNS::startPool()
-{
-
-    if(!startLabelPoolG)
-    {
-        startLabelPoolG = true;
-        labelPoolG.startPool(5, 100);
-    }
-}
 
 std::string LabelingAlgorithmNS::printRoute(Label *label)
 {
@@ -1049,10 +1060,13 @@ bool LabelingAlgorithmNS::extendLabelForward(Label*				  label,
         return false;
     }
 
-    newLabel->bitSetNg = label->bitSetNg;
+    newLabel->bitSetNg = (label->bitSetNg & ngSet.vetNgSet[t]);
+    newLabel->bitSetNg.set(t);
+
+    //newLabel->bitSetNg = label->bitSetNg;
 
     // Checks if custJ(t) its in custI ngSet
-    newLabel->bitSetNg[t] = ngSet.contain(t, custI);
+    //newLabel->bitSetNg[t] = ngSet.contain(t, custI);
 
     newLabel->ptrLabel = label;
     //newLabel.tamRoute = label.tamRoute + 1;
@@ -1648,7 +1662,7 @@ void LabelingAlgorithmNS::LabelingData::dominanceInterBuckets(
 
                                     labelHeap.deleteKey(b1.vetPtrLabel[t1]->posHeap);
                                     // bucket.vetPtrLabel[k]->active = false;
-                                    labelPoolG.delT(b1.vetPtrLabel[t1]);
+                                    vetLabelPoolG[cust].delT(b1.vetPtrLabel[t1]);
 
                                     if(t1 == (b1.sizeVetPtrLabel - 1))
                                     {
@@ -1871,7 +1885,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketForward(int           cust,
                     if(rmFromHeap)
                         labelHeap.deleteKey(bucketPtr->vetPtrLabel[correctPos]->posHeap);
 
-                    labelPoolG.delT(bucketPtr->vetPtrLabel[correctPos]);
+                    vetLabelPoolG[cust].delT(bucketPtr->vetPtrLabel[correctPos]);
 
                     for(int ii = correctPos; ii < (bucketPtr->sizeVetPtrLabel - 1); ++ii)
                     {
@@ -1950,7 +1964,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketForward(int           cust,
                 if(rmFromHeap)
                     labelHeap.deleteKey(bucketPtr->vetPtrLabel[ii]->posHeap);
 
-                labelPoolG.delT(bucketPtr->vetPtrLabel[ii]);
+                vetLabelPoolG[cust].delT(bucketPtr->vetPtrLabel[ii]);
 
                 for(int t = ii; t < (bucketPtr->sizeVetPtrLabel - 1); ++t)
                 {
@@ -2400,7 +2414,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketBackward(int           cust,
                     if(rmFromHeap)
                         labelHeap.deleteKey(bucketPtr->vetPtrLabel[correctPos]->posHeap);
 
-                    labelPoolG.delT(bucketPtr->vetPtrLabel[correctPos]);
+                    vetLabelPoolG[cust].delT(bucketPtr->vetPtrLabel[correctPos]);
 
                     for(int ii = correctPos; ii < (bucketPtr->sizeVetPtrLabel - 1); ++ii)
                     {
@@ -2480,7 +2494,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketBackward(int           cust,
                 if(rmFromHeap)
                     labelHeap.deleteKey(bucketPtr->vetPtrLabel[ii]->posHeap);
 
-                labelPoolG.delT(bucketPtr->vetPtrLabel[ii]);
+                vetLabelPoolG[cust].delT(bucketPtr->vetPtrLabel[ii]);
 
                 for(int t = ii; t < (bucketPtr->sizeVetPtrLabel - 1); ++t)
                 {
@@ -2671,16 +2685,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
                                                       int          &correctPos)
 {
     const int sortRes = 0;
-
-    // std::cout<<"\t"<<lData.vetMatBucketBackward[15].mat(0,0).print(2)<<"\n\n";
-
-    bool    rmFromHeap = true;
     Bucket *bucketPtr = nullptr;
-
-    if((label->typeLabel == Forward && cust == dest) || !labelHeap)
-        rmFromHeap = false;
-    else if(label->typeLabel == Backward && cust == 0)
-        rmFromHeap = false;
 
     if(cust != dest || (cust == dest && label->typeLabel == Backward))
     {
@@ -2725,7 +2730,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
     // candidates L may dominate: [beginDom, n)
     int beginDom = lowerBoundIdx(labelVal - FloatEp, bucketPtr);
 
-    static thread_local VectorI vetRm(1000);
+    static thread_local VectorI vetRm(100000);
     int sizeVetRm = 0;
 
     for(int i=0; i < endDom; ++i)
@@ -2977,7 +2982,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketFast1(int           cust,
                 if(rmFromHeap)
                     labelHeap->deleteKey(bucketLabel->posHeap);
 
-                labelPoolG.delT(bucketLabel);
+                vetLabelPoolG[bucketLabel->cust].delT(bucketLabel);
                 bucketPtr->removeElement(pos);
             }
 
@@ -2998,7 +3003,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketFast1(int           cust,
                 if(rmFromHeap)
                     labelHeap->deleteKey(bucketLabel->posHeap);
 
-                labelPoolG.delT(bucketLabel);
+                vetLabelPoolG[bucketLabel->cust].delT(bucketLabel);
                 bucketPtr->removeElement(pos);
             }
         }
@@ -3058,7 +3063,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketFast1(int           cust,
                 if(rmFromHeap)
                     labelHeap->deleteKey(bucketPtr->vetPtrLabel[ii]->posHeap);
 
-                labelPoolG.delT(bucketPtr->vetPtrLabel[ii]);
+                vetLabelPoolG[cust].delT(bucketPtr->vetPtrLabel[ii]);
                 bucketPtr->removeElement(ii);
 
                 continue; // while ii
@@ -3174,7 +3179,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketFast0(int           cust,
             if(rmFromHeap)
                 labelHeap->deleteKey(labelI->posHeap);
 
-            labelPoolG.delT(labelI);
+            vetLabelPoolG[labelI->cust].delT(labelI);
         }
         else
             pos += 1;
@@ -3195,7 +3200,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketFast0(int           cust,
                 if(rmFromHeap)
                     labelHeap->deleteKey(bucketPtr->vetPtrLabel[pos]->posHeap);
 
-                labelPoolG.delT(bucketPtr->vetPtrLabel[pos]);
+                vetLabelPoolG[cust].delT(bucketPtr->vetPtrLabel[pos]);
                 bucketPtr->removeElement(pos);
             }
             else
@@ -3264,13 +3269,13 @@ Label *LabelingAlgorithmNS::mergeForwardAndBackward(Label                *forwar
         PRINT_THROW();
     }
 
-    Label *result = labelPoolG.getT();
+    Label *result = vetLabelPoolG.getT();
     result->typeLabel = Forward;
     result->vetResources[0] = forward.vetResources[0] + backward.vetResources[0];
 
     if(result->vetResources[0] >= -TolObjSubProb)
     {
-        labelPoolG.delT(result);
+        vetLabelPoolG.delT(result);
         return nullptr;
     }
 
@@ -3287,7 +3292,7 @@ Label *LabelingAlgorithmNS::mergeForwardAndBackward(Label                *forwar
 
     if(!resourcesOk)
     {
-        labelPoolG.delT(result);
+        vetLabelPoolG.delT(result);
         return nullptr;
     }
 
@@ -3318,7 +3323,7 @@ Label *LabelingAlgorithmNS::mergeForwardAndBackward(Label                *forwar
 
     if(result->vetResources[0] >= -TolObjSubProb)
     {
-        labelPoolG.delT(result);
+        vetLabelPoolG.delT(result);
         result = nullptr;
     }
 
@@ -3326,7 +3331,6 @@ Label *LabelingAlgorithmNS::mergeForwardAndBackward(Label                *forwar
 }
 */
 
-void LabelingAlgorithmNS::resetLabelPool() { labelPoolG.resetPool(false); }
 
 HashSortRoute::HashSortRoute(SortRoute &sortRoute_) : sortRoute(sortRoute_)
 {
@@ -3411,4 +3415,53 @@ bool dominanceInterBuckets(int           cust,
             Bucket &bucket = lData.vetMatBucketForward[label->cust].mat(i, j);
         }
     }
+}
+
+void LabelingAlgorithmNS::removeBatchFromBucket(const VectorI &idx, int cnt, Bucket *bucket)
+{
+    if (!bucket || cnt <= 0) return;
+    const int n = bucket->sizeVetPtrLabel;
+    if (n <= 0 || idx[0] >= n) return;
+
+    assert(idx[0] >= 0 && "Index cannot be negative");
+    int w = idx[0];
+    int k = 0;
+    for (int r = idx[0]; r < n; ++r)
+    {
+        if (r == idx[k])
+        {
+            assert((k == 0 || idx[k] > idx[k - 1]) && "idx must be strictly ascending and unique");
+            if (bucket->vetPtrLabel[r])
+            {
+                Label *label = bucket->vetPtrLabel[r];
+                label->active = false;
+                vetLabelPoolG[label->cust].delT(label);
+            }
+            ++k;
+            if (k == cnt)
+            {
+                // All target elements removed! Bulk copy remaining pointers and exit.
+                ++r;
+                const int remaining = n - r;
+                if (remaining > 0)
+                {
+                    std::memmove(&bucket->vetPtrLabel[w],
+                                 &bucket->vetPtrLabel[r],
+                                 remaining * sizeof(bucket->vetPtrLabel[0]));
+                    w += remaining;
+                }
+                break;
+            }
+            continue;
+        }
+        bucket->vetPtrLabel[w] = bucket->vetPtrLabel[r];
+        bucket->vetPtrLabel[w]->posBucket = w;
+        w += 1;
+    }
+
+           // Clear trailing pointers
+    for (int t = w; t < n; ++t)
+        bucket->vetPtrLabel[t] = nullptr;
+
+    bucket->sizeVetPtrLabel = w;
 }

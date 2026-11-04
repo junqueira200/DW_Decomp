@@ -345,10 +345,14 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
                       int                 numItems,
                       bool                sortItemIds,
                       bool                print,
-                      SolucaoNS::Penalty *penalty)
+                      SolucaoNS::Penalty *penalty,
+                      bool				  resetBin)
 {
 
     static VectorI sortedItems(MaxNumItemsBin);
+    static VectorI vetNotPackedItems(instanciaG.numItens);
+    int sizeVetNotPackedItems = 0;
+
     assertm(numItems > MaxNumItemsBin, "Error, numItems is greater them MaxNumItemsBin\n");
 
     //std::printf("size itemIds: %d\nItems: ", numItems);
@@ -385,10 +389,12 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
 
         for(SortStrategy strategy : strategies)
         {
-
-            bin.reset();
             // Initialize with the origin Extreme Point (0, 0, 0)
-            bin.addEp(Ponto(0.0, 0.0, 0.0));
+            if(resetBin)
+            {
+                bin.reset();
+                bin.addEp(Ponto(0.0, 0.0, 0.0));
+            }
 
             // Working copy of items to sort
             copyVet(itemIds, sortedItems, numItems);
@@ -514,9 +520,16 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
                                     itemId,
                                     instanciaG.vetItens[itemId].customer);
 
+                    vetNotPackedItems[sizeVetNotPackedItems] = itemId;
+                    sizeVetNotPackedItems += 1;
                     isInfeasible = true;
-                    lastItem = i;
-                    break;
+
+                    if(penalty)
+                        continue;  	// for(int i = 0; i < numItems; ++i)
+                    else
+                        break;		// for(int i = 0; i < numItems; ++i)
+                    //lastItem = i;
+                    //break;
                     // return false;
                 }
 
@@ -537,24 +550,20 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
 
                 // Place the item (this automatically updates EPs, dimensions, and loads)
                 bin.addItem(candidates[chosen].epIdx, itemId, candidates[chosen].rot);
-            }
+            } // END for(int i = 0; i < numItems; ++i)
 
             if(isInfeasible && sortItemIds)
                 continue;
 
             if(isInfeasible && !sortItemIds && penalty)
             {
-                if(lastItem < 0 || lastItem >= sortedItems.size())
-                {
-                    std::printf(
-                        "Error, isInfeasible: %d; lastItem: %d\n\n", isInfeasible, lastItem);
-                    PRINT_THROW();
-                }
 
                 double vol = 0.0;
-                for(int i = lastItem; i < numItems; ++i)
+                //for(int i = lastItem; i < numItems; ++i)
+                for(int i=0; i < sizeVetNotPackedItems; ++i)
                 {
-                    vol += instanciaG.vetItens[sortedItems[i]].volume;
+                    int item = vetNotPackedItems[i];
+                    vol += instanciaG.vetItens[item].volume;
                 }
 
                 penalizeSolution(rota, bin, *penalty);
@@ -563,6 +572,9 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
                 return false;
             }
 
+            if(isInfeasible)
+                return false;
+
             // Comprehensive final feasibility check (axle weights, compactness, support, LIFO)
 
             // TODO remover
@@ -570,10 +582,11 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
 
             if(bin.checkFeasibility(&rota, false, print))
             {
+                /*
                 if(numItems != bin.numItens)
                 {
                     std::printf("Erro, \nitemIds: %s\n", itemIds.printN(numItems).c_str());
-                    std::printf("bin.vetItens: %s", bin.vetItens.printN(bin.numItens).c_str());
+                    std::printf("bin.vetItens: %s", bin.vetItemId.printN(bin.numItens).c_str());
 
                     PRINT_THROW();
                 }
@@ -602,6 +615,7 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
                         PRINT_THROW();
                     }
                 }
+                */
 
                 return true;
             }

@@ -163,51 +163,8 @@ int upperBoundIdx(FloatType value, const Bucket* bucket)
     return lo;
 }
 
-INLINE
-void removeBatchFromBucket(const VectorI& idx, int cnt, Bucket* bucket)
-{
-    if (!bucket || cnt <= 0) return;
-    const int n = bucket->sizeVetPtrLabel;
-    if (n <= 0 || idx[0] >= n) return;
 
-    assert(idx[0] >= 0 && "Index cannot be negative");
-    int w = idx[0];
-    int k = 0;
-    for (int r = idx[0]; r < n; ++r)
-    {
-        if (r == idx[k])
-        {
-            assert((k == 0 || idx[k] > idx[k - 1]) && "idx must be strictly ascending and unique");
-            if (bucket->vetPtrLabel[r])
-                bucket->vetPtrLabel[r]->active = false;
-            ++k;
-            if (k == cnt)
-            {
-                // All target elements removed! Bulk copy remaining pointers and exit.
-                ++r;
-                const int remaining = n - r;
-                if (remaining > 0)
-                {
-                    std::memmove(&bucket->vetPtrLabel[w],
-                                 &bucket->vetPtrLabel[r],
-                                 remaining * sizeof(bucket->vetPtrLabel[0]));
-                    w += remaining;
-                }
-                break;
-            }
-            continue;
-        }
-        bucket->vetPtrLabel[w] = bucket->vetPtrLabel[r];
-        bucket->vetPtrLabel[w]->posBucket = w;
-        w += 1;
-    }
-
-    // Clear trailing pointers
-    for (int t = w; t < n; ++t)
-        bucket->vetPtrLabel[t] = nullptr;
-
-    bucket->sizeVetPtrLabel = w;
-}
+    void removeBatchFromBucket(const VectorI& idx, int cnt, Bucket* bucket);
 
 INLINE
 void removeFromBucket(int i, Bucket* bucket)
@@ -401,10 +358,6 @@ numRes, 0, correctPos);
 }
 */
 
-Label *getLabel();
-void   rmLabel(Label *label);
-void   resetLabelPool();
-void   startPool();
 
 //void        writeNgSet(Label *label, const NgSet &ngset);
 void        startGlobalMemory(const Vector<VectorI> &vetRoutes);

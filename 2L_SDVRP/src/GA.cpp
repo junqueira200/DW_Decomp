@@ -17,14 +17,30 @@ using namespace RandomKeyNS;
 
 constexpr bool PrintGA = false;
 
-bool GA_NS::ga(SolucaoNS::Bin      &bin,
-               SolucaoNS::Rota     &route,
-               const VectorI *const ptrVetItems,
-               int                  sizeVetItems)
+using namespace SolucaoNS;
+
+bool GA_NS::ga(SolucaoNS::Bin      		&bin,
+               SolucaoNS::Rota     		&route,
+               const VectorI *const 	ptrVetItems,
+               int                  	sizeVetItems,
+               Vector<SolucaoNS::Bin>	*ptrVetBin)
 {
+    int size = 0;
+    if(ptrVetBin)
+    {
+        for(Bin& bin:*ptrVetBin)
+            bin.reset();
+
+        size = ptrVetBin->size();
+    }
+
+    int nextBin = 0;
+
     if constexpr(PrintGA)
         std::printf("GA INI\n");
 
+    //static Vector<double*>		 vetPtrRandomKey(size);
+    static Bin					 binAux;
     static Vector<RandomKey>     vetRandKeyAux(input.gaPopulationSize);
     static VectorI               vetItems(InstanceNS::instanciaG.numItens);
     static Vector<RandomKeyPair> vetRandKey(input.gaPopulationSize);
@@ -33,8 +49,12 @@ bool GA_NS::ga(SolucaoNS::Bin      &bin,
     double                       bestRandKeyPenalty = std::numeric_limits<double>::max();
 
     const int subPopulationSize = input.gaPopulationSize / input.gaNumberOfIslands;
-    std::printf("PopulationSize: %d\n\n", input.gaPopulationSize);
-    std::printf("subPopulationSize: %d\n\n", subPopulationSize);
+
+    if constexpr(PrintGA)
+    {
+        std::printf("PopulationSize: %d\n\n", input.gaPopulationSize);
+        std::printf("subPopulationSize: %d\n\n", subPopulationSize);
+    }
     if(input.gaPopulationSize % input.gaNumberOfIslands != 0)
     {
         std::printf("Error, gaPopulationSize(%d) dont divide gaNumberOfIslands(%d)!\n",
@@ -149,11 +169,41 @@ bool GA_NS::ga(SolucaoNS::Bin      &bin,
         for(auto &it : vetRandKey)
         {
             randKey.vetRandomKey = it.second->vetRandomKey;
-            if(decoderRandomKey(randKey, bin, vetItems, sizeVetItems, route, penalty))
+
+            copiaBin(bin, binAux);
+
+            if(decoderRandomKey(randKey, binAux, vetItems, sizeVetItems, route, penalty))
             {
                 if constexpr(PrintGA)
                     std::printf("GA END\n");
-                return true;
+
+                bool doContinue = true;
+
+                if(ptrVetBin)
+                {
+                    for(int i=0; i < nextBin; ++i)
+                    {
+                        if(binAreEqual((*ptrVetBin)[i], binAux))
+                        {
+                            doContinue = false;
+                            break;
+                        }
+                    }
+
+                    if(doContinue)
+                    {
+                        copiaBin(binAux, (*ptrVetBin)[nextBin]);
+                        nextBin += 1;
+
+                        if(nextBin == ptrVetBin->size())
+                           return true;
+                    }
+                }
+                else
+                {
+                    copiaBin(binAux, bin);
+                    return true;
+                }
             }
 
             it.first = penalty.getValue();
@@ -254,7 +304,9 @@ bool GA_NS::ga(SolucaoNS::Bin      &bin,
         }
     }
 
-    std::printf("GA END\n");
+    if constexpr(PrintGA)
+        std::printf("GA END\n");
+
     return false;
 }
 

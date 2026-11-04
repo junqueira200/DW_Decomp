@@ -228,7 +228,7 @@ void LabelingAlgorithmNS::Bucket::removeElement(int i)
 {
     for(int t = i; t < (sizeVetPtrLabel - 1); ++t)
     {
-        vetPtrLabel[t] = vetPtrLabel[t + 1];
+        vetPtrLabel[t] = vetPtrLabel[t+1];
         vetPtrLabel[t]->posBucket = t;
     }
 

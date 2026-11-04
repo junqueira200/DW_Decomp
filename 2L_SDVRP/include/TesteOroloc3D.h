@@ -25,6 +25,10 @@ void convertVectorOfItensToVectorOfCuboids(const VectorI                        
                                            int                                    numItems,
                                            SolucaoNS::Rota                       &rota);
 
+bool testSequencial(SolucaoNS::Bin			&binRef,
+                    SolucaoNS::Bin			&bin,
+                    SolucaoNS::Rota			&rota);
+
 void appendToFile(const std::string &fileName, const std::string &content);
 void readSolOroloc3D_2(SolucaoNS::Solucao &sol);
 void readSolOroloc3D_3(SolucaoNS::Solucao &sol);

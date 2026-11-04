@@ -438,7 +438,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     for(int veic = 0; veic < sol.vetBin.size(); ++veic)
     {
-        //if(veic != 1)
+        //if(veic != 2)
         //    continue;
 
         Bin &bin = sol.vetBin[veic];
@@ -486,7 +486,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         VectorI vetSumAreasLeft2(numItems, 0);
 
         double ompStartGA = omp_get_wtime();
-        bool   resultRandKey = ga(bin2, solCp.vetRota[veic], &vetItems, numItems);
+        bool   resultRandKey = false;//ga(bin2, solCp.vetRota[veic], &vetItems, numItems);
         double timeGA = omp_get_wtime() - ompStartGA;
 
         if(resultRandKey)
@@ -520,6 +520,18 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
             // continue;
         }
 
+        /*
+        Bin newBin;
+
+        bool newHeuristic = testSequencial(bin, newBin, solCp.vetRota[veic]);
+
+        if(newHeuristic)
+        {
+            std::printf("NEW HEURISTIC(testSequencial) FOUND A SOLUTION!\n");
+        }
+        else
+            std::printf("NEW HEURISTIC(testSequencial) DIDEN FOUND A SOLUTION!\n");
+        */
 
 
         std::printf("GA: %d; time: %f\n\n", (int)resultRandKey, timeGA);
@@ -665,10 +677,10 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
                 std::vector<Array<int, 4>> vetArray;
                 // std::printf("INI CP\n");
-                auto status = LoadingStatus::Infeasible;
-                    //loadingChecker.ConstraintProgrammingSolver(
-                    //type, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
-                    //int_fk, int_fFA, int_fRA, int_fTA, vetSumAreasLeft);
+                auto status = //LoadingStatus::Infeasible;
+                    loadingChecker.ConstraintProgrammingSolver(
+                    type, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
+                    int_fk, int_fFA, int_fRA, int_fTA, vetSumAreasLeft);
 
                 // std::printf("END CP\n");
 
@@ -890,13 +902,13 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
     }
 
     writeSoltionOroloc2(solCp, "model");
-    writeSoltionOroloc2(solHeur, "brkga");
+    //writeSoltionOroloc2(solHeur, "brkga");
 
     //std::cout<<solHeur.printSol()<<"\n\n";
     std::string strSolHeur = solHeur.printSol();
     std::string strModel = solCp.printSol();
 
-    writeToFile(strSolHeur, input.strOutputFolder+"/Plot/Heuristic/"+input.strInst+".txt");
+    //writeToFile(strSolHeur, input.strOutputFolder+"/Plot/Heuristic/"+input.strInst+".txt");
     writeToFile(strModel,   input.strOutputFolder+"/Plot/Model/"+input.strInst+".txt");
 
 }
@@ -1250,4 +1262,137 @@ void TesteOroloc3D_NS::writePlot(SolucaoNS::Solucao &sol, std::string &file)
         std::string binPlot = bin.printPlot();
         writeToFile(binPlot, file + "_veic_" + std::to_string(k) + ".txt");
     }
+}
+
+bool TesteOroloc3D_NS::testSequencial(SolucaoNS::Bin 		&binRef,
+                                      SolucaoNS::Bin 		&bin,
+                                      SolucaoNS::Rota		&rota)
+{
+    RandNs::startEngine(RandNs::estado_, true);
+
+
+    // Extract vector of items
+    static VectorI vetItems(instanciaG.numItens);
+    static VectorI vetItems2(instanciaG.numItens);
+    static VectorI vetNumItems(instanciaG.numClientes);
+    static VectorI vetCust(instanciaG.numClientes);
+
+    int sizeVetItems = 0;
+    int nextCust = 0;
+
+    for(int i=(rota.numPos-2); i > 0; --i)
+    {
+        int cust = rota.vetRota[i];
+        VectorI vetTempItems;
+
+        vetCust[nextCust] = cust;
+
+               // Extract all the items of cust
+        for(int t=0; t < binRef.numItens; ++t)
+        {
+            int itemId = binRef.vetItemId[t];
+
+            if(instanciaG.vetItens[itemId].customer == cust)
+            {
+                vetTempItems.push_back(itemId);
+            }
+        }
+        vetNumItems[nextCust] = vetTempItems.size();
+        nextCust += 1;
+
+        for(int item:vetTempItems)
+        {
+            vetItems[sizeVetItems] = item;
+            sizeVetItems += 1;
+        }
+
+    }
+
+           //std::printf("vetItems: %s\n\n", vetItems.printN(sizeVetItems).c_str());
+
+    for(int it=0; it < 10; ++it)
+    {
+        bin.reset();
+        Vector<Bin> vet(1);
+        bin.addEp(PontoZero);
+        vet[0].addEp(PontoZero);
+
+               //if(packItemsIntoBin(bin, rota, vetItems, sizeVetItems, false))
+               //    return true;
+
+        int size = 0;
+        Rota rota2;
+        rota2.reset();
+
+        auto funcAddCust = [](Rota& rota, int cust)
+        {
+            // Shift elements to the right
+            for (int i = (rota.numPos-1); i > 0; --i)
+                rota.vetRota[i+1] = rota.vetRota[i];
+
+                   // Insert the new customer at index 1 and update the position count
+            rota.vetRota[1] = cust;
+            rota.numPos += 1;
+        };
+
+        bool inviavel = false;
+        for(int cust=0; cust < nextCust; ++cust)
+        {
+            int ini = size;
+            size += vetNumItems[cust];
+            int end = size-1;
+            funcAddCust(rota2, vetCust[cust]);
+
+            //std::printf("Route: %s\n", rota2.printRota(false).c_str());
+
+            int sizeVetItems2 = 0;
+            for(int i=ini; i <= end; ++i)
+            {
+                vetItems2[sizeVetItems2] = vetItems[i];
+                //std::printf("%d ", vetItems2[sizeVetItems2]);
+                sizeVetItems2 += 1;
+            }
+            //std::printf("\n\n");
+            if(!ga(bin, rota2, &vetItems2, sizeVetItems2, &vet))
+            {
+                inviavel = true;
+                break;
+            }
+            else
+            {
+                //std::printf("\tFEASIBLE\n");
+                copiaBin(vet[0], bin);
+            }
+
+        }
+
+        if(!inviavel)
+        {
+            if(!checkIfPackedAllTheItems(vet[0], vetItems, sizeVetItems))
+            {
+                std::printf("ERRO IN SEQUENCE BRKGA!\n BIN DONT HAVE ALL THE ITEMS!\n\n");
+                PRINT_THROW();
+            }
+            // std::printf("BRKGA: \n");
+            if(!vet[0].checkFeasibility(&rota, false, false, nullptr))
+            {
+                std::printf("ERRO IN SEQUENCE BRKGA!\n");
+                PRINT_THROW();
+            }
+
+            std::printf("FEASIBLE!!!\n");
+            copiaBin(vet[0], bin);
+            return true;
+        }
+
+
+        //printVetPackingErros();
+
+    }
+
+    //PRINT_THROW();
+
+
+    return false;
+
 }
