@@ -913,7 +913,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     //writeToFile(strSolHeur, input.strOutputFolder+"/Plot/Heuristic/"+input.strInst+".txt");
     //writeToFile(strModel,   input.strOutputFolder+"/Plot/Model/"+input.strInst+".txt");
-    writeToFile(std::to_string(notFeasibleG), input.outputIrace);
+    writeToFile(std::to_string(notFeasibleG)+"\n", input.outputIrace);
 
 }
 
