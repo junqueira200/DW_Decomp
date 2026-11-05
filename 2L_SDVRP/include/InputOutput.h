@@ -79,6 +79,7 @@ class Input
     int    		gaNumberOfIslands 			= 4;
     int    		gaMigrationInterval			= 50;
     double 		gaMigrationRate				= 0.06;
+    std::string outputIrace;
 
     // bool		inst3d                   = true;
 

@@ -1060,7 +1060,6 @@ void setOroloc3DProblem(int doPrint)
         PRINT_THROW();
     }
 
-    PRINT_THROW();
 }
 
 void saveProblem(Input &inputTemp)

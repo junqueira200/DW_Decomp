@@ -127,6 +127,7 @@ void ParseInputNS::parseInput(int argc, const char *argv[])
                 ("gaInherit",
                  "",
                  cxxopts::value<double>(input.gaProbToInheritFromElite))
+                ("outputIrace", "", cxxopts::value<std::string>(input.outputIrace))
 
             //("useCm","", cxxopts::value<bool>(input.useCm))
             ;
@@ -166,6 +167,7 @@ void ParseInputNS::parseInput(int argc, const char *argv[])
         // assertm(true, "Missing param solOroloc3D_output");
 
         RandNs::startEngine(output.semente, bool(result.count("seed") == 1));
+        std::printf("outputIrace: %s\n\n", input.outputIrace.c_str());
     }
     catch(const cxxopts::exceptions::exception &e)
     {

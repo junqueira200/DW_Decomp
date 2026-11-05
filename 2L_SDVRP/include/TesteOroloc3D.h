@@ -17,6 +17,8 @@ enum StatusOroloc3D
     FEASIBLE = 2
 };
 
+inline int notFeasibleG = 0;
+
 // void testeOroloc3D();
 void testeOroloc3D_2();
 
