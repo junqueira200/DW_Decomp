@@ -87,10 +87,11 @@ class Input
     Input()
     {
         arrayPenaltyWeight.fill(1.0);
-        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::Compactness] = 50.0;
-        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::AxleWeights] = 2.0;
-        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::Support]     = 20.0;
-        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::Lifo]		  = 10.0;
+        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::Compactness] 		= 10.0;
+        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::AxleWeights] 		= 1.0;
+        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::Support]     		= 5.0;
+        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::Lifo]		  		= 0.7;
+        arrayPenaltyWeight[(int)SolucaoNS::Penalty::TypePenalty::VolItemsNotPacked] = 4.0;
     }
 };
 

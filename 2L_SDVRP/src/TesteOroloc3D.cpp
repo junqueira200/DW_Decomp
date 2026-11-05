@@ -438,7 +438,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     for(int veic = 0; veic < sol.vetBin.size(); ++veic)
     {
-        //if(veic != 2)
+        //if(veic != 0)
         //    continue;
 
         Bin &bin = sol.vetBin[veic];
@@ -486,7 +486,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         VectorI vetSumAreasLeft2(numItems, 0);
 
         double ompStartGA = omp_get_wtime();
-        bool   resultRandKey = false;//ga(bin2, solCp.vetRota[veic], &vetItems, numItems);
+        bool   resultRandKey = ga(bin2, solCp.vetRota[veic], &vetItems, numItems);
         double timeGA = omp_get_wtime() - ompStartGA;
 
         if(resultRandKey)
@@ -677,10 +677,10 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
                 std::vector<Array<int, 4>> vetArray;
                 // std::printf("INI CP\n");
-                auto status = //LoadingStatus::Infeasible;
-                    loadingChecker.ConstraintProgrammingSolver(
-                    type, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
-                    int_fk, int_fFA, int_fRA, int_fTA, vetSumAreasLeft);
+                auto status = LoadingStatus::Infeasible;
+                    //loadingChecker.ConstraintProgrammingSolver(
+                    //type, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
+                    //int_fk, int_fFA, int_fRA, int_fTA, vetSumAreasLeft);
 
                 // std::printf("END CP\n");
 
@@ -902,13 +902,13 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
     }
 
     writeSoltionOroloc2(solCp, "model");
-    //writeSoltionOroloc2(solHeur, "brkga");
+    writeSoltionOroloc2(solHeur, "brkga");
 
     //std::cout<<solHeur.printSol()<<"\n\n";
     std::string strSolHeur = solHeur.printSol();
     std::string strModel = solCp.printSol();
 
-    //writeToFile(strSolHeur, input.strOutputFolder+"/Plot/Heuristic/"+input.strInst+".txt");
+    writeToFile(strSolHeur, input.strOutputFolder+"/Plot/Heuristic/"+input.strInst+".txt");
     writeToFile(strModel,   input.strOutputFolder+"/Plot/Model/"+input.strInst+".txt");
 
 }

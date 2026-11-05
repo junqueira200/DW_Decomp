@@ -50,6 +50,8 @@ class SemiTrailer : public AxleData
                           double         *ptrSumM = nullptr) const override;
 
     double computeMaxFK(SolucaoNS::Bin &bin) const;
+    double computeMaxFK(const VectorI& vetItems, int sizeVetItems) const;
+    double computeMaxF() const;
 
     int wheelBase = 379; // WB in cm
     int maxMassFrontAxle = 8400;

@@ -9,11 +9,16 @@
 
 #include "GA.h"
 #include "InputOutput.h"
+#include "ConstrutivoBin2.h"
+#include "AxleWeights.h"
 #include <set>
 
 using namespace GA_NS;
 using namespace ParseInputNS;
 using namespace RandomKeyNS;
+using namespace ConstrutivoBin2NS;
+using namespace AxleWeightsNS;
+using namespace SolucaoNS;
 
 constexpr bool PrintGA = false;
 
@@ -26,6 +31,7 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
                Vector<SolucaoNS::Bin>	*ptrVetBin)
 {
     int size = 0;
+    bin.reset();
     if(ptrVetBin)
     {
         for(Bin& bin:*ptrVetBin)
@@ -38,6 +44,9 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
 
     if constexpr(PrintGA)
         std::printf("GA INI\n");
+
+    if(bin.vazio())
+        bin.addEp(PontoZero);
 
     //static Vector<double*>		 vetPtrRandomKey(size);
     static Bin					 binAux;
@@ -147,6 +156,40 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
         copyVet(*ptrVetItems, vetItems, sizeVetItems);
 
     std::sort(vetItems.begin(), vetItems.begin() + sizeVetItems);
+
+    const double totalVolume = getTotalVolume(bin, vetItems, sizeVetItems);
+    //const double areaLeft    = getTotalLeftArea(bin, vetItems, sizeVetItems);
+    static const double maxF = 100*semiTrailer.computeMaxF();
+    const double areaSupp    = getTotalAreaSupp(bin, vetItems, sizeVetItems);
+    const double totalWeight = getTotalWeight(bin, vetItems, sizeVetItems);
+
+    /*
+    std::printf(
+        "Total Volume: %.6f\n"
+//        "Area Left:    %.6f\n"
+        "Max FK:       %.6f\n"
+        "Area Supp:    %.6f\n"
+        "Total Weight: %.6f\n\n",
+        totalVolume,
+//        areaLeft,
+        maxF,
+        areaSupp,
+        totalWeight
+        );
+    */
+
+    //PRINT_THROW();
+
+    penalty.setNorm(Penalty::TypePenalty::AxleWeights, maxF);
+    penalty.setNorm(Penalty::TypePenalty::Compactness, totalVolume);
+    penalty.setNorm(Penalty::TypePenalty::Lifo, totalVolume);
+    penalty.setNorm(Penalty::TypePenalty::LoadBalancing, totalWeight);
+    penalty.setNorm(Penalty::TypePenalty::Support, totalVolume);
+    penalty.setNorm(Penalty::TypePenalty::VolItemsNotPacked, totalVolume);
+
+    //std::cout<<"vetNorm: "<<penalty.vetNorm<<"\n";
+
+    //PRINT_THROW();
 
     for(int i = 0; i < input.gaPopulationSize; ++i)
         vetRandKey[i].second = &vetRandKeyAux[i];

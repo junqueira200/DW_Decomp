@@ -15,6 +15,7 @@
 #include <memory>
 
 using namespace ParseInputNS;
+using namespace SolucaoNS;
 
 void ParseInputNS::parseInput(int argc, const char *argv[])
 {
@@ -86,8 +87,46 @@ void ParseInputNS::parseInput(int argc, const char *argv[])
                 cxxopts::value<int>(input.modelType))(
                 "strOutputFolder",
                 "",
-                cxxopts::value<std::string>(input.strOutputFolder)
-                )
+                cxxopts::value<std::string>(input.strOutputFolder))(
+                "compactness",
+                "",
+                cxxopts::value<double>(input.arrayPenaltyWeight[(int)Penalty::TypePenalty::Compactness]))					("axleWeights",
+                "",
+                cxxopts::value<double>(input.arrayPenaltyWeight[(int)Penalty::TypePenalty::AxleWeights]))
+                (
+                "support",
+                "",
+                cxxopts::value<double>(input.arrayPenaltyWeight[(int)Penalty::TypePenalty::Support]))
+                (
+                "lifo",
+                "",
+                cxxopts::value<double>(input.arrayPenaltyWeight[(int)Penalty::TypePenalty::Lifo]))
+                (
+                "itemsNotPacked",
+                "",
+                cxxopts::value<double>(input.arrayPenaltyWeight[(int)Penalty::TypePenalty::VolItemsNotPacked]))
+                (
+                "loadBalancing",
+                "",
+                cxxopts::value<double>(input.arrayPenaltyWeight[(int)Penalty::TypePenalty::LoadBalancing]))
+                ("gaDiscard",
+                 "",
+                 cxxopts::value<double>(input.gaDiscartPercetence))
+                ("gaElite",
+                 "",
+                 cxxopts::value<double>(input.gaElitePercetence))
+                ("gaIslands",
+                 "",
+                 cxxopts::value<int>(input.gaNumberOfIslands))
+                ("gaMigrInterval",
+                 "",
+                 cxxopts::value<int>(input.gaMigrationInterval))
+                ("gaMigtRate",
+                 "",
+                 cxxopts::value<double>(input.gaMigrationRate))
+                ("gaInherit",
+                 "",
+                 cxxopts::value<double>(input.gaProbToInheritFromElite))
 
             //("useCm","", cxxopts::value<bool>(input.useCm))
             ;

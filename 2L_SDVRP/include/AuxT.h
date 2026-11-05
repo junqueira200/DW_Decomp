@@ -27,8 +27,7 @@
     PRINT_DEBUGG("", "");                                                                          \
     exit(-1);
 #define PRINT_THROW()                                                                              \
-    PRINT_DEBUGG("", "");                                                                          \
-    throw "ERROR";
+    {PRINT_DEBUGG("", ""); throw "ERROR";}
 
 #define assertm(exp, msg)                                                                          \
     if(exp)                                                                                        \

@@ -51,6 +51,11 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
  */
 void getRouteItems(const SolucaoNS::Rota &rota, VectorI &outItemIds);
 
+double getTotalVolume(const SolucaoNS::Bin& bin, const VectorI& itemIds, int numItems);
+double getTotalLeftArea(const SolucaoNS::Bin& bin, const VectorI& itemIds, int numItems);
+double getTotalAreaSupp(const SolucaoNS::Bin& bin, const VectorI& itemIds, int numItems);
+double getTotalWeight(const SolucaoNS::Bin& bin, const VectorI& itemIds, int numItems);
+
 } // namespace ConstrutivoBin2NS
 
 #endif // INC_2L_SDVRP_CONSTRUTIVOBIN_H

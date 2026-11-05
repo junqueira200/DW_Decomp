@@ -152,3 +152,31 @@ double AxleWeightsNS::SemiTrailer::computeMaxFK(SolucaoNS::Bin &bin) const
 
     return (1.0 / (double)distanceKingpinTrailerAxle) * maxFK;
 }
+
+double SemiTrailer::computeMaxFK(const VectorI &vetItems, int sizeVetItems) const
+{
+    double maxFK = massTrailer * 10 * distanceMassTrailerTrailerAxle;
+    for(int i = 0; i < sizeVetItems; ++i)
+    {
+        Item &item = instanciaG.vetItens[vetItems[i]];
+
+        double f = item.weight * 10;
+        double r =
+            (double)distanceCargoSpaceTrailerAxle; // - std::min(item.vetDim[0], item.vetDim[1]);
+        maxFK += f * r;
+    }
+
+    return (1.0 / (double)distanceKingpinTrailerAxle) * maxFK;
+}
+
+double SemiTrailer::computeMaxF() const
+{
+    double maxK 	= maxMassRearAxle + maxMassFrontAxle;
+
+    double forceK 	= GravityCmConst * maxK;
+    double forceRA 	= GravityCmConst * maxMassRearAxle;
+    double forceFA  = GravityCmConst * maxMassFrontAxle;
+    double forceTA  = GravityCmConst * maxMassTrailerAxle;
+
+    return std::max({forceK, forceRA, forceFA, forceTA});
+}

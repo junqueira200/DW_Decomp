@@ -1944,26 +1944,52 @@ void SolucaoNS::penalizeSolution(Rota &route, Bin &bin, Penalty &penalty)
             axleWightsP += std::max({fFA, fRA, fTA});
     }
 
-    penalty = Penalty(
-        colisionP, supportP, axleWightsP, loadBalancingP, compactnessP, lifoP, fragilityP, 0.0);
+    penalty.set(Penalty::TypePenalty::Collision, colisionP);
+    penalty.set(Penalty::TypePenalty::Support, supportP);
+    penalty.set(Penalty::TypePenalty::AxleWeights, axleWightsP);
+    penalty.set(Penalty::TypePenalty::Compactness, compactnessP);
+    penalty.set(Penalty::TypePenalty::Lifo, lifoP);
+    penalty.set(Penalty::TypePenalty::Fragility, fragilityP);
+    penalty.set(Penalty::TypePenalty::VolItemsNotPacked, 0.0);
 }
 
 double SolucaoNS::Penalty::getValue()
 {
     double value = 0.0;
-    bool   allZero = true;
+    bool doBreak = false;
 
     for(int i = 0; i < (int)TypePenalty::Count; ++i)
     {
-        value += ParseInputNS::input.arrayPenaltyWeight[i] * penalties[i];
-        if(!doubleEqual(penalties[i], 0.0))
-            allZero = false;
+        value += ParseInputNS::input.arrayPenaltyWeight[i] *
+                 (penalties[i]/vetNorm[i]);
+        //std::string name(Names[i]);
+
+//        std::printf("%s: div: %.2f; pena: %.2f; norm: %.2f\n", name.c_str(),
+//                     (penalties[i]/vetNorm[i]), penalties[i], vetNorm[i]);
+
+//        if((penalties[i]/vetNorm[i]) > (1.3))
+//        {
+//            doBreak = true;
+//        }
     }
 
-    if(!allZero)
-        return value;
-    else
-        return 0.0;
+//    std::printf("\nValue: %.2f\n", value);
+
+
+//    std::printf("\n\n******************************************\n\n");
+
+    if(doBreak == true)
+    {
+        PRINT_THROW();
+    }
+
+    //if(count >= 5)
+    //    PRINT_THROW();
+
+    //count += 1;
+
+
+    return value;
 }
 
 bool SolucaoNS::binAreEqual(Bin &bin0, Bin &bin1)

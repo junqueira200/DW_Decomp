@@ -348,6 +348,23 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
                       SolucaoNS::Penalty *penalty,
                       bool				  resetBin)
 {
+    double totalVol = 0.0;
+    double leftArea = 0.0;
+
+    for(int i=0; i < numItems; ++i)
+    {
+        totalVol += instanciaG.vetItens[itemIds[i]].volume;
+        double a0 = instanciaG.vetItens[itemIds[i]].vetDim[2]*
+                    instanciaG.vetItens[itemIds[i]].vetDim[0];
+
+        double a1 = instanciaG.vetItens[itemIds[i]].vetDim[2]*
+                    instanciaG.vetItens[itemIds[i]].vetDim[1];
+
+        if(a0 > a1)
+            leftArea += a0;
+        else
+            leftArea += a1;
+    }
 
     static VectorI sortedItems(MaxNumItemsBin);
     static VectorI vetNotPackedItems(instanciaG.numItens);
@@ -679,6 +696,86 @@ bool packRoute(SolucaoNS::Rota &rota, VectorI _itemIds, bool print)
 
     return packItemsIntoBin(bin, rota, itemIds, numItems, true, false);
 
-} // namespace ConstrutivoBinNS
+}
+
+double getTotalVolume(const SolucaoNS::Bin &bin, const VectorI &itemIds, int numItems)
+{
+    double totalVol = 0.0;
+
+    for(int i=0; i < numItems; ++i)
+        totalVol += instanciaG.vetItens[itemIds[i]].volume;
+
+    for(int i=0; i < bin.numItens; ++i)
+        totalVol += instanciaG.vetItens[bin.vetItemId[i]].volume;
+
+    return totalVol;
+}
+
+double getTotalLeftArea(const SolucaoNS::Bin &bin, const VectorI &itemIds, int numItems)
+{
+    double leftArea = 0.0;
+
+    for(int i=0; i < numItems; ++i)
+    {
+        double a0 = instanciaG.vetItens[itemIds[i]].vetDim[2]*
+                    instanciaG.vetItens[itemIds[i]].vetDim[0];
+
+        double a1 = instanciaG.vetItens[itemIds[i]].vetDim[2]*
+                    instanciaG.vetItens[itemIds[i]].vetDim[1];
+
+        leftArea += std::max(a0, a1);
+    }
+
+    for(int i=0; i < bin.numItens; ++i)
+    {
+        int item = bin.vetItemId[i];
+        double a0 = instanciaG.vetItens[item].vetDim[2]*
+                    instanciaG.vetItens[item].vetDim[0];
+
+        double a1 = instanciaG.vetItens[item].vetDim[2]*
+                    instanciaG.vetItens[item].vetDim[1];
+
+        leftArea += std::max(a0, a1);
+    }
+
+    return leftArea;
+}
+
+double getTotalAreaSupp(const SolucaoNS::Bin &bin, const VectorI &itemIds, int numItems)
+{
+    double area = 0.0;
+
+    for(int i=0; i < numItems; ++i)
+    {
+        const Array<double, 3> dim = instanciaG.vetItens[itemIds[i]].vetDim;
+        area += dim[0]*dim[1];
+    }
+
+    for(int i=0; i < bin.numItens; ++i)
+    {
+        int item = bin.vetItemId[i];
+        const Array<double, 3> dim = instanciaG.vetItens[item].vetDim;
+        area += dim[0]*dim[1];
+    }
+
+    return area;
+}
+
+double getTotalWeight(const SolucaoNS::Bin &bin, const VectorI &itemIds, int numItems)
+{
+
+    double weight = 0.0;
+
+    for(int i=0; i < numItems; ++i)
+        weight += instanciaG.vetItens[itemIds[i]].weight;
+
+
+    for(int i=0; i < bin.numItens; ++i)
+        weight += instanciaG.vetItens[bin.vetItemId[i]].weight;
+
+    return weight;
+}
+
+       // namespace ConstrutivoBinNS
 
 } // namespace ConstrutivoBin2NS

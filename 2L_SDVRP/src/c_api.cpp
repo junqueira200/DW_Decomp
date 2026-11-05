@@ -960,6 +960,7 @@ void setOroloc3DProblem(int doPrint)
 {
     if(doPrint)
         std::printf("Seting parameters for Oroloc3D loading\n");
+    SolucaoNS::Penalty penalty;
 
     input.instOroloc3D_2 		= true;
     input.axleWights 			= true;
@@ -1034,7 +1035,18 @@ void setOroloc3DProblem(int doPrint)
                 input.gaMigrationInterval,
                 input.gaMigrationRate);
 
-    std::printf("Model: %d\n\n", input.modelType);
+    std::printf("--- Penalty ---\n\n");
+    for(int i=0; i < (int)SolucaoNS::Penalty::TypePenalty::Count; ++i)
+    {
+        std::string name(penalty.Names[i]);
+
+        if(name.size() <= 6)
+            std::printf("\t%s:\t\t%.2f\n", name.c_str(), input.arrayPenaltyWeight[i]);
+        else
+            std::printf("\t%s:\t%.2f\n", name.c_str(), input.arrayPenaltyWeight[i]);
+    }
+
+    std::printf("---------------------------------------\n\n");
 
     if(input.mlifo && !input.lifo)
     {
@@ -1047,6 +1059,8 @@ void setOroloc3DProblem(int doPrint)
         std::printf("ERROR, useTopItem cant be active with modelType >= 1\n");
         PRINT_THROW();
     }
+
+    PRINT_THROW();
 }
 
 void saveProblem(Input &inputTemp)

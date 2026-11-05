@@ -37,7 +37,7 @@ class Penalty
         Count // Used to size the array automatically
     };
 
-  private:
+  public:
     Array<double, (std::size_t)TypePenalty::Count> penalties{};
     static constexpr std::array<std::string_view, static_cast<std::size_t>(TypePenalty::Count)>
         Names = {"Collision",
@@ -49,9 +49,9 @@ class Penalty
                  "Fragility",
                  "VolItemsNotPacked"};
 
-  public:
+    Array<double, (std::size_t)TypePenalty::Count> vetNorm{};
     // Default constructor (initializes all values to 0.0)
-    Penalty() { penalties.fill(0.0); }
+    Penalty() { penalties.fill(0.0); vetNorm.fill(1.0);}
 
     // Parameterized constructor
     Penalty(double collision,
@@ -74,10 +74,12 @@ class Penalty
     }
 
     // Getter using Enum
-    double get(TypePenalty type) const { return penalties[static_cast<std::size_t>(type)]; }
+    double get(TypePenalty type) const { return penalties[(std::size_t)type]; }
 
     // Setter using Enum
-    void set(TypePenalty type, double value) { penalties[static_cast<std::size_t>(type)] = value; }
+    void set(TypePenalty type, double value){penalties[(std::size_t)type] = value;}
+
+    void setNorm(TypePenalty type, double value){vetNorm[(std::size_t)type] = value;}
 
     // Array subscript operator overloads for convenient syntax: p[Penalty::Type::Collision]
     double operator[](TypePenalty type) const { return penalties[static_cast<std::size_t>(type)]; }
