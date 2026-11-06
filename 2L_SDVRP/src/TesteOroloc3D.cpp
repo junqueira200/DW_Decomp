@@ -605,7 +605,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         else
         {
             useValuesFromHeuristic = false;
-            notFeasibleG += 1;
+            //notFeasibleG += 1;
             //continue;
         }
 
@@ -894,7 +894,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
             output += std::format("TIME_LIMIT; {:.4f} ", timeGA);
 
         std::cout << output << "\n";
-        //appendToFile(input.strOutputFolder+"/oroloc3D.csv", output);
+        appendToFile(input.strOutputFolder+"/oroloc3D.csv", output);
 
         std::printf("\n\n*************************************\n\n");
 
@@ -905,15 +905,15 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
     }
 
     //writeSoltionOroloc2(solCp, "model");
-    //writeSoltionOroloc2(solHeur, "brkga");
+    writeSoltionOroloc2(solHeur, "brkga");
 
     //std::cout<<solHeur.printSol()<<"\n\n";
     std::string strSolHeur = solHeur.printSol();
     std::string strModel = solCp.printSol();
 
-    //writeToFile(strSolHeur, input.strOutputFolder+"/Plot/Heuristic/"+input.strInst+".txt");
+    writeToFile(strSolHeur, input.strOutputFolder+"/Plot/Heuristic/"+input.strInst+".txt");
     //writeToFile(strModel,   input.strOutputFolder+"/Plot/Model/"+input.strInst+".txt");
-    writeToFile(std::to_string(notFeasibleG)+"\n", input.outputIrace);
+    //writeToFile(std::to_string(notFeasibleG)+"\n", input.outputIrace);
 
 }
 

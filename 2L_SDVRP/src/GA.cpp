@@ -76,25 +76,27 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
     const int numberOfDiscart = subPopulationSize * input.gaDiscartPercetence;
     const int numberOfRest = subPopulationSize - numberOfDiscart - numberOfElite;
 
-    const int numberOfMigrationIndividuals = std::ceil(subPopulationSize * input.gaMigrationRate);
+    int numberOfMigrationIndividuals = std::ceil(subPopulationSize * input.gaMigrationRate);
 
     if constexpr(PrintGA)
         std::printf("numberOfMigrationIndividuals: %d\n", numberOfMigrationIndividuals);
 
-    if(numberOfMigrationIndividuals > numberOfDiscart)
+    if(numberOfMigrationIndividuals > numberOfDiscart && input.gaNumberOfIslands >= 2)
     {
         std::printf("Error: numberOfMigrationIndividuals (%d) > numberOfDiscart (%d)!\n",
                     numberOfMigrationIndividuals,
                     numberOfDiscart);
-        PRINT_THROW();
+        numberOfMigrationIndividuals = std::max(numberOfDiscart-1, 1);
+        //PRINT_THROW();
     }
 
-    if(numberOfMigrationIndividuals > numberOfElite)
+    if(numberOfMigrationIndividuals > numberOfElite && input.gaNumberOfIslands >= 2)
     {
         std::printf("Error: numberOfMigrationIndividuals (%d) > numberOfElite (%d)!\n",
                     numberOfMigrationIndividuals,
                     numberOfElite);
-        PRINT_THROW();
+        numberOfMigrationIndividuals = std::max(numberOfElite-1, 1);
+        //PRINT_THROW();
     }
 
     // const std::pair<int, int> indexElite(0, numberOfElite-1);
