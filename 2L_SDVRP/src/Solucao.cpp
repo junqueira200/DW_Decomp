@@ -128,6 +128,7 @@ void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
         std::cout << "\t\t\tCriando EP" << ponto.print() << "\n";
 
     addEp(ponto);
+    addEp(projectEPFull(ponto.vetDim[0], ponto.vetDim[1], ponto.vetDim[2]));
 
     ponto = pontoRefe;
     ponto.vetDim[1] += instanciaG.vetItens[idItem].getDimRotacionada(1, r);
@@ -136,6 +137,7 @@ void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
     if(PrintEP)
         std::cout << "\t\t\tCriando EP" << ponto.print() << "\n";
     addEp(ponto);
+    addEp(projectEPFull(ponto.vetDim[0], ponto.vetDim[1], ponto.vetDim[2]));
 
     if(instanciaG.numDim == 3)
     {
@@ -143,6 +145,7 @@ void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
         ponto.vetDim[2] += instanciaG.vetItens[idItem].getDimRotacionada(2, r);
         ponto = projectEP(ponto.vetDim[0], ponto.vetDim[1], ponto.vetDim[2]);
         addEp(ponto);
+        addEp(projectEPFull(ponto.vetDim[0], ponto.vetDim[1], ponto.vetDim[2]));
     }
 
     rmI_Ep(idEp);
@@ -343,6 +346,55 @@ SolucaoNS::Ponto SolucaoNS::Bin::projectEP(double x, double y, double sourceZ)
     }
 
     return Ponto(x, y, targetZ);
+}
+
+// Slides the point toward x = 0 until it touches the x-end face of an item
+// that contains (y, z), or the wall.
+SolucaoNS::Ponto SolucaoNS::Bin::projectEPBackX(double sourceX, double y, double z)
+{
+    double targetX = 0.0;
+
+    for(int i = 0; i < numItens; ++i)
+    {
+        Ponto &pos  = vetPosItem[i];
+        Item  &item = instanciaG.vetItens[vetItemId[i]];
+
+        double y0 = pos.vetDim[1];
+        double y1 = y0 + item.getDimRotacionada(1, vetRotacao[i]);
+        double z0 = pos.vetDim[2];
+        double z1 = z0 + item.getDimRotacionada(2, vetRotacao[i]);
+
+        if(y >= y0 && y < y1 && z >= z0 && z < z1)
+        {
+            double itemEndX = pos.vetDim[0] + item.getDimRotacionada(0, vetRotacao[i]);
+            if(itemEndX <= sourceX + 1E-5 && itemEndX > targetX)
+                targetX = itemEndX;
+        }
+    }
+
+    return Ponto(targetX, y, z);
+}
+
+// Alternates down (-z) and back (-x) projections until the point stops moving.
+// Coordinates only decrease, so this converges; the cap is a safety net.
+SolucaoNS::Ponto SolucaoNS::Bin::projectEPFull(double x, double y, double z)
+{
+    Ponto p(x, y, z);
+
+    for(int it = 0; it < 10; ++it)
+    {
+        Ponto q = projectEP(p.vetDim[0], p.vetDim[1], p.vetDim[2]);   // down
+        q = projectEPBackX(q.vetDim[0], q.vetDim[1], q.vetDim[2]);    // back
+
+        bool unchanged = doubleEqual(q.vetDim[0], p.vetDim[0], 1E-5) &&
+                         doubleEqual(q.vetDim[2], p.vetDim[2], 1E-5);
+        p = q;
+
+        if(unchanged)
+            break;
+    }
+
+    return p;
 }
 
 bool SolucaoNS::Bin::rmI_Ep(int i)

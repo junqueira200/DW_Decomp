@@ -14,7 +14,7 @@
 #include "Ig.h"
 #include "InputOutput.h"
 #include "Instancia.h"
-#include "MILP.h"
+//#include "MILP.h"
 #include "TesteOroloc3D.h"
 #include "c_api.h"
 #include "rand.h"
@@ -39,7 +39,8 @@ using namespace DualFeasibleFunctionsNS;
 using namespace ContainerLoading;
 using namespace VehicleRouting;
 using namespace VehicleRouting::Algorithms;
-using namespace MILP_NS;
+
+//using namespace MILP_NS;
 
 void testMLIFO()
 {
@@ -357,6 +358,7 @@ int main(int argc, const char *argv[])
     // IBM_CpOptimizerNS::testSCIP();
     return 0;
 
+    /*
     GRBEnv   env;
     GRBModel model(env);
     model.set(GRB_IntParam_Threads, 4);
@@ -411,6 +413,7 @@ int main(int argc, const char *argv[])
     {
         std::cout << "\nFound a solution!\n";
     }
+    */
 
     // testeOroloc3D();
     return 0;

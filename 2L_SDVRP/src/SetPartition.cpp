@@ -10,12 +10,13 @@
 #include "SetPartition.h"
 #include "Instancia.h"
 #include "c_api.h"
-#include "gurobi_c++.h"
+//#include "gurobi_c++.h"
 
 using namespace SetPartitionNS;
 using namespace SolucaoNS;
 using namespace InstanceNS;
 
+/*
 void SetPartitionNS::setPatition(Solucao &startSol, Solucao &outPutSol)
 {
     std::printf("Num rotas: %ld\n", routeData.routeSetFeasible.size());
@@ -113,3 +114,4 @@ void SetPartitionNS::setPatition(Solucao &startSol, Solucao &outPutSol)
         PRINT_THROW();
     }
 }
+*/

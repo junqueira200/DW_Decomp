@@ -34,6 +34,7 @@ struct StopData
     VectorI 				sizeMatStopItem;
     VectorI 				vetCustStop;
     Vector<std::set<int>>	vetStopsSet;
+    VectorD 				vetStopWeight;   // total weight of the items on board at each stop
 
     StopData();
     void reset();
@@ -223,6 +224,8 @@ struct Bin
     void        addEp(const Ponto &ep);
     std::string printPlot();
     Ponto       projectEP(double x, double y, double sourceZ);
+    Ponto       projectEPBackX(double sourceX, double y, double z);
+    Ponto       projectEPFull(double x, double y, double z);
 
     inline __attribute__((always_inline)) void
     setItem(int pos, int itemId, double x, double y, double z)

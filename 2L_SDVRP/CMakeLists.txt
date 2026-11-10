@@ -26,9 +26,10 @@ cmake_policy(SET CMP0144 NEW)
 #find_package(Eigen3 3.3 REQUIRED)# NO_MODULE)
 include_directories(${EIGEN3_INCLUDE_DIR})
 find_package(ortools CONFIG REQUIRED)
-find_package(GUROBI REQUIRED)
-include_directories(${GUROBI_INCLUDE_DIRS})
-link_directories($ENV{GUROBI_HOME}/lib)
+
+#find_package(GUROBI REQUIRED)
+#include_directories(${GUROBI_INCLUDE_DIRS})
+#link_directories($ENV{GUROBI_HOME}/lib)
 
 include_directories($ENV{SCIPpp}/include)
 link_directories($ENV{SCIPpp}/lib)
@@ -72,7 +73,7 @@ target_sources(${PROJECT_NAME}
         src/LoadingChecker.cpp
         src/AxleWeights.cpp
         src/TesteOroloc3D.cpp
-        src/MILP.cpp
+#        src/MILP.cpp
         src/IBM_CpOptimizer.cpp
         #src/SCIP.cpp
         src/Constants.cpp
@@ -90,8 +91,8 @@ target_sources(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PRIVATE Eigen3::Eigen)
 target_link_libraries(${PROJECT_NAME} PRIVATE ortools::ortools)
 #target_link_libraries(${PROJECT_NAME} DwDecomp)
-target_link_libraries(${PROJECT_NAME} PRIVATE gurobi_c++)
-target_link_libraries(${PROJECT_NAME} PRIVATE gurobi)
+#target_link_libraries(${PROJECT_NAME} PRIVATE gurobi_c++)
+#target_link_libraries(${PROJECT_NAME} PRIVATE gurobi)
 target_link_libraries(${PROJECT_NAME} PRIVATE Boost::boost)
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
 target_link_libraries(${PROJECT_NAME} PRIVATE CPLEX::CPLEX)

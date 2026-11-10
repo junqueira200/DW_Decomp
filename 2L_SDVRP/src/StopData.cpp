@@ -9,13 +9,15 @@ StopData::StopData():	sizeJ(100*instanciaG.numClientes),
                         matStopItem(10, sizeJ),
                         sizeMatStopItem(10),
                         vetCustStop(instanciaG.numClientes),
-                        vetStopsSet(10)
+                        vetStopsSet(10),
+                        vetStopWeight(10)
 {}
 
 void StopData::reset()
 {
     sizeMatStopItem.setAll(0);
     vetCustStop.setAll(-1);
+    vetStopWeight.setAll(0.0);
     for(auto& it:vetStopsSet)
         it.erase(it.begin(), it.end());
 
@@ -74,7 +76,10 @@ void StopData::compute(SolucaoNS::Rota &route, VectorI &vetItems, int sizeVetIte
     for(int stop=0; stop <= (route.numPos-2); ++stop)
     {
         for(int i=0; i < sizeMatStopItem[stop]; ++i)
+        {
             vetStopsSet[stop].insert(matStopItem(stop, i));
+            vetStopWeight[stop] += instanciaG.vetItens[matStopItem(stop, i)].weight;
+        }
     }
 
 }

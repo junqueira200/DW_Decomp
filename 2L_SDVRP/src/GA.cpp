@@ -168,7 +168,7 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
 
     const double totalVolume = getTotalVolume(bin, vetItems, sizeVetItems);
     //const double areaLeft    = getTotalLeftArea(bin, vetItems, sizeVetItems);
-    static const double maxF = 100*semiTrailer.computeMaxF();
+    static const double maxF = 2*semiTrailer.computeMaxF();
     const double areaSupp    = getTotalAreaSupp(bin, vetItems, sizeVetItems);
     const double totalWeight = getTotalWeight(bin, vetItems, sizeVetItems);
 
@@ -190,14 +190,12 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
     */
 
     //PRINT_THROW();
-
     penalty.setNorm(Penalty::TypePenalty::AxleWeights, maxF);
     penalty.setNorm(Penalty::TypePenalty::Compactness, totalVolume);
     penalty.setNorm(Penalty::TypePenalty::Lifo, totalVolume);
     penalty.setNorm(Penalty::TypePenalty::LoadBalancing, totalWeight);
     penalty.setNorm(Penalty::TypePenalty::Support, totalVolume);
     penalty.setNorm(Penalty::TypePenalty::VolItemsNotPacked, totalVolume);
-
     //std::cout<<"vetNorm: "<<penalty.vetNorm<<"\n";
 
     //PRINT_THROW();

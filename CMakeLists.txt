@@ -19,7 +19,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g")#-Wall")
 add_subdirectory(Timer)
 include_directories(Timer/include)
 
-add_subdirectory(DW_Decomp)
+#add_subdirectory(DW_Decomp)
 include_directories(DW_Decomp/include)
 
 add_subdirectory(CvrpSep)
@@ -34,13 +34,13 @@ include_directories(Grafo/include)
 #add_subdirectory(SparseTeste)
 #include_directories(SparseTeste/include)
 
-add_subdirectory(Instances)
+#add_subdirectory(Instances)
 include_directories(Instances/include)
 
 add_subdirectory(2L_SDVRP)
 include_directories(2L_SDVRP/include)
 
-add_subdirectory(VRPTW)
+#add_subdirectory(VRPTW)
 include_directories(VRPTW/include)
 
 add_subdirectory(2L_SDVRP_Main)

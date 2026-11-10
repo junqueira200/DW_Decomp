@@ -251,65 +251,59 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
 
         static VectorD vetLeft(10);
         static VectorD vetRight(10);
-        static VectorD vetTotal(10);
 
         vetLeft.setAll(0.0);
         vetRight.setAll(0.0);
-        vetTotal.setAll(0.0);
 
-        double weight = instanciaG.vetItens[itemId].weight;
-        double width = instanciaG.vetItens[itemId].getDimRotacionada(1, r);
-        double left = computeLeftBalancedLoading(p.vetDim[1], width, weight);
-        double right = item.weight - left;
+        // Model 0 only checks the initial load (stop 1)
+        const int lastStop = (input.modelType <= 0) ? 1 : (rota.numPos - 2);
 
-        for(int s=1; s < rota.numPos-1; ++s)
+        // Candidate item
         {
-            if(stopData->vetStopsSet[s].contains(itemId))
-            {
-                vetLeft[s] 	+= left;
-                vetRight[s] += right;
-                vetTotal[s] += weight;
-            }
-            else
-                break;
-
-            if(input.modelType <= 0)
-                break;
-        }
-
-        // TODO: Remove!
-        for(int i=0; i < bin.numItens; ++i)
-        {
-            int itemId = bin.vetItemId[i];
-            double weight = instanciaG.vetItens[itemId].weight;
-            double width = instanciaG.vetItens[bin.vetItemId[i]].getDimRotacionada(1, r);
-            double left = computeLeftBalancedLoading(bin.vetPosItem[i].vetDim[1], width, weight);
+            double width = item.getDimRotacionada(1, r);
+            double left  = computeLeftBalancedLoading(p.vetDim[1], width, item.weight);
             double right = item.weight - left;
 
-            for(int s=1; s < rota.numPos-1; ++s)
+            for(int s = 1; s <= lastStop; ++s)
             {
-                if(stopData->vetStopsSet[s].contains(itemId))
-                {
-                    vetLeft[s] 	+= left;
-                    vetRight[s] += right;
-                    vetTotal[s] += weight;
-                }
-                else
+                if(!stopData->vetStopsSet[s].contains(itemId))
                     break;
+                vetLeft[s]  += left;
+                vetRight[s] += right;
             }
         }
 
-        for(int s=1; s < rota.numPos-1; ++s)
+        // Items already in the bin (own rotation and own weight)
+        for(int k = 0; k < bin.numItens; ++k)
         {
-            if(std::abs(vetLeft[s]-vetLeft[s]) > std::ceil(input.balancedLoadingD*instanciaG.maxPayload))
+            int    placedId   = bin.vetItemId[k];
+            Item  &placedItem = instanciaG.vetItens[placedId];
+            double width = placedItem.getDimRotacionada(1, bin.vetRotacao[k]);
+            double left  = computeLeftBalancedLoading(bin.vetPosItem[k].vetDim[1], width,
+                                                      placedItem.weight);
+            double right = placedItem.weight - left;
+
+            for(int s = 1; s <= lastStop; ++s)
+            {
+                if(!stopData->vetStopsSet[s].contains(placedId))
+                    break;
+                vetLeft[s]  += left;
+                vetRight[s] += right;
+            }
+        }
+
+        // Side loads only grow as items are added: once a side exceeds the limit
+        // of the stop's final load, no later placement can repair it.
+        for(int s = 1; s <= lastStop; ++s)
+        {
+            double limit = std::ceil(input.balancedLoadingD * stopData->vetStopWeight[s]);
+            if(vetLeft[s] > limit || vetRight[s] > limit)
             {
                 vetPackinErros[PackingErroLoadBalancing] += 1;
                 return false;
             }
         }
-
-
-     }
+    }
 
 
     // 6. Left Compactness Check (Prevent floating gaps on the left side)
@@ -320,7 +314,10 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
         double leftAreaTotal = dy * dz;
         double leftSupport = 0.0;
 
-        for(int s=1; s < rota.numPos-1; ++s)
+        // Model 0 only checks the initial load (stop 1)
+        const int lastStop = (input.modelType <= 0) ? 1 : (rota.numPos - 2);
+
+        for(int s = 1; s <= lastStop; ++s)
         {
             if(!stopData->vetStopsSet[s].contains(itemId))
                 break;
@@ -660,7 +657,8 @@ bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
                           [](const PlacementCandidate &a, const PlacementCandidate &b)
                           { return a.score < b.score; });
 
-                int rclSize = numOfCandidates;//std::max(1, (int)(numOfCandidates * input.aphaBinEscolhaEp));
+                // numOfCandidates
+                int rclSize = std::max(1, (int)(numOfCandidates * input.aphaBinEscolhaEp));
                 // std::printf("\t\trclSize: %d\n", rclSize);
                 int chosen = 0;//randomKey[numItems+itemId]*rclSize;
 
@@ -670,7 +668,10 @@ bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
                 if(randomKey)
                 {
                     double gen = randomKey[numItems+itemId];
-                    chosen = (int)(gen*rclSize);
+                    // Candidates are sorted by score (best first). Raising gen to a power > 1
+                    // pushes values toward 0, so the best positions are picked more often.
+                    constexpr double CandidateBias = 3.0;   // 1 = uniform
+                    chosen = (int)(std::pow(gen, CandidateBias) * rclSize);
                     chosen = std::min(chosen, rclSize - 1);
                 }
                 else
@@ -1081,7 +1082,10 @@ void penalizeSolution(Rota &route, Bin &bin, Penalty &penalty, StopDataNS::StopD
             loadBalancingP += bin.sumRightBalancedLoading - limit;
     }
 
-    for(int stop = 1; stop < (route.numPos-2); ++stop)
+    // Stop 1 (all items on board) is already penalized by the global block above.
+    // Model 0 only checks the initial load, so it has no per-stop part.
+    const int lastStop = (input.modelType >= 1) ? (route.numPos - 2) : 0;
+    for(int stop = 2; stop <= lastStop; ++stop)
     {
 
         double sumLeft 		= 0.0;
@@ -1178,12 +1182,19 @@ void penalizeSolution(Rota &route, Bin &bin, Penalty &penalty, StopDataNS::StopD
     if(input.axleWights)
     {
         if(!semiTrailer.checkAxleWeights(bin, false, &fk, &fFA, &fRA, &fTA))
-            axleWightsP += std::max({fFA, fRA, fTA});
+        {
+            double overFA = std::max(0.0, fFA - semiTrailer.maxMassFrontAxle   * GravityCm);
+            double overRA = std::max(0.0, fRA - semiTrailer.maxMassRearAxle    * GravityCm);
+            double overTA = std::max(0.0, fTA - semiTrailer.maxMassTrailerAxle * GravityCm);
+
+            axleWightsP += overFA + overRA + overTA;
+        }
     }
 
     penalty.set(Penalty::TypePenalty::Collision, colisionP);
     penalty.set(Penalty::TypePenalty::Support, supportP);
     penalty.set(Penalty::TypePenalty::AxleWeights, axleWightsP);
+    penalty.set(Penalty::TypePenalty::LoadBalancing, loadBalancingP);
     penalty.set(Penalty::TypePenalty::Compactness, compactnessP);
     penalty.set(Penalty::TypePenalty::Lifo, lifoP);
     penalty.set(Penalty::TypePenalty::Fragility, fragilityP);

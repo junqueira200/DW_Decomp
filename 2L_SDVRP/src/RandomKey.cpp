@@ -42,7 +42,7 @@ bool RandomKeyNS::decoderRandomKey(RandomKey          	&randKey,
 
     //bin.reset();
     sort_two_vectors(randKey.vetRandomKey.data(), vetItemsTemp, vetItemsSize);
-    //grupByCustomer(vetItemsTemp, vetItemsSize, route);
+    grupByCustomer(vetItemsTemp, vetItemsSize, route);
     penalty.set0();
 
     randKey.evaluated = true;

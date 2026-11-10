@@ -6,7 +6,7 @@
 #include "GA.h"
 #include "IBM_CpOptimizer.h"
 #include "InputOutput.h"
-#include "MILP.h"
+//#include "MILP.h"
 #include "RandomKey.h"
 #include "SCIP.h"
 #include "Solucao.h"
@@ -20,7 +20,7 @@ using namespace ParseInputNS;
 using namespace ContainerLoading;
 using namespace VehicleRouting;
 using namespace VehicleRouting::Algorithms;
-using namespace MILP_NS;
+//using namespace MILP_NS;
 using namespace SolucaoNS;
 using namespace AxleWeightsNS;
 using namespace ConstrutivoBinNS;
@@ -29,6 +29,8 @@ using namespace DualFeasibleFunctionsNS;
 using namespace ConstrutivoBin2NS;
 using namespace RandomKeyNS;
 using namespace GA_NS;
+
+constexpr bool RunIrace = true;
 
 // using namespace SCIP_NS;
 
@@ -433,7 +435,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
     int numCompleteFeasible = 0;
     notFeasibleG = 0;
 
-    std::cout << "Veic: " << instanciaG.vetDimVeiculo << "\n";
+    if constexpr(!RunIrace)
+        std::cout << "Veic: " << instanciaG.vetDimVeiculo << "\n";
 
     Solucao solCpSat(instanciaG);
 
@@ -455,7 +458,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
             continue;
         }
 
-        std::printf("%s\n\n", sol.vetRota[veic].printRota().c_str());
+        if constexpr(!RunIrace)
+            std::printf("%s\n\n", sol.vetRota[veic].printRota().c_str());
 
         VectorI vetItemsCp;
         int     numItems = 0;
@@ -463,16 +467,20 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         {
             vetItemsCp = bin.vetItemId;
             numItems = bin.numItens;
-            std::printf("numItems: %d\n", numItems);
-            for(int i = 0; i < numItems; ++i)
-                std::printf("%d ", vetItemsCp[i]);
-            std::printf("\n:");
+            if constexpr(!RunIrace)
+            {
+                std::printf("numItems: %d\n", numItems);
+                for(int i = 0; i < numItems; ++i)
+                   std::printf("%d ", vetItemsCp[i]);
+                std::printf("\n:");
+            }
             // continue;					// for(int veic = 0)
         }
         else
         {
             numItems = copiaItensCliente(sol.vetRota[veic].vetRota[1], vetItemsCp);
-            std::printf("Cliente unico\n");
+            if constexpr(!RunIrace)
+                std::printf("Cliente unico\n");
         }
 
         const VectorI vetItems = vetItemsCp;
@@ -536,7 +544,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         */
 
 
-        std::printf("GA: %d; time: %f\n\n", (int)resultRandKey, timeGA);
+        if constexpr(!RunIrace)
+            std::printf("GA: %d; time: %f\n\n", (int)resultRandKey, timeGA);
 
         double ompStart = omp_get_wtime();
         RandNs::startEngine(RandNs::estado_, true);
@@ -612,12 +621,16 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         double ompEnd = omp_get_wtime();
         double timeConst = ompEnd - ompStart;
 
-        std::printf("Extreme Point Heuristic: %d; Time: %.4f s\n", feasibleSolConst, timeConst);
-        std::printf("Veic %d:\n", veic);
+        if constexpr(!RunIrace)
+        {
+            std::printf("Extreme Point Heuristic: %d; Time: %.4f s\n", feasibleSolConst, timeConst);
+            std::printf("Veic %d:\n", veic);
+        }
 
         bool feasible = bin.checkFeasibility(&rota, false, true);
 
-        std::printf("Bin check: %d\n", feasible);
+        if constexpr(!RunIrace)
+            std::printf("Bin check: %d\n", feasible);
         // std::printf("Plot:\n\n%s\n", bin.printPlot().c_str());
 
         // continue;
@@ -636,11 +649,14 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                 vetItems, vetCuboids, numItems, sol.vetRota[veic]);
         }
 
-        int dualFeasible = check(vetItems);
-        if(!dualFeasible)
-            std::printf("Dual Infeasible\n");
-        else
-            std::printf("Dual feasible\n");
+        if constexpr(!RunIrace)
+        {
+            int dualFeasible = check(vetItems);
+            if(!dualFeasible)
+                std::printf("Dual Infeasible\n");
+            else
+               std::printf("Dual feasible\n");
+        }
 
         for(int i = 1; i < sol.vetRota[veic].numPos - 1; ++i)
             stopIds.push_back(sol.vetRota[veic].vetRota[i]);
@@ -690,7 +706,9 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                 double ompEnd = omp_get_wtime();
 
                 tempoCpu = ompEnd - ompStart;
-                std::printf("\t%2.f S; ", tempoCpu);
+
+                if constexpr(!RunIrace)
+                    std::printf("\t%2.f S; ", tempoCpu);
 
                 lastType = type;
 
@@ -701,14 +719,16 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                     // std::printf("Error in ConstraintProgrammingSolver: ");
                     if(status == LoadingStatus::Infeasible)
                     {
-                        std::printf("INFEASIBLE\n");
+                        if constexpr(!RunIrace)
+                            std::printf("INFEASIBLE\n");
                         statusOroc3D = INFEASIBLE;
                         output += "INFEASIBLE; ";
                         // break;
                     }
                     else
                     {
-                        std::printf("Time Limit\n");
+                        if constexpr(!RunIrace)
+                            std::printf("Time Limit\n");
                         statusOroc3D = TIME_LIMIT;
                         output += "TIME_LIMIT; ";
                     }
@@ -717,7 +737,9 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                 }
                 else
                 {
-                    std::printf("Loading was successful!\n");
+                    if constexpr(!RunIrace)
+                        std::printf("Loading was successful!\n");
+
                     statusOroc3D = FEASIBLE;
                     doBreak = true;
                     if(n == 0)
@@ -837,7 +859,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                     else
                     {
                         // semiTrailer.checkAxleWeights(binCp, true);
-                        std::printf("CP INFEASIBLE\n");
+                        if constexpr(!RunIrace)
+                            std::printf("CP INFEASIBLE\n");
 
                         // std::cout << binCp.printPlot()
                         //           << "\n***********************\n***********************\n\n";
@@ -893,27 +916,34 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         else
             output += std::format("TIME_LIMIT; {:.4f} ", timeGA);
 
-        std::cout << output << "\n";
-        appendToFile(input.strOutputFolder+"/oroloc3D.csv", output);
+        if constexpr(!RunIrace)
+        {
+            std::cout << output << "\n";
+            appendToFile(input.strOutputFolder+"/oroloc3D.csv", output);
 
-        std::printf("\n\n*************************************\n\n");
-
+            std::printf("\n\n*************************************\n\n");
+        }
         // PRINT_DEBUGG("", "");
 
         // break;
         // PRINT_THROW();
     }
 
-    //writeSoltionOroloc2(solCp, "model");
-    writeSoltionOroloc2(solHeur, "brkga");
+    if constexpr(!RunIrace)
+    {
+        //writeSoltionOroloc2(solCp, "model");
+        writeSoltionOroloc2(solHeur, "brkga");
 
-    //std::cout<<solHeur.printSol()<<"\n\n";
-    std::string strSolHeur = solHeur.printSol();
-    std::string strModel = solCp.printSol();
+               //std::cout<<solHeur.printSol()<<"\n\n";
+        std::string strSolHeur = solHeur.printSol();
+        std::string strModel = solCp.printSol();
 
-    writeToFile(strSolHeur, input.strOutputFolder+"/Plot/Heuristic/"+input.strInst+".txt");
-    //writeToFile(strModel,   input.strOutputFolder+"/Plot/Model/"+input.strInst+".txt");
-    //writeToFile(std::to_string(notFeasibleG)+"\n", input.outputIrace);
+        writeToFile(strSolHeur, input.strOutputFolder+"/Plot/Heuristic/"+input.strInst+".txt");
+        //writeToFile(strModel,   input.strOutputFolder+"/Plot/Model/"+input.strInst+".txt");
+        //writeToFile(std::to_string(notFeasibleG)+"\n", input.outputIrace);
+    }
+    else
+        writeToFile(std::to_string(notFeasibleG)+"\n", input.outputIrace);
 
 }
 
