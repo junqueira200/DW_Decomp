@@ -25,6 +25,8 @@ using namespace InstanceNS;
 using namespace SolucaoNS;
 using namespace AuxGeometryNS;
 using namespace ConstrutivoBinNS;
+using namespace AxleWeightsNS;
+using namespace StopDataNS;
 
 namespace ConstrutivoBin2NS
 {
@@ -33,14 +35,14 @@ void getRouteItems(const SolucaoNS::Rota &rota, VectorI &outItemIds)
 {
     outItemIds.clear();
 
-    // Iterate through all customer stops (excluding depot at 0 and numPos - 1)
+           // Iterate through all customer stops (excluding depot at 0 and numPos - 1)
     for(int pos = 1; pos < rota.numPos - 1; ++pos)
     {
         int customer = rota.vetRota[pos];
         if(customer <= 0 || customer >= instanciaG.numClientes)
             continue;
 
-        // Collect items from instance customer range
+               // Collect items from instance customer range
         int firstItem = instanciaG.matCliItensIniFim(customer, 0);
         int lastItem = instanciaG.matCliItensIniFim(customer, 1);
 
@@ -55,17 +57,18 @@ void getRouteItems(const SolucaoNS::Rota &rota, VectorI &outItemIds)
 /**
  * @brief Evaluates whether placing itemId at point p with rotation r is locally feasible.
  */
-static bool isPlacementFeasible(const Bin           &bin,
-                                Rota                &rota,
-                                int                  itemId,
-                                const Ponto         &p,
-                                InstanceNS::Rotation r,
-                                double sumM,
-                                double sumF)
+static bool isPlacementFeasibleModel0(const Bin           &bin,
+                                      Rota                &rota,
+                                      int                  itemId,
+                                      const Ponto         &p,
+                                      InstanceNS::Rotation r,
+                                      double sumM,
+                                      double sumF,
+                                      StopData *stopData)
 {
     Item &item = instanciaG.vetItens[itemId];
 
-    // 1. Boundary check
+           // 1. Boundary check
     for(int d = 0; d < instanciaG.numDim; ++d)
     {
         double dimR = item.getDimRotacionada(d, r);
@@ -77,33 +80,33 @@ static bool isPlacementFeasible(const Bin           &bin,
     double f = instanciaG.vetItens[itemId].weight * GravityCm;
     sumF += f;
 
-     double r_ = (double)AxleWeightsNS::semiTrailer.distanceCargoSpaceTrailerAxle -
-                p.vetDim[0] -
-                instanciaG.vetItens[itemId].getDimRotacionada(0, r) / 2.0;
+      double r_ = (double)AxleWeightsNS::semiTrailer.distanceCargoSpaceTrailerAxle -
+                 p.vetDim[0] -
+                 instanciaG.vetItens[itemId].getDimRotacionada(0, r) / 2.0;
 
-      sumM += f * r_;
+        sumM += f * r_;
 
-     double fK = (1.0 / (double)AxleWeightsNS::semiTrailer.distanceKingpinTrailerAxle) *
-          (sumM + (double)AxleWeightsNS::semiTrailer.massTrailer * GravityCm *
-                      AxleWeightsNS::semiTrailer.distanceMassTrailerTrailerAxle);
+      double fK = (1.0 / (double)AxleWeightsNS::semiTrailer.distanceKingpinTrailerAxle) *
+           (sumM + (double)AxleWeightsNS::semiTrailer.massTrailer * GravityCm *
+                       AxleWeightsNS::semiTrailer.distanceMassTrailerTrailerAxle);
 
-      double fFA = (1.0 / (double)AxleWeightsNS::semiTrailer.wheelBase) *
-            (fK * (double)AxleWeightsNS::semiTrailer.distanceKingpinRearAxle +
-             (double)AxleWeightsNS::semiTrailer.massTractor *
-                        GravityCm * AxleWeightsNS::semiTrailer.distanceMassTractorRearAxle);
+        double fFA = (1.0 / (double)AxleWeightsNS::semiTrailer.wheelBase) *
+              (fK * (double)AxleWeightsNS::semiTrailer.distanceKingpinRearAxle +
+               (double)AxleWeightsNS::semiTrailer.massTractor *
+                          GravityCm * AxleWeightsNS::semiTrailer.distanceMassTractorRearAxle);
 
-     double fRA = fK + (double)AxleWeightsNS::semiTrailer.massTractor * GravityCm - fFA;
-     double fTA = sumF + (double)AxleWeightsNS::semiTrailer.massTrailer * GravityCm - fK;
+      double fRA = fK + (double)AxleWeightsNS::semiTrailer.massTractor * GravityCm - fFA;
+      double fTA = sumF + (double)AxleWeightsNS::semiTrailer.massTrailer * GravityCm - fK;
 
-      if(fFA > (double)AxleWeightsNS::semiTrailer.maxMassFrontAxle* GravityCm*1.1)
+        if(fFA > (double)AxleWeightsNS::semiTrailer.maxMassFrontAxle* GravityCm*1.1)
+            return false;
+
+      if(fRA > (double)AxleWeightsNS::semiTrailer.maxMassRearAxle * GravityCm*1.1)
           return false;
 
-     if(fRA > (double)AxleWeightsNS::semiTrailer.maxMassRearAxle * GravityCm*1.1)
-         return false;
-
-      if(fTA > (double)AxleWeightsNS::semiTrailer.maxMassTrailerAxle * GravityCm*1.1) // ||
-          return false;
-      */
+        if(fTA > (double)AxleWeightsNS::semiTrailer.maxMassTrailerAxle * GravityCm*1.1) // ||
+            return false;
+        */
 
     // 2. Collision check with all already-packed items
     for(int k = 0; k < bin.numItens; ++k)
@@ -124,6 +127,7 @@ static bool isPlacementFeasible(const Bin           &bin,
 
         for(int k = 0; k < bin.numItens; ++k)
         {
+
             int    placedId = bin.vetItemId[k];
             Item  &placedItem = instanciaG.vetItens[placedId];
             double topZ =
@@ -155,7 +159,12 @@ static bool isPlacementFeasible(const Bin           &bin,
         }
     }
 
-    // 4. LIFO / Unloading sequence check with already packed items
+    static VectorI vetIndex(instanciaG.numItens);
+    vetIndex.setAll(-1);
+    for(int k = 0; k < bin.numItens; ++k)
+        vetIndex[bin.vetItemId[k]] = k;
+
+           // 4. LIFO / Unloading sequence check with already packed items
     if(ParseInputNS::input.lifo)
     {
         int    posNew = findPos(rota, itemId);
@@ -175,12 +184,12 @@ static bool isPlacementFeasible(const Bin           &bin,
             if(posPlaced == posNew)
                 continue;
 
-            // --- NEW: DYNAMICALLY CALCULATE VERTICAL SUPPORT ---
+                   // --- NEW: DYNAMICALLY CALCULATE VERTICAL SUPPORT ---
             bool   new_supports_placed = false;
             bool   placed_supports_new = false;
             double topPlaced = pPlaced.vetDim[2] + placedItem.getDimRotacionada(2, rPlaced);
 
-            // Does candidate support placedItem? (Candidate is directly under placedItem)
+                   // Does candidate support placedItem? (Candidate is directly under placedItem)
             if(doubleEqual(topNew, pPlaced.vetDim[2], 1e-4))
             {
                 if(computeXY_Overlap(item, r, p, placedItem, rPlaced, pPlaced) > 0.0)
@@ -234,24 +243,74 @@ static bool isPlacementFeasible(const Bin           &bin,
         }
     }
 
+    //return true;
+
     // 5. Lateral load balance check
-    /*
     if(ParseInputNS::input.balancedLoading && !ParseInputNS::input.comprimentoAlturaIguais1)
     {
-        double width = item.getDimRotacionada(1, r);
-        double left = computeLeftBalancedLoading(p.vetDim[1], width, item.weight);
+
+        static VectorD vetLeft(10);
+        static VectorD vetRight(10);
+        static VectorD vetTotal(10);
+
+        vetLeft.setAll(0.0);
+        vetRight.setAll(0.0);
+        vetTotal.setAll(0.0);
+
+        double weight = instanciaG.vetItens[itemId].weight;
+        double width = instanciaG.vetItens[itemId].getDimRotacionada(1, r);
+        double left = computeLeftBalancedLoading(p.vetDim[1], width, weight);
         double right = item.weight - left;
 
-        double limit =
-            std::ceil(ParseInputNS::input.balancedLoadingD * (bin.demandaTotal + item.weight));
-        if((bin.sumLeftBalancedLoading + left) > limit ||
-           (bin.sumRightBalancedLoading + right) > limit)
+        for(int s=1; s < rota.numPos-1; ++s)
         {
-            vetPackinErros[PackingErroLoadBalancing] += 1;
-            return false;
+            if(stopData->vetStopsSet[s].contains(itemId))
+            {
+                vetLeft[s] 	+= left;
+                vetRight[s] += right;
+                vetTotal[s] += weight;
+            }
+            else
+                break;
+
+            if(input.modelType <= 0)
+                break;
         }
-    }
-    */
+
+        // TODO: Remove!
+        for(int i=0; i < bin.numItens; ++i)
+        {
+            int itemId = bin.vetItemId[i];
+            double weight = instanciaG.vetItens[itemId].weight;
+            double width = instanciaG.vetItens[bin.vetItemId[i]].getDimRotacionada(1, r);
+            double left = computeLeftBalancedLoading(bin.vetPosItem[i].vetDim[1], width, weight);
+            double right = item.weight - left;
+
+            for(int s=1; s < rota.numPos-1; ++s)
+            {
+                if(stopData->vetStopsSet[s].contains(itemId))
+                {
+                    vetLeft[s] 	+= left;
+                    vetRight[s] += right;
+                    vetTotal[s] += weight;
+                }
+                else
+                    break;
+            }
+        }
+
+        for(int s=1; s < rota.numPos-1; ++s)
+        {
+            if(std::abs(vetLeft[s]-vetLeft[s]) > std::ceil(input.balancedLoadingD*instanciaG.maxPayload))
+            {
+                vetPackinErros[PackingErroLoadBalancing] += 1;
+                return false;
+            }
+        }
+
+
+     }
+
 
     // 6. Left Compactness Check (Prevent floating gaps on the left side)
     if(ParseInputNS::input.compactness && p.vetDim[0] > 1e-4) // Not touching the left truck wall
@@ -261,40 +320,60 @@ static bool isPlacementFeasible(const Bin           &bin,
         double leftAreaTotal = dy * dz;
         double leftSupport = 0.0;
 
-        for(int k = 0; k < bin.numItens; ++k)
+        for(int s=1; s < rota.numPos-1; ++s)
         {
-            int   placedId = bin.vetItemId[k];
-            Item &placedItem = instanciaG.vetItens[placedId];
+            if(!stopData->vetStopsSet[s].contains(itemId))
+                break;
 
-            double placedDx = placedItem.getDimRotacionada(0, bin.vetRotacao[k]);
-            double placedMaxX = bin.vetPosItem[k].vetDim[0] + placedDx;
+            leftSupport = 0.0;
 
-            double dif = p.vetDim[0] - placedMaxX;
-            if(dif >= 0.0 && dif <= DifDistColision)
+            //for(int k = 0; k < bin.numItens; ++k)
+            for(int itemJ:stopData->vetStopsSet[s])
             {
-                double placedDy = placedItem.getDimRotacionada(1, bin.vetRotacao[k]);
-                double placedDz = placedItem.getDimRotacionada(2, bin.vetRotacao[k]);
+                int k = vetIndex[itemJ];
+                if(k < 0)
+                    continue;
 
-                double pY = p.vetDim[1];
-                double pkY = bin.vetPosItem[k].vetDim[1];
-                double pZ = p.vetDim[2];
-                double pkZ = bin.vetPosItem[k].vetDim[2];
+                int   placedId = bin.vetItemId[k];
+                if(placedId != itemJ)
+                {
+                    std::printf("Error, placedId != itemJ\n");
+                    PRINT_THROW();
+                }
 
-                // Calculate overlap area in the Y-Z plane
-                double overlapY =
-                    std::max(0.0, std::min(pY + dy, pkY + placedDy) - std::max(pY, pkY));
-                double overlapZ =
-                    std::max(0.0, std::min(pZ + dz, pkZ + placedDz) - std::max(pZ, pkZ));
+                Item &placedItem = instanciaG.vetItens[placedId];
 
-                leftSupport += overlapY * overlapZ;
+                double placedDx = placedItem.getDimRotacionada(0, bin.vetRotacao[k]);
+                double placedMaxX = bin.vetPosItem[k].vetDim[0] + placedDx;
+
+                double dif = p.vetDim[0] - placedMaxX;
+                if(dif >= 0.0 && dif <= DifDistColision)
+                {
+                    double placedDy = placedItem.getDimRotacionada(1, bin.vetRotacao[k]);
+                    double placedDz = placedItem.getDimRotacionada(2, bin.vetRotacao[k]);
+
+                    double pY = p.vetDim[1];
+                    double pkY = bin.vetPosItem[k].vetDim[1];
+                    double pZ = p.vetDim[2];
+                    double pkZ = bin.vetPosItem[k].vetDim[2];
+
+                           // Calculate overlap area in the Y-Z plane
+                    double overlapY =
+                        std::max(0.0, std::min(pY + dy, pkY + placedDy) - std::max(pY, pkY));
+                    double overlapZ =
+                        std::max(0.0, std::min(pZ + dz, pkZ + placedDz) - std::max(pZ, pkZ));
+
+                    leftSupport += overlapY * overlapZ;
+                }
+            }
+
+            if(leftSupport < std::ceil(ParseInputNS::input.minLeftSupportArea * leftAreaTotal))
+            {
+                vetPackinErros[PackingErroCompactness] += 1;
+                return false;
             }
         }
 
-        if(leftSupport < std::ceil(ParseInputNS::input.minLeftSupportArea * leftAreaTotal))
-        {
-            vetPackinErros[PackingErroCompactness] += 1;
-            return false;
-        }
     }
 
     return true;
@@ -313,6 +392,7 @@ computePlacementScore(const Bin &bin, int itemId, const Ponto &p, InstanceNS::Ro
     double dy = item.getDimRotacionada(1, r);
     double dz = item.getDimRotacionada(2, r);
 
+    /*
     // Calculate contact area with container walls
     double contactArea = 0.0;
     if(p.vetDim[0] <= 1e-4)
@@ -326,9 +406,26 @@ computePlacementScore(const Bin &bin, int itemId, const Ponto &p, InstanceNS::Ro
     if(p.vetDim[2] <= 1e-4)
         contactArea += dx * dy; // Floor
 
-    // DBL weights: prioritize minimum Z (floor), then minimum Y (depth), then minimum X (lateral)
-    double score =
-        1000.0 * p.vetDim[2] + 10.0 * p.vetDim[1] + 1.0 * p.vetDim[0] - 0.05 * contactArea;
+     // DBL weights: prioritize minimum Z (floor), then minimum Y (depth), then minimum X (lateral)
+     double score =
+         1000.0 * p.vetDim[2] + 10.0 * p.vetDim[1] + 1.0 * p.vetDim[0] - 0.05 * contactArea;
+
+      */
+
+           // Ideal longitudinal position (X-axis) for the trailer axle sweet spot
+    double targetX = AxleWeightsNS::semiTrailer.distanceCargoSpaceTrailerAxle * 0.5;
+    double itemCenterX = p.vetDim[0] + dx / 2.0;
+    double axleDistPenalty = std::abs(itemCenterX - targetX);
+    // Lateral balance: penalize deviation from truck centerline (Y-axis)
+    double truckCenterY = bin.binDim[1] / 2.0;
+    double itemCenterY = p.vetDim[1] + dy / 2.0;
+    double lateralPenalty = std::abs(itemCenterY - truckCenterY);
+    // Combine DBL with stability & balance
+    double score = 1000.0 * p.vetDim[2]          // Keep low (stability)
+                   + 10.0 * p.vetDim[0]            // Depth
+                   + 2.0 * lateralPenalty          // Lateral balance
+                   + 1.0 * axleDistPenalty;        // Longitudinal distribution
+
     return score;
 }
 
@@ -339,14 +436,16 @@ struct PlacementCandidate
     InstanceNS::Rotation rot;
 };
 
-bool packItemsIntoBin(SolucaoNS::Bin     &bin,
-                      SolucaoNS::Rota    &rota,
-                      const VectorI      &itemIds,
-                      int                 numItems,
-                      bool                sortItemIds,
-                      bool                print,
-                      SolucaoNS::Penalty *penalty,
-                      bool				  resetBin)
+bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
+                      SolucaoNS::Rota    	&rota,
+                      const VectorI      	&itemIds,
+                      int                 	numItems,
+                      bool                	sortItemIds,
+                      bool                	print,
+                      SolucaoNS::Penalty 	*penalty,
+                      bool				  	resetBin,
+                      StopDataNS::StopData	*stopData,
+                      double				*randomKey)
 {
     double totalVol = 0.0;
     double leftArea = 0.0;
@@ -372,11 +471,11 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
 
     assertm(numItems > MaxNumItemsBin, "Error, numItems is greater them MaxNumItemsBin\n");
 
-    //std::printf("size itemIds: %d\nItems: ", numItems);
+           //std::printf("size itemIds: %d\nItems: ", numItems);
 
-    //for(int i=0; i < numItems; ++i)
-    //    std::printf("%d ", itemIds[i]);
-    //std::printf("\n\n");
+           //for(int i=0; i < numItems; ++i)
+           //    std::printf("%d ", itemIds[i]);
+           //std::printf("\n\n");
 
     uint64_t it = 0;
     uint64_t itMax = 10000;
@@ -413,18 +512,18 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
                 bin.addEp(Ponto(0.0, 0.0, 0.0));
             }
 
-            // Working copy of items to sort
+                   // Working copy of items to sort
             copyVet(itemIds, sortedItems, numItems);
             // std::vector<int> sortedItems(itemIds.begin(), itemIds.begin()+numItems);
 
-            // 1. Generate persistent random noise for this packing pass (+/- 10%)
-            // This allows randomized sorting while maintaining strict weak ordering rules for
-            // std::sort.
+                   // 1. Generate persistent random noise for this packing pass (+/- 10%)
+                   // This allows randomized sorting while maintaining strict weak ordering rules for
+                   // std::sort.
             static Vector<double> noise(instanciaG.numItens);
             for(int i = 0; i < numItems; ++i)
                 noise[sortedItems[i]] = RandNs::getRandDouble();
 
-            // Sort items: primary key is reverse delivery position along the route (deepest first)
+                   // Sort items: primary key is reverse delivery position along the route (deepest first)
             if(sortItemIds)
             {
                 std::sort(
@@ -441,11 +540,11 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
                         Item &itemA = instanciaG.vetItens[a];
                         Item &itemB = instanciaG.vetItens[b];
 
-                        // Non-fragile before fragile (fragile on top)
+                               // Non-fragile before fragile (fragile on top)
                         if(itemA.fragility != itemB.fragility)
                             return !itemA.fragility;
 
-                        // Randomized tie-breaking for items in the same delivery tier
+                               // Randomized tie-breaking for items in the same delivery tier
                         switch(strategy)
                         {
                         case SortStrategy::ReverseRoute_AreaDesc:
@@ -479,14 +578,14 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
                     });
             }
 
-            // Scratch support matrix for LIFO check
-            // static Eigen::Matrix<int, -1, -1, Eigen::RowMajor>
-            //     matSupportItems(instanciaG.numItens, instanciaG.numItens);
+                   // Scratch support matrix for LIFO check
+                   // static Eigen::Matrix<int, -1, -1, Eigen::RowMajor>
+                   //     matSupportItems(instanciaG.numItens, instanciaG.numItens);
 
-            // matSupportItems.setConstant(0);
+                   // matSupportItems.setConstant(0);
 
-            // Number of rotations to try (2 if vertical stability only, or up to 6 if 3D rotation
-            // allowed)
+                   // Number of rotations to try (2 if vertical stability only, or up to 6 if 3D rotation
+                   // allowed)
             int  numRotationsToTry = (instanciaG.numRotation >= 6) ? 6 : 2;
             bool isInfeasible = false;
 
@@ -509,18 +608,23 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
                 int                               numOfCandidates = 0;
                 assertm(bin.numEps > NumEpPorBin, "Error, bin.numEps is greter them NumEpPorBin\n")
 
-                    // Evaluate all active Extreme Points
-                    // std::printf("bin.numEps %d\n", bin.numEps);
-                    for(int epIdx = 0; epIdx < bin.numEps; ++epIdx)
+                // Evaluate all active Extreme Points
+                // std::printf("bin.numEps %d\n", bin.numEps);
+                for(int epIdx = 0; epIdx < bin.numEps; ++epIdx)
                 {
+                    //int epIdx = randomKey[numItems+instanciaG.numItens+itemId]*(bin.numEps-1);
+                    //epIdx = epIdx%bin.numEps;
                     // std::printf("\tepIdx: %d\n", epIdx);
                     const Ponto &ep = bin.vetEp[epIdx];
 
                     for(int rIdx = 0; rIdx < vetRot.size(); ++rIdx)
                     {
+                        //int rIdx = randomKey[numItems+itemId]*(vetRot.size()-1);
+                        //rIdx = rIdx%vetRot.size();
                         Rotation r = vetRot[rIdx];
 
-                        if(isPlacementFeasible(bin, rota, itemId, ep, r, sumM, sumF))
+                        if(isPlacementFeasibleModel0(bin, rota, itemId, ep, r, sumM, sumF,
+                                                     stopData))
                         {
                             double score = computePlacementScore(bin, itemId, ep, r);
                             candidates[numOfCandidates] = {score, epIdx, r};
@@ -529,7 +633,7 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
                     }
                 }
 
-                // If no feasible EP found, packing fails under this strategy
+                       // If no feasible EP found, packing fails under this strategy
                 if(numOfCandidates == 0)
                 {
                     if(print)
@@ -550,22 +654,31 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
                     // return false;
                 }
 
-                // 2. Restricted Candidate List (RCL)
+                       // 2. Restricted Candidate List (RCL)
                 std::sort(candidates.begin(),
                           candidates.begin() + numOfCandidates,
                           [](const PlacementCandidate &a, const PlacementCandidate &b)
                           { return a.score < b.score; });
 
-                int rclSize = std::max(1, (int)(numOfCandidates * input.aphaBinEscolhaEp));
+                int rclSize = numOfCandidates;//std::max(1, (int)(numOfCandidates * input.aphaBinEscolhaEp));
                 // std::printf("\t\trclSize: %d\n", rclSize);
-                int chosen = RandNs::getRandInt(0, rclSize - 1);
+                int chosen = 0;//randomKey[numItems+itemId]*rclSize;
 
-                if(!sortItemIds)
-                    chosen = 0;
+                //if(!sortItemIds)
+                //    chosen = 0;
 
-                // std::printf("\t\tchosen: %d\n", chosen);
+                if(randomKey)
+                {
+                    double gen = randomKey[numItems+itemId];
+                    chosen = (int)(gen*rclSize);
+                    chosen = std::min(chosen, rclSize - 1);
+                }
+                else
+                    chosen = RandNs::getRandInt(0, rclSize - 1);
 
-                // Place the item (this automatically updates EPs, dimensions, and loads)
+                       // std::printf("\t\tchosen: %d\n", chosen);
+
+                       // Place the item (this automatically updates EPs, dimensions, and loads)
                 bin.addItem(candidates[chosen].epIdx, itemId, candidates[chosen].rot);
             } // END for(int i = 0; i < numItems; ++i)
 
@@ -583,7 +696,7 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
                     vol += instanciaG.vetItens[item].volume;
                 }
 
-                penalizeSolution(rota, bin, *penalty);
+                penalizeSolution(rota, bin, *penalty, *stopData);
                 penalty->set(SolucaoNS::Penalty::TypePenalty::VolItemsNotPacked, vol);
 
                 return false;
@@ -592,12 +705,12 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
             if(isInfeasible)
                 return false;
 
-            // Comprehensive final feasibility check (axle weights, compactness, support, LIFO)
+                   // Comprehensive final feasibility check (axle weights, compactness, support, LIFO)
 
-            // TODO remover
-            // Penalty penalty;
+                   // TODO remover
+                   // Penalty penalty;
 
-            if(bin.checkFeasibility(&rota, false, print))
+            if(bin.checkFeasibility(&rota, false, print, nullptr, stopData))
             {
                 /*
                 if(numItems != bin.numItens)
@@ -605,41 +718,41 @@ bool packItemsIntoBin(SolucaoNS::Bin     &bin,
                     std::printf("Erro, \nitemIds: %s\n", itemIds.printN(numItems).c_str());
                     std::printf("bin.vetItens: %s", bin.vetItemId.printN(bin.numItens).c_str());
 
-                    PRINT_THROW();
-                }
+                     PRINT_THROW();
+                 }
 
-                std::set<int> setItems;
-                for(int i = 0; i < numItems; ++i)
-                {
-                    if(setItems.contains(itemIds[i]))
-                    {
-                        std::printf("Repeted item\n");
-                        PRINT_THROW();
-                    }
-                    else
-                        setItems.insert(itemIds[i]);
-                }
+                  std::set<int> setItems;
+                  for(int i = 0; i < numItems; ++i)
+                  {
+                      if(setItems.contains(itemIds[i]))
+                      {
+                          std::printf("Repeted item\n");
+                          PRINT_THROW();
+                      }
+                      else
+                          setItems.insert(itemIds[i]);
+                  }
 
-                for(int i = 0; i < numItems; ++i)
-                {
-                    if(!setItems.contains(bin.vetItemId[i]))
-                    {
-                        std::printf("Error, item(%d) was not packing\n", bin.vetItens[i]);
+                   for(int i = 0; i < numItems; ++i)
+                   {
+                       if(!setItems.contains(bin.vetItemId[i]))
+                       {
+                           std::printf("Error, item(%d) was not packing\n", bin.vetItens[i]);
 
-                        std::printf("Erro, \nitemIds: %s\n", itemIds.printN(numItems).c_str());
-                        std::printf("bin.vetItens: %s", bin.vetItens.printN(bin.numItens).c_str());
+                            std::printf("Erro, \nitemIds: %s\n", itemIds.printN(numItems).c_str());
+                            std::printf("bin.vetItens: %s", bin.vetItens.printN(bin.numItens).c_str());
 
-                        PRINT_THROW();
-                    }
-                }
-                */
+                             PRINT_THROW();
+                         }
+                     }
+                     */
 
                 return true;
             }
             else if(!sortItemIds && penalty)
             {
 
-                penalizeSolution(rota, bin, *penalty);
+                penalizeSolution(rota, bin, *penalty, *stopData);
                 penalty->set(SolucaoNS::Penalty::TypePenalty::VolItemsNotPacked, 0.0);
 
                 return false;
@@ -676,7 +789,7 @@ bool packRoute(SolucaoNS::Rota &rota, VectorI _itemIds, bool print)
         return true;
     }
 
-    // 1. Collect all items demanded by customers in this route
+           // 1. Collect all items demanded by customers in this route
     VectorI itemIds;
     int     numItems;
 
@@ -774,6 +887,307 @@ double getTotalWeight(const SolucaoNS::Bin &bin, const VectorI &itemIds, int num
         weight += instanciaG.vetItens[bin.vetItemId[i]].weight;
 
     return weight;
+}
+
+void penalizeSolution(Rota &route, Bin &bin, Penalty &penalty, StopDataNS::StopData &stopData)
+{
+    if(bin.vazio())
+    {
+        //std::printf("BIN IS EMPTY!\n");
+        return;
+    }
+
+    double colisionP = 0.0;
+    double supportP = 0.0;
+    double axleWightsP = 0.0;
+    double loadBalancingP = 0.0;
+    double compactnessP = 0.0;
+    double lifoP = 0.0;
+    double fragilityP = 0.0;
+
+    const Eigen::MatrixXi &matStopItem = stopData.matStopItem;
+    const VectorI &sizeMatStopItem = stopData.sizeMatStopItem;
+    const VectorI &vetCustStop = stopData.vetCustStop;
+
+    static VectorI vetItemIdex(instanciaG.numItens);
+    static Bin localBin;
+
+    vetItemIdex.setAll(-1);
+
+    double fk, fFA, fRA, fTA;
+
+    if(input.modelType >= 1)
+    {
+        for(int i=0; i < bin.numItens; ++i)
+        {
+            int item = bin.vetItemId[i];
+            vetItemIdex[item] = i;
+        }
+
+        /*
+        for(int stop=0; stop < (route.numPos-1); ++stop)
+        {
+            for(int i=0; i < sizeMatStopItem[stop]; ++i)
+            {
+                int item = matStopItem(stop, i);
+                std::printf("%d ", item);
+            }
+
+              std::printf("\n");
+          }
+          */
+
+               //std::string plot = bin.printPlot();
+
+               //std::printf("****************************************\n");
+               //std::printf("****************************************\n\n");
+
+               //std::printf("\n\nPlot: \n\n%s", plot.c_str());
+
+               //if(!bin.vazio())
+               //    PRINT_THROW();
+    }
+
+    bin.sumLeftBalancedLoading = 0.0;
+    bin.sumRightBalancedLoading = 0.0;
+
+    static Eigen::Matrix<int, -1, -1, Eigen::RowMajor> matSupportItems(
+        instanciaG.numItens, instanciaG.numItens);
+    matSupportItems.setConstant(0);
+
+    for(int i = 0; i < bin.numItens; ++i)
+    {
+        int      itemI = bin.vetItemId[i];
+        Rotation rI = bin.vetRotacao[i];
+        Ponto   &pI = bin.vetPosItem[i];
+
+        bool tochLeft = tochLeftSideOfTruck(itemI, pI, rI);
+
+        double areaSuport = 0.0;
+        double sumAreasLeft = 0.0;
+
+        for(int j=0; j < bin.numItens; ++j)
+        {
+            if(i == j)
+                continue;
+
+            int      itemJ = bin.vetItemId[j];
+            Rotation rJ = bin.vetRotacao[j];
+            Ponto   &pJ = bin.vetPosItem[j];
+
+            if(input.support && pI.vetDim[2] > 1E-5)
+            {
+                double zMaxJ = pJ.vetDim[2] + instanciaG.vetItens[itemJ].getDimRotacionada(2, rJ);
+
+                if(doubleEqual(zMaxJ, pI.vetDim[2]))
+                {
+                    double sup = computeXY_Overlap(
+                        instanciaG.vetItens[itemI], rI, pI, instanciaG.vetItens[itemJ], rJ, pJ);
+
+                    if(doubleGreater(sup, 0.0))
+                    {
+                        areaSuport += sup;
+                        matSupportItems(itemI, itemJ) = 1;
+
+                        if(input.fragility && instanciaG.vetItens[itemJ].fragility &&
+                           !instanciaG.vetItens[itemI].fragility)
+                        {
+                            fragilityP += instanciaG.vetItens[itemJ].volume +
+                                          instanciaG.vetItens[itemI].volume;
+                        }
+                    }
+                }
+            }
+
+
+            if(!tochLeft && input.compactness)
+                sumAreasLeft += getIntercetion(itemI, pI, rI, Left, itemJ, pJ, rJ, Right);
+        }
+
+        double area = instanciaG.vetItens[itemI].getDimRotacionada(0, rI) *
+                      instanciaG.vetItens[itemI].getDimRotacionada(1, rI);
+        double support = areaSuport / area;
+
+        if(input.support && support < input.minSupportArea && pI.vetDim[2] > 1E-5)
+            supportP += instanciaG.vetItens[itemI].volume;
+
+        if(input.balancedLoading)
+        {
+            double w = instanciaG.vetItens[itemI].getDimRotacionada(1, rI);
+            double left =
+                computeLeftBalancedLoading(pI.vetDim[1], w, instanciaG.vetItens[itemI].weight);
+            bin.sumLeftBalancedLoading += left;
+            bin.sumRightBalancedLoading += instanciaG.vetItens[itemI].weight - left;
+        }
+
+        if(input.compactness && !tochLeft)
+        {
+            double dz = instanciaG.vetItens[itemI].getDimRotacionada(2, rI);
+            double dy = instanciaG.vetItens[itemI].getDimRotacionada(1, rI);
+
+            double areaTotal = dz * dy;
+            double ratio = sumAreasLeft / areaTotal;
+            if(ratio < input.minLeftSupportArea)
+                compactnessP += areaTotal * (input.minLeftSupportArea - ratio);
+        }
+    }
+
+    if(input.lifo)
+    {
+        for(int i = 0; i < bin.numItens; ++i)
+        {
+            int itemI = bin.vetItemId[i];
+            int posItemI = findPos(route, bin.vetItemId[i]);
+
+            for(int j = 0; j < bin.numItens; ++j)
+            {
+                if(i == j)
+                    continue;
+
+                int itemJ = bin.vetItemId[j];
+
+                if(instanciaG.vetItens[itemI].customer != instanciaG.vetItens[itemJ].customer)
+                {
+                    int posItemJ = findPos(route, bin.vetItemId[j]);
+                    if(posItemI < posItemJ)
+                    {
+                        if(!lifo(instanciaG.vetItens[itemI],
+                                 bin.vetPosItem[i],
+                                 bin.vetRotacao[i],
+                                 instanciaG.vetItens[itemJ],
+                                 bin.vetPosItem[j],
+                                 bin.vetRotacao[j],
+                                 input.mlifo,
+                                 input.removeFromShortSide,
+                                 matSupportItems(itemI, itemJ),
+                                 matSupportItems(itemJ, itemI)))
+                        {
+                            lifoP += instanciaG.vetItens[itemI].volume +
+                                     instanciaG.vetItens[itemJ].volume;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if(input.balancedLoading)
+    {
+        double limit = std::ceil(input.balancedLoadingD * bin.demandaTotal);
+        if(bin.sumLeftBalancedLoading > limit)
+            loadBalancingP += bin.sumLeftBalancedLoading - limit;
+
+        if(bin.sumRightBalancedLoading > limit)
+            loadBalancingP += bin.sumRightBalancedLoading - limit;
+    }
+
+    for(int stop = 1; stop < (route.numPos-2); ++stop)
+    {
+
+        double sumLeft 		= 0.0;
+        double sumWeight 	= 0.0;
+        localBin.reset();
+        int next = 0;
+
+        for(int i=0; i < sizeMatStopItem[stop]; ++i)
+        {
+            int itemI = matStopItem(stop, i);
+            int indexI = vetItemIdex[itemI];
+
+            if(indexI < 0)
+                continue;
+
+            Rotation rI = bin.vetRotacao[indexI];
+            Ponto   &pI = bin.vetPosItem[indexI];
+
+            localBin.vetItemId[next] = itemI;
+            localBin.vetPosItem[next] = pI;
+            localBin.vetRotacao[next] = rI;
+            next += 1;
+            localBin.numItens += 1;
+
+            double w = instanciaG.vetItens[itemI].getDimRotacionada(1, rI);
+
+            if(input.balancedLoading)
+            {
+                sumWeight += instanciaG.vetItens[itemI].weight;
+                sumLeft   += computeLeftBalancedLoading(pI.vetDim[1], w,
+                                                      instanciaG.vetItens[itemI].weight);
+            }
+
+            if(input.compactness)
+            {
+                bool tochLeft = tochLeftSideOfTruck(itemI, pI, rI);
+                if(!tochLeft)
+                {
+                    double sumAreasLeft = 0.0;
+
+                    for(int j=0; j < sizeMatStopItem[stop]; ++j)
+                    {
+                        if(i == j)
+                            continue;
+
+                        int itemJ = matStopItem(stop, j);
+                        int indexJ = vetItemIdex[itemJ];
+                        if(indexJ < 0)
+                            continue;
+                        Rotation rJ = bin.vetRotacao[indexJ];
+                        Ponto   &pJ = bin.vetPosItem[indexJ];
+
+                        sumAreasLeft += getIntercetion(itemI, pI, rI, Left, itemJ, pJ, rJ, Right);
+
+                    }
+
+                    double dz = instanciaG.vetItens[itemI].getDimRotacionada(2, rI);
+                    double dy = instanciaG.vetItens[itemI].getDimRotacionada(1, rI);
+
+                    double areaTotal = dz * dy;
+                    double ratio = sumAreasLeft / areaTotal;
+                    if(ratio < input.minLeftSupportArea)
+                        compactnessP += areaTotal * (input.minLeftSupportArea - ratio);
+                }
+            }
+
+        }
+
+        if(input.balancedLoading)
+        {
+            double sumRight = sumWeight - sumLeft;
+            double limit = std::ceil(input.balancedLoadingD * sumWeight);
+
+            if(sumRight > limit)
+                loadBalancingP += sumRight - limit;
+            if(sumLeft > limit)
+                loadBalancingP += sumLeft - limit;
+        }
+
+        if(input.axleWights)
+        {
+            if(!semiTrailer.checkAxleWeights(localBin, false, &fk, &fFA, &fRA, &fTA))
+            {
+                double overFA = std::max(0.0, fFA - semiTrailer.maxMassFrontAxle * GravityCm);
+                double overRA = std::max(0.0, fRA - semiTrailer.maxMassRearAxle * GravityCm);
+                double overTA = std::max(0.0, fTA - semiTrailer.maxMassTrailerAxle * GravityCm);
+
+                axleWightsP += overFA+overRA+overTA;
+            }
+        }
+
+    }
+
+    if(input.axleWights)
+    {
+        if(!semiTrailer.checkAxleWeights(bin, false, &fk, &fFA, &fRA, &fTA))
+            axleWightsP += std::max({fFA, fRA, fTA});
+    }
+
+    penalty.set(Penalty::TypePenalty::Collision, colisionP);
+    penalty.set(Penalty::TypePenalty::Support, supportP);
+    penalty.set(Penalty::TypePenalty::AxleWeights, axleWightsP);
+    penalty.set(Penalty::TypePenalty::Compactness, compactnessP);
+    penalty.set(Penalty::TypePenalty::Lifo, lifoP);
+    penalty.set(Penalty::TypePenalty::Fragility, fragilityP);
+    penalty.set(Penalty::TypePenalty::VolItemsNotPacked, 0.0);
 }
 
        // namespace ConstrutivoBinNS

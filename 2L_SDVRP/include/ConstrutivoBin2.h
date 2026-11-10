@@ -13,6 +13,7 @@
 #include "Instancia.h"
 #include "Solucao.h"
 #include <vector>
+#include "StopData.h"
 
 namespace ConstrutivoBin2NS
 {
@@ -37,14 +38,16 @@ bool packRoute(SolucaoNS::Rota &rota, VectorI _itemIds, bool print = false);
 /**
  * @brief Attempts to pack a specific list of items into a bin using a given sorting strategy.
  */
-bool packItemsIntoBin(SolucaoNS::Bin     &bin,
-                      SolucaoNS::Rota    &rota,
-                      const VectorI      &itemIds,
-                      int                 numItems,
-                      bool                sortItemIds = true,
-                      bool                print = false,
-                      SolucaoNS::Penalty *penalty = nullptr,
-                      bool				  resetBin = false);
+bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
+                      SolucaoNS::Rota    	&rota,
+                      const VectorI      	&itemIds,
+                      int                 	numItems,
+                      bool                	sortItemIds = true,
+                      bool                	print 		= false,
+                      SolucaoNS::Penalty 	*penalty 	= nullptr,
+                      bool				  	resetBin 	= false,
+                      StopDataNS::StopData	*stopData 	= nullptr,
+                      double				*randomKey  = nullptr);
 
 /**
  * @brief Collects all item IDs associated with the customers along the route.
@@ -55,6 +58,11 @@ double getTotalVolume(const SolucaoNS::Bin& bin, const VectorI& itemIds, int num
 double getTotalLeftArea(const SolucaoNS::Bin& bin, const VectorI& itemIds, int numItems);
 double getTotalAreaSupp(const SolucaoNS::Bin& bin, const VectorI& itemIds, int numItems);
 double getTotalWeight(const SolucaoNS::Bin& bin, const VectorI& itemIds, int numItems);
+
+void penalizeSolution(SolucaoNS::Rota 		&route,
+                      SolucaoNS::Bin 		&bin,
+                      SolucaoNS::Penalty 	&penalty,
+                      StopDataNS::StopData 	&stopData);
 
 } // namespace ConstrutivoBin2NS
 

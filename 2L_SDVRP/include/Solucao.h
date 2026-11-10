@@ -16,7 +16,31 @@
 #include "safe_vector.h"
 #include <Eigen/Eigen>
 #include <set>
+#include "StopData.h"
+
 // #include "InputOutput.h"
+
+namespace SolucaoNS
+{
+    class Rota;
+}
+
+namespace StopDataNS
+{
+struct StopData
+{
+    int 					sizeJ;
+    Eigen::MatrixXi 		matStopItem;
+    VectorI 				sizeMatStopItem;
+    VectorI 				vetCustStop;
+    Vector<std::set<int>>	vetStopsSet;
+
+    StopData();
+    void reset();
+    void compute(SolucaoNS::Rota& route, VectorI& vetItems, int sizeVetItems);
+
+};
+}
 
 namespace SolucaoNS
 {
@@ -180,8 +204,9 @@ struct Bin
     Vector<Ponto> vetEp;      // Indica as posicoes dos pontos extremos
     VectorI       vetItemId;  // Indica o id do iº item
     Vector<InstanceNS::Rotation> vetRotacao;
-    Vector<int>					 vetStop;
-    Vector<std::set<int>>		 vetStopsSet;
+    //Vector<int>					 vetStop;
+    //Vector<std::set<int>>		 vetStopsSet;
+    // TODO: Remove! This is NOT UPDATED
     Vector<int8_t>               vetItens; // Indica se o bin empacota o i° item
     Array<double, 3>             binDim;
     Rota                        *ptrRota = nullptr;
@@ -198,8 +223,6 @@ struct Bin
     void        addEp(const Ponto &ep);
     std::string printPlot();
     Ponto       projectEP(double x, double y, double sourceZ);
-
-    void updateStops(Rota& rota);
 
     inline __attribute__((always_inline)) void
     setItem(int pos, int itemId, double x, double y, double z)
@@ -239,7 +262,8 @@ struct Bin
     bool checkFeasibility(Rota    *rota = nullptr,
                           bool     fromCp = false,
                           bool     print = false,
-                          VectorI *vetSumAreasLeftPtr = nullptr);
+                          VectorI *vetSumAreasLeftPtr = nullptr,
+                          StopDataNS::StopData* stopData=nullptr);
 
     void rmItens(const VectorI &vetItensRm, const int tam);
 
@@ -375,7 +399,6 @@ int    calculaNumBinOcupados(const Solucao &solucao);
 double calculaVolumeOcupado(const Solucao &solucao);
 double calculaVolumeLivre(const Solucao &solucao);
 double calculaMenorAreaLivre(const Solucao &solucao);
-void   penalizeSolution(Rota &route, Bin &bin, Penalty &penalty);
 
 inline __attribute__((always_inline)) bool pontosIguais(const Ponto &p0, const Ponto &p1)
 {
@@ -586,8 +609,9 @@ bool tochFrontSideOfTruck(int item, Ponto p, InstanceNS::Rotation r)
 
 bool checkCompactness(Bin           &bin,
                       const VectorI &vetTop,
-                      std::string   *strError = nullptr,
-                      VectorI       *vetSumAreasLeftPtr = nullptr);
+                      std::string   *strError 					= nullptr,
+                      VectorI*				vetSumAreasLeftPtr 	= nullptr,
+                      StopDataNS::StopData* stopDataPtr 	   	= nullptr);
 
 bool binAreEqual(Bin& bin0, Bin& bin1);
 

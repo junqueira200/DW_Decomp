@@ -83,6 +83,7 @@ target_sources(${PROJECT_NAME}
         src/ConstrutivoBin2.cpp
         src/RandomKey.cpp
         src/GA.cpp
+        src/StopData.cpp
 )
 
 
@@ -164,6 +165,7 @@ set(public_headers
     include/ConstrutivoBin2.h
     include/RandomKey.h
     include/GA.h
+    include/StopData.h
 )
 
 # where to find our CMake modules

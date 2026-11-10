@@ -12,10 +12,12 @@
 
 #include "Instancia.h"
 #include "Solucao.h"
+#include "StopData.h"
 
 #include <algorithm>
 #include <functional>
 #include <numeric>
+
 
 namespace RandomKeyNS
 {
@@ -23,18 +25,23 @@ namespace RandomKeyNS
 class RandomKey
 {
   public:
-    Array<double, MaxNumItemsBin> vetRandomKey;
+    VectorD        	vetRandomKey;
+    bool    		evaluated 		= false;
+    double 			fitness			= INF_Double;
 
-    RandomKey() {};
+    RandomKey():vetRandomKey(InstanceNS::instanciaG.numItens*3) {};
     void generateRandomKey(int numItems);
 };
 
-bool decoderRandomKey(RandomKey          &randKey,
-                      SolucaoNS::Bin     &bin,
-                      const VectorI      &vetItems,
-                      int                 vetItemsSize,
-                      SolucaoNS::Rota    &route,
-                      SolucaoNS::Penalty &penalty);
+bool decoderRandomKey(RandomKey          	&randKey,
+                      SolucaoNS::Bin     	&bin,
+                      const VectorI      	&vetItems,
+                      int                 	vetItemsSize,
+                      SolucaoNS::Rota    	&route,
+                      SolucaoNS::Penalty 	&penalty,
+                      StopDataNS::StopData	&stopData);
+
+void grupByCustomer(VectorI &vetItems, int sizeVetItems, SolucaoNS::Rota& route);
 
 template <typename Key, typename Value, typename Compare = std::less<Key>>
 void sort_two_vectors(Key *keys, Vector<Value> &values, int vecSize, Compare comp = Compare{})

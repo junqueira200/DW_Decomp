@@ -11,7 +11,9 @@
 #include "InputOutput.h"
 #include "ConstrutivoBin2.h"
 #include "AxleWeights.h"
+#include "StopData.h"
 #include <set>
+#include <print>
 
 using namespace GA_NS;
 using namespace ParseInputNS;
@@ -19,6 +21,7 @@ using namespace RandomKeyNS;
 using namespace ConstrutivoBin2NS;
 using namespace AxleWeightsNS;
 using namespace SolucaoNS;
+using namespace StopDataNS;
 
 constexpr bool PrintGA = false;
 
@@ -31,14 +34,17 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
                Vector<SolucaoNS::Bin>	*ptrVetBin)
 {
     int size = 0;
-    bin.reset();
+
     if(ptrVetBin)
     {
         for(Bin& bin:*ptrVetBin)
             bin.reset();
 
         size = ptrVetBin->size();
+        std::print("Update ");
     }
+    else
+        bin.reset();
 
     int nextBin = 0;
 
@@ -55,6 +61,7 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
     static Vector<RandomKeyPair> vetRandKey(input.gaPopulationSize);
     static RandomKey             randKey, bestRandKey;
     static SolucaoNS::Penalty    penalty;
+    static StopData				 stopData;
     double                       bestRandKeyPenalty = std::numeric_limits<double>::max();
 
     const int subPopulationSize = input.gaPopulationSize / input.gaNumberOfIslands;
@@ -165,6 +172,8 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
     const double areaSupp    = getTotalAreaSupp(bin, vetItems, sizeVetItems);
     const double totalWeight = getTotalWeight(bin, vetItems, sizeVetItems);
 
+    stopData.compute(route, vetItems, sizeVetItems);
+
     /*
     std::printf(
         "Total Volume: %.6f\n"
@@ -213,11 +222,18 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
             std::printf("\tINI decoderRandomKey\n");
         for(auto &it : vetRandKey)
         {
-            randKey.vetRandomKey = it.second->vetRandomKey;
+            if(it.second->evaluated)
+            {
+                it.first = it.second->fitness;
+                continue;
+            }
+
+            for(int i=0; i < (sizeVetItems+2*InstanceNS::instanciaG.numClientes); ++i)
+                randKey.vetRandomKey[i] = it.second->vetRandomKey[i];
 
             copiaBin(bin, binAux);
 
-            if(decoderRandomKey(randKey, binAux, vetItems, sizeVetItems, route, penalty))
+            if(decoderRandomKey(randKey, binAux, vetItems, sizeVetItems, route, penalty, stopData))
             {
                 if constexpr(PrintGA)
                     std::printf("GA END\n");
@@ -252,6 +268,9 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
             }
 
             it.first = penalty.getValue();
+            it.second->fitness = it.first;
+            it.second->evaluated = true;
+
         }
 
         if constexpr(PrintGA)
@@ -304,13 +323,23 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
                 RandomKey *randKeyRest = vetRandKey[index2].second;
                 RandomKey *randKeySon = vetRandKeyAux2Ptr[nextSon];
 
+                randKeySon->evaluated = false;
+
                 for(int t = 0; t < sizeVetItems; ++t)
                 {
                     double randVal = RandNs::getRandDouble();
                     if(randVal < input.gaProbToInheritFromElite)
+                    {
                         randKeySon->vetRandomKey[t] = randKeyElite->vetRandomKey[t];
+                        int index = sizeVetItems+vetItems[t];
+                        randKeySon->vetRandomKey[index] = randKeyElite->vetRandomKey[index];
+                    }
                     else
+                    {
                         randKeySon->vetRandomKey[t] = randKeyRest->vetRandomKey[t];
+                        int index = sizeVetItems+vetItems[t];
+                        randKeySon->vetRandomKey[index] = randKeyRest->vetRandomKey[index];
+                    }
                 }
 
                 nextSon += 1;
@@ -339,11 +368,14 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
                     int selecedInd = vetIndexElite[islandSend].first + j;
                     int reciveInd = vetIndexDiscart[islandRecive].second - j;
 
-                    for(int t = 0; t < sizeVetItems; ++t)
+                    for(int t = 0; t < sizeVetItems+2*InstanceNS::instanciaG.numItens; ++t)
                     {
                         vetRandKey[reciveInd].second->vetRandomKey[t] =
                             vetRandKey[selecedInd].second->vetRandomKey[t];
                     }
+
+                    vetRandKey[reciveInd].second->fitness = vetRandKey[selecedInd].second->fitness;
+                    vetRandKey[reciveInd].second->evaluated = vetRandKey[selecedInd].second->evaluated;
                 }
             }
         }
