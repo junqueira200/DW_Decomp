@@ -19,6 +19,8 @@ namespace ConstrutivoBin2NS
 {
 // Items not packed in the last packItemsIntoBin pass: (itemId, deepest failed check)
 inline std::vector<std::pair<int, int>> vetLastNotPacked;
+// Items placed by the soft fallback (with a violation): (itemId, check that blocked it)
+inline std::vector<std::pair<int, int>> vetLastSoftPlaced;
 
 
 enum class SortStrategy

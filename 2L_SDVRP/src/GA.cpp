@@ -170,7 +170,7 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
     std::sort(vetItems.begin(), vetItems.begin() + sizeVetItems);
 
     const double totalVolume = getTotalVolume(bin, vetItems, sizeVetItems);
-    //const double areaLeft    = getTotalLeftArea(bin, vetItems, sizeVetItems);
+    const double areaLeft    = getTotalLeftArea(bin, vetItems, sizeVetItems);
     static const double maxF = 2*semiTrailer.computeMaxF();
     const double areaSupp    = getTotalAreaSupp(bin, vetItems, sizeVetItems);
     const double totalWeight = getTotalWeight(bin, vetItems, sizeVetItems);
@@ -194,7 +194,7 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
 
     //PRINT_THROW();
     penalty.setNorm(Penalty::TypePenalty::AxleWeights, maxF);
-    penalty.setNorm(Penalty::TypePenalty::Compactness, totalVolume);
+    penalty.setNorm(Penalty::TypePenalty::Compactness, areaLeft);   // compactness penalty is an area (cm2)
     penalty.setNorm(Penalty::TypePenalty::Lifo, totalVolume);
     penalty.setNorm(Penalty::TypePenalty::LoadBalancing, totalWeight);
     penalty.setNorm(Penalty::TypePenalty::Support, totalVolume);
@@ -403,6 +403,18 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
                         itemId, it.customer, findPos(route, itemId),
                         it.vetDim[0], it.vetDim[1], it.vetDim[2],
                         it.weight, it.volume, errNames[err]);
+        }
+        if(!vetLastSoftPlaced.empty())
+        {
+            std::printf("Placed with violation (%d items):\n", (int)vetLastSoftPlaced.size());
+            for(auto [itemId, err] : vetLastSoftPlaced)
+            {
+                InstanceNS::Item &it = InstanceNS::instanciaG.vetItens[itemId];
+                std::printf("  %5d %5d %4d %6.0f %5.0f %5.0f %8.1f %10.0f  %s\n",
+                            itemId, it.customer, findPos(route, itemId),
+                            it.vetDim[0], it.vetDim[1], it.vetDim[2],
+                            it.weight, it.volume, errNames[err]);
+            }
         }
         std::printf("Bin fill: %d items, %.1f%% of volume\n\n", binAux.numItens,
                     100.0 * (totalVolume - bestPenalty[Penalty::TypePenalty::VolItemsNotPacked]) /

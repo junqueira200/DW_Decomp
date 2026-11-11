@@ -78,6 +78,15 @@ static int failDepth(int err)
     return 0;
 }
 
+// Soft-placement fallback: minimum support (fraction of base area) a soft-placed item must
+// still have, so it never floats. Below this, support stays a hard constraint.
+constexpr double MinSoftSupport = 0.5;
+
+static inline double softW(SolucaoNS::Penalty::TypePenalty t)
+{
+    return ParseInputNS::input.arrayPenaltyWeight[(std::size_t)t];
+}
+
 static bool isPlacementFeasibleModel0(const Bin           &bin,
                                       Rota                &rota,
                                       int                  itemId,
@@ -85,8 +94,10 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
                                       InstanceNS::Rotation r,
                                       double sumM,
                                       double sumF,
-                                      StopData *stopData)
+                                      StopData *stopData,
+                                      double   *ptrViolation = nullptr)  // soft mode if != nullptr
 {
+    using TP = SolucaoNS::Penalty::TypePenalty;
     Item &item = instanciaG.vetItens[itemId];
 
            // 1. Boundary check
@@ -178,11 +189,17 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
             }
         }
 
-        if(supportedArea < std::ceil(ParseInputNS::input.minSupportArea * itemBaseArea))
+        const double reqSupport = std::ceil(ParseInputNS::input.minSupportArea * itemBaseArea);
+        if(supportedArea < reqSupport)
         {
-            vetPackinErros[PackingErroSupport] += 1;
-            placementFailErr = PackingErroSupport;
-            return false;
+            if(ptrViolation && supportedArea >= MinSoftSupport * itemBaseArea)
+                *ptrViolation += softW(TP::Support) * (reqSupport - supportedArea) / reqSupport;
+            else
+            {
+                vetPackinErros[PackingErroSupport] += 1;
+                placementFailErr = PackingErroSupport;
+                return false;
+            }
         }
     }
 
@@ -245,9 +262,14 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
                          placed_supports_new,  // item1_supports_item0
                          new_supports_placed)) // item0_supports_item1
                 {
-                    vetPackinErros[PackingErroLifo] += 1;
-                    placementFailErr = PackingErroLifo;
-                    return false;
+                    if(ptrViolation)
+                        *ptrViolation += softW(TP::Lifo);
+                    else
+                    {
+                        vetPackinErros[PackingErroLifo] += 1;
+                        placementFailErr = PackingErroLifo;
+                        return false;
+                    }
                 }
             }
             else
@@ -264,9 +286,14 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
                          new_supports_placed,  // item1_supports_item0
                          placed_supports_new)) // item0_supports_item1
                 {
-                    vetPackinErros[PackingErroLifo] += 1;
-                    placementFailErr = PackingErroLifo;
-                    return false;
+                    if(ptrViolation)
+                        *ptrViolation += softW(TP::Lifo);
+                    else
+                    {
+                        vetPackinErros[PackingErroLifo] += 1;
+                        placementFailErr = PackingErroLifo;
+                        return false;
+                    }
                 }
             }
         }
@@ -328,6 +355,8 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
             double limit = std::ceil(input.balancedLoadingD * stopData->vetStopWeight[s]);
             if(vetLeft[s] > limit || vetRight[s] > limit)
             {
+                // Hard even in soft mode: the excess stays at stop s, so every later item on
+                // board at s would fail too and cascade into the fallback.
                 vetPackinErros[PackingErroLoadBalancing] += 1;
                 placementFailErr = PackingErroLoadBalancing;
                 return false;
@@ -389,10 +418,13 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
             double fRA = fK + (double)semiTrailer.massTractor * g - fFA;
             double fTA = vetSumF[s] + (double)semiTrailer.massTrailer * g - fK;
 
-            if(fFA > (double)semiTrailer.maxMassFrontAxle * g + 1e-6 ||
-               fRA > (double)semiTrailer.maxMassRearAxle * g + 1e-6 ||
-               fTA > (double)semiTrailer.maxMassTrailerAxle * g + 1e-6)
+            const double limFA = (double)semiTrailer.maxMassFrontAxle * g;
+            const double limRA = (double)semiTrailer.maxMassRearAxle * g;
+            const double limTA = (double)semiTrailer.maxMassTrailerAxle * g;
+
+            if(fFA > limFA + 1e-6 || fRA > limRA + 1e-6 || fTA > limTA + 1e-6)
             {
+                // Hard even in soft mode (same cascade as balance).
                 vetPackinErros[PackingErroAxleWights] += 1;
                 placementFailErr = PackingErroAxleWights;
                 return false;
@@ -458,11 +490,17 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
                 }
             }
 
-            if(leftSupport < std::ceil(ParseInputNS::input.minLeftSupportArea * leftAreaTotal))
+            const double reqLeft = std::ceil(ParseInputNS::input.minLeftSupportArea * leftAreaTotal);
+            if(leftSupport < reqLeft)
             {
-                vetPackinErros[PackingErroCompactness] += 1;
-                placementFailErr = PackingErroCompactness;
-                return false;
+                if(ptrViolation)
+                    *ptrViolation += softW(TP::Compactness) * (reqLeft - leftSupport) / reqLeft;
+                else
+                {
+                    vetPackinErros[PackingErroCompactness] += 1;
+                    placementFailErr = PackingErroCompactness;
+                    return false;
+                }
             }
         }
 
@@ -599,6 +637,7 @@ bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
         for(SortStrategy strategy : strategies)
         {
             vetLastNotPacked.clear();
+            vetLastSoftPlaced.clear();
             // Initialize with the origin Extreme Point (0, 0, 0)
             if(resetBin)
             {
@@ -771,6 +810,58 @@ bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
                                 }
                             }
                         }
+                    }
+                }
+
+                // Last resort (GA decoding only): no position satisfies every constraint.
+                // Place the item where the weighted soft violation is smallest, so the GA can
+                // compare how far each layout is from feasible instead of all being "item missing".
+                // Geometry, fragility and a minimum support stay hard. The final checkFeasibility
+                // still rejects the packing, and penalizeSolution measures the violation.
+                if(numOfCandidates == 0 && penalty)
+                {
+                    double   bestViol = std::numeric_limits<double>::max();
+                    int      bestEp   = -1;
+                    Rotation bestRot  = vetRot[0];
+                    Ponto    bestPos;
+
+                    for(int epIdx = 0; epIdx < bin.numEps; ++epIdx)
+                    {
+                        for(int rIdx = 0; rIdx < vetRot.size(); ++rIdx)
+                        {
+                            Rotation     r  = vetRot[rIdx];
+                            double       dy = instanciaG.vetItens[itemId].getDimRotacionada(1, r);
+                            const double vetY[] = {bin.vetEp[epIdx].vetDim[1],       // the EP
+                                                   (bin.binDim[1] - dy) / 2.0,       // centred
+                                                   bin.binDim[1] - dy};              // right wall
+
+                            for(int k = 0; k < 3; ++k)
+                            {
+                                if(vetY[k] < 0.0)
+                                    continue;
+
+                                Ponto pc = bin.vetEp[epIdx];
+                                pc.vetDim[1] = vetY[k];
+
+                                double viol = 0.0;
+                                if(isPlacementFeasibleModel0(bin, rota, itemId, pc, r, sumM, sumF,
+                                                             stopData, &viol) &&
+                                   viol < bestViol)
+                                {
+                                    bestViol = viol;
+                                    bestEp   = (k == 0) ? epIdx : -1;
+                                    bestRot  = r;
+                                    bestPos  = pc;
+                                }
+                            }
+                        }
+                    }
+
+                    if(bestViol < std::numeric_limits<double>::max())
+                    {
+                        candidates[0]   = {bestViol, bestEp, bestRot, bestPos};
+                        numOfCandidates = 1;
+                        vetLastSoftPlaced.push_back({itemId, deepestErr});
                     }
                 }
 
