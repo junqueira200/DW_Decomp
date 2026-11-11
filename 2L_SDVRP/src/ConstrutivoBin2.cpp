@@ -57,6 +57,27 @@ void getRouteItems(const SolucaoNS::Rota &rota, VectorI &outItemIds)
 /**
  * @brief Evaluates whether placing itemId at point p with rotation r is locally feasible.
  */
+// Check where the last call to isPlacementFeasibleModel0 failed
+// (PackingErro index; PackingErroSize = Boundary).
+static int placementFailErr = PackingErroSize;
+
+// Order in which the checks run: a larger value means the candidate got further.
+static int failDepth(int err)
+{
+    switch(err)
+    {
+        case PackingErroSize:          return 0;   // Boundary
+        case PackingErroGeometric:     return 1;
+        case PackingErroSupport:
+        case PackingErroFragility:     return 2;
+        case PackingErroLifo:          return 3;
+        case PackingErroLoadBalancing: return 4;
+        case PackingErroAxleWights:    return 5;
+        case PackingErroCompactness:   return 6;
+    }
+    return 0;
+}
+
 static bool isPlacementFeasibleModel0(const Bin           &bin,
                                       Rota                &rota,
                                       int                  itemId,
@@ -73,7 +94,10 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
     {
         double dimR = item.getDimRotacionada(d, r);
         if(p.vetDim[d] + dimR > bin.binDim[d] + 1e-5)
+        {
+            placementFailErr = PackingErroSize;   // Boundary
             return false;
+        }
     }
 
     /*
@@ -115,6 +139,7 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
                itemId, bin.vetItemId[k], p, bin.vetPosItem[k], r, bin.vetRotacao[k]))
         {
             vetPackinErros[PackingErroGeometric] += 1;
+            placementFailErr = PackingErroGeometric;
             return false;
         }
     }
@@ -144,6 +169,7 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
                     if(ParseInputNS::input.fragility && placedItem.fragility && !item.fragility)
                     {
                         vetPackinErros[PackingErroFragility] += 1;
+                        placementFailErr = PackingErroFragility;
                         return false;
                     }
 
@@ -155,6 +181,7 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
         if(supportedArea < std::ceil(ParseInputNS::input.minSupportArea * itemBaseArea))
         {
             vetPackinErros[PackingErroSupport] += 1;
+            placementFailErr = PackingErroSupport;
             return false;
         }
     }
@@ -219,6 +246,7 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
                          new_supports_placed)) // item0_supports_item1
                 {
                     vetPackinErros[PackingErroLifo] += 1;
+                    placementFailErr = PackingErroLifo;
                     return false;
                 }
             }
@@ -237,6 +265,7 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
                          placed_supports_new)) // item0_supports_item1
                 {
                     vetPackinErros[PackingErroLifo] += 1;
+                    placementFailErr = PackingErroLifo;
                     return false;
                 }
             }
@@ -300,11 +329,76 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
             if(vetLeft[s] > limit || vetRight[s] > limit)
             {
                 vetPackinErros[PackingErroLoadBalancing] += 1;
+                placementFailErr = PackingErroLoadBalancing;
                 return false;
             }
         }
     }
 
+
+    // 5b. Axle weights check on the partial load, for every stop the candidate is on board.
+    // Stops without the candidate are unchanged and were checked when their items were placed.
+    // Adding an item increases the axle loads unless its centre is behind the trailer axle,
+    // so an overload in a partial load almost always remains in the final load.
+    if(ParseInputNS::input.axleWights)
+    {
+        using AxleWeightsNS::semiTrailer;
+        static VectorD vetSumF(10);
+        static VectorD vetSumM(10);
+
+        vetSumF.setAll(0.0);
+        vetSumM.setAll(0.0);
+
+        const int lastStop = (input.modelType <= 0) ? 1 : (rota.numPos - 2);
+        const double g = GravityCmConst;
+
+        auto addLoad = [&](int id, double x, Rotation rot)
+        {
+            Item &it = instanciaG.vetItens[id];
+            double f  = it.weight * g;
+            double rr = (double)semiTrailer.distanceCargoSpaceTrailerAxle - x -
+                        it.getDimRotacionada(0, rot) / 2.0;
+
+            for(int s = 1; s <= lastStop; ++s)
+            {
+                if(!stopData->vetStopsSet[s].contains(id))
+                    break;
+                vetSumF[s] += f;
+                vetSumM[s] += f * rr;
+            }
+        };
+
+        addLoad(itemId, p.vetDim[0], r);
+        for(int k = 0; k < bin.numItens; ++k)
+            addLoad(bin.vetItemId[k], bin.vetPosItem[k].vetDim[0], bin.vetRotacao[k]);
+
+        for(int s = 1; s <= lastStop; ++s)
+        {
+            if(!stopData->vetStopsSet[s].contains(itemId))
+                break;
+
+            double fK = (vetSumM[s] + (double)semiTrailer.massTrailer * g *
+                                          semiTrailer.distanceMassTrailerTrailerAxle) /
+                        (double)semiTrailer.distanceKingpinTrailerAxle;
+
+            double fFA = (fK * (double)semiTrailer.distanceKingpinRearAxle +
+                          (double)semiTrailer.massTractor * g *
+                              semiTrailer.distanceMassTractorRearAxle) /
+                         (double)semiTrailer.wheelBase;
+
+            double fRA = fK + (double)semiTrailer.massTractor * g - fFA;
+            double fTA = vetSumF[s] + (double)semiTrailer.massTrailer * g - fK;
+
+            if(fFA > (double)semiTrailer.maxMassFrontAxle * g + 1e-6 ||
+               fRA > (double)semiTrailer.maxMassRearAxle * g + 1e-6 ||
+               fTA > (double)semiTrailer.maxMassTrailerAxle * g + 1e-6)
+            {
+                vetPackinErros[PackingErroAxleWights] += 1;
+                placementFailErr = PackingErroAxleWights;
+                return false;
+            }
+        }
+    }
 
     // 6. Left Compactness Check (Prevent floating gaps on the left side)
     if(ParseInputNS::input.compactness && p.vetDim[0] > 1e-4) // Not touching the left truck wall
@@ -367,6 +461,7 @@ static bool isPlacementFeasibleModel0(const Bin           &bin,
             if(leftSupport < std::ceil(ParseInputNS::input.minLeftSupportArea * leftAreaTotal))
             {
                 vetPackinErros[PackingErroCompactness] += 1;
+                placementFailErr = PackingErroCompactness;
                 return false;
             }
         }
@@ -502,6 +597,7 @@ bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
 
         for(SortStrategy strategy : strategies)
         {
+            vetLastNotPacked.clear();
             // Initialize with the origin Extreme Point (0, 0, 0)
             if(resetBin)
             {
@@ -603,6 +699,8 @@ bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
                 int                               itemId = sortedItems[i];
                 static Vector<PlacementCandidate> candidates(NumEpPorBin);
                 int                               numOfCandidates = 0;
+                int deepestErr   = PackingErroSize;
+                int deepestDepth = -1;
                 assertm(bin.numEps > NumEpPorBin, "Error, bin.numEps is greter them NumEpPorBin\n")
 
                 // Evaluate all active Extreme Points
@@ -627,12 +725,21 @@ bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
                             candidates[numOfCandidates] = {score, epIdx, r};
                             numOfCandidates += 1;
                         }
+                        else if(failDepth(placementFailErr) > deepestDepth)
+                        {
+                            deepestDepth = failDepth(placementFailErr);
+                            deepestErr   = placementFailErr;
+                        }
                     }
                 }
 
                        // If no feasible EP found, packing fails under this strategy
                 if(numOfCandidates == 0)
                 {
+                    // The furthest check any candidate reached is what blocked this item.
+                    vetDeadEndItem[deepestErr] += 1;
+                    vetLastNotPacked.push_back({itemId, deepestErr});
+
                     if(print)
                         std::printf("Failed to pack item %d (cust: %d)\n",
                                     itemId,
@@ -658,7 +765,9 @@ bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
                           { return a.score < b.score; });
 
                 // numOfCandidates
-                int rclSize = std::max(1, (int)(numOfCandidates * input.aphaBinEscolhaEp));
+                // Let the gene pick among all feasible candidates; the pow bias keeps the best likely.
+                int rclSize = randomKey ? numOfCandidates
+                                        : std::max(1, (int)(numOfCandidates * input.aphaBinEscolhaEp));
                 // std::printf("\t\trclSize: %d\n", rclSize);
                 int chosen = 0;//randomKey[numItems+itemId]*rclSize;
 
@@ -711,7 +820,16 @@ bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
                    // TODO remover
                    // Penalty penalty;
 
-            if(bin.checkFeasibility(&rota, false, print, nullptr, stopData))
+            const auto errBeforeFinal = vetPackinErros;
+            const bool finalOk = bin.checkFeasibility(&rota, false, print, nullptr, stopData);
+            if(!finalOk)
+            {
+                for(int e = 0; e < PackingErroSize; ++e)
+                    if(vetPackinErros[e] > errBeforeFinal[e])
+                        vetFinalCheckFail[e] += 1;
+            }
+
+            if(finalOk)
             {
                 /*
                 if(numItems != bin.numItens)

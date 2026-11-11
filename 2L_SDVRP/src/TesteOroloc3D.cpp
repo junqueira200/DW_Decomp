@@ -495,7 +495,20 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         VectorI vetSumAreasLeft2(numItems, 0);
 
         double ompStartGA = omp_get_wtime();
+        vetPackinErros.setAll(0);
+        vetDeadEndItem.setAll(0);
+        vetFinalCheckFail.setAll(0);
         bool   resultRandKey = ga(bin2, solCp.vetRota[veic], &vetItems, numItems);
+        if constexpr(!RunIrace)
+        {
+            const char *names[] = {"Geometric", "Lifo", "Support", "Axle", "Balance",
+                                   "Compact", "Fragility", "Boundary"};
+            std::printf("%-10s %14s %10s %10s\n", "Constraint", "CandRejects", "DeadEnd", "FinalFail");
+            for(int e = 0; e <= PackingErroSize; ++e)
+                std::printf("%-10s %14lld %10lld %10lld\n", names[e],
+                            e < PackingErroSize ? (long long)vetPackinErros[e] : 0LL,
+                            (long long)vetDeadEndItem[e], (long long)vetFinalCheckFail[e]);
+        }
         double timeGA = omp_get_wtime() - ompStartGA;
 
         if(resultRandKey)

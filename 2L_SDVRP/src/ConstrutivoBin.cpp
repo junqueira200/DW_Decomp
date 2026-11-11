@@ -816,7 +816,7 @@ void ConstrutivoBinNS::printVetPackingErros()
 
     for(int i = 0; i < PackingErroSize; ++i)
     {
-        std::printf("%s: \t %d\n", PackingErroNames[i], vetPackinErros[i]);
+        std::printf("%s: \t %lld\n", PackingErroNames[i], (long long)vetPackinErros[i]);
     }
 
     std::printf("\n\n");

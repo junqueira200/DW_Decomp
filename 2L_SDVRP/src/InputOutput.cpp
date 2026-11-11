@@ -127,6 +127,9 @@ void ParseInputNS::parseInput(int argc, const char *argv[])
                 ("gaInherit",
                  "",
                  cxxopts::value<double>(input.gaProbToInheritFromElite))
+                ("gaSoftGroup",
+                 "",
+                 cxxopts::value<double>(input.gaSoftGroupDelta))
                 ("outputIrace", "", cxxopts::value<std::string>(input.outputIrace))
 
             //("useCm","", cxxopts::value<bool>(input.useCm))

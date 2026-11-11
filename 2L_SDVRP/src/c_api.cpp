@@ -1018,6 +1018,7 @@ void setOroloc3DProblem(int doPrint)
                 "\tNumber of Islands:           %d\n"
                 "\tMigration Interval:          %d\n"
                 "\tMigration Rate:              %.2f\n"
+                "\tSoft Group Delta:            %.2f\n"
                 "---------------------------------------\n\n",
                 input.axleWights,
                 input.balancedLoading,
@@ -1033,7 +1034,8 @@ void setOroloc3DProblem(int doPrint)
                 input.gaProbToInheritFromElite,
                 input.gaNumberOfIslands,
                 input.gaMigrationInterval,
-                input.gaMigrationRate);
+                input.gaMigrationRate,
+                input.gaSoftGroupDelta);
 
     std::printf("--- Penalty ---\n\n");
     for(int i=0; i < (int)SolucaoNS::Penalty::TypePenalty::Count; ++i)

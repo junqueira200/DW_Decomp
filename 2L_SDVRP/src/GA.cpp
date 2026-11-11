@@ -24,6 +24,7 @@ using namespace SolucaoNS;
 using namespace StopDataNS;
 
 constexpr bool PrintGA = false;
+constexpr bool PrintGAFail = true;   // print best penalty breakdown when GA fails
 
 using namespace SolucaoNS;
 
@@ -63,6 +64,8 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
     static SolucaoNS::Penalty    penalty;
     static StopData				 stopData;
     double                       bestRandKeyPenalty = std::numeric_limits<double>::max();
+    static SolucaoNS::Penalty    bestPenalty;
+    bestPenalty.set0();
 
     const int subPopulationSize = input.gaPopulationSize / input.gaNumberOfIslands;
 
@@ -267,6 +270,12 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
             }
 
             it.first = penalty.getValue();
+            if(it.first < bestRandKeyPenalty)
+            {
+                bestRandKeyPenalty = it.first;
+                bestPenalty = penalty;          // raw values of the best chromosome
+                bestRandKey.vetRandomKey = it.second->vetRandomKey;
+            }
             it.second->fitness = it.first;
             it.second->evaluated = true;
 
@@ -283,14 +292,6 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
                       vetRandKey.begin() + vetIndexElite[island].first + subPopulationSize,
                       [](RandomKeyPair &p0, RandomKeyPair &p1) -> bool
                       { return p0.first < p1.first; });
-
-            int indexBest = vetIndexElite[island].first;
-            // Copy the best
-            if(doubleLess(vetRandKey[indexBest].first, bestRandKeyPenalty))
-            {
-                bestRandKey.vetRandomKey = vetRandKey[indexBest].second->vetRandomKey;
-                bestRandKeyPenalty = vetRandKey[indexBest].first;
-            }
 
             // Remove the worse randomKeys
             int quant = 0;
@@ -380,8 +381,33 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
         }
     }
 
-    if constexpr(PrintGA)
-        std::printf("GA END\n");
+    if constexpr(PrintGAFail)
+    {
+        std::printf("GA failed. Best penalty %.4f:\n", bestRandKeyPenalty);
+        bestPenalty.print();
+
+        // Decode the best chromosome again (the decoder is deterministic) to list the items left out
+        static const char *errNames[] = {"Geometric", "Lifo", "Support", "Axle", "Balance",
+                                         "Compact", "Fragility", "Boundary"};
+        randKey.vetRandomKey = bestRandKey.vetRandomKey;
+        copiaBin(bin, binAux);
+        decoderRandomKey(randKey, binAux, vetItems, sizeVetItems, route, penalty, stopData);
+
+        std::printf("Not packed (%d of %d items):\n", (int)vetLastNotPacked.size(), sizeVetItems);
+        std::printf("  %5s %5s %4s %18s %8s %10s  %s\n",
+                    "item", "cust", "stop", "dims (x y z)", "weight", "volume", "blocked by");
+        for(auto [itemId, err] : vetLastNotPacked)
+        {
+            InstanceNS::Item &it = InstanceNS::instanciaG.vetItens[itemId];
+            std::printf("  %5d %5d %4d %6.0f %5.0f %5.0f %8.1f %10.0f  %s\n",
+                        itemId, it.customer, findPos(route, itemId),
+                        it.vetDim[0], it.vetDim[1], it.vetDim[2],
+                        it.weight, it.volume, errNames[err]);
+        }
+        std::printf("Bin fill: %d items, %.1f%% of volume\n\n", binAux.numItens,
+                    100.0 * (totalVolume - bestPenalty[Penalty::TypePenalty::VolItemsNotPacked]) /
+                            (binAux.binDim[0] * binAux.binDim[1] * binAux.binDim[2]));
+    }
 
     return false;
 }

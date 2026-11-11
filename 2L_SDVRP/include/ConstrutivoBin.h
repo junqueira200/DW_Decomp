@@ -101,7 +101,10 @@ enum PackingErro
 
 constexpr int PackingErroSize = PackingErroFragility + 1;
 
-inline Array<int, PackingErroSize> vetPackinErros;
+inline Array<int64_t, PackingErroSize> vetPackinErros;             // int would overflow
+// Index PackingErroSize = Boundary (not counted inside the placement check)
+inline Array<int64_t, PackingErroSize + 1> vetDeadEndItem;    // item had 0 feasible candidates
+inline Array<int64_t, PackingErroSize + 1> vetFinalCheckFail; // all packed, final check failed
 
 void printVetPackingErros();
 

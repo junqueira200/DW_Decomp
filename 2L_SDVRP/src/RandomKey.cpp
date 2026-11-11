@@ -11,6 +11,7 @@
 #include "RandomKey.h"
 #include "ConstrutivoBin2.h"
 #include "rand.h"
+#include "InputOutput.h"
 
 
 #include <set>
@@ -38,11 +39,20 @@ bool RandomKeyNS::decoderRandomKey(RandomKey          	&randKey,
                                    StopDataNS::StopData	&stopData)
 {
     static VectorI vetItemsTemp(MaxNumItemsBin);
+    static VectorD vetSortKey(MaxNumItemsBin);
     copyVet(vetItems, vetItemsTemp, vetItemsSize);
 
-    //bin.reset();
-    sort_two_vectors(randKey.vetRandomKey.data(), vetItemsTemp, vetItemsSize);
-    grupByCustomer(vetItemsTemp, vetItemsSize, route);
+    // Soft grouping: rank 0 = last customer (packed first). With delta in (1, 2),
+    // items of adjacent customers can swap; delta <= 1 is strict grouping.
+    const int    lastPos = route.numPos - 2;
+    const double delta   = ParseInputNS::input.gaSoftGroupDelta;
+    for(int i = 0; i < vetItemsSize; ++i)
+    {
+        int rank = lastPos - findPos(route, vetItemsTemp[i]);
+        vetSortKey[i] = (double)rank + delta * randKey.vetRandomKey[i];
+    }
+
+    sort_two_vectors(vetSortKey.data(), vetItemsTemp, vetItemsSize);
     penalty.set0();
 
     randKey.evaluated = true;

@@ -76,6 +76,7 @@ class Input
     double 		gaDiscartPercetence			= 0.2;
     double 		gaElitePercetence 			= 0.2;
     double 		gaProbToInheritFromElite 	= 0.8;
+    double 		gaSoftGroupDelta 			= 1.0;   // <=1 strict grouping by customer
     int    		gaNumberOfIslands 			= 4;
     int    		gaMigrationInterval			= 50;
     double 		gaMigrationRate				= 0.06;

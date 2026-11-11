@@ -17,6 +17,9 @@
 
 namespace ConstrutivoBin2NS
 {
+// Items not packed in the last packItemsIntoBin pass: (itemId, deepest failed check)
+inline std::vector<std::pair<int, int>> vetLastNotPacked;
+
 
 enum class SortStrategy
 {
