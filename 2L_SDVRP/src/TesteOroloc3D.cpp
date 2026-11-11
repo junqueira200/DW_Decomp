@@ -30,7 +30,7 @@ using namespace ConstrutivoBin2NS;
 using namespace RandomKeyNS;
 using namespace GA_NS;
 
-constexpr bool RunIrace = false;
+constexpr bool RunIrace = true;
 
 // using namespace SCIP_NS;
 

@@ -24,7 +24,7 @@ using namespace SolucaoNS;
 using namespace StopDataNS;
 
 constexpr bool PrintGA = false;
-constexpr bool PrintGAFail = true;   // print best penalty breakdown when GA fails
+constexpr bool PrintGAFail = false;   // print best penalty breakdown when GA fails
 
 using namespace SolucaoNS;
 
