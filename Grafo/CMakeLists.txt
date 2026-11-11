@@ -18,7 +18,7 @@ message(CMAKE_MODULE_PATH="${CMAKE_SOURCE_DIR}")
 
 #set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-find_package(Eigen3 3.3 REQUIRED)# NO_MODULE)
+find_package(Eigen3 REQUIRED)# NO_MODULE)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 #set(CMAKE_CXX_FLAGS "-O0 -g3")

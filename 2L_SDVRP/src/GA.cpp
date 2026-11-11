@@ -226,7 +226,8 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
                 continue;
             }
 
-            for(int i=0; i < (sizeVetItems+2*InstanceNS::instanciaG.numClientes); ++i)
+            const int chromSize = sizeVetItems + InstanceNS::instanciaG.numItens;
+            for(int i = 0; i < chromSize; ++i)
                 randKey.vetRandomKey[i] = it.second->vetRandomKey[i];
 
             copiaBin(bin, binAux);
