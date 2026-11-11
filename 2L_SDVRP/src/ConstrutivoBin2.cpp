@@ -526,6 +526,7 @@ struct PlacementCandidate
     double               score;
     int                  epIdx;
     InstanceNS::Rotation rot;
+    Ponto                pos;      // used when epIdx == -1 (fallback position, not an EP)
 };
 
 bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
@@ -697,7 +698,8 @@ bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
                 */
 
                 int                               itemId = sortedItems[i];
-                static Vector<PlacementCandidate> candidates(NumEpPorBin);
+                // EPs x up to 6 rotations x (EP + 2 fallback positions)
+                static Vector<PlacementCandidate> candidates(NumEpPorBin * 18);
                 int                               numOfCandidates = 0;
                 int deepestErr   = PackingErroSize;
                 int deepestDepth = -1;
@@ -722,13 +724,52 @@ bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
                                                      stopData))
                         {
                             double score = computePlacementScore(bin, itemId, ep, r);
-                            candidates[numOfCandidates] = {score, epIdx, r};
+                            candidates[numOfCandidates] = {score, epIdx, r, ep};
                             numOfCandidates += 1;
                         }
                         else if(failDepth(placementFailErr) > deepestDepth)
                         {
                             deepestDepth = failDepth(placementFailErr);
                             deepestErr   = placementFailErr;
+                        }
+                    }
+                }
+
+                // Fallback when no EP works: try the item centred across the width and against
+                // the right wall, at each EP's x and z. EPs only give y = 0 or flush with a
+                // neighbour, so a lone heavy item can never be balanced at a late stop.
+                if(numOfCandidates == 0)
+                {
+                    for(int epIdx = 0; epIdx < bin.numEps; ++epIdx)
+                    {
+                        for(int rIdx = 0; rIdx < vetRot.size(); ++rIdx)
+                        {
+                            Rotation     r  = vetRot[rIdx];
+                            double       dy = instanciaG.vetItens[itemId].getDimRotacionada(1, r);
+                            const double vetY[] = {(bin.binDim[1] - dy) / 2.0,  // centred
+                                                   bin.binDim[1] - dy};         // right wall
+
+                            for(double y : vetY)
+                            {
+                                if(y < 0.0 || doubleEqual(y, bin.vetEp[epIdx].vetDim[1], 1e-3))
+                                    continue;
+
+                                Ponto pc = bin.vetEp[epIdx];
+                                pc.vetDim[1] = y;
+
+                                if(isPlacementFeasibleModel0(bin, rota, itemId, pc, r, sumM, sumF,
+                                                             stopData))
+                                {
+                                    double score = computePlacementScore(bin, itemId, pc, r);
+                                    candidates[numOfCandidates] = {score, -1, r, pc};
+                                    numOfCandidates += 1;
+                                }
+                                else if(failDepth(placementFailErr) > deepestDepth)
+                                {
+                                    deepestDepth = failDepth(placementFailErr);
+                                    deepestErr   = placementFailErr;
+                                }
+                            }
                         }
                     }
                 }
@@ -789,7 +830,10 @@ bool packItemsIntoBin(SolucaoNS::Bin     	&bin,
                        // std::printf("\t\tchosen: %d\n", chosen);
 
                        // Place the item (this automatically updates EPs, dimensions, and loads)
-                bin.addItem(candidates[chosen].epIdx, itemId, candidates[chosen].rot);
+                if(candidates[chosen].epIdx >= 0)
+                    bin.addItem(candidates[chosen].epIdx, itemId, candidates[chosen].rot);
+                else
+                    bin.addItemAt(candidates[chosen].pos, itemId, candidates[chosen].rot);
             } // END for(int i = 0; i < numItems; ++i)
 
             if(isInfeasible && sortItemIds)

@@ -221,6 +221,7 @@ struct Bin
     int 						 numStops = 0;
 
     void        addItem(int idEp, int idItem, InstanceNS::Rotation r);
+    void        addItemAt(const Ponto &p, int idItem, InstanceNS::Rotation r);
     void        addEp(const Ponto &ep);
     std::string printPlot();
     Ponto       projectEP(double x, double y, double sourceZ);

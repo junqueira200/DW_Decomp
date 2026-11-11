@@ -170,6 +170,27 @@ void SolucaoNS::Bin::addItem(int idEp, int idItem, InstanceNS::Rotation r)
         rmI_Ep(vetEpRm[i]);
 }
 
+// Place an item at an arbitrary point: register it as an EP (addEp ignores duplicates),
+// then use the normal addItem, which removes the used EP and creates the new ones.
+void SolucaoNS::Bin::addItemAt(const Ponto &p, int idItem, InstanceNS::Rotation r)
+{
+    addEp(p);
+
+    for(int i = numEps - 1; i >= 0; --i)
+    {
+        if(doubleEqual(vetEp[i].vetDim[0], p.vetDim[0], 1E-3) &&
+           doubleEqual(vetEp[i].vetDim[1], p.vetDim[1], 1E-3) &&
+           doubleEqual(vetEp[i].vetDim[2], p.vetDim[2], 1E-3))
+        {
+            addItem(i, idItem, r);
+            return;
+        }
+    }
+
+    std::printf("Error, addItemAt: point %s was not added as EP\n", p.print().c_str());
+    PRINT_THROW();
+}
+
 int SolucaoNS::Bin::getEpComMenorCoord(const VectorI &vetIdEp, int tam)
 {
 
