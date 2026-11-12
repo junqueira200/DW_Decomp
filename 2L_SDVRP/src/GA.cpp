@@ -42,7 +42,7 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
             bin.reset();
 
         size = ptrVetBin->size();
-        std::print("Update ");
+        std::printf("Update ");
     }
     else
         bin.reset();
@@ -66,6 +66,7 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
     double                       bestRandKeyPenalty = std::numeric_limits<double>::max();
     static SolucaoNS::Penalty    bestPenalty;
     bestPenalty.set0();
+    lastBestUnweighted = std::numeric_limits<double>::max();
 
     const int subPopulationSize = input.gaPopulationSize / input.gaNumberOfIslands;
 
@@ -275,6 +276,11 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
                 bestRandKeyPenalty = it.first;
                 bestPenalty = penalty;          // raw values of the best chromosome
                 bestRandKey.vetRandomKey = it.second->vetRandomKey;
+
+                double unweighted = 0.0;
+                for(std::size_t t = 0; t < (std::size_t)Penalty::TypePenalty::Count; ++t)
+                    unweighted += penalty.penalties[t] / penalty.vetNorm[t];
+                lastBestUnweighted = unweighted;
             }
             it.second->fitness = it.first;
             it.second->evaluated = true;

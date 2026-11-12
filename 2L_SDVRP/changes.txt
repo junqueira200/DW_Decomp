@@ -1,0 +1,51 @@
+Stronger placement heuristic (ConstrutivoBin2.cpp)
+    -Axle check inside placement: a position is rejected right away if it would overload an axle at any stop where the item is on board. Before, this was only caught by the final feasibility check.
+
+    -Centred and right-wall positions: when no extreme point works, the heuristic also tries the item centred across the width and against the right wall. This adds new positions that help balance.
+
+    -Soft fallback (GA only): if nothing is feasible, the item goes in the position with the smallest weighted violation instead of being left out.
+        .Soft: Support (as long as at least 50% of the base is supported), LIFO and Compactness.
+        .Still hard: Geometric, Balance and Axle. Making Balance soft caused a cascade of failures.
+
+Decoder ordering
+
+    -Strict grouping by customer was replaced by a soft grouping key: rank(customer) + δ·gene.
+
+    .δ = 1, the default, behaves like strict grouping.
+
+    .With δ > 1, items from neighbouring customers can mix.
+
+How the soft grouping (item mixing) works (src/RandomKey.cpp)
+
+    -It only changes the order in which the decoder gives the items to the placement heuristic. No loading constraint is relaxed.
+
+    -Sort key of item i:   key(i) = rank(customer of i) + δ·gene(i)
+        .rank: position of the customer counted from the end of the route. The last customer visited has rank 0 (its items go deepest), the one before it rank 1, and so on.
+        .gene(i): the item's random key in [0, 1), evolved by the GA.
+        .δ: --gaSoftGroup (default 1.0).
+        .Items are sorted by key, smallest first, and placed in that order.
+
+    -Effect of δ: the keys of a customer lie in [rank, rank + δ).
+        .δ <= 1: strict grouping. The intervals [0,1), [1,2), ... do not overlap, so all items of a customer come before the next customer's. The genes only order items inside a customer (same as the old grupByCustomer).
+        .1 < δ < 2: soft grouping. Each interval overlaps the next one, so only neighbouring customers can mix. With δ = 1.52, customer A (rank 0) has [0, 1.52) and customer B (rank 1) has [1, 2.52), so they share [1, 1.52).
+        .δ >= 2: customers two positions apart could also mix (the irace range stops at 2 to avoid this).
+
+    -When two items swap: item a of rank r goes after item b of rank r+1 when
+            r + δ·g_a > r + 1 + δ·g_b   <=>   g_a - g_b > 1/δ
+        .With δ = 1.52 the threshold is 0.66, so about 6% of item pairs from neighbouring customers swap for random genes. The order stays mostly grouped, and the GA learns which items benefit from swapping.
+
+    -Example (route ends ... B, A; δ = 1.52):
+            item  cust  rank  gene  key
+            a1    A     0     0.10  0.15
+            a2    A     0     0.90  1.37
+            b1    B     1     0.05  1.08
+            b2    B     1     0.60  1.91
+        .Order: a1, b1, a2, b2 (b1 before a2). With δ = 1 it would be a1, a2, b1, b2.
+
+    -Why it helps when every check stays hard:
+        .Each placement still runs the full feasibility check, LIFO included, so b1 going first does not let a2 block b1's unloading.
+        .A large item of the next customer placed earlier takes a good position instead of the leftover space. A small item of the previous customer placed afterwards can still go into a deep gap, because positions come from extreme points, not from a front-to-back sweep.
+        .It also helps balance and axle loads: a heavy item can be placed while there are still free positions on both sides.
+        .If a swap makes things worse, a later item finds no feasible position, the chromosome gets a high penalty, and the GA learns to avoid that swap.
+
+    -irace: all five elites use δ between 1.35 and 1.94 (config 45: 1.52), never 1. Manual test: 4/12 feasible with soft grouping against 3/12 without any grouping.

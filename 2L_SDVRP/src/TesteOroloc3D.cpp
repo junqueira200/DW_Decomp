@@ -30,7 +30,7 @@ using namespace ConstrutivoBin2NS;
 using namespace RandomKeyNS;
 using namespace GA_NS;
 
-constexpr bool RunIrace = true;
+constexpr bool RunIrace = false;
 
 // using namespace SCIP_NS;
 
@@ -434,6 +434,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     int numCompleteFeasible = 0;
     notFeasibleG = 0;
+    double sumResidualFailed = 0.0;   // sum over failed vehicles of r/(1+r)
 
     if constexpr(!RunIrace)
         std::cout << "Veic: " << instanciaG.vetDimVeiculo << "\n";
@@ -442,8 +443,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     for(int veic = 0; veic < sol.vetBin.size(); ++veic)
     {
-        //if(veic != 0)
-        //    continue;
+        if(veic != 4)
+           continue;
 
         Bin &bin = sol.vetBin[veic];
         Bin &binCp = solCp.vetBin[veic];
@@ -539,6 +540,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         {
             bin2.reset();
             notFeasibleG += 1;
+            const double r = GA_NS::lastBestUnweighted;
+            sumResidualFailed += r / (1.0 + r);
             // binCp.numItens = 0;
             // continue;
         }
@@ -709,10 +712,10 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
                 std::vector<Array<int, 4>> vetArray;
                 // std::printf("INI CP\n");
-                auto status = LoadingStatus::Infeasible;
-                    //loadingChecker.ConstraintProgrammingSolver(
-                    //type, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
-                    //int_fk, int_fFA, int_fRA, int_fTA, vetSumAreasLeft);
+                auto status = //LoadingStatus::Infeasible;
+                    loadingChecker.ConstraintProgrammingSolver(
+                    type, container, stopIds, vetCuboids, input.cpSatTime, vetArray,
+                    int_fk, int_fFA, int_fRA, int_fTA, vetSumAreasLeft);
 
                 // std::printf("END CP\n");
 
@@ -944,7 +947,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     if constexpr(!RunIrace)
     {
-        //writeSoltionOroloc2(solCp, "model");
+        writeSoltionOroloc2(solCp, "model");
         writeSoltionOroloc2(solHeur, "brkga");
 
                //std::cout<<solHeur.printSol()<<"\n\n";
@@ -952,11 +955,18 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         std::string strModel = solCp.printSol();
 
         writeToFile(strSolHeur, input.strOutputFolder+"/Plot/Heuristic/"+input.strInst+".txt");
-        //writeToFile(strModel,   input.strOutputFolder+"/Plot/Model/"+input.strInst+".txt");
+        writeToFile(strModel,   input.strOutputFolder+"/Plot/Model/"+input.strInst+".txt");
         //writeToFile(std::to_string(notFeasibleG)+"\n", input.outputIrace);
     }
     else
-        writeToFile(std::to_string(notFeasibleG)+"\n", input.outputIrace);
+    {
+        // Integer part: infeasible vehicles. Fraction in [0,1): how close the failed ones got.
+        const double cost = notFeasibleG +
+                            (notFeasibleG > 0 ? sumResidualFailed / notFeasibleG : 0.0);
+        char buf[64];
+        std::snprintf(buf, sizeof(buf), "%.6f\n", cost);
+        writeToFile(buf, input.outputIrace);
+    }
 
 }
 

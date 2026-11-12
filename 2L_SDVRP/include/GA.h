@@ -18,6 +18,10 @@ using RandomKeyPair = std::pair<double, RandomKeyNS::RandomKey *>;
 namespace GA_NS
 {
 
+// Weight-independent residual of the best chromosome of the last ga() call:
+// sum of penalties[i]/vetNorm[i] with every weight = 1 (used by irace)
+inline double lastBestUnweighted = 0.0;
+
 bool ga(SolucaoNS::Bin      	&bin,
         SolucaoNS::Rota     	&route,
         const VectorI *const 	vetItems = nullptr,

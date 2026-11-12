@@ -1250,7 +1250,7 @@ void SolucaoNS::Bin::computeLoadingBalancing()
         std::printf("LeftBalancedLoading: %.1f; RightBalancedLoading: %.1f",
                     sumLeftBalancedLoading,
                     sumRightBalancedLoading);
-        std::print("Limit hit in Balanced Loading\n");
+        std::printf("Limit hit in Balanced Loading\n");
     }
 }
 

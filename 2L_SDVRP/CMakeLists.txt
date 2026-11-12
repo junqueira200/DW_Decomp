@@ -54,6 +54,7 @@ message("set solution_borrow_checker=1")
 
 add_library(${PROJECT_NAME} SHARED
     include/Commit.h
+    changes.txt
 )
 
 target_sources(${PROJECT_NAME}
