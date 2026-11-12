@@ -443,8 +443,8 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
 
     for(int veic = 0; veic < sol.vetBin.size(); ++veic)
     {
-        if(veic != 4)
-           continue;
+        //if(veic != 4)
+        //   continue;
 
         Bin &bin = sol.vetBin[veic];
         Bin &binCp = solCp.vetBin[veic];
@@ -499,7 +499,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         vetPackinErros.setAll(0);
         vetDeadEndItem.setAll(0);
         vetFinalCheckFail.setAll(0);
-        bool   resultRandKey = ga(bin2, solCp.vetRota[veic], &vetItems, numItems);
+        bool   resultRandKey = false;//ga(bin2, solCp.vetRota[veic], &vetItems, numItems);
         if constexpr(!RunIrace)
         {
             const char *names[] = {"Geometric", "Lifo", "Support", "Axle", "Balance",
