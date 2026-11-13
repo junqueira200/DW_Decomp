@@ -324,16 +324,18 @@ function pricing_callback_heuristic(cbdata, model, x)
 
     # 2. Call the SPPRC solver
     sizeVetRoutesOutput = Ref{Cint}(0)
+    isComplete = Ref{Cint}(0)           # out: 1 = exact search finished
     exact = false
     tCall = @elapsed numGeneratedRoutes = 
         ccall((:solveSpprc, LIB), 
                 Cint, 
-                (Ptr{Cdouble}, Ptr{Cint}, Ref{Cint}, Ptr{Cdouble}, Cint), 
+                (Ptr{Cdouble}, Ptr{Cint}, Ref{Cint}, Ptr{Cdouble}, Cint, Ref{Cint}), 
                 vetReducedCosts,
                 vetRoutesOutput,
                 sizeVetRoutesOutput,
                 vetReducedCostsRoutes,
-                0)
+                0,
+                isComplete)
     tSpprc[] += tCall
     tHeur[]  += tCall
     nHeur[]  += 1
@@ -346,12 +348,13 @@ function pricing_callback_heuristic(cbdata, model, x)
         tCall = @elapsed numGeneratedRoutes = 
         ccall((:solveSpprc, LIB), 
                 Cint, 
-                (Ptr{Cdouble}, Ptr{Cint}, Ref{Cint}, Ptr{Cdouble}, Cint), 
+                (Ptr{Cdouble}, Ptr{Cint}, Ref{Cint}, Ptr{Cdouble}, Cint, Ref{Cint}), 
                 vetReducedCosts,
                 vetRoutesOutput,
                 sizeVetRoutesOutput,
                 vetReducedCostsRoutes,
-                1)
+                1,
+                isComplete)
         tSpprc[] += tCall
         tExact[] += tCall
         nExact[] += 1
@@ -383,7 +386,8 @@ function pricing_callback_heuristic(cbdata, model, x)
 
     best_rc = submitRoutesToColuna(routes, cbdata, sp_id, model, x)
 
-    if exact
+    if exact && isComplete[] == 1
+        # Complete exact search: best_rc is the minimum reduced cost.
         MOI.submit(model, BD.PricingDualBound(cbdata), best_rc)
     else
         MOI.submit(model, BD.PricingDualBound(cbdata), -Inf)
@@ -402,15 +406,17 @@ function pricing_callback_exact(cbdata, model, x)
 
     # 2. Call the SPPRC solver
     sizeVetRoutesOutput = Ref{Cint}(0)
+    isComplete = Ref{Cint}(0)           # out: 1 = exact search finished
     numGeneratedRoutes = 
         ccall((:solveSpprc, LIB), 
                 Cint, 
-                (Ptr{Cdouble}, Ptr{Cint}, Ref{Cint}, Ptr{Cdouble}, Cint), 
+                (Ptr{Cdouble}, Ptr{Cint}, Ref{Cint}, Ptr{Cdouble}, Cint, Ref{Cint}), 
                 vetReducedCosts,
                 vetRoutesOutput,
                 sizeVetRoutesOutput,
                 vetReducedCostsRoutes,
-                1)
+                1,
+                isComplete)
 
     actual_size = sizeVetRoutesOutput[]
     #println("Number of integers returned: ", actual_size)
@@ -427,7 +433,8 @@ function pricing_callback_exact(cbdata, model, x)
 
     best_rc = submitRoutesToColuna(routes, cbdata, sp_id, model, x)
 
-    MOI.submit(model, BD.PricingDualBound(cbdata), best_rc)
+    # Complete exact search: best_rc is a valid bound; stopped early: no bound.
+    MOI.submit(model, BD.PricingDualBound(cbdata), isComplete[] == 1 ? best_rc : -Inf)
 
     printInfo && println("\tBest reduced cost: $best_rc; numGeneratedRoutes: $numGeneratedRoutes")
     #println("\n\n********************************\n")

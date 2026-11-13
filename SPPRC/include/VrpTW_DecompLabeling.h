@@ -106,7 +106,8 @@ class VrpLabelingSubProb// : public DW_DecompNS::SubProb
                              int*				vetRoutesOut,
                              int               &sizeVetRoutesOut,
                              ArrayReducedCost  &vetRedCost,
-                             bool				exact);
+                             bool				exact,
+                             bool              &complete);
 
     bool checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi);
     //bool checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol);

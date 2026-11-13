@@ -237,7 +237,8 @@ bool LabelingAlgorithmNS::
                             int*					   	vetSol,
                             int					   		&sizeVetSol,
                             int							capacity_Q,
-                            int                         capacityGcd)
+                            int                         capacityGcd,
+                            bool                       *complete)
 {
     static Vet3D_ResCost vetMatResCostForward(vetMatResCostForwardConst);
 
@@ -398,11 +399,22 @@ bool LabelingAlgorithmNS::
     int& sizeMatForwardDest = lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel;
     bool doPrint = true;
 
+    // Set when the search stops before exploring everything.
+    bool stoppedEarly = false;
+
     auto funcStop = [&]()
     {
-        // Exact labeling must explore everything.
+        // Exact labeling: explore everything, unless enough columns were already
+        // found (then the search is incomplete: see `complete`).
         if(exact)
+        {
+            if(ExactStopMinCols > 0 && sizeMatForwardDest >= ExactStopMinCols)
+            {
+                stoppedEarly = true;
+                return true;
+            }
             return false;
+        }
 
         // Heuristic: it only has to find some negative columns, so stop as soon
         // as there are enough of them (thresholds in LabelingConstants.h).
@@ -889,6 +901,10 @@ bool LabelingAlgorithmNS::
         doContinue = !funcStop() && doContinue;
 
     }
+
+    // The search is complete only if it was never cut short.
+    if(complete)
+        *complete = !stoppedEarly;
 
     if(PrintIterInfoG)
     {

@@ -772,8 +772,12 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                          int              *vetRoutesOut,
                          int              &sizeVetRoutesOut,
                          ArrayReducedCost &vetRedCost,
-                         bool			   exact)
+                         bool			   exact,
+                         bool             &complete)
 {
+    // A heuristic result is never complete; the exact call sets it below.
+    complete = !exact;
+
     //std::print("exact: {}\n", exact);
     static Eigen::VectorX<FloatType> vetRedCostFT(NumMaxSolSubProb);
     static Eigen::VectorXd vetDist(instVrpTw->numClientes + 1);
@@ -934,7 +938,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                            vetRoutesOut,
                            sizeVetRoutesOut,
                            instVrpTw->capVeic,
-                                   capacityGcd);
+                           capacityGcd,
+                           &complete);
 
     fflush(stdout);
     std::cout.flush();

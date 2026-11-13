@@ -83,6 +83,12 @@ constexpr HeurStage HeurStages[] = {
     // {false, 4},  // full graph: catches what the reduced graph misses (cascade, off)
 };
 
+// Exact labeling: stop as soon as at least ExactStopMinCols columns with negative
+// reduced cost were found. The search is then incomplete, so its best reduced cost is
+// not a valid dual bound (the caller is told through `complete`).
+// 0 = never stop early (always explore everything, as before).
+constexpr int ExactStopMinCols = 0;
+
 constexpr double MaxFloatType = std::numeric_limits<FloatType>::max();
 constexpr double MinFloatType = std::numeric_limits<FloatType>::min();
 constexpr double InfFloatType = std::numeric_limits<FloatType>::infinity();
