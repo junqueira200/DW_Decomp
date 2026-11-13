@@ -838,7 +838,20 @@ bool LabelingAlgorithmNS::
                                          "#####################\n\n";
 
                         if(rmLabel)
+                        {
+                            // No extension was feasible: nothing points to this label.
                             vetLabelPoolG[cust].delT(labelPtr);
+                        }
+                        else
+                        {
+                            // Keep the extended label in the closed bucket of the same
+                            // (cust, i, j), sorted by reduced cost, so it can still
+                            // dominate labels that reach this bucket later.
+                            Bucket &closed =
+                                lData.vetMatBucketForwardClosed[cust].mat(labelPtr->i, labelPtr->j);
+                            closed.addElement(lowerBoundIdx(labelPtr->vetResources[0], &closed),
+                                              labelPtr);
+                        }
 
                         numIt += 1;
 
@@ -1244,11 +1257,14 @@ LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2> &ve
 
     vetMatBucketForward = Eigen::VectorX<MatBucket>(numCust); //(numMaxSteps, numMaxSteps);
     vetMatBucketBackward = Eigen::VectorX<MatBucket>(numCust);
+    vetMatBucketForwardClosed = Eigen::VectorX<MatBucket>(numCust);
     for(int i = 0; i < numCust; ++i)
     {
         vetMatBucketForward[i].mat =
             Eigen::Matrix<Bucket, -1, -1, Eigen::RowMajor>(vetNumSteps[0], vetNumSteps[1]);
         vetMatBucketBackward[i].mat =
+            Eigen::Matrix<Bucket, -1, -1, Eigen::RowMajor>(vetNumSteps[0], vetNumSteps[1]);
+        vetMatBucketForwardClosed[i].mat =
             Eigen::Matrix<Bucket, -1, -1, Eigen::RowMajor>(vetNumSteps[0], vetNumSteps[1]);
     }
 
@@ -1397,6 +1413,15 @@ void LabelingAlgorithmNS::LabelingData::flushLabel()
                 //                mat.mat(i, j).vetPtrLabel.conservativeResize()
                 mat.mat(i, j).flush();
             }
+        }
+    }
+
+    for(MatBucket &mat : vetMatBucketForwardClosed)
+    {
+        for(int i = 0; i < vetNumSteps[0]; ++i)
+        {
+            for(int j = 0; j < vetNumSteps[1]; ++j)
+                mat.mat(i, j).flush();
         }
     }
 }
@@ -2757,6 +2782,24 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
         {
             correctPos = -1;
             return nullptr;
+        }
+    }
+
+    // Labels of the same bucket that were already extended (closed) can also
+    // dominate the new label. The closed bucket is sorted by reduced cost:
+    // only [0, endClosed) can dominate.
+    if(label->typeLabel == Forward && cust != dest)
+    {
+        const Bucket *closed = &lData.vetMatBucketForwardClosed[cust].mat(label->i, label->j);
+        const int     endClosed = upperBoundIdx(labelVal + FloatEp, closed);
+
+        for(int t = 0; t < endClosed; ++t)
+        {
+            if(checkCompleteDominance(*closed->vetPtrLabel[t], *label, numRes))
+            {
+                correctPos = -1;
+                return nullptr;
+            }
         }
     }
 

@@ -171,6 +171,11 @@ class LabelingData
     Eigen::VectorX<MatBucket> vetMatBucketForward;
     Eigen::VectorX<MatBucket> vetMatBucketBackward;
 
+    /// Forward labels that were already extended, stored in the same (cust, i, j)
+    /// bucket they were extended from and sorted by reduced cost. Used only to
+    /// discard new labels: these labels have children, so they are never removed.
+    Eigen::VectorX<MatBucket> vetMatBucketForwardClosed;
+
   public:
     /// Access first the resorce
     Vector<Matrix<Bound, false>> vetMatBound;
