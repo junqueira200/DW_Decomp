@@ -1,6 +1,6 @@
 using CVRPLIB
 
-LIB = "../build/libSPPRC.dylib"
+const LIB = "../build/libSPPRC.dylib"
 
 function setInstance(n)
     ccall((:setInstance, LIB),

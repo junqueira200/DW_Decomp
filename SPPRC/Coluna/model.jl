@@ -4,7 +4,13 @@ const MOI = JuMP.MOI
 using Coluna.Branching
 
 # Prints per-call information of the pricing (number of routes, best reduced cost, ...)
-global printInfo = false
+global printInfo::Bool = false
+# Read the subproblem variable bounds (callback_lb / callback_ub) in every pricing call.
+# Coluna branches on original variables through master constraints, so the subproblem
+# bounds stay 0/1 (checked with branching: no arc was ever fixed). Turn it on only if
+# presolve or another branching rule can change the subproblem bounds: it costs
+# 2 callbacks per arc per call.
+global checkSpBounds::Bool = false
 # Total time spent inside solveSpprc (C++ labeling). Reset with tSpprc[] = 0.0
 const tSpprc = Ref(0.0)
 # Time and number of calls of solveSpprc, split by heuristic / exact labeling
@@ -36,7 +42,8 @@ function createModel(inst::CvrpData)
         Coluna.Optimizer,
         "params" => Coluna.Params(
         solver = Coluna.Algorithm.TreeSearchAlgorithm(
-            opennodeslimit = 1,
+            opennodeslimit = 100,
+            maxnumnodes = 1,
             explorestrategy = Coluna.TreeSearch.BestDualBoundStrategy(),
             conqueralg = Coluna.Algorithm.ColCutGenConquer(
                 colgen = Coluna.Algorithm.ColumnGeneration(
@@ -68,10 +75,14 @@ function createModel(inst::CvrpData)
 
     @dantzig_wolfe_decomposition(model, decomposition, VehicleTypes)
     subproblems = BD.getsubproblems(decomposition)
+    # The closure passes model and x as arguments: inside the callback their
+    # concrete types are known, so there is no dynamic dispatch on globals.
+    mdl  = model
+    xVar = x
     BD.specify!.(subproblems,
                  lower_multiplicity = 0,
                  upper_multiplicity = length(inst.customers),
-                 solver = pricing_callback_heuristic)
+                 solver = cbdata -> pricing_callback_heuristic(cbdata, mdl, xVar))
     
     #objectiveprimalbound!(model, 685.0)
     optimize!(model)
@@ -86,7 +97,7 @@ function linearIndex(i::Int, j::Int, n::Int)
     return i*n+j
 end
 
-function populateReducedCosts(cbdata)
+function populateReducedCosts(cbdata, model, x)
 
     sp_id = BD.callback_spid(cbdata, model)
     n     = inst.n
@@ -110,10 +121,13 @@ function populateReducedCosts(cbdata)
             var = x[sp_id, (i, j)]
             vetReducedCosts[k] = BD.callback_reduced_cost(cbdata, var)
 
-            if BD.callback_ub(cbdata, var) < 0.5          # arc fixed to 0
-                vetReducedCosts[k] = Inf
-            elseif BD.callback_lb(cbdata, var) > 0.5      # arc fixed to 1
-                push!(fixedArcs, (i, j))
+            if checkSpBounds
+                if BD.callback_ub(cbdata, var) < 0.5      # arc fixed to 0
+                    vetReducedCosts[k] = Inf
+                    printInfo && println("populateReducedCosts: arc fixed to 0: ", (i, j))
+                elseif BD.callback_lb(cbdata, var) > 0.5  # arc fixed to 1
+                    push!(fixedArcs, (i, j))
+                end
             end
         end
     end
@@ -175,7 +189,7 @@ function parseRoutesFromVetRoutesOutput(actual_size)
     return routes
 end
 
-function submitRoutesToColuna(routes::Vector{Vector{Int}}, cbdata, sp_id)
+function submitRoutesToColuna(routes::Vector{Vector{Int}}, cbdata, sp_id, model, x)
     printInfo && println("**********************************\n\n")
     best_rc = Inf
 
@@ -210,7 +224,7 @@ function submitRoutesToColuna(routes::Vector{Vector{Int}}, cbdata, sp_id)
     return best_rc
 end
 
-function pricing_callback_heuristic(cbdata)
+function pricing_callback_heuristic(cbdata, model, x)
 
     printInfo && println("--> Running heuristic pricing callback")
     #@show propertynames(cbdata.form)
@@ -225,7 +239,7 @@ function pricing_callback_heuristic(cbdata)
 
     sp_id = BD.callback_spid(cbdata, model)
     
-    populateReducedCosts(cbdata)
+    populateReducedCosts(cbdata, model, x)
 
     numGeneratedRoutes = 0
 
@@ -288,7 +302,7 @@ function pricing_callback_heuristic(cbdata)
     # 3. Parse routes from vetRoutesOutput (e.g. 0 1 2 0 0 5 6 7 0 ... 0 9 0)
     routes = parseRoutesFromVetRoutesOutput(actual_size)
 
-    best_rc = submitRoutesToColuna(routes, cbdata, sp_id)
+    best_rc = submitRoutesToColuna(routes, cbdata, sp_id, model, x)
 
     if exact
         MOI.submit(model, BD.PricingDualBound(cbdata), best_rc)
@@ -301,10 +315,10 @@ function pricing_callback_heuristic(cbdata)
     return
 end
 
-function pricing_callback_exact(cbdata)
+function pricing_callback_exact(cbdata, model, x)
     printInfo && println("--> Running exact pricing callback")
 
-    populateReducedCosts(cbdata)
+    populateReducedCosts(cbdata, model, x)
     sp_id = BD.callback_spid(cbdata, model)
 
     # 2. Call the SPPRC solver
@@ -332,7 +346,7 @@ function pricing_callback_exact(cbdata)
     # 3. Parse routes from vetRoutesOutput (e.g. 0 1 2 0 0 5 6 7 0 ... 0 9 0)
     routes = parseRoutesFromVetRoutesOutput(actual_size)
 
-    best_rc = submitRoutesToColuna(routes, cbdata, sp_id)
+    best_rc = submitRoutesToColuna(routes, cbdata, sp_id, model, x)
 
     MOI.submit(model, BD.PricingDualBound(cbdata), best_rc)
 
