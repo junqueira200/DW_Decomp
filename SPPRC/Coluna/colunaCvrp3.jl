@@ -1,4 +1,4 @@
-using JuMP, BlockDecomposition, Coluna, Gurobi
+using JuMP, BlockDecomposition, Coluna
 const BD  = BlockDecomposition
 const MOI = JuMP.MOI
 using CVRPLIB
@@ -16,5 +16,6 @@ global inst::CvrpData = createInstance("E-n76-k7") # E-n76-k7 E-n13-k4 E-n33-k4
 global vetReducedCosts::Vector{Float64}       = zeros(inst.n*inst.n)
 global vetRoutesOutput::Vector{Cint}          = zeros(Cint, getSizeVetRoutesOutput())
 global vetReducedCostsRoutes::Vector{Float64} = zeros(getMaxNumberOfRoutes())
-createModel(inst)
+# primalBound: known optimum + 1 (E-n76-k7: 682). Change it with the instance, or use Inf.
+createModel(inst; primalBound = 683.0)
 

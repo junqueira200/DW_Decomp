@@ -2,6 +2,30 @@ using JuMP, BlockDecomposition, Coluna, CPLEX
 const BD  = BlockDecomposition
 const MOI = JuMP.MOI
 using Coluna.Branching
+using CVRPSEP
+
+# CVRPSEP keeps the cuts it has already found, to avoid generating them again.
+const capCutManager = Ref{CutManager}()
+
+# Print the column generation iteration line only every ColGenPrintEvery iterations.
+# Coluna 0.8.2 ignores ColumnGeneration(log_print_frequency = ...) and prints every
+# iteration, so this redefines its printer method (Algorithm/colgen/printer.jl:189).
+# It uses Coluna internals (_colgen_iter_str, elapsed_optim_time): check it again if
+# Coluna is updated. Julia may warn that the method is overwritten.
+const ColGenPrintEvery = 10
+
+function Coluna.ColGen.after_colgen_iteration(
+    ctx::Coluna.Algorithm.ColGenPrinterContext, phase, stage, env,
+    colgen_iteration, stab, ip_primal_sol, colgen_iter_output)
+
+    colgen_iteration % ColGenPrintEvery == 0 || return
+
+    println(Coluna.Algorithm._colgen_iter_str(
+        colgen_iteration, colgen_iter_output, ctx.phase,
+        Coluna.ColGen.stage_id(stage), ctx.sp_elapsed_time, ctx.mst_elapsed_time,
+        Coluna.elapsed_optim_time(env), Coluna.ColGen.get_output_str(stab)))
+    return
+end
 
 # Prints per-call information of the pricing (number of routes, best reduced cost, ...)
 global printInfo::Bool = false
@@ -33,7 +57,7 @@ phase_exact = Coluna.Algorithm.BranchingPhase(
     Coluna.Algorithm.ProductScore()
 )
 
-function createModel(inst::CvrpData)
+function createModel(inst::CvrpData; primalBound::Float64 = Inf)
 
     
     @axis(VehicleTypes, [1])
@@ -42,25 +66,40 @@ function createModel(inst::CvrpData)
         Coluna.Optimizer,
         "params" => Coluna.Params(
         solver = Coluna.Algorithm.TreeSearchAlgorithm(
-            opennodeslimit = 100,
-            maxnumnodes = 1,
+            #opennodeslimit = 100,
+            maxnumnodes = 50,
             explorestrategy = Coluna.TreeSearch.BestDualBoundStrategy(),
             conqueralg = Coluna.Algorithm.ColCutGenConquer(
                 colgen = Coluna.Algorithm.ColumnGeneration(
                     max_nb_iterations=1000000,
                     #show_column_already_inserted_warning = true,
-                    smoothing_stabilization = 0.85,
+                    smoothing_stabilization = 0.5,
                     #stages_pricing_solver_ids = [2, 1],
                     redcost_tol=1E-3
                 ),
-                # TEST: restricted master heuristic off, to measure its cost
-                #primal_heuristics = Coluna.Algorithm.ParameterizedHeuristic[]
+                # Restricted master heuristic only at the root (max_depth = 0).
+                # Coluna's default runs it at every node (its `frequency` field is not
+                # used in Coluna 0.8.2), solving a MIP each time.
+                # Arguments: algorithm, root_priority, nonroot_priority, frequency,
+                # max_depth, name. Use ParameterizedHeuristic[] to turn it off.
+                primal_heuristics = [Coluna.Algorithm.ParameterizedHeuristic(
+                    Coluna.Algorithm.RestrictedMasterHeuristic(),
+                    1.0, 1.0, 1, 0, "Restricted Master IP")],
+                # Cut rounds per node (Coluna's default is 3; the root needs more).
+                max_nb_cut_rounds = 20
             )
         )
     ),
         "default_optimizer" => optimizer_with_attributes(
-            CPLEX.Optimizer,             
-            "CPXPARAM_ScreenOutput" => 0
+            CPLEX.Optimizer,
+            "CPXPARAM_ScreenOutput" => 0,
+            # Master LPs are small and re-solved many times: thread start-up costs
+            # more than parallelism gains. TEST: compare with the default (0 = auto).
+            "CPXPARAM_Threads" => 1,
+            # Primal simplex: adding columns keeps the previous basis primal feasible,
+            # so re-solving the master starts close to the optimum.
+            # TEST: 0 = automatic (default), 1 = primal, 2 = dual simplex.
+            "CPXPARAM_LPMethod" => 1
         ),
     )
 
@@ -84,13 +123,53 @@ function createModel(inst::CvrpData)
                  upper_multiplicity = length(inst.customers),
                  solver = cbdata -> pricing_callback_heuristic(cbdata, mdl, xVar))
     
-    #objectiveprimalbound!(model, 685.0)
+    # Known upper bound (e.g. optimum + 1) so nodes can be pruned; Inf = none.
+    if isfinite(primalBound)
+        objectiveprimalbound!(model, primalBound)
+    end
+
+    # Rounded capacity cuts (CVRPSEP), separated after column generation at each node.
+    capCutManager[] = CutManager()
+    MOI.set(model, MOI.UserCutCallback(),
+            cbdata -> capacityCutCallback(cbdata, mdl, xVar, inst))
+
     optimize!(model)
 
     println("Time in solveSpprc: ", tSpprc[], " s")
     println("  heuristic: ", tHeur[],  " s in ", nHeur[],  " calls")
     println("  exact:     ", tExact[], " s in ", nExact[], " calls")
 
+end
+
+# Rounded capacity cuts: x(S:S) <= |S| - k(S), separated by CVRPSEP.
+# CVRPSEP numbering: depot = 1, customers = 2..n  (ours: depot = 0, customers = 1..n-1).
+function capacityCutCallback(cbdata, model, x, inst)
+    n = inst.n
+
+    # Arc values -> edge values x(i,j) + x(j,i), only positive edges.
+    edgeTail = Int[]; edgeHead = Int[]; edgeX = Float64[]
+    for i in 0:(n - 1), j in (i + 1):(n - 1)
+        v = callback_value(cbdata, x[1, (i, j)]) + callback_value(cbdata, x[1, (j, i)])
+        if v > 1e-6
+            push!(edgeTail, i + 1); push!(edgeHead, j + 1); push!(edgeX, v)
+        end
+    end
+    isempty(edgeX) && return
+
+    demand = [inst.demand[i] for i in 0:(n - 1)]      # demand[1] = depot (ignored)
+
+    S, RHS = rounded_capacity_cuts!(capCutManager[], demand, inst.capacity,
+                                    edgeTail, edgeHead, edgeX;
+                                    integrality_tolerance = 1e-6, max_n_cuts = 5)
+
+    for (s, rhs) in zip(S, RHS)
+        nodes = s .- 1                                  # back to our numbering
+        cut = @build_constraint(
+            sum(x[1, (i, j)] for i in nodes, j in nodes if i != j) <= rhs)
+        MOI.submit(model, MOI.UserCut(cbdata), cut)
+    end
+    printInfo && println("capacity cuts added: ", length(S))
+    return
 end
 
 function linearIndex(i::Int, j::Int, n::Int)

@@ -861,6 +861,8 @@ bool LabelingAlgorithmNS::
                             // Keep the extended label in the closed bucket of the same
                             // (cust, i, j), sorted by reduced cost, so it can still
                             // dominate labels that reach this bucket later.
+                            // Also needed in the heuristic: disabling it there made the
+                            // heuristic ~2x slower on E-n76 (more labels survive).
                             Bucket &closed =
                                 lData.vetMatBucketForwardClosed[cust].mat(labelPtr->i, labelPtr->j);
                             closed.addElement(lowerBoundIdx(labelPtr->vetResources[0], &closed),
