@@ -13,7 +13,7 @@ endif()
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_BUILD_TYPE Release)
-add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
+add_definitions(-DVAR_VECTOR_SANITY_CHECK=0)
 message("set vector_sanity_check=1")
 
 message(CMAKE_MODULE_PATH="${CMAKE_SOURCE_DIR}")
@@ -38,15 +38,15 @@ find_package(Boost)
 find_package(OpenMP REQUIRED)
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -fPIC")# -Wall -Wextra -fPIC")# -fsanitize=address")# -Wall")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -fPIC -march=native")# -Wall -Wextra -fPIC")# -fsanitize=address")# -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D __FILENAME__='\"$$(subst  ${CMAKE_SOURCE_DIR}/,,$$(abspath $$<))\"'")
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftrivial-auto-var-init=zero")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftrivial-auto-var-init=zero")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address,undefined")
 
-add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
-add_definitions(-DVAR_SOLUTION_BORROW_CHECKER=1)
+#add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
+#add_definitions(-DVAR_SOLUTION_BORROW_CHECKER=1)
 message("set solution_borrow_checker=1")
 
 add_library(${PROJECT_NAME} SHARED)

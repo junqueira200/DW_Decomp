@@ -12,6 +12,7 @@
 #include "sefe_array.h"
 #include "LowerBound.h"
 #include <set>
+#include <algorithm>
 #include "LowerBound.h"
 
 using namespace LabelingAlgorithmNS;
@@ -104,6 +105,10 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
             vetMatResCostBackward.get(j, i, 1) = demJ;
         }
     }
+
+    // Same size as vetMatResCostForward; filled on every heuristic call.
+    vetMatResCostForwardHeur =
+        Vet3D_ResCost(instVrpTw->numClientes + 1, instVrpTw->numClientes + 1, 2);
 
     // std::cout<<"\n"<<instVrpTw->vetClieDem<<"\n\n";
     // PRINT_EXIT();
@@ -798,19 +803,75 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         vetMatResCostForward.get(i, instVrpTw->numClientes, 0) = vetReducedCostInput[k];
     }
 
-    getDistLowerBound(vetMatResCostForward, instVrpTw->numClientes, vetVetResBound, matDp);
+    // The completion bound is computed only for the exact labeling: it is
+    // expensive (O(n^2 * Q)) and the heuristic does not need it.
+    int capacityGcd = 1;
+    if(exact)
+        getDistLowerBound(vetMatResCostForward, instVrpTw->numClientes, vetVetResBound,
+                          matDp, capacityGcd);
+    else
+        ptrMatDp = nullptr;
 
     int numSol;
     FloatType maxDist;
 
     if(!exact)
     {
-        for(int i=2; i <= 4; i+=2)
+        // Reduced graph for the heuristic: every customer keeps only its
+        // HeurNumBestArcs cheapest arcs to other customers. The copy keeps
+        // resource 1 (demands), arcs out of the depot and arcs to the destination.
+        const int n = instVrpTw->numClientes;          // nodes 0..n-1, dest = n
+        vetMatResCostForwardHeur.copy(vetMatResCostForward);
+
+        if(HeurNumBestArcs > 0 && HeurNumBestArcs < (n - 2))
         {
+            static std::vector<std::pair<FloatType, int>> vetCand;
+
+            for(int i = 1; i < n; ++i)
+            {
+                vetCand.clear();
+                for(int j = 1; j < n; ++j)
+                {
+                    if(j == i)
+                        continue;
+
+                    const FloatType c = vetMatResCostForward(i, j, 0);
+                    if(c != InfFloatType)               // skip arcs removed by branching
+                        vetCand.emplace_back(c, j);
+                }
+
+                if((int)vetCand.size() <= HeurNumBestArcs)
+                    continue;
+
+                // The HeurNumBestArcs cheapest arcs end up in [0, HeurNumBestArcs).
+                std::nth_element(vetCand.begin(),
+                                 vetCand.begin() + HeurNumBestArcs,
+                                 vetCand.end());
+
+                for(size_t t = HeurNumBestArcs; t < vetCand.size(); ++t)
+                    vetMatResCostForwardHeur.get(i, vetCand[t].second, 0) = InfFloatType;
+            }
+        }
+
+        // Without a reduced graph, the "reduced" stages already run on the full
+        // graph, so the full-graph stages would only repeat work: skip them.
+        const bool reducedGraphActive = (HeurNumBestArcs > 0 && HeurNumBestArcs < (n - 2));
+
+        int stageId = 0;
+        for(const HeurStage &stage : HeurStages)
+        {
+            ++stageId;
+
+            if(!stage.reducedGraph && !reducedGraphActive)
+                continue;
+
+            const Vet3D_ResCost &graph =
+                stage.reducedGraph ? vetMatResCostForwardHeur : vetMatResCostForward;
+
             bool reducedCostNeg =
             bidirectionalAlgorithm(2,
                                    (instVrpTw->numClientes + 1),
-                                   vetMatResCostForward,
+                                   graph,
                                    vetMatResCostBackward,
                                    vetVetResBound,
                                    instVrpTw->numClientes,
@@ -819,7 +880,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                                    //matColX,
                                    numSol,
                                    //(FloatType)constPiValue,
-                                   i,
+                                   stage.labelsPerBucket,
                                    true,
                                    maxDist,
                                    vetRedCostFT,
@@ -830,10 +891,14 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                                    1.0,
                                    vetRoutesOut,
                                    sizeVetRoutesOut,
-                                   instVrpTw->capVeic);
+                                   instVrpTw->capVeic,
+                                   capacityGcd);
 
             if(reducedCostNeg)
             {
+                if(PrintIterInfoG)
+                    std::printf("heuristic stage %d found %d columns\n", stageId, numSol);
+
                 fflush(stdout);
                 std::cout.flush();
                 return numSol;
@@ -868,7 +933,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                            1.0,
                            vetRoutesOut,
                            sizeVetRoutesOut,
-                           instVrpTw->capVeic);
+                           instVrpTw->capVeic,
+                                   capacityGcd);
 
     fflush(stdout);
     std::cout.flush();

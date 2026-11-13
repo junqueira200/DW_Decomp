@@ -5,6 +5,11 @@ using Coluna.Branching
 
 # Prints per-call information of the pricing (number of routes, best reduced cost, ...)
 global printInfo = false
+# Total time spent inside solveSpprc (C++ labeling). Reset with tSpprc[] = 0.0
+const tSpprc = Ref(0.0)
+# Time and number of calls of solveSpprc, split by heuristic / exact labeling
+const tHeur  = Ref(0.0); const nHeur  = Ref(0)
+const tExact = Ref(0.0); const nExact = Ref(0)
 #include("instanceCVRP.jl")
 
 
@@ -40,7 +45,9 @@ function createModel(inst::CvrpData)
                     smoothing_stabilization = 0.85,
                     #stages_pricing_solver_ids = [2, 1],
                     redcost_tol=1E-3
-                )
+                ),
+                # TEST: restricted master heuristic off, to measure its cost
+                #primal_heuristics = Coluna.Algorithm.ParameterizedHeuristic[]
             )
         )
     ),
@@ -68,6 +75,10 @@ function createModel(inst::CvrpData)
     
     #objectiveprimalbound!(model, 685.0)
     optimize!(model)
+
+    println("Time in solveSpprc: ", tSpprc[], " s")
+    println("  heuristic: ", tHeur[],  " s in ", nHeur[],  " calls")
+    println("  exact:     ", tExact[], " s in ", nExact[], " calls")
 
 end
 
@@ -221,7 +232,7 @@ function pricing_callback_heuristic(cbdata)
     # 2. Call the SPPRC solver
     sizeVetRoutesOutput = Ref{Cint}(0)
     exact = false
-    numGeneratedRoutes = 
+    tCall = @elapsed numGeneratedRoutes = 
         ccall((:solveSpprc, LIB), 
                 Cint, 
                 (Ptr{Cdouble}, Ptr{Cint}, Ref{Cint}, Ptr{Cdouble}, Cint), 
@@ -230,13 +241,16 @@ function pricing_callback_heuristic(cbdata)
                 sizeVetRoutesOutput,
                 vetReducedCostsRoutes,
                 0)
+    tSpprc[] += tCall
+    tHeur[]  += tCall
+    nHeur[]  += 1
 
     
     if numGeneratedRoutes == 0
         printInfo && println("--> Running exact pricing")
         exact = true
 
-        numGeneratedRoutes = 
+        tCall = @elapsed numGeneratedRoutes = 
         ccall((:solveSpprc, LIB), 
                 Cint, 
                 (Ptr{Cdouble}, Ptr{Cint}, Ref{Cint}, Ptr{Cdouble}, Cint), 
@@ -245,6 +259,9 @@ function pricing_callback_heuristic(cbdata)
                 sizeVetRoutesOutput,
                 vetReducedCostsRoutes,
                 1)
+        tSpprc[] += tCall
+        tExact[] += tCall
+        nExact[] += 1
 
         printInfo && println("numGeneratedRoutes: ", numGeneratedRoutes)
 

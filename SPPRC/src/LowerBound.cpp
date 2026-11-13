@@ -9,6 +9,7 @@
  *  *****************************************************************/
 
 #include "LowerBound.h"
+#include <numeric>
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/bellman_ford_shortest_paths.hpp>
@@ -46,17 +47,20 @@ typedef std::pair<int, int>                      Edge;
 bool LowerBoundNS::getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost &vetMatResCost,
                                      int                                       dest,
                                      const LabelingAlgorithmNS::MatBoundRes   &matBoundRes,
-                                     EigenMatrixRowD 						  &matDp)
+                                     EigenMatrixRowD 						  &matDp,
+                                     int                                      &capacityGcd)
 {
     static int                 numNodes = matDp.rows();
     static int 				   lastNode = numNodes - 1;
     static bool allocateMat = false;
     static int capacity_Q = -InfInt;
     static Vector<int> demands(numNodes);
+    // Greatest common divisor of the capacity and all demands. The DP runs in
+    // units of gcdQ (capacity_Q and demands are divided by it), which gives the
+    // same bound with gcdQ times fewer capacity values.
+    static int gcdQ = 1;
 
     demands[0] = 0;
-
-    assert(matDp.cols() >= capacity_Q + 1);
 
     if(!allocateMat)
     {
@@ -66,11 +70,25 @@ bool LowerBoundNS::getDistLowerBound(const LabelingAlgorithmNS::Vet3D_ResCost &v
         for(int v=1; v < (numNodes-1); ++v)
             demands[v] = (int)vetMatResCost(0, v, 1);
 
+        gcdQ = capacity_Q;
+        for(int v=1; v < (numNodes-1); ++v)
+            gcdQ = std::gcd(gcdQ, demands[v]);
+
+        if(gcdQ <= 0)
+            gcdQ = 1;
+
+        capacity_Q /= gcdQ;
+        for(int v=1; v < (numNodes-1); ++v)
+            demands[v] /= gcdQ;
+
         allocateMat = true;
     }
 
+    assert(matDp.cols() >= capacity_Q + 1);
+    capacityGcd = gcdQ;
 
-    matDp.setConstant(InfDouble);
+    // Only the first capacity_Q + 1 columns are used.
+    matDp.leftCols(capacity_Q + 1).setConstant(InfDouble);
     //vetDist.setConstant(-InfDouble);
 
     for(int i=0; i <= capacity_Q; ++i)

@@ -39,6 +39,49 @@ constexpr bool      DominaIterBuckets = false;
 constexpr FloatType FloatEp = 1E-6;
 constexpr bool      TrackingRoutes = false;
 constexpr bool      SortLabels = false;
+// How many buckets back (in each resource) the closed buckets are scanned when
+// checking if a new label is dominated. 0 = own bucket only.
+constexpr int       ClosedBucketWindow = 1;
+
+// Early stop of the heuristic labeling (exact labeling never stops early).
+// Each rule {minIt, minCols}: stop when at least minIt labels were processed and
+// at least minCols columns were found.
+struct HeurStopRule
+{
+    int minIt;
+    int minCols;
+};
+
+constexpr HeurStopRule HeurStopRules[] = {
+    {500, 20},
+    {1000, 15},
+    {10000, 10},
+    {100000, 5},
+    {1000000, 1},
+};
+
+// Heuristic labeling only: each customer keeps only its HeurNumBestArcs outgoing
+// arcs (to other customers) with the lowest reduced cost. Arcs to the destination
+// and arcs out of the depot are always kept. 0 = use the full graph.
+// (see also HeurStages below)
+constexpr int HeurNumBestArcs = 10;
+
+// Heuristic pricing cascade: the stages run in this order until one of them finds
+// columns with negative reduced cost. Exact pricing runs only if all stages fail.
+//  - reducedGraph:    true  = graph with only the HeurNumBestArcs best arcs per customer
+//                     false = full graph
+//  - labelsPerBucket: maximum number of labels kept per bucket (NumMaxLabePerBucket)
+struct HeurStage
+{
+    bool reducedGraph;
+    int  labelsPerBucket;
+};
+
+constexpr HeurStage HeurStages[] = {
+    {true,  2},     // reduced graph, cheap
+    {true,  4},     // reduced graph, more labels
+    // {false, 4},  // full graph: catches what the reduced graph misses (cascade, off)
+};
 
 constexpr double MaxFloatType = std::numeric_limits<FloatType>::max();
 constexpr double MinFloatType = std::numeric_limits<FloatType>::min();

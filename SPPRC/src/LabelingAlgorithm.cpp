@@ -236,7 +236,8 @@ bool LabelingAlgorithmNS::
                             double                     	percentage,
                             int*					   	vetSol,
                             int					   		&sizeVetSol,
-                            int							capacity_Q)
+                            int							capacity_Q,
+                            int                         capacityGcd)
 {
     static Vet3D_ResCost vetMatResCostForward(vetMatResCostForwardConst);
 
@@ -399,13 +400,20 @@ bool LabelingAlgorithmNS::
 
     auto funcStop = [&]()
     {
-        if(!exact && ((numIt >= 500 && sizeMatForwardDest >= 20)    ||
-                      (numIt >= 1000 && sizeMatForwardDest >= 15)   ||
-                      (numIt >= 10000 && sizeMatForwardDest >= 10)  ||
-                      (numIt >= 100000 && sizeMatForwardDest >= 5)  ||
-                      (numIt >= 1000000 && sizeMatForwardDest >= 1) ||
-                      (sizeMatForwardDest == NumMaxSolSubProb)))
+        // Exact labeling must explore everything.
+        if(exact)
+            return false;
+
+        // Heuristic: it only has to find some negative columns, so stop as soon
+        // as there are enough of them (thresholds in LabelingConstants.h).
+        if(sizeMatForwardDest >= NumMaxSolSubProb)
             return true;
+
+        for(const HeurStopRule &rule : HeurStopRules)
+        {
+            if(numIt >= rule.minIt && sizeMatForwardDest >= rule.minCols)
+                return true;
+        }
 
         return false;
     };
@@ -591,8 +599,14 @@ bool LabelingAlgorithmNS::
                                     // dominanceIntraBucketSlow(); at this point it still holds
                                     // whatever the pool slot had before. The label's customer
                                     // is newCust.
-                                    const int rem_cap =
+                                    // matDp is indexed in units of capacityGcd (see
+                                    // getDistLowerBound). Rounding up is always safe:
+                                    // more remaining capacity -> smaller (still valid) bound.
+                                    const int remLoad =
                                         capacity_Q - (int)std::lround(labelPtrAux->vetResources[1]);
+                                    const int rem_cap =
+                                        (remLoad >= 0) ? (remLoad + capacityGcd - 1) / capacityGcd
+                                                       : -1;
 
                                     if(rem_cap >= 0 && rem_cap < ptrMatDp->cols())
                                     {
@@ -2773,7 +2787,9 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
     // candidates L may dominate: [beginDom, n)
     int beginDom = lowerBoundIdx(labelVal - FloatEp, bucketPtr);
 
-    static thread_local VectorI vetRm(100000);
+    // Plain static (not thread_local): the labeling runs on one thread, and on macOS
+    // thread_local costs a TLS lookup (_tlv_get_addr) on every call.
+    static VectorI vetRm(100000);
     int sizeVetRm = 0;
 
     for(int i=0; i < endDom; ++i)
@@ -2785,20 +2801,56 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
         }
     }
 
-    // Labels of the same bucket that were already extended (closed) can also
-    // dominate the new label. The closed bucket is sorted by reduced cost:
-    // only [0, endClosed) can dominate.
+    // Labels that were already extended (closed) can also dominate the new label.
+    // As for open labels, only closed buckets (ii, jj) with ii <= label->i and
+    // jj <= label->j can contain a dominating label. The loop starts with the
+    // label's own bucket (closest first).
     if(label->typeLabel == Forward && cust != dest)
     {
-        const Bucket *closed = &lData.vetMatBucketForwardClosed[cust].mat(label->i, label->j);
-        const int     endClosed = upperBoundIdx(labelVal + FloatEp, closed);
+        MatBucket &matClosed = lData.vetMatBucketForwardClosed[cust];
 
-        for(int t = 0; t < endClosed; ++t)
+        // Only look ClosedBucketWindow buckets back in each resource: labels far
+        // away rarely dominate (their ng-sets differ) and scanning them is costly.
+        const int jjMin = std::max(0, label->j - ClosedBucketWindow);
+        const int iiMin = std::max(0, label->i - ClosedBucketWindow);
+
+        for(int jj = label->j; jj >= jjMin; --jj)
         {
-            if(checkCompleteDominance(*closed->vetPtrLabel[t], *label, numRes))
+            for(int ii = label->i; ii >= iiMin; --ii)
             {
-                correctPos = -1;
-                return nullptr;
+                const Bucket *closed = &matClosed.mat(ii, jj);
+                if(closed->sizeVetPtrLabel == 0)
+                    continue;
+
+                // Orange bucket: strictly lower reduced cost AND strictly lower load.
+                // Every label here has smaller resources: only the ng-set test is left.
+                // (Valid only when the buckets cover all resources: numRes <= 2.)
+                if(numRes <= 2 && ii < label->i && jj < label->j)
+                {
+                    for(int t = 0; t < closed->sizeVetPtrLabel; ++t)
+                    {
+                        if(checkDominanceSubSet(*closed->vetPtrLabel[t], *label))
+                        {
+                            correctPos = -1;
+                            return nullptr;
+                        }
+                    }
+                    continue;
+                }
+
+                // Own bucket, same row or same column: full comparison.
+                // The closed bucket is sorted by reduced cost: only [0, endClosed)
+                // can dominate.
+                const int endClosed = upperBoundIdx(labelVal + FloatEp, closed);
+
+                for(int t = 0; t < endClosed; ++t)
+                {
+                    if(checkCompleteDominance(*closed->vetPtrLabel[t], *label, numRes))
+                    {
+                        correctPos = -1;
+                        return nullptr;
+                    }
+                }
             }
         }
     }

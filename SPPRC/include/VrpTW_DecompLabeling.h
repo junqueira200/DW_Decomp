@@ -56,6 +56,9 @@ class VrpLabelingSubProb// : public DW_DecompNS::SubProb
     LabelingAlgorithmNS::LabelingData           labelingData;
     LabelingAlgorithmNS::Vet3D_ResCost          vetMatResCostForward;
     LabelingAlgorithmNS::Vet3D_ResCost          vetMatResCostBackward;
+    /// Same as vetMatResCostForward, but each customer keeps only its
+    /// HeurNumBestArcs cheapest arcs (used by the heuristic labeling only).
+    LabelingAlgorithmNS::Vet3D_ResCost          vetMatResCostForwardHeur;
     LabelingAlgorithmNS::MatBoundRes            vetVetResBound;
     LabelingAlgorithmNS::NgSet                  ngSet;
 

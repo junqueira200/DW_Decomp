@@ -120,7 +120,8 @@ bool bidirectionalAlgorithm(int                        	numRes,
                             double                     	percentage,
                             int*					   	vetSol,
                             int					   		&sizeVetSol,
-                            int							capacity_Q);
+                            int							capacity_Q,
+                            int                         capacityGcd = 1);
 
 inline __attribute__((always_inline)) bool checkDominanceSubSet(const Label &l0, const Label &l1)
 {
