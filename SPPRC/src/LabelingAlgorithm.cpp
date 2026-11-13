@@ -2780,6 +2780,24 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
                 if(b->sizeVetPtrLabel == 0)
                     continue;
 
+                // Orange bucket: strictly lower reduced cost AND strictly lower load.
+                // getIndex() never decreases, so every label here already has smaller
+                // resources than the new one; only the ng-set test is left.
+                // (Valid only when the buckets cover all resources: numRes <= 2.)
+                if(numRes <= 2 && ii < label->i && jj < label->j)
+                {
+                    for(int t = 0; t < b->sizeVetPtrLabel; ++t)
+                    {
+                        if(checkDominanceSubSet(*b->vetPtrLabel[t], *label))
+                        {
+                            correctPos = -1;
+                            return nullptr;
+                        }
+                    }
+                    continue;
+                }
+
+                // Same row or same column: full comparison.
                 // The bucket is sorted by reduced cost: only [0, end) can dominate.
                 const int end = upperBoundIdx(labelVal + FloatEp, b);
 
@@ -2831,11 +2849,31 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
                 if(b->sizeVetPtrLabel == 0)
                     continue;
 
+                sizeVetRm = 0;
+
+                // Gray bucket: strictly higher reduced cost AND strictly higher load.
+                // Every label here already has larger resources than the new one;
+                // only the ng-set test is left. (Valid only when numRes <= 2.)
+                if(numRes <= 2 && ii > label->i && jj > label->j)
+                {
+                    for(int t = 0; t < b->sizeVetPtrLabel; ++t)
+                    {
+                        if(checkDominanceSubSet(*label, *b->vetPtrLabel[t]))
+                        {
+                            vetRm[sizeVetRm] = t;
+                            sizeVetRm += 1;
+                        }
+                    }
+
+                    if(sizeVetRm > 0)
+                        removeBatchFromBucket(vetRm, sizeVetRm, b);
+                    continue;
+                }
+
+                // Same row or same column: full comparison.
                 // The bucket is sorted by reduced cost: only [begin, size) can be
                 // dominated by the new label.
                 const int begin = lowerBoundIdx(labelVal - FloatEp, b);
-
-                sizeVetRm = 0;
                 for(int t = begin; t < b->sizeVetPtrLabel; ++t)
                 {
                     if(checkCompleteDominance(*label, *b->vetPtrLabel[t], numRes))
