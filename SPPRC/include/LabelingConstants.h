@@ -23,6 +23,8 @@ inline FloatType minDistG = std::numeric_limits<FloatType>::max();
 inline FloatType maxDistG = std::numeric_limits<FloatType>::min();
 inline bool      exactLabelingG = false;
 inline bool      PrintG = false;
+// Prints per-call information of the pricing (number of iterations, routes, ...)
+inline bool      PrintIterInfoG = false;
 
 constexpr int       NumMaxResources = 2;
 constexpr int       NumMaxRoute = 100;

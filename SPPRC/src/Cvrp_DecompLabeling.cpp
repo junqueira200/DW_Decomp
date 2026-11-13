@@ -19,11 +19,13 @@ Cvrp_DecompLabelingNS::CvrpLabelingSubProb::CvrpLabelingSubProb(
     InstanceVRPTW_NS::InstanceVRPTW &instVrpTw_,
     double                           startDist)
 {
-    if(instVrpTw_.numClientes > NumMaxCust)
+    // Nodes are 0..numClientes (numClientes = destination, a copy of the depot),
+    // so the ng bitset needs numClientes + 1 positions.
+    if(instVrpTw_.numClientes + 1 > NumMaxCust)
     {
         PRINT_DEBUG("",
-                    "ERRO; Const NumMaxCust(" << NumMaxCust << ") < NumCust("
-                                              << instVrpTw_.numClientes << ")\n\t");
+                    "ERRO; Const NumMaxCust(" << NumMaxCust << ") < NumCust + 1("
+                                              << instVrpTw_.numClientes + 1 << ")\n\t");
         throw "ERRO";
     }
 

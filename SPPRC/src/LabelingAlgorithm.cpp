@@ -66,37 +66,46 @@ LabelingAlgorithmNS::NgSet::NgSet(int numCust_, int ngSetSize_)
 
 void LabelingAlgorithmNS::NgSet::setNgSets(const EigenMatrixRowD &matDist)
 {
+    // matDist only covers the real nodes 0..nReal-1 (0 = depot).
+    // numCust = nReal + 1: the last index is the destination (a copy of the depot)
+    // and has no row/column in matDist.
+    const int nReal = (int)matDist.rows();
 
-    Eigen::VectorX<Node> vet(numCust - 1);
-
-    for(int i = 0; i < numCust; ++i)
+    if(matDist.cols() != nReal || nReal > numCust)
     {
-        // std::cout<<"i("<<i<<")\n";
+        PRINT_DEBUG("", "matDist(" << matDist.rows() << "x" << matDist.cols()
+                         << ") is incompatible with numCust(" << numCust << ")");
+        throw "ERROR";
+    }
+
+    // Neighbours are customers only (1..nReal-1): the depot (0) and the destination
+    // are never extension targets, so keeping them in an ng-set wastes a slot.
+    const int numCandidates = std::max(nReal - 2, 0);   // customers other than i
+    const int size          = std::min(ngSetSize, numCandidates);
+
+    Eigen::VectorX<Node> vet(std::max(nReal - 1, 1));
+
+    // Depot and destination keep empty ng-sets.
+    for(int i = 0; i < numCust; ++i)
+        vetNgSet[i].reset();
+
+    for(int i = 1; i < nReal; ++i)
+    {
         int next = 0;
-        for(int j = 0; j < numCust; ++j)
+        for(int j = 1; j < nReal; ++j)
         {
             if(i == j)
                 continue;
 
             vet[next].dist = matDist(i, j);
-            vet[next].i = j;
+            vet[next].i    = j;
             next += 1;
-
-            // std::cout<<"("<<j<<","<<matDist(i,j)<<"); ";
         }
 
-        std::sort(vet.begin(), vet.end());
-        next = 0;
+        std::sort(vet.begin(), vet.begin() + next);
 
-        // std::cout<<"\tsort:\n";
-        vetNgSet[i] = 0;
-        for(int j = 0; j < ngSetSize; ++j)
-        {
-            vetNgSet[i][vet[j].i] = true;
-        }
-
-        if((i + 1) == numCust)
-            break;
+        for(int k = 0; k < size; ++k)
+            vetNgSet[i][vet[k].i] = true;
     }
 }
 
@@ -578,13 +587,21 @@ bool LabelingAlgorithmNS::
 
                                 if(ptrMatDp)
                                 {
-                                    int rem_cap = capacity_Q - labelPtrAux->vetResources[1];
+                                    // labelPtrAux->cust is only set later, in
+                                    // dominanceIntraBucketSlow(); at this point it still holds
+                                    // whatever the pool slot had before. The label's customer
+                                    // is newCust.
+                                    const int rem_cap =
+                                        capacity_Q - (int)std::lround(labelPtrAux->vetResources[1]);
 
-                                    double compBounds = (*ptrMatDp)(labelPtrAux->cust, rem_cap);
-                                    if((labelPtrAux->vetResources[0]+compBounds) >= 0.0)
+                                    if(rem_cap >= 0 && rem_cap < ptrMatDp->cols())
                                     {
-                                        vetLabelPoolG[labelPtrAux->cust].delT(labelPtrAux);
-                                        continue; // for t
+                                        const double compBounds = (*ptrMatDp)(newCust, rem_cap);
+                                        if((labelPtrAux->vetResources[0] + compBounds) >= -TolObjSubProb)
+                                        {
+                                            vetLabelPoolG[newCust].delT(labelPtrAux);
+                                            continue; // for newCust
+                                        }
                                     }
                                 }
 
@@ -844,12 +861,13 @@ bool LabelingAlgorithmNS::
 
     }
 
-    if(sizeMatForwardDest <= 0)
+    if(PrintIterInfoG)
     {
-        std::printf("Empty\n");
-    }
+        if(sizeMatForwardDest <= 0)
+            std::printf("Empty\n");
 
-    std::cout << "numIt: " << numIt << "\n";
+        std::cout << "numIt: " << numIt << "\n";
+    }
 
     // std::cout<<"End while\n";
 
@@ -2742,6 +2760,41 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
         }
     }
 
+    // A label can only be dominated by labels with reduced cost <= its own and
+    // load <= its own, i.e. labels stored in buckets (ii, jj) with ii <= label->i and
+    // jj <= label->j. The own bucket was checked above; here we check the others.
+    // Only forward labels at a customer: the destination uses a single bucket (0, 0),
+    // and for backward labels the order of resource 1 is reversed.
+    if(label->typeLabel == Forward && cust != dest)
+    {
+        MatBucket &matBucket = lData.vetMatBucketForward[cust];
+
+        for(int jj = label->j; jj >= 0; --jj)          // closest loads first
+        {
+            for(int ii = label->i; ii >= 0; --ii)
+            {
+                if(ii == label->i && jj == label->j)
+                    continue;                          // own bucket: already checked
+
+                const Bucket *b = &matBucket.mat(ii, jj);
+                if(b->sizeVetPtrLabel == 0)
+                    continue;
+
+                // The bucket is sorted by reduced cost: only [0, end) can dominate.
+                const int end = upperBoundIdx(labelVal + FloatEp, b);
+
+                for(int t = 0; t < end; ++t)
+                {
+                    if(checkCompleteDominance(*b->vetPtrLabel[t], *label, numRes))
+                    {
+                        correctPos = -1;
+                        return nullptr;
+                    }
+                }
+            }
+        }
+    }
+
     for(int i=beginDom; i < bucketPtr->sizeVetPtrLabel; ++i)
     {
         if(checkCompleteDominance(*label, *bucketPtr->vetPtrLabel[i], numRes))
@@ -2754,6 +2807,49 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
     if(sizeVetRm > 0)
         removeBatchFromBucket(vetRm, sizeVetRm, bucketPtr);
 
+    // The new label survived. It can only dominate labels with reduced cost >= its own
+    // and load >= its own, i.e. labels stored in buckets (ii, jj) with ii >= label->i
+    // and jj >= label->j. The own bucket was handled above; here we handle the others.
+    // Every label still stored in a bucket has not been extended yet (labels are
+    // removed from their bucket when extended), so it has no children and can be
+    // deleted safely.
+    // Only forward labels at a customer (same reasons as the check above).
+    if(label->typeLabel == Forward && cust != dest)
+    {
+        MatBucket &matBucket = lData.vetMatBucketForward[cust];
+        const int  numSteps0 = (int)matBucket.mat.rows();
+        const int  numSteps1 = (int)matBucket.mat.cols();
+
+        for(int jj = label->j; jj < numSteps1; ++jj)
+        {
+            for(int ii = label->i; ii < numSteps0; ++ii)
+            {
+                if(ii == label->i && jj == label->j)
+                    continue;                          // own bucket: already handled
+
+                Bucket *b = &matBucket.mat(ii, jj);
+                if(b->sizeVetPtrLabel == 0)
+                    continue;
+
+                // The bucket is sorted by reduced cost: only [begin, size) can be
+                // dominated by the new label.
+                const int begin = lowerBoundIdx(labelVal - FloatEp, b);
+
+                sizeVetRm = 0;
+                for(int t = begin; t < b->sizeVetPtrLabel; ++t)
+                {
+                    if(checkCompleteDominance(*label, *b->vetPtrLabel[t], numRes))
+                    {
+                        vetRm[sizeVetRm] = t;
+                        sizeVetRm += 1;
+                    }
+                }
+
+                if(sizeVetRm > 0)
+                    removeBatchFromBucket(vetRm, sizeVetRm, b);
+            }
+        }
+    }
 
     correctPos = lowerBoundIdx(labelVal, bucketPtr);
     return bucketPtr;

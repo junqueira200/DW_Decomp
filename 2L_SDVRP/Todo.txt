@@ -1,2 +1,3 @@
-- Re-run results for MODEL on problem version 3 and check with me before sending!
-- Try to build a heuristic with Claude on problem version 3
+- Test without kandom key position of the chose of extreme point
+- Test n random key, without Brkga
+- Test solution of Brkga in the CP model

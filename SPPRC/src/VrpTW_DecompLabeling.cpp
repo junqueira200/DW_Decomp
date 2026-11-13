@@ -26,19 +26,21 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
 {
     PRINT_DEBUG("", "");
 
-    if(instVrpTw_.numClientes > NumMaxCust)
+    // Nodes are 0..numClientes (numClientes = destination, a copy of the depot),
+    // so the ng bitset needs numClientes + 1 positions.
+    if(instVrpTw_.numClientes + 1 > NumMaxCust)
     {
         PRINT_DEBUG("",
-                    "ERRO; Const NumMaxCust(" << NumMaxCust << ") < NumCust("
-                                              << instVrpTw_.numClientes << ")\n\t");
+                    "ERRO; Const NumMaxCust(" << NumMaxCust << ") < NumCust + 1("
+                                              << instVrpTw_.numClientes + 1 << ")\n\t");
         throw "ERRO";
     }
 
     instVrpTw = &instVrpTw_;
-    double numSteps = 20.0; // 2
+    double numSteps = 10.0; // 20 // 10
 
     // vetStepSize[0].stepSize = 400;
-    vetStepSize[0].stepSize = 10000000.0; // 200
+    vetStepSize[0].stepSize = 500.0; // 200
     vetStepSize[0].start = -1000;       // -500
     vetStepSize[0].end = 1000;          // 500
 
@@ -83,6 +85,8 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
 
     // std::cout<<"\n";
 
+    const int dest = instVrpTw->numClientes;   // copy of the depot
+
     for(int i = 0; i < instVrpTw->numClientes + 1; ++i)
     {
         for(int j = 0; j < (instVrpTw->numClientes + 1); ++j)
@@ -90,8 +94,14 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
             if(i == j)
                 continue;
 
-            vetMatResCostForward.get(i, j, 1) = (FloatType)instVrpTw->vetClieDem[j];
-            vetMatResCostBackward.get(j, i, 1) = (FloatType)instVrpTw->vetClieDem[j];
+            // vetClieDem has only numClientes entries (0..numClientes-1).
+            // The destination node (dest == numClientes) is a copy of the depot,
+            // so it has no demand of its own.
+            const FloatType demJ = (j == dest) ? (FloatType)0.0
+                                               : (FloatType)instVrpTw->vetClieDem[j];
+
+            vetMatResCostForward.get(i, j, 1)  = demJ;
+            vetMatResCostBackward.get(j, i, 1) = demJ;
         }
     }
 
@@ -507,7 +517,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(
     {
         for(int i = 1; i <= 2; i += 1)
         {
-            std::cout << i << ": ";
+            if(PrintIterInfoG)
+                std::cout << i << ": ";
             // std::cout<<"forwardLabelingAlgorithm: "<<i<<"\n\n";
             matColX.setZero();
             /*
@@ -654,7 +665,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(
     // redCost = (double)redCostFT;
     vetCooefRestConv[0] = 1;
 
-    std::cout << "*************\n\n";
+    if(PrintIterInfoG)
+        std::cout << "*************\n\n";
 
     /*    if(numSol == 0)
         {
@@ -761,10 +773,10 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     static Eigen::VectorX<FloatType> vetRedCostFT(NumMaxSolSubProb);
     static Eigen::VectorXd vetDist(instVrpTw->numClientes + 1);
     static EigenMatrixRowD matDp(instVrpTw->numClientes + 1, instVrpTw->capVeic+1);
-    EigenMatrixRowD       *ptrMatDp = nullptr;
+    EigenMatrixRowD       *ptrMatDp = &matDp;
 
-    if(exact)
-        ptrMatDp = nullptr;
+    //if(exact)
+    //    ptrMatDp = nullptr;
 
     vetDist.setConstant(-MaxFloatType);
 
@@ -786,14 +798,14 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         vetMatResCostForward.get(i, instVrpTw->numClientes, 0) = vetReducedCostInput[k];
     }
 
-    //getDistLowerBound(vetMatResCostForward, instVrpTw->numClientes, vetVetResBound, matDp);
+    getDistLowerBound(vetMatResCostForward, instVrpTw->numClientes, vetVetResBound, matDp);
 
     int numSol;
     FloatType maxDist;
 
     if(!exact)
     {
-        for(int i=1; i <= 4; ++i)
+        for(int i=2; i <= 4; i+=2)
         {
             bool reducedCostNeg =
             bidirectionalAlgorithm(2,

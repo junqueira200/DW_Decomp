@@ -2,6 +2,9 @@ using JuMP, BlockDecomposition, Coluna, CPLEX
 const BD  = BlockDecomposition
 const MOI = JuMP.MOI
 using Coluna.Branching
+
+# Prints per-call information of the pricing (number of routes, best reduced cost, ...)
+global printInfo = false
 #include("instanceCVRP.jl")
 
 
@@ -28,14 +31,14 @@ function createModel(inst::CvrpData)
         Coluna.Optimizer,
         "params" => Coluna.Params(
         solver = Coluna.Algorithm.TreeSearchAlgorithm(
-            opennodeslimit = 1000000,
+            opennodeslimit = 1,
             explorestrategy = Coluna.TreeSearch.BestDualBoundStrategy(),
             conqueralg = Coluna.Algorithm.ColCutGenConquer(
                 colgen = Coluna.Algorithm.ColumnGeneration(
                     max_nb_iterations=1000000,
                     #show_column_already_inserted_warning = true,
                     smoothing_stabilization = 0.85,
-                    stages_pricing_solver_ids = [2, 1],
+                    #stages_pricing_solver_ids = [2, 1],
                     redcost_tol=1E-3
                 )
             )
@@ -59,11 +62,11 @@ function createModel(inst::CvrpData)
     @dantzig_wolfe_decomposition(model, decomposition, VehicleTypes)
     subproblems = BD.getsubproblems(decomposition)
     BD.specify!.(subproblems,
-                 lower_multiplicity = 1,
-                 upper_multiplicity = inst.numberOfVehicles,
-                 solver = [pricing_callback_heuristic, pricing_callback_exact])
+                 lower_multiplicity = 0,
+                 upper_multiplicity = length(inst.customers),
+                 solver = pricing_callback_heuristic)
     
-    objectiveprimalbound!(model, 685.0)
+    #objectiveprimalbound!(model, 685.0)
     optimize!(model)
 
 end
@@ -75,45 +78,61 @@ end
 function populateReducedCosts(cbdata)
 
     sp_id = BD.callback_spid(cbdata, model)
+    n     = inst.n
 
-    # 1. Populate reduced costs for all arcs
-    for i in 0:(inst.n - 1)
-        for j in 0:(inst.n - 1)
-            k = linearIndex(i, j, inst.n) + 1
-            rc = Inf
-            if i != j && (i, j) in inst.arcs
-                rc = BD.callback_reduced_cost(cbdata, x[sp_id, (i, j)])
-            end
-            vetReducedCosts[k] = rc
-        end
-    end
+    # Arcs fixed to 1 by branching. They are applied after every reduced cost has
+    # been written, so step 1 cannot overwrite them.
+    fixedArcs = Tuple{Int, Int}[]
 
-    for i in 0:(inst.n - 1)
-        for j in 0:(inst.n - 1)
+    # 1. Reduced costs and arcs fixed to 0, in a single pass.
+    #    createArcs() creates every arc (i, j) with i != j, so no search in
+    #    inst.arcs is needed.
+    for i in 0:(n - 1)
+        for j in 0:(n - 1)
+            k = linearIndex(i, j, n) + 1
 
-            if i == 0 || !((i, j) in inst.arcs)
+            if i == j
+                vetReducedCosts[k] = Inf
                 continue
             end
 
-            lb = BD.callback_lb(cbdata, x[sp_id, (i, j)])
-            up = BD.callback_ub(cbdata, x[sp_id, (i, j)])
+            var = x[sp_id, (i, j)]
+            vetReducedCosts[k] = BD.callback_reduced_cost(cbdata, var)
 
-            if up == 0
-                k = linearIndex(i, j, inst.n) + 1
+            if BD.callback_ub(cbdata, var) < 0.5          # arc fixed to 0
                 vetReducedCosts[k] = Inf
+            elseif BD.callback_lb(cbdata, var) > 0.5      # arc fixed to 1
+                push!(fixedArcs, (i, j))
             end
+        end
+    end
 
-            if lb == 1
-                for ii in 0:(inst.n -1)
-                    if i != ii
-                        k = linearIndex(ii, j, inst.n) + 1
-                        vetReducedCosts[k] = Inf
-                    end
+    # 2. Arc (i, j) fixed to 1:
+    #    - a route that visits customer i must leave it through j;
+    #    - a route that visits customer j must enter it from i.
+    #    The depot (0) is shared by every route, so its arcs are never blocked
+    #    because of another arc.
+    for (i, j) in fixedArcs
+        if i != 0                       # i is a customer: its only exit is j
+            for jj in 0:(n - 1)
+                if jj != j && jj != i
+                    vetReducedCosts[linearIndex(i, jj, n) + 1] = Inf
+                end
+            end
+        end
+
+        if j != 0                       # j is a customer: its only entry is i
+            for ii in 0:(n - 1)
+                if ii != i && ii != j
+                    vetReducedCosts[linearIndex(ii, j, n) + 1] = Inf
                 end
             end
         end
     end
 
+    if !isempty(fixedArcs)
+        printInfo && println("populateReducedCosts: arcs fixed to 1 in the subproblem: ", fixedArcs)
+    end
 end
 
 function parseRoutesFromVetRoutesOutput(actual_size)
@@ -146,7 +165,7 @@ function parseRoutesFromVetRoutesOutput(actual_size)
 end
 
 function submitRoutesToColuna(routes::Vector{Vector{Int}}, cbdata, sp_id)
-    println("**********************************\n\n")
+    printInfo && println("**********************************\n\n")
     best_rc = Inf
 
     if isempty(routes)
@@ -171,7 +190,7 @@ function submitRoutesToColuna(routes::Vector{Vector{Int}}, cbdata, sp_id)
 
         else
 
-            println("Error, route is not negative. Value: ", sol_rc)
+            printInfo && println("Error, route is not negative. Value: ", sol_rc)
 
         end
         #println(sol_rc)
@@ -182,7 +201,7 @@ end
 
 function pricing_callback_heuristic(cbdata)
 
-    println("--> Running heuristic pricing callback")
+    printInfo && println("--> Running heuristic pricing callback")
     #@show propertynames(cbdata.form)
     #exit(-1)
 
@@ -212,9 +231,9 @@ function pricing_callback_heuristic(cbdata)
                 vetReducedCostsRoutes,
                 0)
 
-    #=
+    
     if numGeneratedRoutes == 0
-        println("--> Running exact pricing")
+        printInfo && println("--> Running exact pricing")
         exact = true
 
         numGeneratedRoutes = 
@@ -227,7 +246,7 @@ function pricing_callback_heuristic(cbdata)
                 vetReducedCostsRoutes,
                 1)
 
-        println("numGeneratedRoutes: ", numGeneratedRoutes)
+        printInfo && println("numGeneratedRoutes: ", numGeneratedRoutes)
 
         if numGeneratedRoutes == 0
             MOI.submit(model, BD.PricingDualBound(cbdata), 0)
@@ -236,7 +255,7 @@ function pricing_callback_heuristic(cbdata)
         
 
     end
-    =#
+    
 
     actual_size = sizeVetRoutesOutput[]
     #println("Number of integers returned: ", actual_size)
@@ -254,19 +273,19 @@ function pricing_callback_heuristic(cbdata)
 
     best_rc = submitRoutesToColuna(routes, cbdata, sp_id)
 
-    #if exact
-    #    MOI.submit(model, BD.PricingDualBound(cbdata), best_rc)
-    #else
-    MOI.submit(model, BD.PricingDualBound(cbdata), -Inf)
-    #end
+    if exact
+        MOI.submit(model, BD.PricingDualBound(cbdata), best_rc)
+    else
+        MOI.submit(model, BD.PricingDualBound(cbdata), -Inf)
+    end
 
-    println("\tBest reduced cost: $best_rc; numGeneratedRoutes: $numGeneratedRoutes")
+    printInfo && println("\tBest reduced cost: $best_rc; numGeneratedRoutes: $numGeneratedRoutes")
     #println("\n\n********************************\n")
     return
 end
 
 function pricing_callback_exact(cbdata)
-    println("--> Running exact pricing callback")
+    printInfo && println("--> Running exact pricing callback")
 
     populateReducedCosts(cbdata)
     sp_id = BD.callback_spid(cbdata, model)
@@ -300,7 +319,7 @@ function pricing_callback_exact(cbdata)
 
     MOI.submit(model, BD.PricingDualBound(cbdata), best_rc)
 
-    println("\tBest reduced cost: $best_rc; numGeneratedRoutes: $numGeneratedRoutes")
+    printInfo && println("\tBest reduced cost: $best_rc; numGeneratedRoutes: $numGeneratedRoutes")
     #println("\n\n********************************\n")
     return
 end

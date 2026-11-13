@@ -16,7 +16,7 @@ namespace LabelingAlgorithmNS
 
 constexpr double TolObjSubProb = 1E-3;
 // TODO Retornar para 25!
-constexpr int    NumMaxSolSubProb = 25;     // 25;
+constexpr int    NumMaxSolSubProb = 50;     // 25;
 
 /// Stores the start indexes for the reduced cost and demand
 typedef Eigen::Array<int, 1, 2> IndexStart;
