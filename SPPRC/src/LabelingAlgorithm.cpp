@@ -238,7 +238,8 @@ bool LabelingAlgorithmNS::
                             int					   		&sizeVetSol,
                             int							capacity_Q,
                             int                         capacityGcd,
-                            bool                       *complete)
+                            bool                       *complete,
+                            ArcFixingData              *fixing)
 {
     static Vet3D_ResCost vetMatResCostForward(vetMatResCostForwardConst);
 
@@ -429,6 +430,9 @@ bool LabelingAlgorithmNS::
 
         return false;
     };
+
+    // Arc fixing run: keep every label whose bound is < gap (normal pricing: < 0).
+    const FloatType pruneThreshold = fixing ? fixing->gap : (FloatType)-TolObjSubProb;
 
     bool doContinue = true;
     while(doContinue)
@@ -623,7 +627,17 @@ bool LabelingAlgorithmNS::
                                     if(rem_cap >= 0 && rem_cap < ptrMatDp->cols())
                                     {
                                         const double compBounds = (*ptrMatDp)(newCust, rem_cap);
-                                        if((labelPtrAux->vetResources[0] + compBounds) >= -TolObjSubProb)
+                                        const double value = labelPtrAux->vetResources[0] + compBounds;
+
+                                        // Arc fixing: lower bound of a route through (cust, newCust)
+                                        if(fixing)
+                                        {
+                                            FloatType &arcMin = fixing->matArcMin(labelPtr->cust, newCust);
+                                            if(value < arcMin)
+                                                arcMin = value;
+                                        }
+
+                                        if(value >= pruneThreshold)
                                         {
                                             vetLabelPoolG[newCust].delT(labelPtrAux);
                                             continue; // for newCust
@@ -660,6 +674,16 @@ bool LabelingAlgorithmNS::
 
                                 if(newCust == dest && labelPtrAux->typeLabel == Forward)
                                 {
+                                    // Arc fixing run: the route's value was recorded above;
+                                    // keep nothing at the destination.
+                                    if(fixing)
+                                    {
+                                        if(labelPtrAux->vetResources[0] < fixing->minRouteRc)
+                                            fixing->minRouteRc = labelPtrAux->vetResources[0];
+                                        vetLabelPoolG[newCust].delT(labelPtrAux);
+                                        continue;
+                                    }
+
                                     if(labelPtrAux->vetResources[0] >= -TolObjSubProb)
                                     {
 

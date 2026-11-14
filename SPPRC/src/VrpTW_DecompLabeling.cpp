@@ -110,6 +110,9 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
     vetMatResCostForwardHeur =
         Vet3D_ResCost(instVrpTw->numClientes + 1, instVrpTw->numClientes + 1, 2);
 
+    // Completion bound of the exact pricing and of the arc fixing.
+    matDpColuna = EigenMatrixRowD(instVrpTw->numClientes + 1, instVrpTw->capVeic + 1);
+
     // std::cout<<"\n"<<instVrpTw->vetClieDem<<"\n\n";
     // PRINT_EXIT();
 
@@ -767,6 +770,97 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::resolveSubProb(
     return 0;
 }
 
+void VrpTW_DecompLabelingNS::VrpLabelingSubProb::
+    loadReducedCostsColuna(const double *vetReducedCostInput)
+{
+    const int n = instVrpTw->numClientes;          // nodes 0..n-1, dest = n
+
+    for(int i = 0; i < n; ++i)
+    {
+        for(int j = 0; j < n; ++j)
+        {
+            int k = getIndex(i, j, n);
+            vetMatResCostForward.get(i, j, 0) = vetReducedCostInput[k];
+        }
+    }
+
+    // Arc (i, 0) of Coluna is the arc (i, dest) of the labeling.
+    for(int i = 1; i < n; ++i)
+    {
+        int k = getIndex(i, 0, n);
+        vetMatResCostForward.get(i, n, 0) = vetReducedCostInput[k];
+    }
+}
+
+/// Reduced-cost arc fixing. Exact forward labeling where a label is pruned only when
+/// rc(L) + completion bound >= gap (instead of >= 0). For each arc (i,j) it records the
+/// minimum of rc(L) + c̄(i,j) + matDp(j, Q - load(L) - d_j) over the labels L at i.
+/// Any route through (i,j) has reduced cost >= vetArcMinOut[i*n+j], so the arc can be
+/// removed if vetArcMinOut[i*n+j] > gap (decided by the caller).
+double VrpTW_DecompLabelingNS::VrpLabelingSubProb::
+    fixArcsColuna(const double *vetReducedCostInput, double gap, double *vetArcMinOut)
+{
+    const int n = instVrpTw->numClientes;          // nodes 0..n-1, dest = n
+
+    loadReducedCostsColuna(vetReducedCostInput);
+
+    int capacityGcd = 1;
+    getDistLowerBound(vetMatResCostForward, n, vetVetResBound, matDpColuna, capacityGcd);
+
+    static ArcFixingData fixing;
+    fixing.gap = (FloatType)gap;
+    fixing.matArcMin.setConstant(n + 1, n + 1, InfFloatType);
+    fixing.minRouteRc = InfFloatType;
+
+    static Eigen::VectorX<FloatType> vetRedCostFT(NumMaxSolSubProb);
+    static int vetRoutesDummy[NumMaxSolSubProb * NumMaxRoute];   // nothing is written
+    int        sizeRoutesDummy = 0;
+    int        numSol = 0;
+    FloatType  maxDist;
+
+    // Forward only: the per-arc minimum is recorded on forward extensions.
+    bidirectionalAlgorithm(2,
+                           n + 1,
+                           vetMatResCostForward,
+                           vetMatResCostBackward,
+                           vetVetResBound,
+                           n,
+                           ngSet,
+                           labelingData,
+                           numSol,
+                           MaxInt,                  // no label limit per bucket
+                           true,
+                           maxDist,
+                           vetRedCostFT,
+                           true,                    // exact: never stops early
+                           LabelingAlgorithmNS::AlgForward,
+                           true,
+                           &matDpColuna,
+                           1.0,
+                           vetRoutesDummy,
+                           sizeRoutesDummy,
+                           instVrpTw->capVeic,
+                           capacityGcd,
+                           nullptr,
+                           &fixing);
+
+    // Back to Coluna's indexing: arc (i, dest) is (i, 0).
+    for(int i = 0; i < n; ++i)
+    {
+        for(int j = 0; j < n; ++j)
+        {
+            const int jj = (j == 0) ? n : j;
+            vetArcMinOut[getIndex(i, j, n)] =
+                (i == j) ? InfDouble : (double)fixing.matArcMin(i, jj);
+        }
+    }
+
+    fflush(stdout);
+    std::cout.flush();
+
+    return (double)fixing.minRouteRc;
+}
+
 int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     resolveSubProbColuna(double 		  *vetReducedCostInput,
                          int              *vetRoutesOut,
@@ -780,39 +874,16 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     //std::print("exact: {}\n", exact);
     static Eigen::VectorX<FloatType> vetRedCostFT(NumMaxSolSubProb);
-    static Eigen::VectorXd vetDist(instVrpTw->numClientes + 1);
-    static EigenMatrixRowD matDp(instVrpTw->numClientes + 1, instVrpTw->capVeic+1);
-    EigenMatrixRowD       *ptrMatDp = &matDp;
+    EigenMatrixRowD       *ptrMatDp = &matDpColuna;
 
-    //if(exact)
-    //    ptrMatDp = nullptr;
-
-    vetDist.setConstant(-MaxFloatType);
-
-
-    for(int i = 0; i < instVrpTw->numClientes; ++i)
-    {
-        for(int j = 0; j < instVrpTw->numClientes; ++j)
-        {
-
-            int k = getIndex(i, j, instVrpTw->numClientes);
-            vetMatResCostForward.get(i, j, 0) = vetReducedCostInput[k];
-
-        }
-    }
-
-    for(int i=1; i < instVrpTw->numClientes; ++i)
-    {
-        int k = getIndex(i, 0, instVrpTw->numClientes);
-        vetMatResCostForward.get(i, instVrpTw->numClientes, 0) = vetReducedCostInput[k];
-    }
+    loadReducedCostsColuna(vetReducedCostInput);
 
     // The completion bound is computed only for the exact labeling: it is
     // expensive (O(n^2 * Q)) and the heuristic does not need it.
     int capacityGcd = 1;
     if(exact)
         getDistLowerBound(vetMatResCostForward, instVrpTw->numClientes, vetVetResBound,
-                          matDp, capacityGcd);
+                          matDpColuna, capacityGcd);
     else
         ptrMatDp = nullptr;
 

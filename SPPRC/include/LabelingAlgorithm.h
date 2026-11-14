@@ -93,6 +93,15 @@ inline bool operator==(const HashSortRoute &sol0, const HashSortRoute &sol1)
 
 inline std::size_t hash_value(const HashSortRoute &solXHash) { return solXHash.hash; }
 
+// Data of the reduced-cost arc fixing run (see VrpLabelingSubProb::fixArcsColuna).
+struct ArcFixingData
+{
+    FloatType       gap = 0.0;                  // labels with rc + completion >= gap are pruned
+    EigenMatrixRowD matArcMin;                  // (i,j): min over labels L at i of
+                                                //   rc(L) + c̄(i,j) + matDp(j, Q - load(L) - d_j)
+    FloatType       minRouteRc = InfFloatType;  // min reduced cost of a complete route (< gap)
+};
+
 typedef Vector<std::unique_ptr<LabelingAlgorithmNS::SortRoute>>       VetSortRoute;
 typedef boost::unordered_multiset<LabelingAlgorithmNS::HashSortRoute> MultsetSortRoute;
 
@@ -122,7 +131,8 @@ bool bidirectionalAlgorithm(int                        	numRes,
                             int					   		&sizeVetSol,
                             int							capacity_Q,
                             int                         capacityGcd = 1,
-                            bool                       *complete    = nullptr);
+                            bool                       *complete    = nullptr,
+                            ArcFixingData              *fixing      = nullptr);
 
 inline __attribute__((always_inline)) bool checkDominanceSubSet(const Label &l0, const Label &l1)
 {

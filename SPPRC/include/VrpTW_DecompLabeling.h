@@ -109,6 +109,17 @@ class VrpLabelingSubProb// : public DW_DecompNS::SubProb
                              bool				exact,
                              bool              &complete);
 
+    /// Completion bound (shared by the exact pricing and the arc fixing).
+    EigenMatrixRowD matDpColuna;
+
+    /// Copies the reduced costs from Coluna (n x n, row-major; (i,0) = arc to the destination).
+    void loadReducedCostsColuna(const double *vetReducedCostInput);
+
+    /// Reduced-cost arc fixing: exact forward labeling with prune threshold `gap`.
+    /// vetArcMinOut[i*n + j] = lower bound on the reduced cost of a route using (i,j)
+    /// (Inf if no route with value < gap uses it). Returns the min route reduced cost.
+    double fixArcsColuna(const double *vetReducedCostInput, double gap, double *vetArcMinOut);
+
     bool checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi);
     //bool checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol);
     //void convertRouteIntoLabel(const TestNS::Route &route, LabelingAlgorithmNS::Label *label);

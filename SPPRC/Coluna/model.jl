@@ -40,6 +40,22 @@ const tSpprc = Ref(0.0)
 # Time and number of calls of solveSpprc, split by heuristic / exact labeling
 const tHeur  = Ref(0.0); const nHeur  = Ref(0)
 const tExact = Ref(0.0); const nExact = Ref(0)
+
+# Reduced-cost arc fixing, only at the root (the cut callback does not know the node).
+# An arc is removed for the whole tree if every route through it has
+#   z_LP + rc(route) > UB.
+const ArcFixing      = true
+const MaxNbCutRounds = 20       # also passed to ColCutGenConquer (root detection uses it)
+const FixRcTol       = 1e-4     # same as the column submission threshold
+# true  = fix only in the last root round (first round with no cut, or MaxNbCutRounds):
+#         one fixing run, at the highest z_LP, but it does not help the root pricing.
+# false = fix in every root round: removed arcs also shrink the graph of the next
+#         root rounds, and the union over the rounds can remove more arcs.
+global FixOnlyLastRound::Bool = false
+const ubArcFixing    = Ref(Inf) # set from primalBound in createModel
+const rootCutCalls   = Ref(0)   # cut callback calls at the root
+const rootDone       = Ref(false)
+const tFixing        = Ref(0.0)
 #include("instanceCVRP.jl")
 
 
@@ -86,7 +102,7 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
                     Coluna.Algorithm.RestrictedMasterHeuristic(),
                     1.0, 1.0, 1, 0, "Restricted Master IP")],
                 # Cut rounds per node (Coluna's default is 3; the root needs more).
-                max_nb_cut_rounds = 20
+                max_nb_cut_rounds = MaxNbCutRounds
             )
         )
     ),
@@ -128,6 +144,12 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
         objectiveprimalbound!(model, primalBound)
     end
 
+    # Arc fixing state (root only).
+    ubArcFixing[]  = primalBound
+    rootCutCalls[] = 0
+    rootDone[]     = false
+    fill!(removedArcs, false)
+
     # Rounded capacity cuts (CVRPSEP), separated after column generation at each node.
     capCutManager[] = CutManager()
     MOI.set(model, MOI.UserCutCallback(),
@@ -138,6 +160,7 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     println("Time in solveSpprc: ", tSpprc[], " s")
     println("  heuristic: ", tHeur[],  " s in ", nHeur[],  " calls")
     println("  exact:     ", tExact[], " s in ", nExact[], " calls")
+    println("Time in arc fixing: ", tFixing[], " s; arcs removed: ", count(removedArcs))
 
 end
 
@@ -147,29 +170,83 @@ function capacityCutCallback(cbdata, model, x, inst)
     n = inst.n
 
     # Arc values -> edge values x(i,j) + x(j,i), only positive edges.
+    # zLP = value of the master LP (sum of c(i,j) * x(i,j)), used by the arc fixing.
     edgeTail = Int[]; edgeHead = Int[]; edgeX = Float64[]
+    zLP = 0.0
     for i in 0:(n - 1), j in (i + 1):(n - 1)
-        v = callback_value(cbdata, x[1, (i, j)]) + callback_value(cbdata, x[1, (j, i)])
+        vij = callback_value(cbdata, x[1, (i, j)])
+        vji = callback_value(cbdata, x[1, (j, i)])
+        zLP += inst.arc_weights[(i, j)] * vij + inst.arc_weights[(j, i)] * vji
+        v = vij + vji
         if v > 1e-6
             push!(edgeTail, i + 1); push!(edgeHead, j + 1); push!(edgeX, v)
         end
     end
-    isempty(edgeX) && return
 
-    demand = [inst.demand[i] for i in 0:(n - 1)]      # demand[1] = depot (ignored)
+    numCuts = 0
+    if !isempty(edgeX)
+        demand = [inst.demand[i] for i in 0:(n - 1)]      # demand[1] = depot (ignored)
 
-    S, RHS = rounded_capacity_cuts!(capCutManager[], demand, inst.capacity,
-                                    edgeTail, edgeHead, edgeX;
-                                    integrality_tolerance = 1e-6, max_n_cuts = 5)
+        S, RHS = rounded_capacity_cuts!(capCutManager[], demand, inst.capacity,
+                                        edgeTail, edgeHead, edgeX;
+                                        integrality_tolerance = 1e-6, max_n_cuts = 5)
 
-    for (s, rhs) in zip(S, RHS)
-        nodes = s .- 1                                  # back to our numbering
-        cut = @build_constraint(
-            sum(x[1, (i, j)] for i in nodes, j in nodes if i != j) <= rhs)
-        MOI.submit(model, MOI.UserCut(cbdata), cut)
+        for (s, rhs) in zip(S, RHS)
+            nodes = s .- 1                                  # back to our numbering
+            cut = @build_constraint(
+                sum(x[1, (i, j)] for i in nodes, j in nodes if i != j) <= rhs)
+            MOI.submit(model, MOI.UserCut(cbdata), cut)
+        end
+        numCuts = length(S)
+        printInfo && println("capacity cuts added: ", numCuts)
     end
-    printInfo && println("capacity cuts added: ", length(S))
+
+    # Root = the cut rounds until the first round with no cut, or MaxNbCutRounds rounds
+    # (Coluna runs the cut callback right after column generation converges).
+    if ArcFixing && !rootDone[]
+        rootCutCalls[] += 1
+        lastRootRound = (numCuts == 0 || rootCutCalls[] >= MaxNbCutRounds)
+        if !FixOnlyLastRound || lastRootRound
+            fixArcsAtRoot(zLP, inst)
+        end
+        rootDone[] = lastRootRound
+    end
     return
+end
+
+# Reduced-cost arc fixing with the duals of the last pricing call (vetReducedCosts).
+# For a solution that uses arc a:
+#   cost >= zLP + arcMin(a) + (K-1)*min(0, r*),   r* = min route reduced cost
+# so arc a is removed (whole tree) if arcMin(a) > UB - zLP + (K-1)*FixRcTol.
+function fixArcsAtRoot(zLP, inst)
+    UB = ubArcFixing[]
+    isfinite(UB) || return
+    n = inst.n
+    K = inst.numberOfVehicles
+
+    gap = UB - zLP + (K - 1) * FixRcTol + 1e-6
+
+    t = @elapsed minRouteRc = ccall((:fixArcsSpprc, LIB), Cdouble,
+                                    (Ptr{Cdouble}, Cdouble, Ptr{Cdouble}),
+                                    vetReducedCosts, gap, vetArcMin)
+    tFixing[] += t
+
+    # vetReducedCosts must be the converged (non-smoothed) duals of this master LP.
+    if minRouteRc < -FixRcTol
+        println("arc fixing skipped: min route rc = ", minRouteRc, " (duals not converged)")
+        return
+    end
+
+    newly = 0
+    for k in eachindex(vetArcMin)
+        if !removedArcs[k] && isfinite(vetReducedCosts[k]) && vetArcMin[k] > gap
+            removedArcs[k] = true
+            newly += 1
+        end
+    end
+    println("arc fixing: zLP = ", round(zLP, digits = 2), ", gap = ", round(gap, digits = 2),
+            ", removed ", newly, " (total ", count(removedArcs), " of ", n*(n - 1), ") in ",
+            round(t, digits = 3), " s")
 end
 
 function linearIndex(i::Int, j::Int, n::Int)
@@ -192,7 +269,7 @@ function populateReducedCosts(cbdata, model, x)
         for j in 0:(n - 1)
             k = linearIndex(i, j, n) + 1
 
-            if i == j
+            if i == j || removedArcs[k]      # removed by arc fixing: also skips the callback
                 vetReducedCosts[k] = Inf
                 continue
             end
