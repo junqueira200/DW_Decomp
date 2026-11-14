@@ -4,7 +4,9 @@ const MOI = JuMP.MOI
 using Coluna.Branching
 using CVRPSEP
 
-# CVRPSEP keeps the cuts it has already found, to avoid generating them again.
+# CVRPSEP.jl moves every cut it returns into this manager's list (it grows with every
+# call, duplicates included), but that list does not stop a known cut from being
+# returned again when it is violated (checked 2026-11-14).
 const capCutManager = Ref{CutManager}()
 
 # Print the column generation iteration line only every ColGenPrintEvery iterations.
@@ -88,16 +90,39 @@ const tFixing        = Ref(0.0)
 #  - phase 1: SbNumCandLP candidates, each child evaluated by the restricted master LP
 #             (no pricing: cheap, but optimistic);
 #  - phase 2: the SbNumCandCG best ones, each child evaluated by column generation
-#             (no cuts, no heuristic); the best one (ProductScore) is chosen.
+#             and SbCutRounds capacity cut rounds (no heuristic); the best one
+#             (ProductScore) is chosen.
 # Coluna does NOT conquer the chosen children again: a node created by strong branching
 # already has a conquer output, so the tree goes straight to its branching
 # (TreeSearch.children, Algorithm/treesearch.jl:184). The phase-2 conquer is therefore the
-# real conquer of every non-root node: no cuts and no primal heuristic there, and these
+# real conquer of every non-root node: only SbCutRounds cut rounds and no primal
+# heuristic there, and these
 # nodes are not counted by maxnumnodes (after_conquer! is not called for them).
 global UseStrongBranching::Bool = true
 const SbNumCandLP = 20
 const SbNumCandCG = 3
 const SbVerbose   = false   # true = print the score of every candidate
+# Capacity cut rounds in strong-branching phase 2. Coluna does not conquer the chosen
+# children again, so these are the only cut rounds at the non-root nodes (0 = cuts only
+# at the root).
+const SbCutRounds = 2
+
+# Marks the end of the root. Runs in strong-branching phase 2 before each cut round, so
+# the cut callback never treats a call from a child node as a root round (the root arc
+# fixing would otherwise use a child's LP value).
+struct RootDoneMarker <: Coluna.Algorithm.AbstractOptimizationAlgorithm end
+
+function Coluna.Algorithm.get_units_usage(::RootDoneMarker, reform::Coluna.MathProg.Reformulation)
+    return [(sp, Coluna.Algorithm.StaticVarConstrUnit, Coluna.ColunaBase.READ_ONLY)
+            for (_, sp) in Coluna.MathProg.get_dw_pricing_sps(reform)]
+end
+
+function Coluna.Algorithm.run!(::RootDoneMarker, env::Coluna.Env,
+                               reform::Coluna.MathProg.Reformulation,
+                               conquer_output::Coluna.Algorithm.OptimizationState)
+    rootDone[] = true
+    return false                                   # the master is not changed
+end
 
 # Same column generation everywhere (tree nodes and strong branching).
 colgenAlgo() = Coluna.Algorithm.ColumnGeneration(
@@ -120,7 +145,9 @@ function strongBranchingAlgo()
                 Coluna.Algorithm.ColCutGenConquer(
                     colgen = colgenAlgo(),
                     primal_heuristics = Coluna.Algorithm.ParameterizedHeuristic[],
-                    max_nb_cut_rounds = 0),     # no cut callback (arc fixing unaffected)
+                    before_cutgen_user_algorithm =
+                        Coluna.Algorithm.BeforeCutGenAlgo(RootDoneMarker(), "Root done"),
+                    max_nb_cut_rounds = SbCutRounds),
                 Coluna.Algorithm.ProductScore()),
         ],
         rules = [Coluna.Branching.PrioritisedBranchingRule(
