@@ -27,6 +27,30 @@ function Coluna.ColGen.after_colgen_iteration(
     return
 end
 
+# Time limit of the branch-and-bound (wall clock, from optimize!). Inf = none.
+# Coluna 0.8.2's own time limit (TreeSearchAlgorithm(timelimit = ...) or JuMP's
+# set_time_limit_sec) crashes: a node conquered after the limit has no LP solution, but
+# the branching still runs on it (error("Error") in candidates_selection). So the limit
+# is checked here instead, in the tree's stopping test, which runs before each node is
+# taken: the search stops cleanly between nodes (it may exceed the limit by one node,
+# including its strong branching). The global dual bound is still valid.
+const TimeLimitSec = 600.0
+const tStartOptimize = Ref(0.0)
+
+# Redefines Coluna's stopping test of the branch-and-bound
+# (Algorithm/treesearch/branch_and_bound.jl:155) to add the time limit. It uses Coluna
+# internals (_update_global_dual_bound!, BaBSearchSpace fields): check it again if Coluna
+# is updated. Julia may warn that the method is overwritten.
+function Coluna.TreeSearch.stop(space::Coluna.Algorithm.BaBSearchSpace, untreated_nodes)
+    Coluna.Algorithm._update_global_dual_bound!(space, space.reformulation, untreated_nodes)
+    space.nb_untreated_nodes = length(untreated_nodes)
+    timeUp = !isempty(untreated_nodes) && (time() - tStartOptimize[]) >= TimeLimitSec
+    timeUp && println("Time limit of ", TimeLimitSec, " s reached: stopping the tree search.")
+    return space.nb_nodes_treated >= space.max_num_nodes ||
+           space.nb_untreated_nodes > space.open_nodes_limit ||
+           timeUp
+end
+
 # Prints per-call information of the pricing (number of routes, best reduced cost, ...)
 global printInfo::Bool = false
 # Read the subproblem variable bounds (callback_lb / callback_ub) in every pricing call.
@@ -59,24 +83,59 @@ const tFixing        = Ref(0.0)
 #include("instanceCVRP.jl")
 
 
-# Phase 1: Test candidates on Restricted Master LP, keep top 3
-phase_fast = Coluna.Algorithm.BranchingPhase(
-    3,
-    Coluna.Algorithm.ColCutGenConquer(),
-    Coluna.Algorithm.ProductScore()
+# Strong branching (false = Coluna's default: most fractional arc, no evaluation).
+# Candidates are arcs x[1,(i,j)] (SingleVarBranchingRule), first chosen by fractionality.
+#  - phase 1: SbNumCandLP candidates, each child evaluated by the restricted master LP
+#             (no pricing: cheap, but optimistic);
+#  - phase 2: the SbNumCandCG best ones, each child evaluated by column generation
+#             (no cuts, no heuristic); the best one (ProductScore) is chosen.
+# Coluna does NOT conquer the chosen children again: a node created by strong branching
+# already has a conquer output, so the tree goes straight to its branching
+# (TreeSearch.children, Algorithm/treesearch.jl:184). The phase-2 conquer is therefore the
+# real conquer of every non-root node: no cuts and no primal heuristic there, and these
+# nodes are not counted by maxnumnodes (after_conquer! is not called for them).
+global UseStrongBranching::Bool = true
+const SbNumCandLP = 20
+const SbNumCandCG = 3
+const SbVerbose   = false   # true = print the score of every candidate
+
+# Same column generation everywhere (tree nodes and strong branching).
+colgenAlgo() = Coluna.Algorithm.ColumnGeneration(
+    max_nb_iterations = 1000000,
+    #show_column_already_inserted_warning = true,
+    smoothing_stabilization = 0.5,
+    #stages_pricing_solver_ids = [2, 1],
+    redcost_tol = 1E-3
 )
 
-# Phase 2: Run full Column Generation on top 3 candidates, keep best 1
-phase_exact = Coluna.Algorithm.BranchingPhase(
-    1,
-    Coluna.Algorithm.ColCutGenConquer(),
-    Coluna.Algorithm.ProductScore()
-)
+function strongBranchingAlgo()
+    return Coluna.Algorithm.StrongBranching(
+        phases = [
+            Coluna.Algorithm.BranchingPhase(
+                SbNumCandLP,
+                Coluna.Algorithm.RestrMasterLPConquer(),
+                Coluna.Algorithm.ProductScore()),
+            Coluna.Algorithm.BranchingPhase(
+                SbNumCandCG,
+                Coluna.Algorithm.ColCutGenConquer(
+                    colgen = colgenAlgo(),
+                    primal_heuristics = Coluna.Algorithm.ParameterizedHeuristic[],
+                    max_nb_cut_rounds = 0),     # no cut callback (arc fixing unaffected)
+                Coluna.Algorithm.ProductScore()),
+        ],
+        rules = [Coluna.Branching.PrioritisedBranchingRule(
+                    Coluna.Algorithm.SingleVarBranchingRule(), 1.0, 1.0)],
+        selection_criterion = Coluna.Algorithm.MostFractionalCriterion(),
+        verbose = SbVerbose
+    )
+end
 
 function createModel(inst::CvrpData; primalBound::Float64 = Inf)
 
-    
+
     @axis(VehicleTypes, [1])
+
+    dividealg = UseStrongBranching ? strongBranchingAlgo() : Coluna.Algorithm.ClassicBranching()
 
     coluna = optimizer_with_attributes(
         Coluna.Optimizer,
@@ -85,14 +144,9 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
             #opennodeslimit = 100,
             maxnumnodes = 50,
             explorestrategy = Coluna.TreeSearch.BestDualBoundStrategy(),
+            dividealg = dividealg,
             conqueralg = Coluna.Algorithm.ColCutGenConquer(
-                colgen = Coluna.Algorithm.ColumnGeneration(
-                    max_nb_iterations=1000000,
-                    #show_column_already_inserted_warning = true,
-                    smoothing_stabilization = 0.5,
-                    #stages_pricing_solver_ids = [2, 1],
-                    redcost_tol=1E-3
-                ),
+                colgen = colgenAlgo(),
                 # Restricted master heuristic only at the root (max_depth = 0).
                 # Coluna's default runs it at every node (its `frequency` field is not
                 # used in Coluna 0.8.2), solving a MIP each time.
@@ -155,6 +209,7 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     MOI.set(model, MOI.UserCutCallback(),
             cbdata -> capacityCutCallback(cbdata, mdl, xVar, inst))
 
+    tStartOptimize[] = time()
     optimize!(model)
 
     println("Time in solveSpprc: ", tSpprc[], " s")
