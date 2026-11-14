@@ -28,7 +28,7 @@ inline bool      PrintIterInfoG = false;
 
 constexpr int       NumMaxResources = 2;
 constexpr int       NumMaxRoute = 100;
-constexpr int       NumMaxCust = 100; // 100
+constexpr int       NumMaxCust = 128; // 100; 128 uses the same 2 words of bitset<>
 constexpr int       NgSetSize = 8;    // 8
 constexpr int       NumBuckets = 10;
 constexpr int       vetPtrLabelSize = 10;
