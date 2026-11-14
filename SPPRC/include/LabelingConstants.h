@@ -71,16 +71,23 @@ constexpr int HeurNumBestArcs = 10;
 //  - reducedGraph:    true  = graph with only the HeurNumBestArcs best arcs per customer
 //                     false = full graph
 //  - labelsPerBucket: maximum number of labels kept per bucket (NumMaxLabePerBucket)
+//  - useNg:           true  = full dominance test (ng-sets included), as in the exact
+//                             labeling
+//                     false = dominance ignores the ng-sets (reduced cost and load only):
+//                             more labels are pruned and each test is cheaper; routes stay
+//                             ng-feasible (the ng-set is still checked on extension)
 struct HeurStage
 {
     bool reducedGraph;
     int  labelsPerBucket;
+    bool useNg;
 };
 
 constexpr HeurStage HeurStages[] = {
-    {true,  2},     // reduced graph, cheap
-    {true,  4},     // reduced graph, more labels
-    // {false, 4},  // full graph: catches what the reduced graph misses (cascade, off)
+    {true,  2, false},  // reduced graph, cheap, no ng in dominance
+    {true,  4, false},  // reduced graph, more labels, no ng in dominance
+    {true,  4, true},   // reduced graph, full dominance: catches what the stages above miss
+    // {false, 4, true},   // full graph: catches what the reduced graph misses (off)
 };
 
 // Exact labeling: stop as soon as at least ExactStopMinCols columns with negative

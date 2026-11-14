@@ -132,7 +132,8 @@ bool bidirectionalAlgorithm(int                        	numRes,
                             int							capacity_Q,
                             int                         capacityGcd = 1,
                             bool                       *complete    = nullptr,
-                            ArcFixingData              *fixing      = nullptr);
+                            ArcFixingData              *fixing      = nullptr,
+                            bool                        heurUseNg   = true);
 
 inline __attribute__((always_inline)) bool checkDominanceSubSet(const Label &l0, const Label &l1)
 {
@@ -232,6 +233,19 @@ bool checkCompleteDominance(const Label &l0, const Label &l1, int numResources)
 }
 
 
+// Resource-only dominance (ng-sets ignored), forward labels: l0 <= l1 in every resource.
+// Used by the heuristic stages with HeurStage::useNg = false.
+INLINE
+bool checkResourceDominance(const Label &l0, const Label &l1, int numResources)
+{
+    for(int r = 0; r < numResources; ++r)
+    {
+        if(doubleGreater(l0.vetResources[r], l1.vetResources[r], FloatEp))
+            return false;
+    }
+    return true;
+}
+
 typedef Eigen::Array<FloatType, 1, NumMaxResources> VetBackwardMask;
 
 bool extendLabelForward(Label*         		label,
@@ -324,7 +338,8 @@ Bucket *dominanceIntraBucketSlow(int           cust,
                                  LabelHeap    *labelHeap,
                                  int           numRes,
                                  int           dest,
-                                 int          &correctPos);
+                                 int          &correctPos,
+                                 bool          useNg = true);
 
 Bucket *dominanceIntraBucketFast0(int           cust,
                                   Label        *label,

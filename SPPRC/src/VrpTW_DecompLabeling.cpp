@@ -967,7 +967,10 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                                    vetRoutesOut,
                                    sizeVetRoutesOut,
                                    instVrpTw->capVeic,
-                                   capacityGcd);
+                                   capacityGcd,
+                                   nullptr,
+                                   nullptr,
+                                   stage.useNg);
 
             if(reducedCostNeg)
             {

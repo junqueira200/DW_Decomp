@@ -239,7 +239,8 @@ bool LabelingAlgorithmNS::
                             int							capacity_Q,
                             int                         capacityGcd,
                             bool                       *complete,
-                            ArcFixingData              *fixing)
+                            ArcFixingData              *fixing,
+                            bool                        heurUseNg)
 {
     static Vet3D_ResCost vetMatResCostForward(vetMatResCostForwardConst);
 
@@ -759,7 +760,8 @@ bool LabelingAlgorithmNS::
                                         tAux, labelPtrAux, lData, nullptr, numRes, dest, correctPos);
                                 else
                                     bucket = dominanceIntraBucketSlow(
-                                        tAux, labelPtrAux, lData, nullptr, numRes, dest, correctPos);
+                                        tAux, labelPtrAux, lData, nullptr, numRes, dest, correctPos,
+                                        heurUseNg || exact);
 
                                 if(!bucket)
                                 {
@@ -2781,7 +2783,8 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
                                                       LabelHeap    *labelHeap,
                                                       int           numRes,
                                                       int           dest,
-                                                      int          &correctPos)
+                                                      int          &correctPos,
+                                                      bool          useNg)
 {
     const int sortRes = 0;
     Bucket *bucketPtr = nullptr;
@@ -2824,6 +2827,16 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
     correctPos = -1;
     const double labelVal = label->vetResources[sortRes];
 
+    // !useNg (heuristic labeling): resource-only dominance, the ng-sets are ignored.
+    // Only forward labels at a customer; the destination and backward labels keep the
+    // full test.
+    const bool resOnly = !useNg && label->typeLabel == Forward && cust != dest;
+    auto dom = [&](const Label &a, const Label &b) -> bool
+    {
+        return resOnly ? checkResourceDominance(a, b, numRes)
+                       : checkCompleteDominance(a, b, numRes);
+    };
+
     // candidates that may dominate L: [0, endDom)
     int endDom   = upperBoundIdx(labelVal + FloatEp, bucketPtr);
     // candidates L may dominate: [beginDom, n)
@@ -2836,7 +2849,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
 
     for(int i=0; i < endDom; ++i)
     {
-        if(checkCompleteDominance(*bucketPtr->vetPtrLabel[i], *label, numRes))
+        if(dom(*bucketPtr->vetPtrLabel[i], *label))
         {
             correctPos = -1;
             return nullptr;
@@ -2869,6 +2882,12 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
                 // (Valid only when the buckets cover all resources: numRes <= 2.)
                 if(numRes <= 2 && ii < label->i && jj < label->j)
                 {
+                    if(resOnly)                        // any label here dominates
+                    {
+                        correctPos = -1;
+                        return nullptr;
+                    }
+
                     for(int t = 0; t < closed->sizeVetPtrLabel; ++t)
                     {
                         if(checkDominanceSubSet(*closed->vetPtrLabel[t], *label))
@@ -2887,7 +2906,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
 
                 for(int t = 0; t < endClosed; ++t)
                 {
-                    if(checkCompleteDominance(*closed->vetPtrLabel[t], *label, numRes))
+                    if(dom(*closed->vetPtrLabel[t], *label))
                     {
                         correctPos = -1;
                         return nullptr;
@@ -2923,6 +2942,12 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
                 // (Valid only when the buckets cover all resources: numRes <= 2.)
                 if(numRes <= 2 && ii < label->i && jj < label->j)
                 {
+                    if(resOnly)                        // any label here dominates
+                    {
+                        correctPos = -1;
+                        return nullptr;
+                    }
+
                     for(int t = 0; t < b->sizeVetPtrLabel; ++t)
                     {
                         if(checkDominanceSubSet(*b->vetPtrLabel[t], *label))
@@ -2940,7 +2965,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
 
                 for(int t = 0; t < end; ++t)
                 {
-                    if(checkCompleteDominance(*b->vetPtrLabel[t], *label, numRes))
+                    if(dom(*b->vetPtrLabel[t], *label))
                     {
                         correctPos = -1;
                         return nullptr;
@@ -2952,7 +2977,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
 
     for(int i=beginDom; i < bucketPtr->sizeVetPtrLabel; ++i)
     {
-        if(checkCompleteDominance(*label, *bucketPtr->vetPtrLabel[i], numRes))
+        if(dom(*label, *bucketPtr->vetPtrLabel[i]))
         {
             vetRm[sizeVetRm] = i;
             sizeVetRm += 1;
@@ -2993,6 +3018,14 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
                 // only the ng-set test is left. (Valid only when numRes <= 2.)
                 if(numRes <= 2 && ii > label->i && jj > label->j)
                 {
+                    if(resOnly)                        // every label here is dominated
+                    {
+                        for(int t = 0; t < b->sizeVetPtrLabel; ++t)
+                            vetRm[t] = t;
+                        removeBatchFromBucket(vetRm, b->sizeVetPtrLabel, b);
+                        continue;
+                    }
+
                     for(int t = 0; t < b->sizeVetPtrLabel; ++t)
                     {
                         if(checkDominanceSubSet(*label, *b->vetPtrLabel[t]))
@@ -3013,7 +3046,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
                 const int begin = lowerBoundIdx(labelVal - FloatEp, b);
                 for(int t = begin; t < b->sizeVetPtrLabel; ++t)
                 {
-                    if(checkCompleteDominance(*label, *b->vetPtrLabel[t], numRes))
+                    if(dom(*label, *b->vetPtrLabel[t]))
                     {
                         vetRm[sizeVetRm] = t;
                         sizeVetRm += 1;
