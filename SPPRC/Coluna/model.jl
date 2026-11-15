@@ -123,12 +123,17 @@ include(joinpath(@__DIR__, "ColumnCleanup.jl")) # column cleanup in the master
 include(joinpath(@__DIR__, "CutCleanup.jl"))   # cut pool cleanup (CutCleanup)
 include(joinpath(@__DIR__, "ColGenHelpers.jl"))  # faster Coluna colgen helpers (cache + build)
 include(joinpath(@__DIR__, "LpDuals.jl"))        # faster master LP dual reading (CPLEX)
+include(joinpath(@__DIR__, "CplexSync.jl"))      # batch deletion when syncing with CPLEX
 
 # Same column generation everywhere (tree nodes and strong branching).
+# Smoothing factor of the dual stabilization (1.0 = automatic, self-adjusting).
+# ColGenHelpers.jl skips a matrix that only the automatic mode reads.
+const ColGenSmoothing = 0.5
+colgenHelpersSetSmoothing!(ColGenSmoothing)
 colgenAlgo() = Coluna.Algorithm.ColumnGeneration(
     max_nb_iterations = 1000000,
     #show_column_already_inserted_warning = true,
-    smoothing_stabilization = 0.5,
+    smoothing_stabilization = ColGenSmoothing,
     #stages_pricing_solver_ids = [2, 1],
     redcost_tol = 1E-3
 )
@@ -236,6 +241,7 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     empty!(cutAge)                 # cut ages (CutCleanup.jl)
     colgenHelpersReset!()          # ColGenHelpers.jl
     lpDualsReset!()                # LpDuals.jl
+    cplexSyncReset!()              # CplexSync.jl
     fill!(removedArcs, false)
 
     # Rounded capacity cuts (CVRPSEP), separated after column generation at each node.
@@ -254,6 +260,7 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     columnCleanupPrint()
     colgenHelpersPrint()
     lpDualsPrint()
+    cplexSyncPrint()
 
 end
 

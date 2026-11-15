@@ -173,8 +173,14 @@ function build_reduced_costs_helper(master)
     return ReducedCostsCalculationHelper(dw_subprob_c, dw_subprob_A, master_c, master_A)
 end
 
+# The subgradient matrix A is read only by the automatic (self-adjusting) smoothing
+# (colgen/default.jl, update_stabilization_after_pricing_optim!: `if stab.automatic`).
+# With a fixed smoothing factor only a / a_for_dual are used, so A is left empty.
+# model.jl sets this from its smoothing parameter (true only when it is 1.0 = automatic).
+const colgen_need_subgradient_A = Ref(true)
+
 # Body of Coluna's SubgradientCalculationHelper(master) (colgen/utils.jl), with
-# helper_submatrix (row cache) instead of _submatrix.
+# helper_submatrix (row cache) instead of _submatrix, and A left empty when unused.
 function build_subgradient_helper(master)
     m_rhs = (master, is_min, constr_id) -> begin
         constr_sense = getcursense(master, constr_id)
@@ -204,12 +210,17 @@ function build_subgradient_helper(master)
 
     a = sparsevec(constr_ids, constr_rhs, Coluna.MAX_NB_ELEMS)
     a_dual = sparsevec(constr_ids, constr_rhs_dual, Coluna.MAX_NB_ELEMS)
-    A = helper_submatrix(
-        master,
-        (form, constr_id, constr) -> !(getduty(constr_id) <= MasterConvexityConstr) && iscuractive(form, constr),
-        (form, var_id, var) -> getduty(var_id) <= MasterPureVar || getduty(var_id) <= MasterRepPricingVar,
-        m_submatrix
-    )
+    A = if colgen_need_subgradient_A[]
+        helper_submatrix(
+            master,
+            (form, constr_id, constr) -> !(getduty(constr_id) <= MasterConvexityConstr) && iscuractive(form, constr),
+            (form, var_id, var) -> getduty(var_id) <= MasterPureVar || getduty(var_id) <= MasterRepPricingVar,
+            m_submatrix
+        )
+    else
+        dynamicsparse(ConstrId[], VarId[], Float64[],
+                      ConstrId(Coluna.MAX_NB_ELEMS), VarId(Coluna.MAX_NB_ELEMS))
+    end
     return SubgradientCalculationHelper(a, a_dual, A)
 end
 
@@ -244,6 +255,8 @@ end
 end)  # Core.eval(Coluna.Algorithm)
 
 # Use these from model.jl.
+# smoothing = ColumnGeneration's smoothing_stabilization (1.0 = automatic: A needed).
+colgenHelpersSetSmoothing!(smoothing) = (Coluna.Algorithm.colgen_need_subgradient_A[] = (smoothing == 1.0); nothing)
 colgenHelpersReset!() = Coluna.Algorithm.colgen_helpers_reset!()
 function colgenHelpersPrint()
     s = Coluna.Algorithm.colgen_helper_stats
