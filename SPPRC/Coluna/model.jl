@@ -122,6 +122,7 @@ include(joinpath(@__DIR__, "NodeArcFixing.jl")) # per-node arc fixing (record un
 include(joinpath(@__DIR__, "ColumnCleanup.jl")) # column cleanup in the master
 include(joinpath(@__DIR__, "CutCleanup.jl"))   # cut pool cleanup (CutCleanup)
 include(joinpath(@__DIR__, "ColGenHelpers.jl"))  # faster Coluna colgen helpers (cache + build)
+include(joinpath(@__DIR__, "ActiveSets.jl"))     # active column set (no loops over all columns)
 include(joinpath(@__DIR__, "LpDuals.jl"))        # faster master LP dual reading (CPLEX)
 include(joinpath(@__DIR__, "CplexSync.jl"))      # batch deletion when syncing with CPLEX
 
@@ -242,6 +243,7 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     colgenHelpersReset!()          # ColGenHelpers.jl
     lpDualsReset!()                # LpDuals.jl
     cplexSyncReset!()              # CplexSync.jl
+    activeSetsReset!()             # ActiveSets.jl (before the formulations are built)
     fill!(removedArcs, false)
 
     # Rounded capacity cuts (CVRPSEP), separated after column generation at each node.

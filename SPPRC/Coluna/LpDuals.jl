@@ -97,7 +97,7 @@ function get_dual_solutions_cplex(form::F, inner) where {F <: Formulation}
     varids = VarId[]
     varvals = Float64[]
     activebounds = ActiveBound[]
-    for (varid, var) in getvars(form)
+    for (varid, var) in maybe_active_vars(form)                       # ActiveSets.jl
         (iscuractive(form, var) && isexplicit(form, var)) || continue   # not in CPLEX
         moirec = getmoirecord(var)
         MOI.is_valid(inner, getmoiindex(moirec)) || continue
