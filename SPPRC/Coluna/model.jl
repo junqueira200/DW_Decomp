@@ -67,20 +67,14 @@ const tSpprc = Ref(0.0)
 const tHeur  = Ref(0.0); const nHeur  = Ref(0)
 const tExact = Ref(0.0); const nExact = Ref(0)
 
-# Reduced-cost arc fixing, only at the root (the cut callback does not know the node).
-# An arc is removed for the whole tree if every route through it has
-#   z_LP + rc(route) > UB.
+# Reduced-cost arc fixing at every node (NodeArcFixing.jl, called from CutCleanup after
+# every column generation). An arc is removed in the node's subtree if every route
+# through it has  z_LP(node) + rc(route) > UB.
 const ArcFixing      = true
-const MaxNbCutRounds = 20       # also passed to ColCutGenConquer (root detection uses it)
+const MaxNbCutRounds = 20       # cut rounds at the root (ColCutGenConquer)
 const FixRcTol       = 1e-4     # same as the column submission threshold
-# true  = fix only in the last root round (first round with no cut, or MaxNbCutRounds):
-#         one fixing run, at the highest z_LP, but it does not help the root pricing.
-# false = fix in every root round: removed arcs also shrink the graph of the next
-#         root rounds, and the union over the rounds can remove more arcs.
-global FixOnlyLastRound::Bool = false
 const ubArcFixing    = Ref(Inf) # set from primalBound in createModel
-const rootCutCalls   = Ref(0)   # cut callback calls at the root
-const rootDone       = Ref(false)
+const rootDone       = Ref(false)   # true once strong branching starts (NodeArcFixing: root fixes at every call)
 const tFixing        = Ref(0.0)
 #include("instanceCVRP.jl")
 
@@ -124,6 +118,7 @@ function Coluna.Algorithm.run!(::RootDoneMarker, env::Coluna.Env,
     return false                                   # the master is not changed
 end
 
+include(joinpath(@__DIR__, "NodeArcFixing.jl")) # per-node arc fixing (record unit)
 include(joinpath(@__DIR__, "CutCleanup.jl"))   # cut pool cleanup (CutCleanup)
 include(joinpath(@__DIR__, "ColGenHelpers.jl"))  # faster Coluna colgen helpers (cache + build)
 include(joinpath(@__DIR__, "LpDuals.jl"))        # faster master LP dual reading (CPLEX)
@@ -231,10 +226,10 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
         objectiveprimalbound!(model, primalBound)
     end
 
-    # Arc fixing state (root only).
+    # Arc fixing state.
     ubArcFixing[]  = primalBound
-    rootCutCalls[] = 0
     rootDone[]     = false
+    nodeArcFixingReset!()          # NodeArcFixing.jl
     empty!(cutAge)                 # cut ages (CutCleanup.jl)
     colgenHelpersReset!()          # ColGenHelpers.jl
     lpDualsReset!()                # LpDuals.jl
@@ -251,7 +246,8 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     println("Time in solveSpprc: ", tSpprc[], " s")
     println("  heuristic: ", tHeur[],  " s in ", nHeur[],  " calls")
     println("  exact:     ", tExact[], " s in ", nExact[], " calls")
-    println("Time in arc fixing: ", tFixing[], " s; arcs removed: ", count(removedArcs))
+    println("Time in arc fixing: ", tFixing[], " s")
+    nodeArcFixingPrint()
     colgenHelpersPrint()
     lpDualsPrint()
 
@@ -263,13 +259,10 @@ function capacityCutCallback(cbdata, model, x, inst)
     n = inst.n
 
     # Arc values -> edge values x(i,j) + x(j,i), only positive edges.
-    # zLP = value of the master LP (sum of c(i,j) * x(i,j)), used by the arc fixing.
     edgeTail = Int[]; edgeHead = Int[]; edgeX = Float64[]
-    zLP = 0.0
     for i in 0:(n - 1), j in (i + 1):(n - 1)
         vij = callback_value(cbdata, x[1, (i, j)])
         vji = callback_value(cbdata, x[1, (j, i)])
-        zLP += inst.arc_weights[(i, j)] * vij + inst.arc_weights[(j, i)] * vji
         v = vij + vji
         if v > 1e-6
             push!(edgeTail, i + 1); push!(edgeHead, j + 1); push!(edgeX, v)
@@ -293,27 +286,17 @@ function capacityCutCallback(cbdata, model, x, inst)
         numCuts = length(S)
         printInfo && println("capacity cuts added: ", numCuts)
     end
-
-    # Root = the cut rounds until the first round with no cut, or MaxNbCutRounds rounds
-    # (Coluna runs the cut callback right after column generation converges).
-    if ArcFixing && !rootDone[]
-        rootCutCalls[] += 1
-        lastRootRound = (numCuts == 0 || rootCutCalls[] >= MaxNbCutRounds)
-        if !FixOnlyLastRound || lastRootRound
-            fixArcsAtRoot(zLP, inst)
-        end
-        rootDone[] = lastRootRound
-    end
     return
 end
 
 # Reduced-cost arc fixing with the duals of the last pricing call (vetReducedCosts).
 # For a solution that uses arc a:
 #   cost >= zLP + arcMin(a) + (K-1)*min(0, r*),   r* = min route reduced cost
-# so arc a is removed (whole tree) if arcMin(a) > UB - zLP + (K-1)*FixRcTol.
-function fixArcsAtRoot(zLP, inst)
+# so arc a is removed (in the node's subtree) if arcMin(a) > UB - zLP + (K-1)*FixRcTol.
+# zLP = LP value of the current node. Returns the number of arcs removed.
+function fixArcs(zLP, inst)
     UB = ubArcFixing[]
-    isfinite(UB) || return
+    isfinite(UB) || return 0
     n = inst.n
     K = inst.numberOfVehicles
 
@@ -326,8 +309,8 @@ function fixArcsAtRoot(zLP, inst)
 
     # vetReducedCosts must be the converged (non-smoothed) duals of this master LP.
     if minRouteRc < -FixRcTol
-        println("arc fixing skipped: min route rc = ", minRouteRc, " (duals not converged)")
-        return
+        printInfo && println("arc fixing skipped: min route rc = ", minRouteRc, " (duals not converged)")
+        return 0
     end
 
     newly = 0
@@ -337,9 +320,10 @@ function fixArcsAtRoot(zLP, inst)
             newly += 1
         end
     end
-    println("arc fixing: zLP = ", round(zLP, digits = 2), ", gap = ", round(gap, digits = 2),
+    printInfo && println("arc fixing: zLP = ", round(zLP, digits = 2), ", gap = ", round(gap, digits = 2),
             ", removed ", newly, " (total ", count(removedArcs), " of ", n*(n - 1), ") in ",
             round(t, digits = 3), " s")
+    return newly
 end
 
 function linearIndex(i::Int, j::Int, n::Int)

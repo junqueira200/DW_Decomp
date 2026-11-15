@@ -32,7 +32,8 @@ end
 
 function Coluna.Algorithm.get_units_usage(::CutCleanup, reform::Coluna.MathProg.Reformulation)
     master = Coluna.MathProg.getmaster(reform)
-    return [(master, Coluna.Algorithm.MasterCutsUnit, Coluna.ColunaBase.READ_AND_WRITE)]
+    return [(master, Coluna.Algorithm.MasterCutsUnit, Coluna.ColunaBase.READ_AND_WRITE),
+            (master, ArcFixUnit,                      Coluna.ColunaBase.READ_AND_WRITE)]
 end
 
 # Number of linear rows in the CPLEX model of the master (for the checks above).
@@ -55,6 +56,8 @@ function Coluna.Algorithm.run!(algo::CutCleanup, env::Coluna.Env,
     master = MP.getmaster(reform)
     primal = Coluna.Algorithm.get_best_lp_primal_sol(conquer_output)
     isnothing(primal) && return false
+
+    nodeArcFixing!(conquer_output)   # per-node arc fixing (NodeArcFixing.jl)
 
     xVal = Dict{MP.VarId, Float64}()
     for (varid, val) in primal
