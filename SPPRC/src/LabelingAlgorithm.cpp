@@ -894,7 +894,7 @@ bool LabelingAlgorithmNS::
                             // No extension was feasible: nothing points to this label.
                             vetLabelPoolG[cust].delT(labelPtr);
                         }
-                        else
+                        else if(UseClosedBuckets)   // TEMP test: closed buckets off
                         {
                             // Keep the extended label in the closed bucket of the same
                             // (cust, i, j), sorted by reduced cost, so it can still
@@ -2860,7 +2860,7 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
     // As for open labels, only closed buckets (ii, jj) with ii <= label->i and
     // jj <= label->j can contain a dominating label. The loop starts with the
     // label's own bucket (closest first).
-    if(label->typeLabel == Forward && cust != dest)
+    if(UseClosedBuckets && label->typeLabel == Forward && cust != dest)   // TEMP test
     {
         MatBucket &matClosed = lData.vetMatBucketForwardClosed[cust];
 

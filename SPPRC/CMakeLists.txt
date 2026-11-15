@@ -13,7 +13,7 @@ endif()
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_BUILD_TYPE Release)
-add_definitions(-DVAR_VECTOR_SANITY_CHECK=0)
+add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
 message("set vector_sanity_check=1")
 
 message(CMAKE_MODULE_PATH="${CMAKE_SOURCE_DIR}")

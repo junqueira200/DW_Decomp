@@ -42,6 +42,8 @@ constexpr bool      SortLabels = false;
 // How many buckets back (in each resource) the closed buckets are scanned when
 // checking if a new label is dominated. 0 = own bucket only.
 constexpr int       ClosedBucketWindow = 1;
+// TEMP test: false = extended labels are not kept in closed buckets and never checked.
+constexpr bool      UseClosedBuckets = true;
 
 // Early stop of the heuristic labeling (exact labeling never stops early).
 // Each rule {minIt, minCols}: stop when at least minIt labels were processed and
