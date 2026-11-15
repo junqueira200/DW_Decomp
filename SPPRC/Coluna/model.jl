@@ -124,6 +124,8 @@ function Coluna.Algorithm.run!(::RootDoneMarker, env::Coluna.Env,
     return false                                   # the master is not changed
 end
 
+include(joinpath(@__DIR__, "CutCleanup.jl"))   # cut pool cleanup (CutCleanup)
+
 # Same column generation everywhere (tree nodes and strong branching).
 colgenAlgo() = Coluna.Algorithm.ColumnGeneration(
     max_nb_iterations = 1000000,
@@ -146,7 +148,7 @@ function strongBranchingAlgo()
                     colgen = colgenAlgo(),
                     primal_heuristics = Coluna.Algorithm.ParameterizedHeuristic[],
                     before_cutgen_user_algorithm =
-                        Coluna.Algorithm.BeforeCutGenAlgo(RootDoneMarker(), "Root done"),
+                        Coluna.Algorithm.BeforeCutGenAlgo(CutCleanup(true), "Cut cleanup + root done"),
                     max_nb_cut_rounds = SbCutRounds),
                 Coluna.Algorithm.ProductScore()),
         ],
@@ -182,6 +184,8 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
                 primal_heuristics = [Coluna.Algorithm.ParameterizedHeuristic(
                     Coluna.Algorithm.RestrictedMasterHeuristic(),
                     1.0, 1.0, 1, 0, "Restricted Master IP")],
+                before_cutgen_user_algorithm =
+                    Coluna.Algorithm.BeforeCutGenAlgo(CutCleanup(false), "Cut cleanup"),
                 # Cut rounds per node (Coluna's default is 3; the root needs more).
                 max_nb_cut_rounds = MaxNbCutRounds
             )
@@ -229,6 +233,7 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     ubArcFixing[]  = primalBound
     rootCutCalls[] = 0
     rootDone[]     = false
+    empty!(cutAge)                 # cut ages (CutCleanup.jl)
     fill!(removedArcs, false)
 
     # Rounded capacity cuts (CVRPSEP), separated after column generation at each node.
