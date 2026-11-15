@@ -119,6 +119,7 @@ function Coluna.Algorithm.run!(::RootDoneMarker, env::Coluna.Env,
 end
 
 include(joinpath(@__DIR__, "NodeArcFixing.jl")) # per-node arc fixing (record unit)
+include(joinpath(@__DIR__, "ColumnCleanup.jl")) # column cleanup in the master
 include(joinpath(@__DIR__, "CutCleanup.jl"))   # cut pool cleanup (CutCleanup)
 include(joinpath(@__DIR__, "ColGenHelpers.jl"))  # faster Coluna colgen helpers (cache + build)
 include(joinpath(@__DIR__, "LpDuals.jl"))        # faster master LP dual reading (CPLEX)
@@ -167,7 +168,8 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
         Coluna.Optimizer,
         "params" => Coluna.Params(
         solver = Coluna.Algorithm.TreeSearchAlgorithm(
-            #opennodeslimit = 100,
+            # Coluna stops the search when more nodes than this are open (default 100).
+            opennodeslimit = 1000000,
             maxnumnodes = 50,
             explorestrategy = Coluna.TreeSearch.BestDualBoundStrategy(),
             dividealg = dividealg,
@@ -230,6 +232,7 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     ubArcFixing[]  = primalBound
     rootDone[]     = false
     nodeArcFixingReset!()          # NodeArcFixing.jl
+    columnCleanupReset!()          # ColumnCleanup.jl
     empty!(cutAge)                 # cut ages (CutCleanup.jl)
     colgenHelpersReset!()          # ColGenHelpers.jl
     lpDualsReset!()                # LpDuals.jl
@@ -248,6 +251,7 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     println("  exact:     ", tExact[], " s in ", nExact[], " calls")
     println("Time in arc fixing: ", tFixing[], " s")
     nodeArcFixingPrint()
+    columnCleanupPrint()
     colgenHelpersPrint()
     lpDualsPrint()
 

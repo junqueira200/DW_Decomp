@@ -72,6 +72,12 @@ function Coluna.Algorithm.run!(algo::CutCleanup, env::Coluna.Env,
         end
     end
 
+    # Column cleanup (ColumnCleanup.jl): needs the duals of this LP.
+    if !isnothing(dual)
+        zLP = Coluna.ColunaBase.getvalue(Coluna.Algorithm.get_lp_primal_bound(conquer_output))
+        columnCleanup!(master, xVal, yVal, zLP)
+    end
+
     coefmatrix = MP.getcoefmatrix(master)
     nActive = 0; nBinding = 0; nDualNz = 0; nMismatch = 0; nRemoved = 0; nInactive = 0
 
