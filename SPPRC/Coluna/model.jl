@@ -125,6 +125,8 @@ function Coluna.Algorithm.run!(::RootDoneMarker, env::Coluna.Env,
 end
 
 include(joinpath(@__DIR__, "CutCleanup.jl"))   # cut pool cleanup (CutCleanup)
+include(joinpath(@__DIR__, "ColGenHelpers.jl"))  # faster Coluna colgen helpers (cache + build)
+include(joinpath(@__DIR__, "LpDuals.jl"))        # faster master LP dual reading (CPLEX)
 
 # Same column generation everywhere (tree nodes and strong branching).
 colgenAlgo() = Coluna.Algorithm.ColumnGeneration(
@@ -234,6 +236,8 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     rootCutCalls[] = 0
     rootDone[]     = false
     empty!(cutAge)                 # cut ages (CutCleanup.jl)
+    colgenHelpersReset!()          # ColGenHelpers.jl
+    lpDualsReset!()                # LpDuals.jl
     fill!(removedArcs, false)
 
     # Rounded capacity cuts (CVRPSEP), separated after column generation at each node.
@@ -248,6 +252,8 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     println("  heuristic: ", tHeur[],  " s in ", nHeur[],  " calls")
     println("  exact:     ", tExact[], " s in ", nExact[], " calls")
     println("Time in arc fixing: ", tFixing[], " s; arcs removed: ", count(removedArcs))
+    colgenHelpersPrint()
+    lpDualsPrint()
 
 end
 
