@@ -176,6 +176,12 @@ class LabelingData
     /// discard new labels: these labels have children, so they are never removed.
     Eigen::VectorX<MatBucket> vetMatBucketForwardClosed;
 
+    /// Best (lowest) reduced cost of the closed labels, per customer: entry (i, j) is the
+    /// minimum over the closed buckets (i, 0..j), i.e. the same reduced-cost row up to
+    /// load bucket j (as c_best in the bucket graph, Sadykov et al. 2021). Used to stop
+    /// scanning a row of closed buckets as soon as none of them can dominate a label.
+    Eigen::VectorX<Eigen::Matrix<FloatType, -1, -1, Eigen::RowMajor>> vetMatClosedCBest;
+
   public:
     /// Access first the resorce
     Vector<Matrix<Bound, false>> vetMatBound;

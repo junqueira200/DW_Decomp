@@ -919,6 +919,17 @@ bool LabelingAlgorithmNS::
                                 lData.vetMatBucketForwardClosed[cust].mat(labelPtr->i, labelPtr->j);
                             closed.addElement(lowerBoundIdx(labelPtr->vetResources[0], &closed),
                                               labelPtr);
+
+                            // Best closed reduced cost of the row, for load buckets >= j
+                            // (prefix minimum over j: stop once it is already lower).
+                            auto &cBest = lData.vetMatClosedCBest[cust];
+                            const FloatType rc = labelPtr->vetResources[0];
+                            for(int jj = labelPtr->j; jj < cBest.cols(); ++jj)
+                            {
+                                if(cBest(labelPtr->i, jj) <= rc)
+                                    break;
+                                cBest(labelPtr->i, jj) = rc;
+                            }
                         }
 
                         numIt += 1;
@@ -1338,6 +1349,10 @@ LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2> &ve
             Eigen::Matrix<Bucket, -1, -1, Eigen::RowMajor>(vetNumSteps[0], vetNumSteps[1]);
     }
 
+    vetMatClosedCBest.resize(numCust);
+    for(int i = 0; i < numCust; ++i)
+        vetMatClosedCBest[i].setConstant(vetNumSteps[0], vetNumSteps[1], InfFloatType);
+
     vetMatBound = Vector<Matrix<Bound, false>>(2);
 
     // Generates matBound
@@ -1494,6 +1509,9 @@ void LabelingAlgorithmNS::LabelingData::flushLabel()
                 mat.mat(i, j).flush();
         }
     }
+
+    for(int c = 0; c < vetMatClosedCBest.size(); ++c)
+        vetMatClosedCBest[c].setConstant(InfFloatType);
 }
 
 std::ostream &LabelingAlgorithmNS::operator<<(std::ostream &out, const Bound &bound)
@@ -2870,20 +2888,44 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
 
     // Labels that were already extended (closed) can also dominate the new label.
     // As for open labels, only closed buckets (ii, jj) with ii <= label->i and
-    // jj <= label->j can contain a dominating label. The loop starts with the
-    // label's own bucket (closest first).
+    // jj <= label->j can contain a dominating label. All of them are scanned (no window).
     if(UseClosedBuckets && label->typeLabel == Forward && cust != dest)   // TEMP test
     {
         MatBucket &matClosed = lData.vetMatBucketForwardClosed[cust];
+        const auto &cBest = lData.vetMatClosedCBest[cust];
+        const int li = label->i;
+        const int lj = label->j;
 
-        // Only look ClosedBucketWindow buckets back in each resource: labels far
-        // away rarely dominate (their ng-sets differ) and scanning them is costly.
-        const int jjMin = std::max(0, label->j - ClosedBucketWindow);
-        const int iiMin = std::max(0, label->i - ClosedBucketWindow);
-
-        for(int jj = label->j; jj >= jjMin; --jj)
+        // 1) Same reduced-cost row (ii = li), load buckets lj, lj-1, ..., 0.
+        //    cBest(li, jj) = lowest closed reduced cost in buckets (li, 0..jj): once it is
+        //    above the label's reduced cost, no closed label of the row at these loads
+        //    can dominate it -> stop.
+        for(int jj = lj; jj >= 0; --jj)
         {
-            for(int ii = label->i; ii >= iiMin; --ii)
+            if(cBest(li, jj) > labelVal + FloatEp)
+                break;
+
+            const Bucket *closed = &matClosed.mat(li, jj);
+            if(closed->sizeVetPtrLabel == 0)
+                continue;
+
+            // Sorted by reduced cost: only [0, endClosed) can dominate.
+            const int endClosed = upperBoundIdx(labelVal + FloatEp, closed);
+            for(int t = 0; t < endClosed; ++t)
+            {
+                if(dom(*closed->vetPtrLabel[t], *label))
+                {
+                    correctPos = -1;
+                    return nullptr;
+                }
+            }
+        }
+
+        // 2) Lower reduced-cost rows (ii < li): every closed label there has a lower
+        //    reduced cost, so cBest cannot skip anything.
+        for(int jj = lj; jj >= 0; --jj)
+        {
+            for(int ii = li - 1; ii >= 0; --ii)
             {
                 const Bucket *closed = &matClosed.mat(ii, jj);
                 if(closed->sizeVetPtrLabel == 0)

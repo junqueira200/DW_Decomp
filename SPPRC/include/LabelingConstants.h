@@ -39,9 +39,8 @@ constexpr bool      DominaIterBuckets = false;
 constexpr FloatType FloatEp = 1E-6;
 constexpr bool      TrackingRoutes = false;
 constexpr bool      SortLabels = false;
-// How many buckets back (in each resource) the closed buckets are scanned when
-// checking if a new label is dominated. 0 = own bucket only.
-constexpr int       ClosedBucketWindow = 1;
+// (ClosedBucketWindow removed 2026-11-15: the closed buckets are now scanned in all
+// lower buckets, with the best reduced cost per row (vetMatClosedCBest) to stop early.)
 // TEMP test: false = extended labels are not kept in closed buckets and never checked.
 constexpr bool      UseClosedBuckets = true;
 
