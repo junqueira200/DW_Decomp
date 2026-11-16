@@ -16,7 +16,13 @@ namespace LabelingAlgorithmNS
 
 constexpr double TolObjSubProb = 1E-3;
 // TODO Retornar para 25!
-constexpr int    NumMaxSolSubProb = 50;     // 25;
+// Most routes returned by one pricing call (size of the output buffers; limit of the
+// exact labeling). 50 until 2026-11-16; 25 before.
+constexpr int    NumMaxSolSubProb = 100;
+// Limit of the heuristic labeling: it stops once it has this many routes and returns
+// at most this many (100 for the heuristic too was slower: E-n76/E-n101 roots +10-12%).
+constexpr int    HeurMaxSolSubProb = 50;
+static_assert(HeurMaxSolSubProb <= NumMaxSolSubProb);
 
 /// Stores the start indexes for the reduced cost and demand
 typedef Eigen::Array<int, 1, 2> IndexStart;

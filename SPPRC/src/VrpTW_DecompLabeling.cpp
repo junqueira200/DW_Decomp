@@ -117,6 +117,7 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
 
     // Completion bound of the exact pricing and of the arc fixing.
     matDpColuna = EigenMatrixRowD(instVrpTw->numClientes + 1, instVrpTw->capVeic + 1);
+    matDpHeur   = EigenMatrixRowD(instVrpTw->numClientes + 1, instVrpTw->capVeic + 1);
 
     // Bidirectional labeling (backward run). Resource 1 is copied from the forward
     // graph (demand of the head) and never changes; resource 0 is set on every exact
@@ -243,6 +244,250 @@ void VrpTW_DecompLabelingNS::VrpLabelingSubProb::updateVetMatResCostBackward()
 
     // Empty route (source -> destination): same arc in both directions.
     vetMatResCostTransposed.get(0, n, 0) = vetMatResCostForward(0, n, 0);
+}
+
+// Merge of the bidirectional labeling.
+//
+// Forward label F at u: path 0 -> ... -> u, load(F) includes d_u. Backward label B at v:
+// path v -> ... -> depot (built on the transposed graph), load(B) includes d_v. Through
+// the arc (u, v) they give the route 0 ... u v ... 0 with
+//     rc = rc(F) + c(u, v) + rc(B),   load = load(F) + load(B) <= Q.
+// ng: the memories must not share a customer (this also excludes v in F and u in B).
+//
+// Completeness (every elementary route is found or dominated): for a route, let u be the
+// last customer whose prefix load is <= splitLoad (u = 0, the start label, if the first
+// customer alone is above it) and v the next one. The prefix up to u was extended (load
+// <= splitLoad), so F exists (or a label that dominates it). The suffix from v exists in
+// the backward run: its parent has load = total - (prefix load up to v) < Q - splitLoad
+// = splitLoad (split at Q/2), so the parent was extended. Routes whose load stays <=
+// splitLoad up to the last customer are found by the forward run itself.
+// Dominance keeps this true: a dominating label has lower or equal rc and load and an
+// ng memory contained in the dominated one, so the same join stays feasible.
+//
+// So only the forward labels with load <= splitLoad are joined (they are the closed
+// ones; the others were kept but not extended), with every backward label.
+int VrpTW_DecompLabelingNS::VrpLabelingSubProb::mergeBidirectional(
+    FloatType                        splitLoad,
+    int                              numSolForward,
+    const Eigen::VectorX<FloatType> &vetRedCostForward,
+    int                             *vetRoutesOut,
+    int                             &sizeVetRoutesOut,
+    ArrayReducedCost                &vetRedCost)
+{
+    const int    n   = instVrpTw->numClientes;     // nodes 0..n-1, dest = n
+    const int    Q   = instVrpTw->capVeic;
+    const int    K   = NumMaxSolSubProb;
+    const double inf = std::numeric_limits<double>::infinity();
+
+    LabelingData &lF = labelingDataForward;
+    LabelingData &lB = labelingDataBackward;
+    const int numI = lF.vetNumSteps(0);
+    const int numJ = lF.vetNumSteps(1);
+
+    // 1. Backward labels per customer v, sorted by reduced cost, and
+    //    bestB(v, r) = best reduced cost of a backward label at v with load <= r.
+    struct BackLabel
+    {
+        double       rc;
+        int          load;
+        const Label *label;
+    };
+    static std::vector<std::vector<BackLabel>> vetBack;
+    static EigenMatrixRowD                     bestB;
+    vetBack.resize(n);
+    bestB.resize(n, Q + 1);
+    bestB.setConstant(inf);
+
+    for(int v = 1; v < n; ++v)
+    {
+        std::vector<BackLabel> &list = vetBack[v];
+        list.clear();
+
+        for(int i = 0; i < numI; ++i)
+        {
+            for(int j = 0; j < numJ; ++j)
+            {
+                // Open buckets (labels above the split, never extended) and closed ones.
+                for(const Bucket *bucket : {&lB.vetMatBucketForward[v].mat(i, j),
+                                            &lB.vetMatBucketForwardClosed[v].mat(i, j)})
+                {
+                    for(int t = 0; t < bucket->sizeVetPtrLabel; ++t)
+                    {
+                        const Label *label = bucket->vetPtrLabel[t];
+                        if(!label || !label->active)
+                            continue;
+
+                        const int load = (int)std::lround(label->vetResources[1]);
+                        if(load > Q)
+                            continue;
+
+                        const double rc = label->vetResources[0];
+                        list.push_back({rc, load, label});
+                        bestB(v, load) = std::min(bestB(v, load), rc);
+                    }
+                }
+            }
+        }
+
+        std::sort(list.begin(), list.end(),
+                  [](const BackLabel &a, const BackLabel &b) { return a.rc < b.rc; });
+
+        for(int r = 1; r <= Q; ++r)
+            bestB(v, r) = std::min(bestB(v, r), bestB(v, r - 1));
+    }
+
+    // 2. G(u, R) = min over v of c(u, v) + bestB(v, R): best completion of a forward
+    //    label at u with remaining capacity R (skips whole forward labels).
+    static EigenMatrixRowD G;
+    G.resize(n, Q + 1);
+    G.setConstant(inf);
+    for(int u = 0; u < n; ++u)
+    {
+        for(int v = 1; v < n; ++v)
+        {
+            if(v == u)
+                continue;
+            const double c = vetMatResCostForward(u, v, 0);
+            if(c == InfFloatType)
+                continue;
+            for(int r = 0; r <= Q; ++r)
+                G(u, r) = std::min(G(u, r), c + bestB(v, r));
+        }
+    }
+
+    // 3. Candidate routes: the forward run's own routes, then the joins. Kept: the K
+    //    best distinct routes; once there are K of them, the K-th reduced cost is the
+    //    threshold a new join must beat.
+    struct Candidate
+    {
+        double           rc;
+        std::vector<int> route;    // 0 c1 ... ck 0
+    };
+    static std::vector<Candidate> cands;
+    cands.clear();
+    double threshold = -TolObjSubProb;
+
+    auto compact = [&]()
+    {
+        std::sort(cands.begin(), cands.end(),
+                  [](const Candidate &a, const Candidate &b) { return a.rc < b.rc; });
+        std::vector<Candidate>       kept;
+        std::set<std::vector<int>>   seen;
+        for(Candidate &c : cands)
+        {
+            if((int)kept.size() == K)
+                break;
+            if(seen.insert(c.route).second)
+                kept.push_back(std::move(c));
+        }
+        cands.swap(kept);
+        if((int)cands.size() == K)
+            threshold = std::min(threshold, cands.back().rc);
+    };
+
+    // Forward routes (already complete): numSolForward routes, each 0 ... 0.
+    {
+        int pos = 0;
+        for(int k = 0; k < numSolForward && pos < sizeVetRoutesOut; ++k)
+        {
+            int end = pos + 1;
+            while(end < sizeVetRoutesOut && vetRoutesOut[end] != 0)
+                ++end;
+            cands.push_back({(double)vetRedCostForward[k],
+                             std::vector<int>(vetRoutesOut + pos, vetRoutesOut + end + 1)});
+            pos = end + 1;
+        }
+    }
+
+    std::vector<int> route;
+    auto buildRoute = [&](const Label *F, const Label *B)
+    {
+        route.clear();
+        for(const Label *l = F; l; l = l->ptrLabel)      // u ... 0
+            route.push_back(l->cust);
+        std::reverse(route.begin(), route.end());        // 0 ... u
+        for(const Label *l = B; l; l = l->ptrLabel)      // v ... 0
+            route.push_back(l->cust);
+    };
+
+    for(int u = 0; u < n; ++u)
+    {
+        for(int i = 0; i < numI; ++i)
+        {
+            for(int j = 0; j < numJ; ++j)
+            {
+                const Bucket &bucket = lF.vetMatBucketForwardClosed[u].mat(i, j);
+                for(int t = 0; t < bucket.sizeVetPtrLabel; ++t)
+                {
+                    const Label *F = bucket.vetPtrLabel[t];
+                    if(!F || !F->active || F->vetResources[1] > splitLoad)
+                        continue;
+
+                    const int R = Q - (int)std::lround(F->vetResources[1]);
+                    if(R < 0)
+                        continue;
+
+                    const double rcF = F->vetResources[0];
+                    if(rcF + G(u, R) >= threshold)
+                        continue;
+
+                    for(int v = 1; v < n; ++v)
+                    {
+                        if(v == u)
+                            continue;
+                        const double c = vetMatResCostForward(u, v, 0);
+                        if(c == InfFloatType)
+                            continue;
+
+                        const double base = rcF + c;
+                        if(base + bestB(v, R) >= threshold)
+                            continue;
+
+                        for(const BackLabel &b : vetBack[v])
+                        {
+                            if(base + b.rc >= threshold)
+                                break;                // sorted by reduced cost
+                            if(b.load > R)
+                                continue;
+
+                            auto common = F->bitSetNg & b.label->bitSetNg;
+                            common.reset(0);
+                            common.reset(n);
+                            if(common.any())
+                                continue;
+
+                            buildRoute(F, b.label);
+                            cands.push_back({base + b.rc, route});
+                            if((int)cands.size() >= 4 * K)
+                                compact();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    compact();
+
+    // 4. Output.
+    int next = 0;
+    int num  = 0;
+    for(const Candidate &c : cands)
+    {
+        if(next + (int)c.route.size() > NumMaxSolSubProb * NumMaxRoute)
+            break;
+        for(int node : c.route)
+            vetRoutesOut[next++] = node;
+        vetRedCost[num] = c.rc;
+        ++num;
+    }
+    sizeVetRoutesOut = next;
+
+    if(PrintIterInfoG)
+        std::printf("merge: %d forward routes, %d routes returned, best rc %.6f\n",
+                    numSolForward, num, num > 0 ? cands[0].rc : 0.0);
+
+    return num;
 }
 
 /*
@@ -852,6 +1097,8 @@ double VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     int capacityGcd = 1;
     getDistLowerBound(vetMatResCostForward, n, vetVetResBound, matDpColuna, capacityGcd);
+    matDpColunaValid = true;
+    matDpColunaGcd   = capacityGcd;
 
     static ArcFixingData fixing;
     fixing.gap = (FloatType)gap;
@@ -927,9 +1174,13 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
     // The completion bound is computed only for the exact labeling: it is
     // expensive (O(n^2 * Q)) and the heuristic does not need it.
     int capacityGcd = 1;
-    if(exact)
+    if(exact && ExactUseCompletionBound)
+    {
         getDistLowerBound(vetMatResCostForward, instVrpTw->numClientes, vetVetResBound,
                           matDpColuna, capacityGcd);
+        matDpColunaValid = true;
+        matDpColunaGcd   = capacityGcd;
+    }
     else
         ptrMatDp = nullptr;
 
@@ -979,6 +1230,8 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         const bool reducedGraphActive = (HeurNumBestArcs > 0 && HeurNumBestArcs < (n - 2));
 
         int stageId = 0;
+        const Vet3D_ResCost *boundGraph = nullptr;   // graph of matDpHeur (this call)
+        int                  boundGcd   = 1;         // its capacity divisor
         for(const HeurStage &stage : HeurStages)
         {
             ++stageId;
@@ -988,6 +1241,26 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
             const Vet3D_ResCost &graph =
                 stage.reducedGraph ? vetMatResCostForwardHeur : vetMatResCostForward;
+
+            // Completion bound of the heuristic (see HeurCompletionBound).
+            ptrMatDp    = nullptr;
+            capacityGcd = 1;
+            if(HeurCompletionBound == 1)
+            {
+                if(boundGraph != &graph)
+                {
+                    getDistLowerBound(graph, instVrpTw->numClientes, vetVetResBound,
+                                      matDpHeur, boundGcd);
+                    boundGraph = &graph;
+                }
+                capacityGcd = boundGcd;
+                ptrMatDp    = &matDpHeur;
+            }
+            else if(HeurCompletionBound == 2 && matDpColunaValid)
+            {
+                ptrMatDp    = &matDpColuna;
+                capacityGcd = matDpColunaGcd;
+            }
 
             bool reducedCostNeg =
             bidirectionalAlgorithm(2,
@@ -1035,9 +1308,14 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         return 0;
     }
 
-    // Forward run: its routes, numSol and `complete` are what goes back to Coluna.
-    // It stops at the split load (bidirectional labeling), so until the merge exists
-    // it only returns routes that pass the split on their last arc or not at all.
+    // Bidirectional labeling (exact pricing): forward run up to the split load, backward
+    // run (forward labeling on the transposed graph) up to the split load, then the merge
+    // of the two writes the routes that go back to Coluna.
+    const bool      bidirMerge = BidirExactBackwardRun && !BidirBackwardFullCheck;
+    const FloatType splitLoad  = (FloatType)(BidirSplitFraction * instVrpTw->capVeic);
+    const FloatType forwardStopLoad = bidirMerge ? splitLoad : (FloatType)InfFloatType;
+
+    // Forward run.
     bidirectionalAlgorithm(2,
                            (instVrpTw->numClientes + 1),
                            vetMatResCostForward,
@@ -1066,18 +1344,17 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                            nullptr,
                            true,
                            true,
-                           // Stops extending at BidirSplitFraction * Q (labels above are
-                           // kept, not extended). WITHOUT THE MERGE THIS IS NOT EXACT:
-                           // routes whose load passes the split are not generated.
-                           (FloatType)(BidirSplitFraction * instVrpTw->capVeic));
+                           // Bidirectional: stops extending at the split load (labels
+                           // above it are kept, not extended); the merge below completes
+                           // the routes. Otherwise (or in the check mode): full Q.
+                           forwardStopLoad);
 
     if(BidirExactBackwardRun)
     {
-        // Backward run (forward labeling on the transposed graph). Until the merge
-        // exists it must not touch the outputs that go back to Coluna, so it writes
-        // into its own scratch variables. Its labels stay alive in
-        // labelingDataBackward (and the forward ones in labelingDataForward, since
-        // the label pool is not reset) for the merge.
+        // Backward run (forward labeling on the transposed graph). Its own routes are
+        // not used (scratch variables): the merge uses its labels, which stay alive in
+        // labelingDataBackward (and the forward ones in labelingDataForward, since the
+        // label pool is not reset).
         static Eigen::VectorX<FloatType> vetRedCostBackward(NumMaxSolSubProb);
         static std::vector<int>          vetRoutesBackward(NumMaxSolSubProb * NumMaxRoute);
         int       numSolBackward     = 0;
@@ -1092,13 +1369,13 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         // demands and the capacity in static variables from its first call; they are
         // the same for both graphs.
         int capacityGcdBackward = 1;
-        getDistLowerBound(vetMatResCostTransposed, instVrpTw->numClientes, vetVetResBound,
-                          matDpBackward, capacityGcdBackward);
+        if(ExactUseCompletionBound)
+            getDistLowerBound(vetMatResCostTransposed, instVrpTw->numClientes, vetVetResBound,
+                              matDpBackward, capacityGcdBackward);
 
         // Labels with a load above this are kept but not extended.
         const FloatType backwardStopLoad =
-            BidirBackwardFullCheck ? (FloatType)InfFloatType
-                                   : (FloatType)(BidirSplitFraction * instVrpTw->capVeic);
+            BidirBackwardFullCheck ? (FloatType)InfFloatType : splitLoad;
 
         bidirectionalAlgorithm(2,
                                (instVrpTw->numClientes + 1),
@@ -1116,7 +1393,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                                exact,
                                typeLabel,
                                true,
-                               &matDpBackward,
+                               ExactUseCompletionBound ? &matDpBackward : nullptr,
                                1.0,
                                vetRoutesBackward.data(), // scratch
                                sizeRoutesBackward,       // scratch
@@ -1128,13 +1405,12 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                                false,                    // keep the forward labels
                                backwardStopLoad);
 
-        if(PrintIterInfoG)
-            std::printf("backward run: %d routes, best rc %.6f (forward: %d routes)\n",
-                        numSolBackward,
-                        numSolBackward > 0
-                            ? (double)vetRedCostBackward.head(numSolBackward).minCoeff()
-                            : 0.0,
-                        numSol);
+        if(bidirMerge)
+        {
+            numSol   = mergeBidirectional(splitLoad, numSol, vetRedCostFT,
+                                          vetRoutesOut, sizeVetRoutesOut, vetRedCost);
+            complete = complete && completeBackward;
+        }
 
         if(BidirBackwardFullCheck)
         {

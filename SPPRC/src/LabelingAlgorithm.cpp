@@ -369,6 +369,9 @@ bool LabelingAlgorithmNS::
     // labelHeap.insertKey(labelForwardPtr);
     labelPtr = nullptr;
     labelBackwardPtr = nullptr;
+    // TEST (ExactDestKeepAll): no dominance among complete routes in exact calls.
+    destNoDominanceG = exact && ExactDestKeepAll && !fixing;
+
     int    numIt = 0;
     int    maxSize = 0;
     int    localNumMaxLabel = numMaxLabelG;
@@ -423,7 +426,7 @@ bool LabelingAlgorithmNS::
 
         // Heuristic: it only has to find some negative columns, so stop as soon
         // as there are enough of them (thresholds in LabelingConstants.h).
-        if(sizeMatForwardDest >= NumMaxSolSubProb)
+        if(sizeMatForwardDest >= HeurMaxSolSubProb)
             return true;
 
         for(const HeurStopRule &rule : HeurStopRules)
@@ -1029,8 +1032,9 @@ bool LabelingAlgorithmNS::
 
     if(lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel > 0)
     {
-        numSol = std::min(lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel,
-                          NumMaxSolSubProb);
+        // Most routes returned: NumMaxSolSubProb (exact), HeurMaxSolSubProb (heuristic).
+        const int maxOut = exact ? NumMaxSolSubProb : HeurMaxSolSubProb;
+        numSol = std::min(lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel, maxOut);
 
         auto getReducedCost = [](Label* label)->double{return label->vetResources[0];};
         auto getNLabel = [&](int n)->Label*
@@ -1038,7 +1042,7 @@ bool LabelingAlgorithmNS::
 
         int size = lData.vetMatBucketForward[dest].mat(0, 0).sizeVetPtrLabel;
 
-        if(size > NumMaxSolSubProb)
+        if(size > maxOut)
         {
             int 	indexBest = 0;
             double 	valueBest = getReducedCost(getNLabel(0));
@@ -2879,6 +2883,13 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
     int i=0;
     correctPos = -1;
     const double labelVal = label->vetResources[sortRes];
+
+    // TEST (ExactDestKeepAll): keep every complete route, sorted by reduced cost.
+    if(destNoDominanceG && cust == dest && label->typeLabel == Forward)
+    {
+        correctPos = lowerBoundIdx(labelVal, bucketPtr);
+        return bucketPtr;
+    }
 
     // !useNg (heuristic labeling): resource-only dominance, the ng-sets are ignored.
     // Only forward labels at a customer; the destination and backward labels keep the

@@ -97,16 +97,38 @@ constexpr HeurStage HeurStages[] = {
 // 0 = never stop early (always explore everything, as before).
 constexpr int ExactStopMinCols = 0;
 
-// Exact pricing: also run the labeling on the transposed graph (bidirectional
-// labeling, work in progress: no merge yet, its routes are not returned).
-constexpr bool BidirExactBackwardRun = true;
-// Fraction of the capacity where the backward run stops extending labels (labels
-// above it are kept, not extended). The forward run will stop there too once the
-// merge exists; until then it must explore up to Q (its routes go to Coluna).
+// Exact pricing with bidirectional labeling: forward run and backward run (forward
+// labeling on the transposed graph) both stop at BidirSplitFraction * Q, then
+// mergeBidirectional() joins them. Exact (same best route as the forward-only
+// labeling on all recorded inputs), but OFF: each half costs 70-90% of a full run, so
+// it is slower than ExactDestKeepAll (E-n76-k7 4-min tree, 2026-11-16: bound 672.85
+// vs 672.92, 47 vs 53 nodes). false = forward-only exact labeling up to Q.
+constexpr bool BidirExactBackwardRun = false;
+// Split load of the bidirectional labeling, as a fraction of the capacity: labels
+// above it are kept (for the merge) but not extended.
 constexpr double BidirSplitFraction = 0.5;
-// Debug: run the backward labeling up to Q (no split) and compare its best route
-// with the forward one on every exact call (prints one "BIDIR check" line per call).
+// Debug (with BidirExactBackwardRun): both runs go up to Q, no merge; prints one
+// "BIDIR check" line per exact call comparing their best routes.
 constexpr bool BidirBackwardFullCheck = false;
+
+// Exact (forward-only) labeling keeps every negative route at the destination (no
+// dominance there), so up to NumMaxSolSubProb routes go back per exact call.
+constexpr bool ExactDestKeepAll = true;
+// Set by bidirectionalAlgorithm on each call (exact && ExactDestKeepAll).
+inline bool destNoDominanceG = false;
+
+// Exact pricing: prune labels with the completion bound (matDp). false = no completion
+// bound in the exact labeling (forward and backward runs); test only.
+constexpr bool ExactUseCompletionBound = true;
+
+// Completion bound in the heuristic labeling (it only has to find some negative
+// columns, so an invalid prune is allowed: exact pricing catches what it misses).
+//   0 = none;
+//   1 = computed on every heuristic call, on the graph the stage searches (reduced
+//       graph or full graph): a valid bound for that graph;
+//   2 = the bound of the last exact call (or arc fixing run), reused as it is: free,
+//       but computed from older duals.
+constexpr int HeurCompletionBound = 0;
 
 constexpr double MaxFloatType = std::numeric_limits<FloatType>::max();
 constexpr double MinFloatType = std::numeric_limits<FloatType>::min();

@@ -112,6 +112,12 @@ class VrpLabelingSubProb// : public DW_DecompNS::SubProb
 
     /// Completion bound (shared by the exact pricing and the arc fixing).
     EigenMatrixRowD matDpColuna;
+    /// matDpColuna holds a bound (from the last exact call or arc fixing run) and its
+    /// capacity divisor (HeurCompletionBound == 2 reuses it in the heuristic).
+    bool            matDpColunaValid = false;
+    int             matDpColunaGcd   = 1;
+    /// Completion bound of the heuristic (HeurCompletionBound == 1).
+    EigenMatrixRowD matDpHeur;
 
     /// Bidirectional labeling: the backward run is a forward labeling on this graph.
     /// Arc (i, j) here is arc (j, i) of vetMatResCostForward; the source 0 and the
@@ -137,6 +143,16 @@ class VrpLabelingSubProb// : public DW_DecompNS::SubProb
     //void convertRouteIntoLabel(const TestNS::Route &route, LabelingAlgorithmNS::Label *label);
 
     void updateVetMatResCostBackward();
+
+    /// Bidirectional labeling: joins the forward labels (load <= splitLoad) with the
+    /// backward labels through every arc (u, v) and writes the best routes (the forward
+    /// run's own routes included) to vetRoutesOut / vetRedCost. Returns their number.
+    int mergeBidirectional(FloatType          splitLoad,
+                           int                                     numSolForward,
+                           const Eigen::VectorX<FloatType> &vetRedCostForward,
+                           int                                    *vetRoutesOut,
+                           int                                    &sizeVetRoutesOut,
+                           ArrayReducedCost                       &vetRedCost);
 
 }; // END MySubProb
 
