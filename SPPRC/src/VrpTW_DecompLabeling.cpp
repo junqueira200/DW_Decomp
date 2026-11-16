@@ -118,6 +118,14 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
     // Completion bound of the exact pricing and of the arc fixing.
     matDpColuna = EigenMatrixRowD(instVrpTw->numClientes + 1, instVrpTw->capVeic + 1);
 
+    // Bidirectional labeling (backward run). Resource 1 is copied from the forward
+    // graph (demand of the head) and never changes; resource 0 is set on every exact
+    // call by updateVetMatResCostBackward().
+    vetMatResCostTransposed =
+        Vet3D_ResCost(instVrpTw->numClientes + 1, instVrpTw->numClientes + 1, 2);
+    vetMatResCostTransposed.copy(vetMatResCostForward);
+    matDpBackward = EigenMatrixRowD(instVrpTw->numClientes + 1, instVrpTw->capVeic + 1);
+
     // std::cout<<"\n"<<instVrpTw->vetClieDem<<"\n\n";
     // PRINT_EXIT();
 
@@ -204,18 +212,37 @@ bool VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesFinal(
     return ret;
 }
 
+// Reduced costs of the transposed graph (resource 0 of vetMatResCostTransposed), from
+// vetMatResCostForward. Nodes: 0 = source (depot), 1..n-1 = customers, n = destination
+// (depot copy). A path 0 -> v -> ... -> n here is a route suffix read backwards.
 void VrpTW_DecompLabelingNS::VrpLabelingSubProb::updateVetMatResCostBackward()
 {
-    for(int i = 0; i < instVrpTw->numClientes + 1; ++i)
+    const int n = instVrpTw->numClientes;          // dest = n
+
+    // Customer arcs: (i, j) here is (j, i) in the forward graph.
+    for(int i = 1; i < n; ++i)
     {
-        for(int j = 0; j < (instVrpTw->numClientes + 1); ++j)
+        for(int j = 1; j < n; ++j)
         {
             if(i == j)
                 continue;
 
-            vetMatResCostBackward.get(i, j, 0) = vetMatResCostForward(j, i, 0);
+            vetMatResCostTransposed.get(i, j, 0) = vetMatResCostForward(j, i, 0);
         }
     }
+
+    for(int i = 1; i < n; ++i)
+    {
+        // First arc of the backward path: forward arc (i, depot) = (i, dest).
+        vetMatResCostTransposed.get(0, i, 0) = vetMatResCostForward(i, n, 0);
+        // Last arc of the backward path: forward arc (depot, i) = (0, i).
+        vetMatResCostTransposed.get(i, n, 0) = vetMatResCostForward(0, i, 0);
+        // Arcs into the source are never used.
+        vetMatResCostTransposed.get(i, 0, 0) = InfFloatType;
+    }
+
+    // Empty route (source -> destination): same arc in both directions.
+    vetMatResCostTransposed.get(0, n, 0) = vetMatResCostForward(0, n, 0);
 }
 
 /*
@@ -1008,6 +1035,9 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
         return 0;
     }
 
+    // Forward run: its routes, numSol and `complete` are what goes back to Coluna.
+    // It stops at the split load (bidirectional labeling), so until the merge exists
+    // it only returns routes that pass the split on their last arc or not at all.
     bidirectionalAlgorithm(2,
                            (instVrpTw->numClientes + 1),
                            vetMatResCostForward,
@@ -1030,43 +1060,140 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                            1.0,
                            vetRoutesOut,
                            sizeVetRoutesOut,
-                           instVrpTw->capVeic/2,
+                           instVrpTw->capVeic,      // full Q: only used by the matDp pruning
                            capacityGcd,
                            &complete,
                            nullptr,
                            true,
-                           true);
+                           true,
+                           // Stops extending at BidirSplitFraction * Q (labels above are
+                           // kept, not extended). WITHOUT THE MERGE THIS IS NOT EXACT:
+                           // routes whose load passes the split are not generated.
+                           (FloatType)(BidirSplitFraction * instVrpTw->capVeic));
 
-    updateVetMatResCostBackward();
+    if(BidirExactBackwardRun)
+    {
+        // Backward run (forward labeling on the transposed graph). Until the merge
+        // exists it must not touch the outputs that go back to Coluna, so it writes
+        // into its own scratch variables. Its labels stay alive in
+        // labelingDataBackward (and the forward ones in labelingDataForward, since
+        // the label pool is not reset) for the merge.
+        static Eigen::VectorX<FloatType> vetRedCostBackward(NumMaxSolSubProb);
+        static std::vector<int>          vetRoutesBackward(NumMaxSolSubProb * NumMaxRoute);
+        int       numSolBackward     = 0;
+        int       sizeRoutesBackward = 0;
+        bool      completeBackward   = false;
+        FloatType maxDistBackward;
 
-    bidirectionalAlgorithm(2,
-                           (instVrpTw->numClientes + 1),
-                           vetMatResCostBackward,
-                           vetMatResCostBackward,
-                           vetVetResBound,
-                           instVrpTw->numClientes,
-                           ngSet,
-                           labelingDataBackward,
-                           //matColX,
-                           numSol,
-                           //(FloatType)constPiValue,
-                           MaxInt,
-                           true,
-                           maxDist,
-                           vetRedCostFT,
-                           exact,
-                           typeLabel,
-                           true,
-                           ptrMatDp,
-                           1.0,
-                           vetRoutesOut,
-                           sizeVetRoutesOut,
-                           instVrpTw->capVeic/2.0,
-                           capacityGcd,
-                           &complete,
-                           nullptr,
-                           true,
-                           false);
+        updateVetMatResCostBackward();
+
+        // Completion bound of the transposed graph (the forward matDp is not valid
+        // here unless the reduced costs are symmetric). getDistLowerBound keeps the
+        // demands and the capacity in static variables from its first call; they are
+        // the same for both graphs.
+        int capacityGcdBackward = 1;
+        getDistLowerBound(vetMatResCostTransposed, instVrpTw->numClientes, vetVetResBound,
+                          matDpBackward, capacityGcdBackward);
+
+        // Labels with a load above this are kept but not extended.
+        const FloatType backwardStopLoad =
+            BidirBackwardFullCheck ? (FloatType)InfFloatType
+                                   : (FloatType)(BidirSplitFraction * instVrpTw->capVeic);
+
+        bidirectionalAlgorithm(2,
+                               (instVrpTw->numClientes + 1),
+                               vetMatResCostTransposed,
+                               vetMatResCostTransposed,
+                               vetVetResBound,
+                               instVrpTw->numClientes,
+                               ngSet,
+                               labelingDataBackward,
+                               numSolBackward,           // scratch
+                               MaxInt,
+                               true,
+                               maxDistBackward,          // scratch
+                               vetRedCostBackward,       // scratch
+                               exact,
+                               typeLabel,
+                               true,
+                               &matDpBackward,
+                               1.0,
+                               vetRoutesBackward.data(), // scratch
+                               sizeRoutesBackward,       // scratch
+                               instVrpTw->capVeic,       // full Q: only used by the matDp pruning
+                               capacityGcdBackward,
+                               &completeBackward,        // scratch
+                               nullptr,
+                               true,
+                               false,                    // keep the forward labels
+                               backwardStopLoad);
+
+        if(PrintIterInfoG)
+            std::printf("backward run: %d routes, best rc %.6f (forward: %d routes)\n",
+                        numSolBackward,
+                        numSolBackward > 0
+                            ? (double)vetRedCostBackward.head(numSolBackward).minCoeff()
+                            : 0.0,
+                        numSol);
+
+        if(BidirBackwardFullCheck)
+        {
+            // Best route of each run (routes are written one after the other, each
+            // as 0 c1 ... ck 0) and whether it visits a customer twice. ng-routes
+            // with a cycle can differ between the two directions, so the runs must
+            // agree only when the better route is elementary.
+            auto best = [](const int *vet, int size, const Eigen::VectorX<FloatType> &rc,
+                           int num, double &bestRc, bool &elementary)
+            {
+                bestRc = 0.0;
+                elementary = true;
+                if(num <= 0)
+                    return;
+
+                int bestK = 0;
+                for(int k = 1; k < num; ++k)
+                    if(rc[k] < rc[bestK])
+                        bestK = k;
+                bestRc = rc[bestK];
+
+                int k = -1, pos = 0;
+                std::vector<int> route;
+                while(pos < size)
+                {
+                    // Route starts at a 0; it ends at the next 0.
+                    int end = pos + 1;
+                    while(end < size && vet[end] != 0)
+                        ++end;
+                    ++k;
+                    if(k == bestK)
+                    {
+                        route.assign(vet + pos + 1, vet + end);
+                        break;
+                    }
+                    pos = end + 1;
+                }
+                std::sort(route.begin(), route.end());
+                elementary = std::adjacent_find(route.begin(), route.end()) == route.end();
+            };
+
+            double fwdRc, bwdRc;
+            bool   fwdElem, bwdElem;
+            best(vetRoutesOut, sizeVetRoutesOut, vetRedCostFT, numSol, fwdRc, fwdElem);
+            best(vetRoutesBackward.data(), sizeRoutesBackward, vetRedCostBackward,
+                 numSolBackward, bwdRc, bwdElem);
+
+            const double tol = 1e-6;
+            // A run is wrong if the other one found a better elementary route.
+            const bool bug = (fwdElem && numSol > 0 && bwdRc > fwdRc + tol) ||
+                             (bwdElem && numSolBackward > 0 && fwdRc > bwdRc + tol);
+            const char *status = bug ? "MISMATCH"
+                               : (std::abs(fwdRc - bwdRc) > tol ? "differ (ng cycle)" : "ok");
+
+            std::printf("BIDIR check: %s; forward %d routes best %.6f%s, backward %d routes best %.6f%s\n",
+                        status, numSol, fwdRc, fwdElem ? "" : " (cycle)",
+                        numSolBackward, bwdRc, bwdElem ? "" : " (cycle)");
+        }
+    }
 
     fflush(stdout);
     std::cout.flush();

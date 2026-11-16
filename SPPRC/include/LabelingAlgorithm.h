@@ -134,7 +134,8 @@ bool bidirectionalAlgorithm(int                        	numRes,
                             bool                       *complete    	= nullptr,
                             ArcFixingData              *fixing      	= nullptr,
                             bool                        heurUseNg   	= true,
-                            bool					    resetLabelPool 	= true);
+                            bool					    resetLabelPool 	= true,
+                            FloatType                   maxExtendLoad   = InfFloatType);
 
 inline __attribute__((always_inline)) bool checkDominanceSubSet(const Label &l0, const Label &l1)
 {

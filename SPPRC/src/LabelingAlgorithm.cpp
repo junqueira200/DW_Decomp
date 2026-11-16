@@ -242,7 +242,8 @@ bool LabelingAlgorithmNS::
                             bool                       *complete,
                             ArcFixingData              *fixing,
                             bool                        heurUseNg,
-                            bool						resetLabelPool)
+                            bool						resetLabelPool,
+                            FloatType                   maxExtendLoad)
 {
     static Vet3D_ResCost vetMatResCostForward(vetMatResCostForwardConst);
 
@@ -446,7 +447,34 @@ bool LabelingAlgorithmNS::
     // while anything changed: ~8 passes per call, ~73% of the labels processed after
     // higher layers had already been extended. E-n101 root: 80.9 -> 61.3 s.)
     bool doContinue = false;   // set on extension; no longer drives the loop
-    for(int j=0; j < lData.vetNumSteps[1]; ++j)
+
+    // Puts a processed label in the closed bucket of its (cust, i, j), sorted by
+    // reduced cost, so it can still dominate labels that reach this bucket later,
+    // and updates the best closed reduced cost of the row (prefix minimum over j).
+    auto closeLabel = [&](Label *label, int cust)
+    {
+        Bucket &closed = lData.vetMatBucketForwardClosed[cust].mat(label->i, label->j);
+        closed.addElement(lowerBoundIdx(label->vetResources[0], &closed), label);
+
+        auto &cBest = lData.vetMatClosedCBest[cust];
+        const FloatType rc = label->vetResources[0];
+        for(int jj = label->j; jj < cBest.cols(); ++jj)
+        {
+            if(cBest(label->i, jj) <= rc)
+                break;
+            cBest(label->i, jj) = rc;
+        }
+    };
+
+    // Bidirectional labeling: labels with a load above maxExtendLoad are kept (open
+    // bucket or closed bucket) but never extended, so the layers above the one that
+    // contains maxExtendLoad are not swept at all.
+    const bool limitedLoad   = (maxExtendLoad < (FloatType)InfFloatType);
+    const int  lastLayer     = limitedLoad ? std::min(lData.getIndex(1, maxExtendLoad),
+                                                      lData.vetNumSteps[1] - 1)
+                                           : lData.vetNumSteps[1] - 1;
+
+    for(int j=0; j <= lastLayer; ++j)
     {
         if(funcStop())
             break;
@@ -521,6 +549,15 @@ bool LabelingAlgorithmNS::
                             continue;
                             //std::cout << "All labels shuld be active!\n";
                             //PRINT_EXIT();
+                        }
+
+                        // Above the stop load (bidirectional labeling): keep the
+                        // label for the merge, do not extend it.
+                        if(limitedLoad && labelPtr->vetResources[1] > maxExtendLoad)
+                        {
+                            if(UseClosedBuckets)
+                                closeLabel(labelPtr, cust);
+                            continue;
                         }
 
                                // bool haveRoute = labelHaveRoute(vetRoutesG, labelPtr);
@@ -911,26 +948,11 @@ bool LabelingAlgorithmNS::
                         }
                         else if(UseClosedBuckets)   // TEMP test: closed buckets off
                         {
-                            // Keep the extended label in the closed bucket of the same
-                            // (cust, i, j), sorted by reduced cost, so it can still
-                            // dominate labels that reach this bucket later.
-                            // Also needed in the heuristic: disabling it there made the
-                            // heuristic ~2x slower on E-n76 (more labels survive).
-                            Bucket &closed =
-                                lData.vetMatBucketForwardClosed[cust].mat(labelPtr->i, labelPtr->j);
-                            closed.addElement(lowerBoundIdx(labelPtr->vetResources[0], &closed),
-                                              labelPtr);
-
-                            // Best closed reduced cost of the row, for load buckets >= j
-                            // (prefix minimum over j: stop once it is already lower).
-                            auto &cBest = lData.vetMatClosedCBest[cust];
-                            const FloatType rc = labelPtr->vetResources[0];
-                            for(int jj = labelPtr->j; jj < cBest.cols(); ++jj)
-                            {
-                                if(cBest(labelPtr->i, jj) <= rc)
-                                    break;
-                                cBest(labelPtr->i, jj) = rc;
-                            }
+                            // Keep the extended label in the closed bucket (see
+                            // closeLabel). Also needed in the heuristic: disabling it
+                            // there made the heuristic ~2x slower on E-n76 (more
+                            // labels survive).
+                            closeLabel(labelPtr, cust);
                         }
 
                         numIt += 1;

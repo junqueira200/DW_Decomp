@@ -97,6 +97,17 @@ constexpr HeurStage HeurStages[] = {
 // 0 = never stop early (always explore everything, as before).
 constexpr int ExactStopMinCols = 0;
 
+// Exact pricing: also run the labeling on the transposed graph (bidirectional
+// labeling, work in progress: no merge yet, its routes are not returned).
+constexpr bool BidirExactBackwardRun = true;
+// Fraction of the capacity where the backward run stops extending labels (labels
+// above it are kept, not extended). The forward run will stop there too once the
+// merge exists; until then it must explore up to Q (its routes go to Coluna).
+constexpr double BidirSplitFraction = 0.5;
+// Debug: run the backward labeling up to Q (no split) and compare its best route
+// with the forward one on every exact call (prints one "BIDIR check" line per call).
+constexpr bool BidirBackwardFullCheck = false;
+
 constexpr double MaxFloatType = std::numeric_limits<FloatType>::max();
 constexpr double MinFloatType = std::numeric_limits<FloatType>::min();
 constexpr double InfFloatType = std::numeric_limits<FloatType>::infinity();

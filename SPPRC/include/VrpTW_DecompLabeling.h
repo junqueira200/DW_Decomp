@@ -113,6 +113,17 @@ class VrpLabelingSubProb// : public DW_DecompNS::SubProb
     /// Completion bound (shared by the exact pricing and the arc fixing).
     EigenMatrixRowD matDpColuna;
 
+    /// Bidirectional labeling: the backward run is a forward labeling on this graph.
+    /// Arc (i, j) here is arc (j, i) of vetMatResCostForward; the source 0 and the
+    /// destination keep their roles: (0, j) = (j, depot) and (i, dest) = (depot, i).
+    /// Resource 1 = demand of the head (j), as in vetMatResCostForward, so a label at v
+    /// has the load of the route suffix that starts at v (d_v included).
+    /// (vetMatResCostBackward is not used for this: the old backward labels read it
+    /// with the opposite convention.)
+    LabelingAlgorithmNS::Vet3D_ResCost          vetMatResCostTransposed;
+    /// Completion bound of the backward run (computed on vetMatResCostTransposed).
+    EigenMatrixRowD matDpBackward;
+
     /// Copies the reduced costs from Coluna (n x n, row-major; (i,0) = arc to the destination).
     void loadReducedCostsColuna(const double *vetReducedCostInput);
 
