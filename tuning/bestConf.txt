@@ -1,0 +1,1 @@
+--compactness 0.8 --axleWeights 0.37 --support 0.12 --lifo 0.53 --itemsNotPacked 0.62 --loadBalancing 0.92 --gaDiscard 0.15 --gaElite 0.18 --gaIslands 4 --gaMigrInterval 72 --gaMigtRate 0.02 --gaInherit 0.72

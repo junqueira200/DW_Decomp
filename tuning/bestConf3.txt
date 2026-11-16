@@ -1,0 +1,6 @@
+# Best configurations as commandlines (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+1  --compactness 0.01 --axleWeights 0.44 --support 0.01 --lifo 7.18 --itemsNotPacked 100.0 --loadBalancing 1.66 --gaDiscard 0.21 --gaElite 0.27 --gaIslands 4 --gaMigrInterval 33 --gaMigtRate 0.01 --gaInherit 0.73 --gaSoftGroup 1.73
+32 --compactness 0.23 --axleWeights 3.94 --support 0.01 --lifo 1.92 --itemsNotPacked 100.0 --loadBalancing 2.01 --gaDiscard 0.23 --gaElite 0.22 --gaIslands 2 --gaMigrInterval 38 --gaMigtRate 0.02 --gaInherit 0.64 --gaSoftGroup 1.21
+3  --compactness 2.05 --axleWeights 2.47 --support 0.06 --lifo 1.28 --itemsNotPacked 100.0 --loadBalancing 0.3 --gaDiscard 0.13 --gaElite 0.21 --gaIslands 5 --gaMigrInterval 90 --gaMigtRate 0.04 --gaInherit 0.67 --gaSoftGroup 1.48
+18 --compactness 5.98 --axleWeights 0.24 --support 0.01 --lifo 5.75 --itemsNotPacked 100.0 --loadBalancing 0.19 --gaDiscard 0.22 --gaElite 0.29 --gaIslands 2 --gaMigrInterval 64 --gaMigtRate 0.04 --gaInherit 0.66 --gaSoftGroup 1.77
+45 --compactness 5.76 --axleWeights 3.13 --support 0.04 --lifo 0.76 --itemsNotPacked 100.0 --loadBalancing 0.1 --gaDiscard 0.29 --gaElite 0.25 --gaIslands 1 --gaSoftGroup 1.4

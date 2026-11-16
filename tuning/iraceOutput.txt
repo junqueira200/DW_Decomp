@@ -1,0 +1,260 @@
+#------------------------------------------------------------------------------
+# irace: An implementation in R of (Elitist) Iterated Racing
+# Version: 4.5.1.d5507ea
+# Copyright (C) 2010-2025
+# Manuel Lopez-Ibanez     <manuel.lopez-ibanez@manchester.ac.uk>
+# Jeremie Dubois-Lacoste
+# Leslie Perez Caceres    <leslie.perez.caceres@ulb.ac.be>
+#
+# This is free software, and you are welcome to redistribute it under certain
+# conditions.  See the GNU General Public License for details. There is NO
+# WARRANTY; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+#
+# irace builds upon previous code from the race package:
+#     race: Racing methods for the selection of the best
+#     Copyright (C) 2003 Mauro Birattari
+#------------------------------------------------------------------------------
+# installed at: /Library/Frameworks/R.framework/Versions/4.6/Resources/library/irace
+# called with: --parallel 4
+Warning: == irace == A default scenario file '/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/tuning/scenario.txt' has been found and will be read.
+# 2026-11-11 22:35:07 CET: Reading parameter file '/Users/igor/Documents/[08] Projetos/[16]_DW_Decomp/tuning/parameters.txt'.
+# 2026-11-11 22:35:07 CET: Initialization
+# Elitist race
+# Elitist new instances: 1
+# Elitist limit: 2
+# nbIterations: 5
+# minNbSurvival: 5
+# nbParameters: 12
+# seed: 1089526931
+# confidence level: 0.95
+# budget: 500
+# mu: 5
+# deterministic: FALSE
+
+# 2026-11-11 22:35:07 CET: Iteration 1 of 5
+# experimentsUsed: 0
+# remainingBudget: 500
+# currentBudget: 100
+# nbConfigurations: 16
+# Markers:
+     x No test is performed.
+     c Configurations are discarded only due to capping.
+     - The test is performed and some configurations are discarded.
+     = The test is performed but no configuration is discarded.
+     ! The test is performed and configurations could be discarded but elite configurations are preserved.
+     . Alive configurations were already evaluated on this instance and nothing is discarded.
+     : All alive configurations are elite, but some need to be evaluated on this instance.
+
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+| |   Instance|      Alive|       Best|       Mean best| Exp so far|  W time|  rho|KenW|  Qvar|
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+|x|          1|         16|          7|     5.013268000|         16|00:11:52|   NA|  NA|    NA|
+|x|          2|         16|          6|     4.554664500|         32|00:15:40|-0.04|0.48|0.8309|
+|x|          3|         16|          6|     5.709556000|         48|00:22:58|+0.11|0.41|0.7445|
+|x|          4|         16|          6|     5.284461750|         64|00:04:52|+0.10|0.33|0.7047|
+|=|          5|         16|          6|     4.829685800|         80|00:05:28|+0.15|0.32|0.7398|
+|-|          6|          7|          6|     4.860962333|         96|00:11:18|+0.12|0.26|0.9079|
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+Best configuration for the instances in this race: 6
+Best-so-far configuration:           7    mean value:      4.859331333
+Description of the best-so-far configuration:
+  .ID. compactness axleWeights support lifo itemsNotPacked loadBalancing gaDiscard gaElite gaIslands gaMigrInterval gaMigtRate gaInherit gaSoftGroup .PARENT.
+7    7        0.46        1.72     0.1 0.16          100.0          0.03      0.17    0.17         8             70       0.02      0.61         1.7       NA
+
+# 2026-11-11 23:47:19 CET: Elite configurations (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+   compactness axleWeights support lifo itemsNotPacked loadBalancing gaDiscard gaElite gaIslands gaMigrInterval gaMigtRate gaInherit gaSoftGroup
+7         0.46        1.72    0.10 0.16          100.0          0.03      0.17    0.17         8             70       0.02      0.61        1.70
+6         2.58        0.31    0.58 0.92          100.0          0.15      0.25    0.24         5             89       0.01      0.67        1.95
+2         0.03        0.73    1.37 2.19          100.0          0.35      0.14    0.14         8             80       0.02      0.64        1.07
+10        0.71        0.08    2.12 0.04          100.0          0.53      0.19    0.22         5             84       0.05      0.62        1.51
+8         0.01        0.05    3.26 5.18          100.0          0.82      0.03    0.30         4             32       0.04      0.73        1.20
+# 2026-11-11 23:47:19 CET: Iteration 2 of 5
+# experimentsUsed: 96
+# remainingBudget: 404
+# currentBudget: 101
+# nbConfigurations: 18
+# Markers:
+     x No test is performed.
+     c Configurations are discarded only due to capping.
+     - The test is performed and some configurations are discarded.
+     = The test is performed but no configuration is discarded.
+     ! The test is performed and configurations could be discarded but elite configurations are preserved.
+     . Alive configurations were already evaluated on this instance and nothing is discarded.
+     : All alive configurations are elite, but some need to be evaluated on this instance.
+
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+| |   Instance|      Alive|       Best|       Mean best| Exp so far|  W time|  rho|KenW|  Qvar|
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+|x|          7|         18|          8|     4.060976000|         18|00:18:09|   NA|  NA|    NA|
+|x|          2|         18|          8|     4.061225500|         31|00:12:44|+0.37|0.68|0.8636|
+|x|          4|         18|          8|     4.043876667|         44|00:04:37|+0.10|0.40|0.8558|
+|x|          6|         18|         29|     4.287311250|         57|00:08:55|+0.08|0.31|0.8621|
+|-|          1|         12|         29|     4.432290800|         70|00:08:42|-0.04|0.17|0.9396|
+|=|          5|         12|         23|     4.202365500|         77|00:01:59|+0.05|0.21|0.9357|
+|=|          3|         12|         23|     4.746144714|         84|00:10:29|+0.12|0.25|0.9430|
+|-|          8|          6|         23|     5.153981750|         96|00:17:15|+0.09|0.21|0.8499|
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+Best-so-far configuration:          23    mean value:      5.153981750
+Description of the best-so-far configuration:
+   .ID. compactness axleWeights support lifo itemsNotPacked loadBalancing gaDiscard gaElite gaIslands gaMigrInterval gaMigtRate gaInherit gaSoftGroup .PARENT.
+23   23        0.22        2.93     1.8 0.49          100.0          3.21      0.22    0.24         2             43       0.02      0.62        1.86        6
+
+# 2026-11-12 01:10:14 CET: Elite configurations (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+   compactness axleWeights support lifo itemsNotPacked loadBalancing gaDiscard gaElite gaIslands gaMigrInterval gaMigtRate gaInherit gaSoftGroup
+23        0.22        2.93    1.80 0.49          100.0          3.21      0.22    0.24         2             43       0.02      0.62        1.86
+29        0.02        0.64    1.72 0.58          100.0          0.47      0.10    0.28         4             80       0.02      0.69        1.75
+26        0.10        0.06    2.36 0.03          100.0          0.05      0.16    0.27         5             81       0.04      0.63        1.28
+7         0.46        1.72    0.10 0.16          100.0          0.03      0.17    0.17         8             70       0.02      0.61        1.70
+8         0.01        0.05    3.26 5.18          100.0          0.82      0.03    0.30         4             32       0.04      0.73        1.20
+# 2026-11-12 01:10:14 CET: Iteration 3 of 5
+# experimentsUsed: 192
+# remainingBudget: 308
+# currentBudget: 102
+# nbConfigurations: 15
+# Markers:
+     x No test is performed.
+     c Configurations are discarded only due to capping.
+     - The test is performed and some configurations are discarded.
+     = The test is performed but no configuration is discarded.
+     ! The test is performed and configurations could be discarded but elite configurations are preserved.
+     . Alive configurations were already evaluated on this instance and nothing is discarded.
+     : All alive configurations are elite, but some need to be evaluated on this instance.
+
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+| |   Instance|      Alive|       Best|       Mean best| Exp so far|  W time|  rho|KenW|  Qvar|
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+|x|          9|         15|         39|     7.031827000|         15|00:20:29|   NA|  NA|    NA|
+|x|          1|         15|         23|     6.510257000|         25|00:06:40|+0.52|0.76|1.0730|
+|x|          2|         15|         29|     5.694324000|         35|00:10:04|+0.18|0.45|0.9992|
+|x|          7|         15|         29|     5.286626250|         45|00:10:02|+0.28|0.46|0.8513|
+|-|          4|         11|         31|     4.833247400|         55|00:03:02|+0.02|0.21|0.9259|
+|=|          5|         11|         29|     4.694402667|         61|00:02:25|+0.08|0.23|0.9103|
+|=|          8|         11|         29|     5.167893857|         67|00:09:03|+0.10|0.23|0.9377|
+|-|          6|          8|         23|     5.153996250|         73|00:04:39|-0.02|0.11|0.9124|
+|=|          3|          8|         23|     5.471198889|         76|00:04:50|+0.00|0.11|0.9397|
+|=|         10|          8|         23|     5.335455900|         84|00:08:18|+0.03|0.13|0.9047|
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+Best-so-far configuration:          23    mean value:      5.335455900
+Description of the best-so-far configuration:
+   .ID. compactness axleWeights support lifo itemsNotPacked loadBalancing gaDiscard gaElite gaIslands gaMigrInterval gaMigtRate gaInherit gaSoftGroup .PARENT.
+23   23        0.22        2.93     1.8 0.49          100.0          3.21      0.22    0.24         2             43       0.02      0.62        1.86        6
+
+# 2026-11-12 02:29:52 CET: Elite configurations (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+   compactness axleWeights support lifo itemsNotPacked loadBalancing gaDiscard gaElite gaIslands gaMigrInterval gaMigtRate gaInherit gaSoftGroup
+23        0.22        2.93    1.80 0.49          100.0          3.21      0.22    0.24         2             43       0.02      0.62        1.86
+29        0.02        0.64    1.72 0.58          100.0          0.47      0.10    0.28         4             80       0.02      0.69        1.75
+26        0.10        0.06    2.36 0.03          100.0          0.05      0.16    0.27         5             81       0.04      0.63        1.28
+31        0.08        1.06    3.87 0.03          100.0          0.50      0.12    0.29         5             97       0.04      0.62        1.15
+39        1.02        0.20    1.98 0.61          100.0          0.63      0.27    0.21         1             NA         NA        NA        1.59
+# 2026-11-12 02:29:52 CET: Iteration 4 of 5
+# experimentsUsed: 276
+# remainingBudget: 224
+# currentBudget: 112
+# nbConfigurations: 14
+# Markers:
+     x No test is performed.
+     c Configurations are discarded only due to capping.
+     - The test is performed and some configurations are discarded.
+     = The test is performed but no configuration is discarded.
+     ! The test is performed and configurations could be discarded but elite configurations are preserved.
+     . Alive configurations were already evaluated on this instance and nothing is discarded.
+     : All alive configurations are elite, but some need to be evaluated on this instance.
+
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+| |   Instance|      Alive|       Best|       Mean best| Exp so far|  W time|  rho|KenW|  Qvar|
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+|x|         11|         14|         39|     3.010582000|         14|00:04:28|   NA|  NA|    NA|
+|x|          6|         14|         45|     4.012381000|         23|00:06:23|+0.01|0.51|0.9912|
+|x|          8|         14|         45|     5.344534333|         32|00:13:52|+0.23|0.49|0.7721|
+|x|         10|         14|         45|     5.024293500|         41|00:09:06|+0.13|0.34|0.8002|
+|-|          1|         11|         45|     5.022270800|         50|00:06:29|-0.04|0.17|0.8556|
+|=|          3|         11|         45|     5.520032500|         56|00:09:57|+0.05|0.21|0.8689|
+|=|          4|         11|         45|     5.161539571|         62|00:01:58|+0.05|0.19|0.8637|
+|=|          7|         11|         45|     5.023775375|         68|00:06:38|+0.03|0.15|0.8742|
+|=|          5|         11|         45|     4.800087222|         74|00:01:46|+0.07|0.17|0.8593|
+|=|          2|         11|         45|     4.726438700|         80|00:06:33|+0.09|0.18|0.8595|
+|-|          9|          5|         45|     5.024838909|         86|00:09:36|-0.01|0.08|0.7365|
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+Best-so-far configuration:          45    mean value:      5.024838909
+Description of the best-so-far configuration:
+   .ID. compactness axleWeights support lifo itemsNotPacked loadBalancing gaDiscard gaElite gaIslands gaMigrInterval gaMigtRate gaInherit gaSoftGroup .PARENT.
+45   45        0.06        1.19     7.6  2.4          100.0           0.6       0.3    0.26         4             38       0.02      0.69        1.52       23
+
+# 2026-11-12 03:46:43 CET: Elite configurations (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+   compactness axleWeights support lifo itemsNotPacked loadBalancing gaDiscard gaElite gaIslands gaMigrInterval gaMigtRate gaInherit gaSoftGroup
+45        0.06        1.19    7.60 2.40          100.0          0.60      0.30    0.26         4             38       0.02      0.69        1.52
+29        0.02        0.64    1.72 0.58          100.0          0.47      0.10    0.28         4             80       0.02      0.69        1.75
+23        0.22        2.93    1.80 0.49          100.0          3.21      0.22    0.24         2             43       0.02      0.62        1.86
+46        0.10        3.53    1.89 0.25          100.0          2.72      0.15    0.24         2             36       0.03      0.66        1.87
+44        0.06        0.07    0.07 0.60          100.0          0.13      0.19    0.26         4             85       0.02      0.62        1.37
+# 2026-11-12 03:46:43 CET: Iteration 5 of 5
+# experimentsUsed: 362
+# remainingBudget: 138
+# currentBudget: 138
+# nbConfigurations: 16
+# Markers:
+     x No test is performed.
+     c Configurations are discarded only due to capping.
+     - The test is performed and some configurations are discarded.
+     = The test is performed but no configuration is discarded.
+     ! The test is performed and configurations could be discarded but elite configurations are preserved.
+     . Alive configurations were already evaluated on this instance and nothing is discarded.
+     : All alive configurations are elite, but some need to be evaluated on this instance.
+
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+| |   Instance|      Alive|       Best|       Mean best| Exp so far|  W time|  rho|KenW|  Qvar|
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+|x|         12|         16|         57|     5.009326000|         16|00:09:26|   NA|  NA|    NA|
+|x|         11|         16|         57|     4.009954000|         27|00:03:37|+0.09|0.54|0.8881|
+|x|          9|         16|         45|     5.343412333|         38|00:15:23|-0.09|0.27|1.0058|
+|x|         10|         16|         45|     5.023452000|         49|00:10:07|-0.03|0.23|0.9913|
+|=|          3|         16|         45|     5.620529800|         60|00:15:26|-0.09|0.13|0.9911|
+|=|          7|         16|         45|     5.360345833|         71|00:10:05|-0.04|0.13|1.0188|
+|=|          8|         16|         45|     5.738702286|         82|00:15:40|-0.01|0.13|0.9932|
+|=|          2|         16|         45|     5.529314750|         93|00:09:39|+0.03|0.15|0.9792|
+|=|          5|         16|         45|     5.249455556|        104|00:03:11|+0.05|0.16|0.9611|
+|=|          6|         16|         45|     5.225928000|        115|00:06:20|+0.03|0.13|0.9456|
+|=|          4|         16|         45|     5.024532909|        126|00:03:16|+0.02|0.11|0.9383|
+|=|          1|         16|         45|     5.023670167|        137|00:06:47|+0.02|0.10|0.9322|
++-+-----------+-----------+-----------+----------------+-----------+--------+-----+----+------+
+Best-so-far configuration:          45    mean value:      5.023670167
+Description of the best-so-far configuration:
+   .ID. compactness axleWeights support lifo itemsNotPacked loadBalancing gaDiscard gaElite gaIslands gaMigrInterval gaMigtRate gaInherit gaSoftGroup .PARENT.
+45   45        0.06        1.19     7.6  2.4          100.0           0.6       0.3    0.26         4             38       0.02      0.69        1.52       23
+
+# 2026-11-12 05:35:46 CET: Elite configurations (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+   compactness axleWeights support lifo itemsNotPacked loadBalancing gaDiscard gaElite gaIslands gaMigrInterval gaMigtRate gaInherit gaSoftGroup
+45        0.06        1.19    7.60 2.40          100.0          0.60      0.30    0.26         4             38       0.02      0.69        1.52
+29        0.02        0.64    1.72 0.58          100.0          0.47      0.10    0.28         4             80       0.02      0.69        1.75
+52        0.03        0.73    3.89 1.37          100.0          0.03      0.24    0.20         4             36       0.02      0.69        1.35
+57        0.33        1.57    1.80 1.51          100.0          2.93      0.17    0.27         2             73       0.03      0.62        1.94
+54        0.11        4.60    0.19 1.77          100.0          4.68      0.12    0.28         2             32       0.02      0.62        1.58
+# 2026-11-12 05:35:46 CET: Stopped because there is not enough budget left to race more than the minimum (5).
+# You may either increase the budget or set 'minNbSurvival' to a lower value.
+# Iteration: 6
+# nbIterations: 6
+# experimentsUsed: 499
+# timeUsed: 0
+# remainingBudget: 1
+# currentBudget: 1
+# number of elites: 5
+# nbConfigurations: 5
+# Total CPU user time: 90376.39, CPU sys time: 67.716, Wall-clock time: 25238.61
+# Best configurations (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+   compactness axleWeights support lifo itemsNotPacked loadBalancing gaDiscard gaElite gaIslands gaMigrInterval gaMigtRate gaInherit gaSoftGroup
+45        0.06        1.19    7.60 2.40          100.0          0.60      0.30    0.26         4             38       0.02      0.69        1.52
+29        0.02        0.64    1.72 0.58          100.0          0.47      0.10    0.28         4             80       0.02      0.69        1.75
+52        0.03        0.73    3.89 1.37          100.0          0.03      0.24    0.20         4             36       0.02      0.69        1.35
+57        0.33        1.57    1.80 1.51          100.0          2.93      0.17    0.27         2             73       0.03      0.62        1.94
+54        0.11        4.60    0.19 1.77          100.0          4.68      0.12    0.28         2             32       0.02      0.62        1.58
+# Best configurations as commandlines (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+45 --compactness 0.06 --axleWeights 1.19 --support 7.6 --lifo 2.4 --itemsNotPacked 100.0 --loadBalancing 0.6 --gaDiscard 0.3 --gaElite 0.26 --gaIslands 4 --gaMigrInterval 38 --gaMigtRate 0.02 --gaInherit 0.69 --gaSoftGroup 1.52
+29 --compactness 0.02 --axleWeights 0.64 --support 1.72 --lifo 0.58 --itemsNotPacked 100.0 --loadBalancing 0.47 --gaDiscard 0.1 --gaElite 0.28 --gaIslands 4 --gaMigrInterval 80 --gaMigtRate 0.02 --gaInherit 0.69 --gaSoftGroup 1.75
+52 --compactness 0.03 --axleWeights 0.73 --support 3.89 --lifo 1.37 --itemsNotPacked 100.0 --loadBalancing 0.03 --gaDiscard 0.24 --gaElite 0.2 --gaIslands 4 --gaMigrInterval 36 --gaMigtRate 0.02 --gaInherit 0.69 --gaSoftGroup 1.35
+57 --compactness 0.33 --axleWeights 1.57 --support 1.8 --lifo 1.51 --itemsNotPacked 100.0 --loadBalancing 2.93 --gaDiscard 0.17 --gaElite 0.27 --gaIslands 2 --gaMigrInterval 73 --gaMigtRate 0.03 --gaInherit 0.62 --gaSoftGroup 1.94
+54 --compactness 0.11 --axleWeights 4.6 --support 0.19 --lifo 1.77 --itemsNotPacked 100.0 --loadBalancing 4.68 --gaDiscard 0.12 --gaElite 0.28 --gaIslands 2 --gaMigrInterval 32 --gaMigtRate 0.02 --gaInherit 0.62 --gaSoftGroup 1.58
+
+
+# Testing of elite configurations: 1
+# Testing iteration configurations: FALSE
+# 2026-11-12 05:35:46 CET: No test instances, skip testing

@@ -1,0 +1,13 @@
+# 2026-11-11 04:24:39 CET: Elite configurations (first number is the configuration ID; listed from best to worst according to the sum of ranks):
+  compactness axleWeights support lifo itemsNotPacked loadBalancing gaDiscard gaElite gaIslands gaMigrInterval gaMigtRate gaInherit
+1        0.02        0.23    0.57 0.02           1.31          0.02      0.12    0.20         1             NA         NA        NA
+2        0.55        7.42    0.02 0.70           0.04          0.64      0.26    0.07         5             83       0.01      0.78
+3        3.09        0.04    3.23 0.12           0.23          3.61      0.05    0.13         8             64       0.02      0.85
+4        0.10        1.32    0.10 3.91           7.35          0.11      0.19    0.26         4             26       0.04      0.72
+    5        0.04        3.13    7.66 0.05           0.55          0.27      0.30    0.10         4             73       0.02      0.63
+
+--compactness 0.02 --axleWeights 0.23 --support 0.57 --lifo 0.02 --itemsNotPacked 1.31 --loadBalancing 0.02 --gaDiscard 0.12 --gaElite 0.2 --gaIslands 1
+2 --compactness 0.55 --axleWeights 7.42 --support 0.02 --lifo 0.7 --itemsNotPacked 0.04 --loadBalancing 0.64 --gaDiscard 0.26 --gaElite 0.07 --gaIslands 5 --gaMigrInterval 83 --gaMigtRate 0.01 --gaInherit 0.78
+3 --compactness 3.09 --axleWeights 0.04 --support 3.23 --lifo 0.12 --itemsNotPacked 0.23 --loadBalancing 3.61 --gaDiscard 0.05 --gaElite 0.13 --gaIslands 8 --gaMigrInterval 64 --gaMigtRate 0.02 --gaInherit 0.85
+4 --compactness 0.1 --axleWeights 1.32 --support 0.1 --lifo 3.91 --itemsNotPacked 7.35 --loadBalancing 0.11 --gaDiscard 0.19 --gaElite 0.26 --gaIslands 4 --gaMigrInterval 26 --gaMigtRate 0.04 --gaInherit 0.72
+5 --compactness 0.04 --axleWeights 3.13 --support 7.66 --lifo 0.05 --itemsNotPacked 0.55 --loadBalancing 0.27 --gaDiscard 0.3 --gaElite 0.1 --gaIslands 4 --gaMigrInterval 73 --gaMigtRate 0.02 --gaInherit 0.63
