@@ -53,7 +53,8 @@ class VrpLabelingSubProb// : public DW_DecompNS::SubProb
     InstanceVRPTW_NS::InstanceVRPTW *instVrpTw = nullptr; // DON'T DELETE!
     // Forward
     Eigen::Vector<LabelingAlgorithmNS::Step, 2> vetStepSize;
-    LabelingAlgorithmNS::LabelingData           labelingData;
+    LabelingAlgorithmNS::LabelingData           labelingDataForward;
+    LabelingAlgorithmNS::LabelingData           labelingDataBackward;
     LabelingAlgorithmNS::Vet3D_ResCost          vetMatResCostForward;
     LabelingAlgorithmNS::Vet3D_ResCost          vetMatResCostBackward;
     /// Same as vetMatResCostForward, but each customer keeps only its
@@ -123,6 +124,8 @@ class VrpLabelingSubProb// : public DW_DecompNS::SubProb
     bool checkEnumeratedRoutesFinal(Eigen::RowVectorXd &vetRowPi);
     //bool checkEnumeratedRoutesMid(Eigen::RowVectorXd &vetRowPi, Eigen::MatrixXd &matColX, int &numSol);
     //void convertRouteIntoLabel(const TestNS::Route &route, LabelingAlgorithmNS::Label *label);
+
+    void updateVetMatResCostBackward();
 
 }; // END MySubProb
 

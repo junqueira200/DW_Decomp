@@ -241,7 +241,8 @@ bool LabelingAlgorithmNS::
                             int                         capacityGcd,
                             bool                       *complete,
                             ArcFixingData              *fixing,
-                            bool                        heurUseNg)
+                            bool                        heurUseNg,
+                            bool						resetLabelPool)
 {
     static Vet3D_ResCost vetMatResCostForward(vetMatResCostForwardConst);
 
@@ -293,7 +294,7 @@ bool LabelingAlgorithmNS::
         for(LabelPool& pool:vetLabelPoolG)
             pool.startPool(2, 100);
     }
-    else
+    else if(resetLabelPool)
     {
         for(LabelPool& pool:vetLabelPoolG)
             pool.resetPool(false);
@@ -643,7 +644,7 @@ bool LabelingAlgorithmNS::
                                         // Arc fixing: lower bound of a route through (cust, newCust)
                                         if(fixing)
                                         {
-                                            FloatType &arcMin = fixing->matArcMin(labelPtr->cust, newCust);
+                                            double    &arcMin = fixing->matArcMin(labelPtr->cust, newCust);
                                             if(value < arcMin)
                                                 arcMin = value;
                                         }

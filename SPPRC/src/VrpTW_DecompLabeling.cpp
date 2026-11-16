@@ -51,9 +51,14 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
     vetStepSize[1].start = 0;
     vetStepSize[1].end = (FloatType)instVrpTw->capVeic+1;
 
-    labelingData = LabelingAlgorithmNS::LabelingData(
+    labelingDataForward = LabelingAlgorithmNS::LabelingData(
         vetStepSize, 2, instVrpTw->numClientes + 1, vetMaxResouces);
-    labelingData.matDist = instVrpTw->matDist;
+    labelingDataForward.matDist = instVrpTw->matDist;
+
+    labelingDataBackward = LabelingAlgorithmNS::LabelingData(
+        vetStepSize, 2, instVrpTw->numClientes + 1, vetMaxResouces);
+    labelingDataBackward.matDist = instVrpTw->matDist;
+
     vetMatResCostForward = Vet3D_ResCost(instVrpTw->numClientes + 1, instVrpTw->numClientes + 1, 2);
     vetMatResCostForward.setVal(0.0);
 
@@ -62,11 +67,11 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
     vetMatResCostBackward.setVal(0.0);
 
     double val = vetStepSize[0].start;
-    std::printf("Resorce 0: %d\n", labelingData.vetNumSteps(0));
-    std::printf("\nResorce 1: %d\n", labelingData.vetNumSteps(0));
+    std::printf("Resorce 0: %d\n", labelingDataForward.vetNumSteps(0));
+    std::printf("\nResorce 1: %d\n", labelingDataForward.vetNumSteps(0));
     std::printf("start: %f\n", vetStepSize[0].start);
 
-    for(int i=0; i < labelingData.vetNumSteps(0); ++i)
+    for(int i=0; i < labelingDataForward.vetNumSteps(0); ++i)
     {
         std::cout<<"["<<val<<";"<<val+vetStepSize[0].stepSize<<") ";
         val += vetStepSize[0].stepSize;
@@ -74,11 +79,11 @@ VrpTW_DecompLabelingNS::VrpLabelingSubProb::VrpLabelingSubProb(
 
     std::cout<<"\n\n";
 
-    std::printf("\nResorce 1: %d\n", labelingData.vetNumSteps(1));
+    std::printf("\nResorce 1: %d\n", labelingDataForward.vetNumSteps(1));
     std::printf("start: %f\n", vetStepSize[1].start);
 
     val = vetStepSize[1].start;
-    for(int i=0; i < labelingData.vetNumSteps(1); ++i)
+    for(int i=0; i < labelingDataForward.vetNumSteps(1); ++i)
     {
         std::cout<<"["<<val<<";"<<val+vetStepSize[1].stepSize<<") ";
         val += vetStepSize[1].stepSize;
@@ -197,6 +202,20 @@ bool VrpTW_DecompLabelingNS::VrpLabelingSubProb::checkEnumeratedRoutesFinal(
     }
 
     return ret;
+}
+
+void VrpTW_DecompLabelingNS::VrpLabelingSubProb::updateVetMatResCostBackward()
+{
+    for(int i = 0; i < instVrpTw->numClientes + 1; ++i)
+    {
+        for(int j = 0; j < (instVrpTw->numClientes + 1); ++j)
+        {
+            if(i == j)
+                continue;
+
+            vetMatResCostBackward.get(i, j, 0) = vetMatResCostForward(j, i, 0);
+        }
+    }
 }
 
 /*
@@ -826,7 +845,7 @@ double VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                            vetVetResBound,
                            n,
                            ngSet,
-                           labelingData,
+                           labelingDataForward,
                            numSol,
                            MaxInt,                  // no label limit per bucket
                            true,
@@ -951,7 +970,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                                    vetVetResBound,
                                    instVrpTw->numClientes,
                                    ngSet,
-                                   labelingData,
+                                   labelingDataForward,
                                    //matColX,
                                    numSol,
                                    //(FloatType)constPiValue,
@@ -996,7 +1015,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                            vetVetResBound,
                            instVrpTw->numClientes,
                            ngSet,
-                           labelingData,
+                           labelingDataForward,
                            //matColX,
                            numSol,
                            //(FloatType)constPiValue,
@@ -1011,9 +1030,43 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
                            1.0,
                            vetRoutesOut,
                            sizeVetRoutesOut,
-                           instVrpTw->capVeic,
+                           instVrpTw->capVeic/2,
                            capacityGcd,
-                           &complete);
+                           &complete,
+                           nullptr,
+                           true,
+                           true);
+
+    updateVetMatResCostBackward();
+
+    bidirectionalAlgorithm(2,
+                           (instVrpTw->numClientes + 1),
+                           vetMatResCostBackward,
+                           vetMatResCostBackward,
+                           vetVetResBound,
+                           instVrpTw->numClientes,
+                           ngSet,
+                           labelingDataBackward,
+                           //matColX,
+                           numSol,
+                           //(FloatType)constPiValue,
+                           MaxInt,
+                           true,
+                           maxDist,
+                           vetRedCostFT,
+                           exact,
+                           typeLabel,
+                           true,
+                           ptrMatDp,
+                           1.0,
+                           vetRoutesOut,
+                           sizeVetRoutesOut,
+                           instVrpTw->capVeic/2.0,
+                           capacityGcd,
+                           &complete,
+                           nullptr,
+                           true,
+                           false);
 
     fflush(stdout);
     std::cout.flush();

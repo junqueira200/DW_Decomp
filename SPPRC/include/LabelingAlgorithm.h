@@ -131,9 +131,10 @@ bool bidirectionalAlgorithm(int                        	numRes,
                             int					   		&sizeVetSol,
                             int							capacity_Q,
                             int                         capacityGcd = 1,
-                            bool                       *complete    = nullptr,
-                            ArcFixingData              *fixing      = nullptr,
-                            bool                        heurUseNg   = true);
+                            bool                       *complete    	= nullptr,
+                            ArcFixingData              *fixing      	= nullptr,
+                            bool                        heurUseNg   	= true,
+                            bool					    resetLabelPool 	= true);
 
 inline __attribute__((always_inline)) bool checkDominanceSubSet(const Label &l0, const Label &l1)
 {
