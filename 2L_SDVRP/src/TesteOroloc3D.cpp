@@ -1,10 +1,11 @@
+#include "OPP_CP_3D.h" // must precede c_api.h (global using ParseInputNS clashes with or-tools File)
 #include "TesteOroloc3D.h"
 #include "AxleWeights.h"
 #include "ConstrutivoBin.h"
 #include "ConstrutivoBin2.h"
 #include "DualFeasibleFunctions.h"
 #include "GA.h"
-#include "IBM_CpOptimizer.h"
+//#include "IBM_CpOptimizer.h"
 #include "InputOutput.h"
 //#include "MILP.h"
 #include "RandomKey.h"
@@ -24,11 +25,12 @@ using namespace VehicleRouting::Algorithms;
 using namespace SolucaoNS;
 using namespace AxleWeightsNS;
 using namespace ConstrutivoBinNS;
-using namespace IBM_CpOptimizerNS;
+//using namespace IBM_CpOptimizerNS;
 using namespace DualFeasibleFunctionsNS;
 using namespace ConstrutivoBin2NS;
 using namespace RandomKeyNS;
 using namespace GA_NS;
+//using namespace ContainerLoadingCP;
 
 constexpr bool RunIrace = true;
 

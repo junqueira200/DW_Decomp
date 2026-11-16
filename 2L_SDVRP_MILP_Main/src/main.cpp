@@ -10,7 +10,7 @@
 #include "Construtivo.h"
 #include "ConstrutivoBin.h"
 #include "DualFeasibleFunctions.h"
-#include "IBM_CpOptimizer.h"
+//#include "IBM_CpOptimizer.h"
 #include "Ig.h"
 #include "InputOutput.h"
 #include "Instancia.h"
