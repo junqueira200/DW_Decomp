@@ -69,7 +69,7 @@ class Input
     bool		useTopItem					= false;
     // 0 valid only in the beginning; 1 valid at all stops, without change positions;
     // 2 valid at all stops with change in positions
-    int			modelType					= 1;
+    int			modelType					= 0;
 
     int    		gaPopulationSize 			= 800; // 1000;
     int    		gaNumberOfGenerations 		= 400; // 400
