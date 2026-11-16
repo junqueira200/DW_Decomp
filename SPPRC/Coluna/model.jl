@@ -36,7 +36,7 @@ end
 # is checked here instead, in the tree's stopping test, which runs before each node is
 # taken: the search stops cleanly between nodes (it may exceed the limit by one node,
 # including its strong branching). The global dual bound is still valid.
-const TimeLimitSec = 600.0
+const TimeLimitSec = 4.0*60.0
 const tStartOptimize = Ref(0.0)
 
 # Redefines Coluna's stopping test of the branch-and-bound
@@ -125,11 +125,13 @@ include(joinpath(@__DIR__, "ColGenHelpers.jl"))  # faster Coluna colgen helpers 
 include(joinpath(@__DIR__, "ActiveSets.jl"))     # active column set (no loops over all columns)
 include(joinpath(@__DIR__, "LpDuals.jl"))        # faster master LP dual reading (CPLEX)
 include(joinpath(@__DIR__, "CplexSync.jl"))      # batch deletion when syncing with CPLEX
+include(joinpath(@__DIR__, "CutInsert.jl"))      # faster cut coefficients on the columns
 
 # Same column generation everywhere (tree nodes and strong branching).
 # Smoothing factor of the dual stabilization (1.0 = automatic, self-adjusting).
 # ColGenHelpers.jl skips a matrix that only the automatic mode reads.
-const ColGenSmoothing = 0.5
+const ColGenSmoothing = 1.0
+
 colgenHelpersSetSmoothing!(ColGenSmoothing)
 colgenAlgo() = Coluna.Algorithm.ColumnGeneration(
     max_nb_iterations = 1000000,
@@ -175,8 +177,8 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
         "params" => Coluna.Params(
         solver = Coluna.Algorithm.TreeSearchAlgorithm(
             # Coluna stops the search when more nodes than this are open (default 100).
-            opennodeslimit = 1000000,
-            maxnumnodes = 50,
+            opennodeslimit = 10000000,
+            maxnumnodes = 10000000,
             explorestrategy = Coluna.TreeSearch.BestDualBoundStrategy(),
             dividealg = dividealg,
             conqueralg = Coluna.Algorithm.ColCutGenConquer(
@@ -244,6 +246,7 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     lpDualsReset!()                # LpDuals.jl
     cplexSyncReset!()              # CplexSync.jl
     activeSetsReset!()             # ActiveSets.jl (before the formulations are built)
+    cutInsertReset!()              # CutInsert.jl
     fill!(removedArcs, false)
 
     # Rounded capacity cuts (CVRPSEP), separated after column generation at each node.
@@ -263,6 +266,7 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     colgenHelpersPrint()
     lpDualsPrint()
     cplexSyncPrint()
+    cutInsertPrint()
 
 end
 
