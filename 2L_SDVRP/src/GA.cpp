@@ -217,13 +217,13 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
 
     // PRINT_THROW();
 
-    //for(int i = 0; i < input.gaNumberOfGenerations; ++i)
-    uint64_t i = 0;
-    while(!doStop())
+    for(int i = 0; i < input.gaNumberOfGenerations; ++i)
+    //uint64_t i = 0;
+    //while(!doStop())
     {
         // Nuke the population
-        if(i > 0 && i%1000 == 0)
-            startPopulation(vetRandKey, sizeVetItems);
+        //if(i > 0 && i%1000 == 0)
+        //    startPopulation(vetRandKey, sizeVetItems);
 
         if constexpr(PrintGA)
             std::printf("Iteration: %lld\n", i);
@@ -395,7 +395,7 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
             }
         }
 
-        i += 1;
+        //i += 1;
     }
 
     if constexpr(PrintGAFail)
