@@ -14,6 +14,7 @@
 #include "StopData.h"
 #include <set>
 #include <print>
+#include "Alarm.h"
 
 using namespace GA_NS;
 using namespace ParseInputNS;
@@ -35,6 +36,8 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
                Vector<SolucaoNS::Bin>	*ptrVetBin)
 {
     int size = 0;
+    setOffAlarm();
+    setAlarm(input.cpSatTime);
 
     if(ptrVetBin)
     {
@@ -214,10 +217,16 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
 
     // PRINT_THROW();
 
-    for(int i = 0; i < input.gaNumberOfGenerations; ++i)
+    //for(int i = 0; i < input.gaNumberOfGenerations; ++i)
+    uint64_t i = 0;
+    while(!doStop())
     {
+        // Nuke the population
+        if(i > 0 && i%1000 == 0)
+            startPopulation(vetRandKey, sizeVetItems);
+
         if constexpr(PrintGA)
-            std::printf("Iteration: %d\n", i);
+            std::printf("Iteration: %lld\n", i);
 
         // Evaluate the population
         if constexpr(PrintGA)
@@ -385,6 +394,8 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
                 }
             }
         }
+
+        i += 1;
     }
 
     if constexpr(PrintGAFail)
