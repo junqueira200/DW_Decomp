@@ -128,7 +128,10 @@ constexpr bool ExactUseCompletionBound = true;
 //       graph or full graph): a valid bound for that graph;
 //   2 = the bound of the last exact call (or arc fixing run), reused as it is: free,
 //       but computed from older duals.
-constexpr int HeurCompletionBound = 0;
+// 2026-11-16: mode 1 made the heuristic ~3x slower (the bound costs more than a call);
+// mode 2: heuristic -35% on the E-n76-k7 4-min tree (19.4 vs 30.0 s), 55 vs 52 nodes,
+// bound 673.17 vs 672.86.
+constexpr int HeurCompletionBound = 2;
 
 constexpr double MaxFloatType = std::numeric_limits<FloatType>::max();
 constexpr double MinFloatType = std::numeric_limits<FloatType>::min();
