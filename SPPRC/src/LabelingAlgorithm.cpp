@@ -424,16 +424,14 @@ bool LabelingAlgorithmNS::
             return false;
         }
 
-        // Heuristic: it only has to find some negative columns, so stop as soon
-        // as there are enough of them (thresholds in LabelingConstants.h).
+        // Heuristic: stop only when the output is full (HeurMaxSolSubProb columns).
+        // Otherwise each stage runs to the end. (HeurStopRules, which stopped as soon
+        // as a few columns were found, was removed 2026-11-17: running the stage to
+        // the end returns more columns per call and needs fewer colgen iterations;
+        // roots E-n76 13.8 -> 12.1 s, E-n101 44.1 -> 40.2 s; E-n76 4-min tree DB
+        // 673.17 -> 673.28.)
         if(sizeMatForwardDest >= HeurMaxSolSubProb)
             return true;
-
-        for(const HeurStopRule &rule : HeurStopRules)
-        {
-            if(numIt >= rule.minIt && sizeMatForwardDest >= rule.minCols)
-                return true;
-        }
 
         return false;
     };

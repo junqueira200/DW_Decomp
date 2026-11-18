@@ -32,7 +32,8 @@ using namespace RandomKeyNS;
 using namespace GA_NS;
 //using namespace ContainerLoadingCP;
 
-constexpr bool RunIrace = true;
+constexpr bool RunIrace 		= false;
+constexpr bool PrintBrkgaStat 	= false;
 
 // using namespace SCIP_NS;
 
@@ -502,7 +503,9 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
         vetDeadEndItem.setAll(0);
         vetFinalCheckFail.setAll(0);
         bool   resultRandKey = ga(bin2, solCp.vetRota[veic], &vetItems, numItems);
-        if constexpr(!RunIrace)
+        //                        kRandomKeys(bin2, solCp.vetRota[veic], &vetItems, numItems);
+
+        if constexpr(!RunIrace && PrintBrkgaStat)
         {
             const char *names[] = {"Geometric", "Lifo", "Support", "Axle", "Balance",
                                    "Compact", "Fragility", "Boundary"};
@@ -512,6 +515,7 @@ void TesteOroloc3D_NS::testeOroloc3D_2()
                             e < PackingErroSize ? (long long)vetPackinErros[e] : 0LL,
                             (long long)vetDeadEndItem[e], (long long)vetFinalCheckFail[e]);
         }
+
         double timeGA = omp_get_wtime() - ompStartGA;
 
         if(resultRandKey)

@@ -28,6 +28,11 @@ bool ga(SolucaoNS::Bin      	&bin,
         int                  	sizeVetItems = 0,
         Vector<SolucaoNS::Bin>	*ptrVetBin = nullptr);
 
+bool kRandomKeys(SolucaoNS::Bin 		&bin,
+                 SolucaoNS::Rota 		&route,
+                 const VectorI *const 	vetItems 	 = nullptr,
+                 int                  	sizeVetItems = 0);
+
 void startPopulation(Vector<RandomKeyPair> &vetRandKey, int vetItemsSize);
 } // namespace GA_NS
 

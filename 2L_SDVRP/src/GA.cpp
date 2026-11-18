@@ -217,13 +217,13 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
 
     // PRINT_THROW();
 
-    for(int i = 0; i < input.gaNumberOfGenerations; ++i)
-    //uint64_t i = 0;
-    //while(!doStop())
+    //for(int i = 0; i < input.gaNumberOfGenerations; ++i)
+    uint64_t i = 0;
+    while(!doStop())
     {
         // Nuke the population
-        //if(i > 0 && i%1000 == 0)
-        //    startPopulation(vetRandKey, sizeVetItems);
+        if(i > 0 && i%1000 == 0)
+            startPopulation(vetRandKey, sizeVetItems);
 
         if constexpr(PrintGA)
             std::printf("Iteration: %lld\n", i);
@@ -395,7 +395,7 @@ bool GA_NS::ga(SolucaoNS::Bin      		&bin,
             }
         }
 
-        //i += 1;
+        i += 1;
     }
 
     if constexpr(PrintGAFail)
@@ -445,4 +445,33 @@ void GA_NS::startPopulation(Vector<RandomKeyPair> &vetRandKey, int vetItemsSize)
 {
     for(auto &it : vetRandKey)
         it.second->generateRandomKey(vetItemsSize);
+}
+
+bool GA_NS::
+     kRandomKeys(SolucaoNS::Bin 		&bin,
+                 SolucaoNS::Rota 		&route,
+                 const VectorI * const 	ptrVetItems,
+                 int 					sizeVetItems)
+{
+
+    static RandomKey 				randKey;
+    static VectorI   				vetItems(InstanceNS::instanciaG.numItens);
+    static SolucaoNS::Penalty    	penalty;
+    static StopData				 	stopData;
+
+    copyVet(*ptrVetItems, vetItems, sizeVetItems);
+    stopData.compute(route, vetItems, sizeVetItems);
+
+    for(int i=0; i < input.gaNumberOfGenerations; ++i)
+    {
+        randKey.generateRandomKey(sizeVetItems);
+
+        bin.reset();
+        penalty.set0();
+
+        if(decoderRandomKey(randKey, bin, vetItems, sizeVetItems, route, penalty, stopData))
+            return true;
+    }
+
+    return false;
 }

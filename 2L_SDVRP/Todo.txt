@@ -1,3 +1,2 @@
 - Test without kandom key position of the chose of extreme point
-- Test n random key, without Brkga
 - Test solution of Brkga in the CP model

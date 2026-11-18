@@ -44,6 +44,8 @@ constexpr bool      SortLabels = false;
 // TEMP test: false = extended labels are not kept in closed buckets and never checked.
 constexpr bool      UseClosedBuckets = true;
 
+// NOT USED since 2026-11-17 (removed from funcStop: the heuristic now stops only at
+// HeurMaxSolSubProb columns). Kept for reference.
 // Early stop of the heuristic labeling (exact labeling never stops early).
 // Each rule {minIt, minCols}: stop when at least minIt labels were processed and
 // at least minCols columns were found.
