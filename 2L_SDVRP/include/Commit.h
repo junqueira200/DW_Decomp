@@ -1,7 +1,7 @@
 #ifndef COMMIT_H
 #define COMMIT_H
 
-#include <iostream>
-const std::string Commit = "238f33d66ede7b7ef22ba37cc446684f844e895c" ;
+#include <string>
+const std::string Commit = "63d26b20de6f5e5a2b72d9bdd3bbe16ebb2a6d7c";
 
 #endif // COMMIT_H

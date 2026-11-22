@@ -76,6 +76,51 @@ const FixRcTol       = 1e-4     # same as the column submission threshold
 const ubArcFixing    = Ref(Inf) # set from primalBound in createModel
 const rootDone       = Ref(false)   # true once strong branching starts (NodeArcFixing: root fixes at every call)
 const tFixing        = Ref(0.0)
+
+# Reduced costs read directly from Coluna's subproblem variables (populateReducedCosts).
+# BD.callback_reduced_cost goes through JuMP -> MOI bridges -> Coluna's MOI wrapper and
+# two dictionary lookups on every call (n^2 calls per pricing call, ~450 bytes each;
+# E-n101-k8 root: 6.95 s and 11.5 GiB). It ends at var.curdata.cost of the subproblem
+# variable, which Coluna sets before each pricing call (ColGen.update_sp_vars_red_costs!).
+# The Variable of each arc is found once and kept: the subproblem's variables are never
+# replaced. Uses Coluna internals: check again if Coluna is updated.
+const spVarCache       = Coluna.MathProg.Variable[]   # index linearIndex(i, j, n) + 1
+const spVarCacheForm   = Ref{Any}(nothing)            # subproblem formulation of the cache
+const SpVarCacheVerify = false   # true = compare with BD.callback_reduced_cost at every call (tests)
+
+# Coluna Variable of a JuMP variable, inside the subproblem formulation `form`.
+function colunaSpVar(model, var, form)
+    cache  = JuMP.backend(model)                          # CachingOptimizer
+    idx    = cache.model_to_optimizer_map[JuMP.index(var)]
+    bridge = cache.optimizer                              # LazyBridgeOptimizer{Coluna.Optimizer}
+    MOI.Bridges.is_bridged(bridge, idx) && error("colunaSpVar: variable is bridged")
+    origid = Coluna._get_orig_varid(bridge.model.env, idx)
+    v = Coluna.MathProg.getvar(form, origid)
+    v === nothing && error("colunaSpVar: variable not in the subproblem")
+    return v
+end
+
+# Builds the cache (first pricing call) and checks it once against BD.callback_reduced_cost.
+function buildSpVarCache!(cbdata, model, x)
+    form  = cbdata.form
+    sp_id = BD.callback_spid(cbdata, model)
+    n     = inst.n
+    resize!(spVarCache, n * n)
+    for i in 0:(n - 1), j in 0:(n - 1)
+        i == j && continue
+        k = linearIndex(i, j, n) + 1
+        spVarCache[k] = colunaSpVar(model, x[sp_id, (i, j)], form)
+        rc = BD.callback_reduced_cost(cbdata, x[sp_id, (i, j)])
+        spVarCache[k].curdata.cost == rc ||
+            error("buildSpVarCache!: reduced cost of arc ", (i, j), " differs")
+    end
+    # Diagonal entries are never read (i == j is skipped); fill them with any variable.
+    for i in 0:(n - 1)
+        spVarCache[linearIndex(i, i, n) + 1] = spVarCache[linearIndex(i, i == 0 ? 1 : 0, n) + 1]
+    end
+    spVarCacheForm[] = form
+    return
+end
 #include("instanceCVRP.jl")
 
 
@@ -126,6 +171,7 @@ include(joinpath(@__DIR__, "ActiveSets.jl"))     # active column set (no loops o
 include(joinpath(@__DIR__, "LpDuals.jl"))        # faster master LP dual reading (CPLEX)
 include(joinpath(@__DIR__, "CplexSync.jl"))      # batch deletion when syncing with CPLEX
 include(joinpath(@__DIR__, "CutInsert.jl"))      # faster cut coefficients on the columns
+include(joinpath(@__DIR__, "Timers.jl"))         # extra sections in Coluna's timer table (@ctime)
 
 # Same column generation everywhere (tree nodes and strong branching).
 # Smoothing factor of the dual stabilization (1.0 = automatic, self-adjusting).
@@ -255,7 +301,9 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
             cbdata -> capacityCutCallback(cbdata, mdl, xVar, inst))
 
     tStartOptimize[] = time()
+    timersStart!()                 # Timers.jl (JIT compilation time)
     optimize!(model)
+    timersPrint()
 
     println("Time in solveSpprc: ", tSpprc[], " s")
     println("  heuristic: ", tHeur[],  " s in ", nHeur[],  " calls")
@@ -277,7 +325,7 @@ function capacityCutCallback(cbdata, model, x, inst)
 
     # Arc values -> edge values x(i,j) + x(j,i), only positive edges.
     edgeTail = Int[]; edgeHead = Int[]; edgeX = Float64[]
-    for i in 0:(n - 1), j in (i + 1):(n - 1)
+    @ctime "edge values" for i in 0:(n - 1), j in (i + 1):(n - 1)
         vij = callback_value(cbdata, x[1, (i, j)])
         vji = callback_value(cbdata, x[1, (j, i)])
         v = vij + vji
@@ -290,11 +338,12 @@ function capacityCutCallback(cbdata, model, x, inst)
     if !isempty(edgeX)
         demand = [inst.demand[i] for i in 0:(n - 1)]      # demand[1] = depot (ignored)
 
-        S, RHS = rounded_capacity_cuts!(capCutManager[], demand, inst.capacity,
+        S, RHS = @ctime "CVRPSEP" rounded_capacity_cuts!(capCutManager[], demand, inst.capacity,
                                         edgeTail, edgeHead, edgeX;
                                         integrality_tolerance = 1e-6, max_n_cuts = 5)
 
-        for (s, rhs) in zip(S, RHS)
+        # Includes Coluna's insertion of the cut in the master (coefficients on the columns).
+        @ctime "add cuts" for (s, rhs) in zip(S, RHS)
             nodes = s .- 1                                  # back to our numbering
             cut = @build_constraint(
                 sum(x[1, (i, j)] for i in nodes, j in nodes if i != j) <= rhs)
@@ -352,6 +401,8 @@ function populateReducedCosts(cbdata, model, x)
     sp_id = BD.callback_spid(cbdata, model)
     n     = inst.n
 
+    cbdata.form === spVarCacheForm[] || buildSpVarCache!(cbdata, model, x)
+
     # Arcs fixed to 1 by branching. They are applied after every reduced cost has
     # been written, so step 1 cannot overwrite them.
     fixedArcs = Tuple{Int, Int}[]
@@ -368,10 +419,15 @@ function populateReducedCosts(cbdata, model, x)
                 continue
             end
 
-            var = x[sp_id, (i, j)]
-            vetReducedCosts[k] = BD.callback_reduced_cost(cbdata, var)
+            # Same value as BD.callback_reduced_cost(cbdata, x[sp_id, (i, j)]).
+            vetReducedCosts[k] = spVarCache[k].curdata.cost
+            if SpVarCacheVerify
+                vetReducedCosts[k] == BD.callback_reduced_cost(cbdata, x[sp_id, (i, j)]) ||
+                    error("populateReducedCosts: cached reduced cost differs for arc ", (i, j))
+            end
 
             if checkSpBounds
+                var = x[sp_id, (i, j)]
                 if BD.callback_ub(cbdata, var) < 0.5      # arc fixed to 0
                     vetReducedCosts[k] = Inf
                     printInfo && println("populateReducedCosts: arc fixed to 0: ", (i, j))
@@ -489,7 +545,7 @@ function pricing_callback_heuristic(cbdata, model, x)
 
     sp_id = BD.callback_spid(cbdata, model)
     
-    populateReducedCosts(cbdata, model, x)
+    @ctime "reduced costs (callback)" populateReducedCosts(cbdata, model, x)
 
     numGeneratedRoutes = 0
 
@@ -497,8 +553,7 @@ function pricing_callback_heuristic(cbdata, model, x)
     sizeVetRoutesOutput = Ref{Cint}(0)
     isComplete = Ref{Cint}(0)           # out: 1 = exact search finished
     exact = false
-    tCall = @elapsed numGeneratedRoutes = 
-        ccall((:solveSpprc, LIB), 
+    tCall = @elapsed numGeneratedRoutes = @ctime "SPPRC heuristic" ccall((:solveSpprc, LIB), 
                 Cint, 
                 (Ptr{Cdouble}, Ptr{Cint}, Ref{Cint}, Ptr{Cdouble}, Cint, Ref{Cint}), 
                 vetReducedCosts,
@@ -516,8 +571,7 @@ function pricing_callback_heuristic(cbdata, model, x)
         printInfo && println("--> Running exact pricing")
         exact = true
 
-        tCall = @elapsed numGeneratedRoutes = 
-        ccall((:solveSpprc, LIB), 
+        tCall = @elapsed numGeneratedRoutes = @ctime "SPPRC exact" ccall((:solveSpprc, LIB), 
                 Cint, 
                 (Ptr{Cdouble}, Ptr{Cint}, Ref{Cint}, Ptr{Cdouble}, Cint, Ref{Cint}), 
                 vetReducedCosts,
@@ -553,9 +607,10 @@ function pricing_callback_heuristic(cbdata, model, x)
     end
 
     # 3. Parse routes from vetRoutesOutput (e.g. 0 1 2 0 0 5 6 7 0 ... 0 9 0)
-    routes = parseRoutesFromVetRoutesOutput(actual_size)
+    routes = @ctime "parse routes" parseRoutesFromVetRoutesOutput(actual_size)
 
-    best_rc = submitRoutesToColuna(routes, cbdata, sp_id, model, x)
+    # Includes Coluna's handling of each submitted column (MOI.submit).
+    best_rc = @ctime "submit columns" submitRoutesToColuna(routes, cbdata, sp_id, model, x)
 
     if exact && isComplete[] == 1
         # Complete exact search: best_rc is the minimum reduced cost.

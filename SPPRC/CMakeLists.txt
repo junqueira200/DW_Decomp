@@ -11,10 +11,13 @@ else()
     message(STATUS "This project is a top-level one")
 endif()
 
+include(CheckCXXCompilerFlag)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_BUILD_TYPE Release)
 add_definitions(-DVAR_VECTOR_SANITY_CHECK=1)
 message("set vector_sanity_check=1")
+# add_compile_definitions(EIGEN_NO_DEBUG)   # put this before add_executable
 
 message(CMAKE_MODULE_PATH="${CMAKE_SOURCE_DIR}")
 
@@ -37,9 +40,45 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 find_package(Boost)
 find_package(OpenMP REQUIRED)
 
+check_cxx_compiler_flag("-march=native" HAS_MARCH_NATIVE)
+check_cxx_compiler_flag("-mcpu=native"  HAS_MCPU_NATIVE)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -fPIC -march=native")# -Wall -Wextra -fPIC")# -fsanitize=address")# -Wall")
+if(HAS_MCPU_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcpu=native")
+elseif(HAS_MARCH_NATIVE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -fPIC")# -march=native")# -Wall -Wextra -fPIC")# -fsanitize=address")# -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D __FILENAME__='\"$$(subst  ${CMAKE_SOURCE_DIR}/,,$$(abspath $$<))\"'")
+
+# Profile-guided optimization (PGO, clang). Both off by default (normal build).
+#   -DSPPRC_PGO_GEN=ON          instrumented library: writes a .profraw file (path in
+#                               LLVM_PROFILE_FILE) when the program that loads it exits.
+#   -DSPPRC_PGO_USE=<.profdata> optimized library built with a merged profile, e.g.
+#                               -DSPPRC_PGO_USE=pgo/default.profdata (relative to this folder).
+# pgo/pgo_train.sh does the instrumented build, the training runs and the merge.
+# 2026-11-22, E-n101-k8 root (not in the training): labeling -9% (heuristic 4.53 -> 4.17 s,
+# exact 5.29 -> 4.80 s), same results. After large changes to the labeling code the profile
+# gets old (clang warns "profile data may be out of date"): run pgo/pgo_train.sh again.
+option(SPPRC_PGO_GEN "Build the instrumented library for PGO training" OFF)
+set(SPPRC_PGO_USE "" CACHE FILEPATH "Merged .profdata file for PGO (empty = no PGO)")
+
+if(SPPRC_PGO_GEN AND SPPRC_PGO_USE)
+    message(FATAL_ERROR "SPPRC_PGO_GEN and SPPRC_PGO_USE cannot be used together")
+endif()
+
+# (the flags are set on the target below, with target_compile_options: CMake quotes them
+# there, and the profile path has a space, "[08] Projetos")
+if(SPPRC_PGO_GEN)
+    message(STATUS "PGO: instrumented build (training)")
+elseif(SPPRC_PGO_USE)
+    get_filename_component(SPPRC_PGO_FILE "${SPPRC_PGO_USE}" ABSOLUTE BASE_DIR "${CMAKE_SOURCE_DIR}")
+    if(NOT EXISTS "${SPPRC_PGO_FILE}")
+        message(FATAL_ERROR "PGO profile not found: ${SPPRC_PGO_FILE} (run pgo/pgo_train.sh)")
+    endif()
+    message(STATUS "PGO: optimized build with ${SPPRC_PGO_FILE}")
+endif()
 
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ftrivial-auto-var-init=zero")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ftrivial-auto-var-init=zero")
@@ -67,6 +106,17 @@ target_sources(${PROJECT_NAME}
     src/Test.cpp
     src/c_api.cpp
 )
+
+if(SPPRC_PGO_GEN)
+    target_compile_options(${PROJECT_NAME} PRIVATE -fprofile-instr-generate)
+    # the profiling runtime is linked into the library
+    target_link_options(${PROJECT_NAME} PRIVATE -fprofile-instr-generate)
+elseif(SPPRC_PGO_USE)
+    target_compile_options(${PROJECT_NAME} PRIVATE "-fprofile-instr-use=${SPPRC_PGO_FILE}")
+    # recompile when the profile file changes
+    get_target_property(spprcSources ${PROJECT_NAME} SOURCES)
+    set_source_files_properties(${spprcSources} PROPERTIES OBJECT_DEPENDS "${SPPRC_PGO_FILE}")
+endif()
 
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Eigen3::Eigen)
