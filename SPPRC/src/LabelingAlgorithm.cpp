@@ -1186,7 +1186,8 @@ bool LabelingAlgorithmNS::extendLabelForward(Label*				  label,
     //newLabel.tamRoute = label.tamRoute + 1;
     newLabel->active = true;
     newLabel->typeLabel = Forward;
-    newLabel->rank1State = label->rank1State;
+    // Limited memory: forget the counters of the cuts whose memory does not contain t.
+    newLabel->rank1State = label->rank1State & lData.rank1KeepMask[t];
 
     if(lData.sizeVetRank1Cut > 0)
     {
@@ -1202,7 +1203,7 @@ bool LabelingAlgorithmNS::extendLabelForward(Label*				  label,
                 PRINT_THROW();
             }
 
-            if(label->rank1State[cutId])
+            if(newLabel->rank1State[cutId])        // t ∈ S ⊆ M: the mask kept this bit
             {
                 newLabel->vetResources[0] += lData.vetRank1Cut[cutId].penalty;
                 newLabel->rank1State.reset(cutId);
@@ -1385,6 +1386,7 @@ LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2> &ve
     rank1CutsOfCust     = Vector<VectorI>(numCust, VectorI(MaxActiveCuts, -1));
     sizeRank1CutsOfCust = VectorI(numCust, 0);
     vetRank1Cut         = Vector<Rank1Cut>(MaxActiveCuts);
+    rank1KeepMask       = Vector<std::bitset<MaxActiveCuts>>(numCust);
     sizeVetRank1Cut     = 0;
 
     vetMatBound = Vector<Matrix<Bound, false>>(2);

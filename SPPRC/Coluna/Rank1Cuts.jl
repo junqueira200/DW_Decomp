@@ -5,8 +5,13 @@
 #   sum_routes floor(visits of the route to S / 2) * lambda_route <= 1
 #
 # - Columns carry their route (RouteData); Coluna computes each cut coefficient with
-#   computecoeff (same rule as the C++ labeling: count visits to S, divide by 2, round down;
-#   full memory, no limited memory yet).
+#   computecoeff, same rule as the C++ labeling.
+# - Limited memory (Pecin et al. 2017, vertex memory M ⊇ S): walking the route, arriving at
+#   a customer outside M resets the counter; a visit to S adds 1, at 2 the coefficient
+#   grows by 1 and the counter goes back to 0. The coefficient is <= the full-memory one,
+#   so the cut stays valid. M is built from the LP routes so that the violation is the
+#   same as with full memory (r1Memory); a cut that the LP escapes later (violated with
+#   full memory, not with M) is replaced by one with a larger M.
 # - Pricing: the cut duals sigma <= 0 are passed to the C++ library (setRank1Cuts) before
 #   every solveSpprc call; the labeling charges -sigma each time a route completes 2
 #   visits to S. The C++ library does not return the route reduced costs, so the
@@ -26,6 +31,7 @@ const R1OnlyIfNoCapCuts = false  # separate only in rounds where CVRPSEP found n
 const R1MaxCutsPerRound = 10     # cuts added per separation round, most violated first
 const R1MinViolation    = 0.02   # lhs > 1 + R1MinViolation
 const R1DualTol         = 1e-9
+const R1LimitedMemory   = true   # false = full memory (M = all customers)
 # At most this many rank-1 cuts are active in the master: the C++ labeling keeps one bit
 # per cut with sigma < 0 (MaxActiveCuts in LabelingConstants.h, read in rank1Reset!).
 const R1MaxActive       = Ref(0)
@@ -39,17 +45,57 @@ Base.hash(a::RouteData, h::UInt) = hash(a.route, hash(:RouteData, h))
 
 struct R1CutData <: BD.AbstractCustomConstrData
     S::NTuple{3,Int}             # customers, sorted
+    M::BitSet                    # memory, S ⊆ M
 end
 
-@inline function r1Coef(route::Vector{Int}, S::NTuple{3,Int})
+@inline inS(u, S::NTuple{3,Int}) = (u == S[1]) | (u == S[2]) | (u == S[3])
+
+# Full memory: floor(visits to S / 2) (separation: violation of the plain SR cut)
+@inline function r1CoefFull(route::Vector{Int}, S::NTuple{3,Int})
     cnt = 0
     for u in route
-        cnt += (u == S[1]) | (u == S[2]) | (u == S[3])
+        cnt += inS(u, S)
     end
     return cnt ÷ 2
 end
 
-Coluna.MathProg.computecoeff(v::RouteData, c::R1CutData) = Float64(r1Coef(v.route, c.S))
+# Limited memory: the rule of the C++ labeling (state &= keepMask[v], then the S update)
+@inline function r1Coef(route::Vector{Int}, S::NTuple{3,Int}, M::BitSet)
+    cnt = 0; coef = 0
+    for u in route
+        u == 0 && continue                       # depot: start (counter 0) or end
+        if !(u in M)
+            cnt = 0                              # left the memory: forget
+        elseif inS(u, S)
+            cnt += 1
+            cnt == 2 && (coef += 1; cnt = 0)
+        end
+    end
+    return coef
+end
+
+# Smallest vertex memory that keeps every route at its full-memory coefficient:
+# S + the customers between two visits to S that pair up (counter 1 -> 2).
+function r1Memory(S::NTuple{3,Int}, routes)
+    M = BitSet(S)
+    for r in routes
+        open = 0                                 # position of the unpaired visit to S
+        for (q, u) in enumerate(r)
+            inS(u, S) || continue
+            if open == 0
+                open = q
+            else
+                for p in (open + 1):(q - 1)
+                    r[p] != 0 && push!(M, r[p])
+                end
+                open = 0
+            end
+        end
+    end
+    return M
+end
+
+Coluna.MathProg.computecoeff(v::RouteData, c::R1CutData) = Float64(r1Coef(v.route, c.S, c.M))
 # Coluna's MOI.submit of a user cut calls computecoeff for every column with custom data,
 # also for robust cuts (capacity cuts, custom data = nothing): no non-robust part.
 Coluna.MathProg.computecoeff(::RouteData, ::Nothing) = 0.0
@@ -74,16 +120,19 @@ function Coluna.ColGen.get_stab_dual_sol(stab::Coluna.Algorithm.NoColGenStab,
     return mast_dual_sol
 end
 
-# Cuts with sigma < 0 in the current pricing round: (S, sigma)
-const r1Active   = Tuple{NTuple{3,Int},Float64}[]
+# Cuts with sigma < 0 in the current pricing round: (S, M, sigma)
+const r1Active   = Tuple{NTuple{3,Int},BitSet,Float64}[]
 const r1Custs    = Cint[]
 const r1Duals    = Float64[]
 const r1Ids      = Cint[]
+const r1MemStart = Cint[]
+const r1MemCusts = Cint[]
 const r1Complete = Ref(true)   # false: more cuts with sigma < 0 than the labeling handles
 
 # Stats: pricing calls with cuts, max cuts in one call, separation rounds, cuts added,
-# positive duals seen (sign check), calls without exact bound (too many cuts)
-const r1Stats = zeros(Int, 6)
+# positive duals seen (sign check), calls without exact bound (too many cuts),
+# memories enlarged, sum of |M| of the added cuts
+const r1Stats = zeros(Int, 8)
 
 # Reads the cut duals and loads them in the C++ library. Call before every solveSpprc.
 function r1LoadPricingCuts!(cbdata)
@@ -98,7 +147,7 @@ function r1LoadPricingCuts!(cbdata)
             constr.custom_data isa R1CutData || continue
             σ = MP.getcurincval(master, constr)
             σ > R1DualTol && (r1Stats[5] += 1)
-            σ < -R1DualTol && push!(r1Active, (constr.custom_data.S, σ))
+            σ < -R1DualTol && push!(r1Active, (constr.custom_data.S, constr.custom_data.M, σ))
         end
     else
         for (constrid, σ) in sol
@@ -106,16 +155,20 @@ function r1LoadPricingCuts!(cbdata)
             constr = MP.getconstr(master, constrid)
             constr.custom_data isa R1CutData || continue
             σ > R1DualTol && (r1Stats[5] += 1)
-            σ < -R1DualTol && push!(r1Active, (constr.custom_data.S, σ))
+            σ < -R1DualTol && push!(r1Active, (constr.custom_data.S, constr.custom_data.M, σ))
         end
     end
 
-    empty!(r1Custs); empty!(r1Duals); empty!(r1Ids)
-    for (k, (S, σ)) in enumerate(r1Active)
+    empty!(r1Custs); empty!(r1Duals); empty!(r1Ids); empty!(r1MemStart); empty!(r1MemCusts)
+    push!(r1MemStart, 0)
+    for (k, (S, M, σ)) in enumerate(r1Active)
         push!(r1Custs, S[1], S[2], S[3]); push!(r1Duals, σ); push!(r1Ids, k)
+        append!(r1MemCusts, M)
+        push!(r1MemStart, length(r1MemCusts))
     end
-    loaded = ccall((:setRank1Cuts, LIB), Cint, (Cint, Ptr{Cint}, Ptr{Cdouble}, Ptr{Cint}),
-                   length(r1Duals), r1Custs, r1Duals, r1Ids)
+    loaded = ccall((:setRank1Cuts, LIB), Cint,
+                   (Cint, Ptr{Cint}, Ptr{Cdouble}, Ptr{Cint}, Ptr{Cint}, Ptr{Cint}),
+                   length(r1Duals), r1Custs, r1Duals, r1Ids, r1MemStart, r1MemCusts)
     r1Complete[] = loaded >= 0
     r1Complete[] || (r1Stats[6] += 1)
     if !isempty(r1Active)
@@ -128,8 +181,8 @@ end
 # Reduced-cost contribution of the cuts to a route: -sum sigma * coef >= 0
 function r1RoutePenalty(route::Vector{Int})
     pen = 0.0
-    for (S, σ) in r1Active
-        c = r1Coef(route, S)
+    for (S, M, σ) in r1Active
+        c = r1Coef(route, S, M)
         c > 0 && (pen -= σ * c)
     end
     return pen
@@ -144,17 +197,16 @@ function r1Separate(cbdata, model, n::Int)
     MP     = Coluna.MathProg
     master = cbdata.form
 
-    active = Set{NTuple{3,Int}}()
+    activeConstrs = Dict{NTuple{3,Int},Any}()      # S -> active constraint
     for (_, constr) in MP.getconstrs(master)
         constr.custom_data isa R1CutData || continue
-        MP.iscuractive(master, constr) && push!(active, constr.custom_data.S)
+        MP.iscuractive(master, constr) && (activeConstrs[constr.custom_data.S] = constr)
     end
-    room = min(R1MaxCutsPerRound, R1MaxActive[] - length(active))
-    room <= 0 && return 0
 
-    # Columns with value > 0: visits per customer
-    vals  = Float64[]
-    lists = Vector{Vector{Tuple{Int,Int}}}()       # (customer, visits)
+    # Columns with value > 0: routes and visits per customer
+    vals   = Float64[]
+    routes = Vector{Vector{Int}}()
+    lists  = Vector{Vector{Tuple{Int,Int}}}()      # (customer, visits)
     for (varid, val) in cbdata.orig_sol
         val > 1e-6 || continue
         var = MP.getvar(master, varid)
@@ -163,9 +215,44 @@ function r1Separate(cbdata, model, n::Int)
         for u in var.custom_data.route
             u != 0 && (cnt[u] = get(cnt, u, 0) + 1)
         end
-        push!(vals, val); push!(lists, [(u, a) for (u, a) in cnt])
+        push!(vals, val); push!(routes, var.custom_data.route)
+        push!(lists, [(u, a) for (u, a) in cnt])
     end
     isempty(vals) && return 0
+
+    lim       = 1.0 + R1MinViolation
+    fullM     = BitSet(1:(n - 1))
+    memoryOf(S) = R1LimitedMemory ? r1Memory(S, routes) : fullM
+    added     = 0
+
+    # Active cuts the LP escapes through the memory (violated with full memory, not with M):
+    # replaced by a cut with a larger memory; the old one is deactivated.
+    if R1LimitedMemory
+        for (S, constr) in collect(activeConstrs)
+            added >= R1MaxCutsPerRound && break
+            M = constr.custom_data.M
+            lhsFull = 0.0; lhsM = 0.0
+            for c in eachindex(vals)
+                lhsFull += vals[c] * r1CoefFull(routes[c], S)
+                lhsM    += vals[c] * r1Coef(routes[c], S, M)
+            end
+            (lhsFull > lim && lhsM <= 1.0 + 1e-6) || continue
+            newM = union(M, r1Memory(S, routes))
+            MP.deactivate!(master, constr)
+            MOI.submit(model, MOI.UserCut(cbdata),
+                       JuMP.ScalarConstraint(JuMP.AffExpr(0.0), MOI.LessThan(1.0)),
+                       R1CutData(S, newM))
+            added += 1
+            r1Stats[7] += 1
+            r1Stats[8] += length(newM)
+        end
+    end
+
+    room = min(R1MaxCutsPerRound - added, R1MaxActive[] - length(activeConstrs))
+    if room <= 0
+        r1Stats[3] += 1
+        return added
+    end
 
     # Upper bound of the lhs of S = {i,j,k}: W(i,j) + W(i,k) + W(j,k) + D(i) + D(j) + D(k)
     # with W(i,j) = sum val*a_i*a_j and D(i) = sum val*floor(a_i/2)
@@ -183,7 +270,6 @@ function r1Separate(cbdata, model, n::Int)
         end
     end
 
-    lim   = 1.0 + R1MinViolation
     cands = Tuple{Float64,NTuple{3,Int}}[]
     for i in 1:(n - 1), j in (i + 1):(n - 1)
         wij = W[i, j] + D[i] + D[j]
@@ -195,21 +281,24 @@ function r1Separate(cbdata, model, n::Int)
                 s >= 2 && (lhs += vals[c] * (s ÷ 2))
             end
             S = (i, j, k)
-            (lhs > lim && !(S in active)) && push!(cands, (lhs, S))
+            (lhs > lim && !haskey(activeConstrs, S)) && push!(cands, (lhs, S))
         end
     end
 
     sort!(cands, by = first, rev = true)
-    added = 0
+    nNew = 0
     for (lhs, S) in cands
-        added >= room && break
+        nNew >= room && break
+        M = memoryOf(S)
         MOI.submit(model, MOI.UserCut(cbdata),
                    JuMP.ScalarConstraint(JuMP.AffExpr(0.0), MOI.LessThan(1.0)),
-                   R1CutData(S))
-        added += 1
+                   R1CutData(S, M))
+        nNew += 1
+        r1Stats[8] += length(M)
     end
+    added += nNew
     r1Stats[3] += 1
-    r1Stats[4] += added
+    r1Stats[4] += nNew
     printInfo && println("rank-1 cuts: ", length(cands), " violated, ", added, " added")
     return added
 end
@@ -230,6 +319,8 @@ function rank1Print()
     println("Rank-1 cuts: ", r1Stats[4], " added in ", r1Stats[3], " separation rounds",
             " (max ", R1MaxCutsPerRound, " per round, ", R1MaxActive[], " active)")
     println("  pricing calls with cuts: ", r1Stats[1], ", max cuts with dual < 0: ", r1Stats[2])
+    R1LimitedMemory && println("  limited memory: ", r1Stats[7], " memories enlarged, mean |M| ",
+                               round(r1Stats[8] / max(1, r1Stats[4] + r1Stats[7]), digits = 1))
     r1Stats[5] > 0 && println("  WARNING: ", r1Stats[5], " cut duals > 0 (sign convention?)")
     r1Stats[6] > 0 && println("  WARNING: ", r1Stats[6], " pricing calls with too many cuts (no exact bound)")
     return

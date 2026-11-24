@@ -224,6 +224,11 @@ class LabelingData
     Vector<Rank1Cut> vetRank1Cut;
     int sizeVetRank1Cut  = 0;
 
+    // Limited memory: rank1KeepMask[v] bit c = 1 if customer v is in the memory of cut c.
+    // A label arriving at v keeps only those counters; the others are forgotten
+    // (filled by updateRank1CutsData).
+    Vector<std::bitset<MaxActiveCuts>> rank1KeepMask;
+
     GraphNS::Graph<int> graphBucket;
 
     ArrayResources vetMaxResources;

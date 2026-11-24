@@ -35,9 +35,12 @@ extern "C"
     // Rank-1 cuts (subset-row, |S| = 3, multiplier 1/2) for the next pricing calls.
     // custs: 3*numCuts customers (0 = depot, 1..n-1), duals: sigma <= 0 of each cut,
     // ids: any id (kept in Rank1Cut::colunaId). Cuts with sigma >= -1e-9 are skipped.
+    // Limited memory: the memory of cut c is memCusts[memStart[c] .. memStart[c+1]-1]
+    // (memStart has numCuts+1 entries); S is always added to it.
     // Returns the number of cuts loaded, or -1 if more than MaxActiveCuts have sigma < 0
     // (then none is loaded: the exact pricing would not be exact).
-    int setRank1Cuts(int numCuts, const int* custs, const double* duals, const int* ids);
+    int setRank1Cuts(int numCuts, const int* custs, const double* duals, const int* ids,
+                     const int* memStart, const int* memCusts);
     int getMaxActiveCuts();
 }
 

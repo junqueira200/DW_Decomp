@@ -104,7 +104,8 @@ int getMaxNumberOfRoutes()
 }
 
 extern "C"
-int setRank1Cuts(int numCuts, const int* custs, const double* duals, const int* ids)
+int setRank1Cuts(int numCuts, const int* custs, const double* duals, const int* ids,
+                 const int* memStart, const int* memCusts)
 {
     LabelingData& ld = vrpLabelingSubProb->labelingDataForward;
     const int n = instanceVrptw.numClientes;
@@ -128,7 +129,17 @@ int setRank1Cuts(int numCuts, const int* custs, const double* duals, const int* 
 
         Rank1Cut& r = ld.vetRank1Cut[k];
         r.S.reset();
-        r.memory.set();                         // full memory (no limited memory yet)
+        r.memory.reset();                       // limited memory (vertices)
+        for(int p = memStart[c]; p < memStart[c + 1]; ++p)
+        {
+            const int v = memCusts[p];
+            if(v <= 0 || v >= n)
+            {
+                std::printf("setRank1Cuts: memory customer %d out of range (n = %d)\n", v, n);
+                PRINT_THROW();
+            }
+            r.memory.set(v);
+        }
         for(int i = 0; i < 3; ++i)
         {
             const int cust = custs[3*c + i];
@@ -139,6 +150,7 @@ int setRank1Cuts(int numCuts, const int* custs, const double* duals, const int* 
             }
             r.vetS[i] = cust;
             r.S.set(cust);
+            r.memory.set(cust);                 // S ⊆ memory
         }
         r.sizeVetS = 3;
         r.penalty  = pen;

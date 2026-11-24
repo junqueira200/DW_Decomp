@@ -540,6 +540,15 @@ void LabelingAlgorithmNS::LabelingData::updateRank1CutsData()
         }
     }
 
+
+    // Limited memory masks (S ⊆ memory is set by setRank1Cuts)
+    for(int v = 0; v < numCust; ++v)
+    {
+        rank1KeepMask[v].reset();
+        for(int cut = 0; cut < sizeVetRank1Cut; ++cut)
+            if(vetRank1Cut[cut].memory[v])
+                rank1KeepMask[v].set(cut);
+    }
 }
 
 /// Ret ALL data related with Rank1Cuts (also the cuts)
