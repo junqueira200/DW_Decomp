@@ -172,6 +172,7 @@ include(joinpath(@__DIR__, "LpDuals.jl"))        # faster master LP dual reading
 include(joinpath(@__DIR__, "CplexSync.jl"))      # batch deletion when syncing with CPLEX
 include(joinpath(@__DIR__, "CutInsert.jl"))      # faster cut coefficients on the columns
 include(joinpath(@__DIR__, "Timers.jl"))         # extra sections in Coluna's timer table (@ctime)
+include(joinpath(@__DIR__, "Rank1Cuts.jl"))      # rank-1 (subset-row) cuts, non-robust
 
 # Same column generation everywhere (tree nodes and strong branching).
 # Smoothing factor of the dual stabilization (1.0 = automatic, self-adjusting).
@@ -259,6 +260,10 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
 
     global model = BlockModel(coluna)
     global x = @variable(model, x[v in VehicleTypes, a in inst.arcs], Bin)
+    if UseRank1Cuts                # custom data: route of each column, customers of each cut
+        BD.customvars!(model, RouteData)
+        BD.customconstrs!(model, R1CutData)
+    end
     #println(x)
     #println(inst.arcs)
     
@@ -294,6 +299,7 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     activeSetsReset!()             # ActiveSets.jl (before the formulations are built)
     cutInsertReset!()              # CutInsert.jl
     fill!(removedArcs, false)
+    rank1Reset!()                  # Rank1Cuts.jl
 
     # Rounded capacity cuts (CVRPSEP), separated after column generation at each node.
     capCutManager[] = CutManager()
@@ -315,6 +321,7 @@ function createModel(inst::CvrpData; primalBound::Float64 = Inf)
     lpDualsPrint()
     cplexSyncPrint()
     cutInsertPrint()
+    rank1Print()
 
 end
 
@@ -351,6 +358,11 @@ function capacityCutCallback(cbdata, model, x, inst)
         end
         numCuts = length(S)
         printInfo && println("capacity cuts added: ", numCuts)
+    end
+
+    # Rank-1 cuts (Rank1Cuts.jl)
+    if numCuts == 0 || !R1OnlyIfNoCapCuts
+        @ctime "rank-1 separation" r1Separate(cbdata, model, n)
     end
     return
 end
@@ -508,8 +520,9 @@ function submitRoutesToColuna(routes::Vector{Vector{Int}}, cbdata, sp_id, model,
         sol_vars = [x[sp_id, (route[k], route[k + 1])] for k in 1:(length(route) - 1)]
         sol_vals = fill(1.0, length(sol_vars))
 
-        # Calculate reduced cost of the column
+        # Calculate reduced cost of the column (+ rank-1 cut penalties, Rank1Cuts.jl)
         sol_rc = sum(BD.callback_reduced_cost(cbdata, v) for v in sol_vars)
+        UseRank1Cuts && (sol_rc += r1RoutePenalty(route))
 
         if sol_rc < best_rc
             best_rc = sol_rc
@@ -517,7 +530,12 @@ function submitRoutesToColuna(routes::Vector{Vector{Int}}, cbdata, sp_id, model,
 
         # Submit column if it has a negative reduced cost (improving column)
         if sol_rc < -1e-4
-            MOI.submit(model, BD.PricingSolution(cbdata), sol_rc, sol_vars, sol_vals)
+            if UseRank1Cuts
+                MOI.submit(model, BD.PricingSolution(cbdata), sol_rc, sol_vars, sol_vals,
+                           RouteData(route))
+            else
+                MOI.submit(model, BD.PricingSolution(cbdata), sol_rc, sol_vars, sol_vals)
+            end
 
         else
 
@@ -546,6 +564,7 @@ function pricing_callback_heuristic(cbdata, model, x)
     sp_id = BD.callback_spid(cbdata, model)
     
     @ctime "reduced costs (callback)" populateReducedCosts(cbdata, model, x)
+    @ctime "rank-1 duals" r1LoadPricingCuts!(cbdata)      # Rank1Cuts.jl
 
     numGeneratedRoutes = 0
 
@@ -587,7 +606,7 @@ function pricing_callback_heuristic(cbdata, model, x)
         printInfo && println("numGeneratedRoutes: ", numGeneratedRoutes)
 
         if numGeneratedRoutes == 0
-            MOI.submit(model, BD.PricingDualBound(cbdata), 0)
+            MOI.submit(model, BD.PricingDualBound(cbdata), r1Complete[] ? 0 : -Inf)
             return
         end
         
@@ -612,7 +631,7 @@ function pricing_callback_heuristic(cbdata, model, x)
     # Includes Coluna's handling of each submitted column (MOI.submit).
     best_rc = @ctime "submit columns" submitRoutesToColuna(routes, cbdata, sp_id, model, x)
 
-    if exact && isComplete[] == 1
+    if exact && isComplete[] == 1 && r1Complete[]
         # Complete exact search: best_rc is the minimum reduced cost.
         MOI.submit(model, BD.PricingDualBound(cbdata), best_rc)
     else
@@ -628,6 +647,7 @@ function pricing_callback_exact(cbdata, model, x)
     printInfo && println("--> Running exact pricing callback")
 
     populateReducedCosts(cbdata, model, x)
+    r1LoadPricingCuts!(cbdata)                               # Rank1Cuts.jl
     sp_id = BD.callback_spid(cbdata, model)
 
     # 2. Call the SPPRC solver
@@ -650,7 +670,7 @@ function pricing_callback_exact(cbdata, model, x)
 
     # If no routes were found
     if actual_size == 0
-        MOI.submit(model, BD.PricingDualBound(cbdata), 0)
+        MOI.submit(model, BD.PricingDualBound(cbdata), r1Complete[] ? 0 : -Inf)
         return
     end
 
@@ -660,7 +680,8 @@ function pricing_callback_exact(cbdata, model, x)
     best_rc = submitRoutesToColuna(routes, cbdata, sp_id, model, x)
 
     # Complete exact search: best_rc is a valid bound; stopped early: no bound.
-    MOI.submit(model, BD.PricingDualBound(cbdata), isComplete[] == 1 ? best_rc : -Inf)
+    MOI.submit(model, BD.PricingDualBound(cbdata),
+               (isComplete[] == 1 && r1Complete[]) ? best_rc : -Inf)
 
     printInfo && println("\tBest reduced cost: $best_rc; numGeneratedRoutes: $numGeneratedRoutes")
     #println("\n\n********************************\n")

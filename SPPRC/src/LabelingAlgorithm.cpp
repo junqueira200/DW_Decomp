@@ -1381,6 +1381,12 @@ LabelingAlgorithmNS::LabelingData::LabelingData(const Eigen::Vector<Step, 2> &ve
     for(int i = 0; i < numCust; ++i)
         vetMatClosedCBest[i].setConstant(vetNumSteps[0], vetNumSteps[1], InfFloatType);
 
+    // Rank-1 cuts: reverse index customer -> active cuts (filled by updateRank1CutsData)
+    rank1CutsOfCust     = Vector<VectorI>(numCust, VectorI(MaxActiveCuts, -1));
+    sizeRank1CutsOfCust = VectorI(numCust, 0);
+    vetRank1Cut         = Vector<Rank1Cut>(MaxActiveCuts);
+    sizeVetRank1Cut     = 0;
+
     vetMatBound = Vector<Matrix<Bound, false>>(2);
 
     // Generates matBound
@@ -2969,7 +2975,9 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
                 // Orange bucket: strictly lower reduced cost AND strictly lower load.
                 // Every label here has smaller resources: only the ng-set test is left.
                 // (Valid only when the buckets cover all resources: numRes <= 2.)
-                if(numRes <= 2 && ii < label->i && jj < label->j)
+                // Not with rank-1 cuts: a lower reduced cost is not enough, the closed/open
+                // label may still owe cut penalties (rank1Extra) -> use the full dom() test.
+                if(numRes <= 2 && ii < label->i && jj < label->j && lData.sizeVetRank1Cut == 0)
                 {
                     if(resOnly)                        // any label here dominates
                     {
@@ -3029,7 +3037,9 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
                 // getIndex() never decreases, so every label here already has smaller
                 // resources than the new one; only the ng-set test is left.
                 // (Valid only when the buckets cover all resources: numRes <= 2.)
-                if(numRes <= 2 && ii < label->i && jj < label->j)
+                // Not with rank-1 cuts: a lower reduced cost is not enough, the closed/open
+                // label may still owe cut penalties (rank1Extra) -> use the full dom() test.
+                if(numRes <= 2 && ii < label->i && jj < label->j && lData.sizeVetRank1Cut == 0)
                 {
                     if(resOnly)                        // any label here dominates
                     {

@@ -505,6 +505,19 @@ void LabelingAlgorithmNS::LabelingData::checkLabels()
 
 void LabelingAlgorithmNS::LabelingData::updateRank1CutsData()
 {
+    if(sizeVetRank1Cut > MaxActiveCuts || sizeVetRank1Cut > (int)vetRank1Cut.size())
+    {
+        std::printf("Error, %d active rank-1 cuts, max is %d (MaxActiveCuts)\n",
+                    sizeVetRank1Cut, MaxActiveCuts);
+        PRINT_THROW();
+    }
+
+    // The backward labeling and the bidirectional merge do not handle the cuts.
+    if(BidirExactBackwardRun && sizeVetRank1Cut > 0)
+    {
+        std::printf("Error, rank-1 cuts are not supported with BidirExactBackwardRun\n");
+        PRINT_THROW();
+    }
 
     sizeRank1CutsOfCust.setAll(0);
 
@@ -515,6 +528,12 @@ void LabelingAlgorithmNS::LabelingData::updateRank1CutsData()
         for(int i=0; i < rank1Cut.sizeVetS; ++i)
         {
             int cust = rank1Cut.vetS[i];
+            if(cust <= 0 || cust >= numCust)
+            {
+                std::printf("Error, cut %d has customer %d out of range\n", cut, cust);
+                PRINT_THROW();
+            }
+
             int next = sizeRank1CutsOfCust[cust];
             rank1CutsOfCust[cust][next] = cut;
             sizeRank1CutsOfCust[cust] += 1;

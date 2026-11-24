@@ -102,3 +102,56 @@ int getMaxNumberOfRoutes()
 {
     return NumMaxSolSubProb;
 }
+
+extern "C"
+int setRank1Cuts(int numCuts, const int* custs, const double* duals, const int* ids)
+{
+    LabelingData& ld = vrpLabelingSubProb->labelingDataForward;
+    const int n = instanceVrptw.numClientes;
+
+    int numNeg = 0;
+    for(int c = 0; c < numCuts; ++c)
+        numNeg += (duals[c] < -1e-9);
+
+    if(numNeg > MaxActiveCuts)
+    {
+        ld.sizeVetRank1Cut = 0;
+        return -1;
+    }
+
+    int k = 0;
+    for(int c = 0; c < numCuts; ++c)
+    {
+        const double pen = -duals[c];           // sign fixed here: penalty >= 0
+        if(pen <= 1e-9)
+            continue;
+
+        Rank1Cut& r = ld.vetRank1Cut[k];
+        r.S.reset();
+        r.memory.set();                         // full memory (no limited memory yet)
+        for(int i = 0; i < 3; ++i)
+        {
+            const int cust = custs[3*c + i];
+            if(cust <= 0 || cust >= n)
+            {
+                std::printf("setRank1Cuts: customer %d out of range (n = %d)\n", cust, n);
+                PRINT_THROW();
+            }
+            r.vetS[i] = cust;
+            r.S.set(cust);
+        }
+        r.sizeVetS = 3;
+        r.penalty  = pen;
+        r.colunaId = ids[c];
+        ++k;
+    }
+
+    ld.sizeVetRank1Cut = k;                     // updateRank1CutsData() runs in the pricing
+    return k;
+}
+
+extern "C"
+int getMaxActiveCuts()
+{
+    return MaxActiveCuts;
+}

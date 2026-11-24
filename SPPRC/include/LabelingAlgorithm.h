@@ -195,6 +195,27 @@ void removeFromBucket(int i, Bucket* bucket)
     bucket->sizeVetPtrLabel -= 1;
 }
 
+// Rank-1 cuts: penalties that l0 may still pay and l1 not (counter 1 in l0, 0 in l1).
+// l0 can only dominate l1 if cost(l0) + extra <= cost(l1).
+INLINE
+FloatType rank1Extra(const Label &l0, const Label &l1, const LabelingData &lData)
+{
+    FloatType extra = 0.0;
+    if(lData.sizeVetRank1Cut > 0)
+    {
+        const auto diff = l0.rank1State & ~l1.rank1State;
+        if(diff.any())
+        {
+            for(int s = 0; s < lData.sizeVetRank1Cut; ++s)
+            {
+                if(diff[s])
+                    extra += lData.vetRank1Cut[s].penalty;
+            }
+        }
+    }
+    return extra;
+}
+
 INLINE
 bool checkCompleteDominance(const Label &l0, const Label &l1, int numResources, LabelingData& lData)
 {
@@ -205,18 +226,7 @@ bool checkCompleteDominance(const Label &l0, const Label &l1, int numResources, 
         throw "ERROR";
     }
 
-    FloatType extra = 0.0;
-
-    if(lData.sizeVetRank1Cut > 0)
-    {
-        auto diff = l0.rank1State & ~l1.rank1State;
-        for(int s=0; s < lData.sizeVetRank1Cut; ++s)
-        {
-            if(diff[s])
-                extra += lData.vetRank1Cut[s].penalty;
-        }
-
-    }
+    const FloatType extra = rank1Extra(l0, l1, lData);
 
     if(l0.typeLabel == Forward) [[likely]]
     {
@@ -254,22 +264,15 @@ bool checkCompleteDominance(const Label &l0, const Label &l1, int numResources, 
 INLINE
 bool checkResourceDominance(const Label &l0, const Label &l1, int numResources, LabelingData& lData)
 {
-    FloatType extra = 0.0;
+    const FloatType extra = rank1Extra(l0, l1, lData);
 
-    if(lData.sizeVetRank1Cut > 0)
+    // the penalty is a cost: only on resource 0
+    if(doubleGreater(l0.vetResources[0] + extra, l1.vetResources[0], FloatEp))
+        return false;
+
+    for(int r = 1; r < numResources; ++r)
     {
-        auto diff = l0.rank1State & ~l1.rank1State;
-        for(int s=0; s < lData.sizeVetRank1Cut; ++s)
-        {
-            if(diff[s])
-                extra += lData.vetRank1Cut[s].penalty;
-        }
-
-    }
-
-    for(int r = 0; r < numResources; ++r)
-    {
-        if(doubleGreater(l0.vetResources[r]+extra, l1.vetResources[r], FloatEp))
+        if(doubleGreater(l0.vetResources[r], l1.vetResources[r], FloatEp))
             return false;
     }
 

@@ -1095,6 +1095,19 @@ double VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     loadReducedCostsColuna(vetReducedCostInput);
 
+    // Rank-1 cuts are ignored here: labelingDataForward may still hold the cuts of the
+    // last pricing call, with other duals. Without the penalties every route reduced cost
+    // is a lower bound of the true one -> the fixing stays valid (only weaker).
+    // Restored on exit (also when an exception is thrown).
+    struct Rank1Off
+    {
+        LabelingAlgorithmNS::LabelingData &lData;
+        int saved;
+        explicit Rank1Off(LabelingAlgorithmNS::LabelingData &l) : lData(l), saved(l.sizeVetRank1Cut)
+        { lData.sizeVetRank1Cut = 0; }
+        ~Rank1Off() { lData.sizeVetRank1Cut = saved; }
+    } rank1Off(labelingDataForward);
+
     int capacityGcd = 1;
     getDistLowerBound(vetMatResCostForward, n, vetVetResBound, matDpColuna, capacityGcd);
     matDpColunaValid = true;
