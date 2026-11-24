@@ -1171,6 +1171,9 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     loadReducedCostsColuna(vetReducedCostInput);
 
+    // Load Rank1 Cuts ...
+    labelingDataForward.updateRank1CutsData();
+
     // The completion bound is computed only for the exact labeling: it is
     // expensive (O(n^2 * Q)) and the heuristic does not need it.
     int capacityGcd = 1;

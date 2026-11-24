@@ -26,23 +26,24 @@ inline bool      PrintG = false;
 // Prints per-call information of the pricing (number of iterations, routes, ...)
 inline bool      PrintIterInfoG = false;
 
-constexpr int       NumMaxResources = 2;
-constexpr int       NumMaxRoute = 100;
-constexpr int       NumMaxCust = 128; // 100; 128 uses the same 2 words of bitset<>
-constexpr int       NgSetSize = 8;    // 8
-constexpr int       NumBuckets = 10;
-constexpr int       vetPtrLabelSize = 10;
-constexpr bool      NullFlush = false;
-constexpr bool      Print = false;
-constexpr int       numMaxLabelG = 40; // 2000
-constexpr bool      DominaIterBuckets = false;
-constexpr FloatType FloatEp = 1E-6;
-constexpr bool      TrackingRoutes = false;
-constexpr bool      SortLabels = false;
+constexpr int       NumMaxResources 	= 2;
+constexpr int       NumMaxRoute 		= 100;
+constexpr int       NumMaxCust 			= 128; // 100; 128 uses the same 2 words of bitset<>
+constexpr int       MaxActiveCuts 		= 32;
+constexpr int       NgSetSize 			= 8;    // 8
+constexpr int       NumBuckets 			= 10;
+constexpr int       vetPtrLabelSize 	= 10;
+constexpr bool      NullFlush 			= false;
+constexpr bool      Print 				= false;
+constexpr int       numMaxLabelG 		= 40; // 2000
+constexpr bool      DominaIterBuckets 	= false;
+constexpr FloatType FloatEp 			= 1E-6;
+constexpr bool      TrackingRoutes 		= false;
+constexpr bool      SortLabels 			= false;
 // (ClosedBucketWindow removed 2026-11-15: the closed buckets are now scanned in all
 // lower buckets, with the best reduced cost per row (vetMatClosedCBest) to stop early.)
 // TEMP test: false = extended labels are not kept in closed buckets and never checked.
-constexpr bool      UseClosedBuckets = true;
+constexpr bool      UseClosedBuckets 	= true;
 
 // NOT USED since 2026-11-17 (removed from funcStop: the heuristic now stops only at
 // HeurMaxSolSubProb columns). Kept for reference.

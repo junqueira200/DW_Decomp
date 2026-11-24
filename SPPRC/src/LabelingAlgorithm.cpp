@@ -328,6 +328,7 @@ bool LabelingAlgorithmNS::
         labelPtr->vetResources[0] = 0.0;
         labelPtr->bitSetNg = 0;
         labelPtr->bitSetNg[0] = true;
+        labelPtr->rank1State.reset();
 
         labelPtr->i = i;
         labelPtr->j = j;
@@ -508,24 +509,7 @@ bool LabelingAlgorithmNS::
                                       << "\n\n";
                         }
 
-                        /*
-                        if(labelHeap.heapSize > localNumMaxLabel && DominaIterBuckets)
-                        {
-                            lData.dominanceInterBuckets(
-                                labelHeap, numRes, localNumMaxLabel, lData.vetMatBucketForward, Backward);
 
-                             if(labelHeap.heapSize > localNumMaxLabel)
-                             {
-                                 int max = std::max(labelHeap.heapSize, localNumMaxLabel);
-                                 localNumMaxLabel = (int)(max * 2);
-                             }
-                         }
-                         */
-
-                               //localNumMaxLabel = std::max(localNumMaxLabel, (int)labelHeap.heapSize);
-
-
-                               //maxSize = std::max(maxSize, labelHeap.heapSize);
 
                         if(Print && PrintG)
                             std::cout << "numIt: " << numIt << "\n";
@@ -645,16 +629,15 @@ bool LabelingAlgorithmNS::
                             }
                             */
 
-                            if(extendLabel(labelPtr,
-                                           labelPtrAux,
-                                           vetMatResCostForward,
-                                           vetMatResCostBackward,
-                                           matBoundRes,
-                                           labelPtr->cust,
-                                           newCust,
-                                           ngSet,
-                                           numRes,
-                                           vetBackwardMask))
+                            if(extendLabelForward(labelPtr,
+                                                  labelPtrAux,
+                                                  vetMatResCostForward,
+                                                  matBoundRes,
+                                                  labelPtr->cust,
+                                                  newCust,
+                                                  ngSet,
+                                                  numRes,
+                                                  lData))
                             {
                                 rmLabel = false;
                                 doContinue = true;
@@ -765,8 +748,6 @@ bool LabelingAlgorithmNS::
                                         continue;
                                     }
 
-                                           // removeCycles2(*labelPtrAux, numCust);
-
                                     if(labelPtrAux->vetResources[0] >= -TolObjSubProb)
                                     {
 
@@ -774,7 +755,7 @@ bool LabelingAlgorithmNS::
                                         continue;
                                     }
 
-                                           // change the backward type to forward
+                                    // change the backward type to forward
                                     convertLabelBackwardToForward(labelPtrAux, vetMaxResources, numRes);
                                     labelPtrAux->cust = dest;
                                     labelPtrAux->i = 0;
@@ -803,14 +784,9 @@ bool LabelingAlgorithmNS::
                                 }
                                 */
 
-                                Bucket *bucket = nullptr;
-                                if(SortLabels)
-                                    bucket = dominanceIntraBucketFast0(
-                                        tAux, labelPtrAux, lData, nullptr, numRes, dest, correctPos);
-                                else
-                                    bucket = dominanceIntraBucketSlow(
-                                        tAux, labelPtrAux, lData, nullptr, numRes, dest, correctPos,
-                                        heurUseNg || exact);
+                                Bucket *bucket  = dominanceIntraBucketSlow(tAux, labelPtrAux, lData,
+                                                   nullptr, numRes, dest, correctPos,
+                                                   heurUseNg || exact);
 
                                 if(!bucket)
                                 {
@@ -1167,7 +1143,8 @@ bool LabelingAlgorithmNS::extendLabelForward(Label*				  label,
                                              int                  custI,
                                              int                  t,
                                              const NgSet         &ngSet,
-                                             int                  numResources)
+                                             int                  numResources,
+                                             LabelingData		 &lData)
 {
 
     // Goes through resources
@@ -1187,8 +1164,8 @@ bool LabelingAlgorithmNS::extendLabelForward(Label*				  label,
         boundOk = boundOk && (newLabel->vetResources[i] <= vetVetBound(t, i).upperBound);
     }
 
-    if(numResources == 1)
-        newLabel->vetResources[1] = 0.0;
+    //if(numResources == 1)
+    //    newLabel->vetResources[1] = 0.0;
 
     // std::cout<<"\n";
 
@@ -1209,6 +1186,32 @@ bool LabelingAlgorithmNS::extendLabelForward(Label*				  label,
     //newLabel.tamRoute = label.tamRoute + 1;
     newLabel->active = true;
     newLabel->typeLabel = Forward;
+    newLabel->rank1State = label->rank1State;
+
+    if(lData.sizeVetRank1Cut > 0)
+    {
+        const VectorI& vetCuts = lData.rank1CutsOfCust[t];
+        int size = lData.sizeRank1CutsOfCust[t];
+
+        for(int i=0; i < size; ++i)
+        {
+            int cutId = vetCuts[i];
+            if(cutId >= lData.sizeVetRank1Cut)
+            {
+                std::printf("Error, cut index is greater then the number of active cuts\n");
+                PRINT_THROW();
+            }
+
+            if(label->rank1State[cutId])
+            {
+                newLabel->vetResources[0] += lData.vetRank1Cut[cutId].penalty;
+                newLabel->rank1State.reset(cutId);
+            }
+            else
+                newLabel->rank1State.set(cutId);
+
+        }
+    }
 
     return true;
 }
@@ -2895,8 +2898,8 @@ Bucket *LabelingAlgorithmNS::dominanceIntraBucketSlow(int           cust,
     const bool resOnly = !useNg && label->typeLabel == Forward && cust != dest;
     auto dom = [&](const Label &a, const Label &b) -> bool
     {
-        return resOnly ? checkResourceDominance(a, b, numRes)
-                       : checkCompleteDominance(a, b, numRes);
+        return resOnly ? checkResourceDominance(a, b, numRes, lData)
+                       : checkCompleteDominance(a, b, numRes, lData);
     };
 
     // candidates that may dominate L: [0, endDom)

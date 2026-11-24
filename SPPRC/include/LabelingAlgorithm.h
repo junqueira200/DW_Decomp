@@ -22,6 +22,7 @@
 // #include <bits/stdc++.h>
 #include "Label.h"
 #include "NgSet.h"
+#include "SrCut.h"
 
 // typedef double FloatType;
 
@@ -195,7 +196,7 @@ void removeFromBucket(int i, Bucket* bucket)
 }
 
 INLINE
-bool checkCompleteDominance(const Label &l0, const Label &l1, int numResources)
+bool checkCompleteDominance(const Label &l0, const Label &l1, int numResources, LabelingData& lData)
 {
     if(l0.cust != l1.cust)
     {
@@ -204,9 +205,22 @@ bool checkCompleteDominance(const Label &l0, const Label &l1, int numResources)
         throw "ERROR";
     }
 
+    FloatType extra = 0.0;
+
+    if(lData.sizeVetRank1Cut > 0)
+    {
+        auto diff = l0.rank1State & ~l1.rank1State;
+        for(int s=0; s < lData.sizeVetRank1Cut; ++s)
+        {
+            if(diff[s])
+                extra += lData.vetRank1Cut[s].penalty;
+        }
+
+    }
+
     if(l0.typeLabel == Forward) [[likely]]
     {
-        if(doubleGreater(l0.vetResources[0], l1.vetResources[0], FloatEp) ||
+        if(doubleGreater(l0.vetResources[0]+extra, l1.vetResources[0], FloatEp) ||
            doubleGreater(l0.vetResources[1], l1.vetResources[1], FloatEp))
             return false;
 
@@ -238,13 +252,27 @@ bool checkCompleteDominance(const Label &l0, const Label &l1, int numResources)
 // Resource-only dominance (ng-sets ignored), forward labels: l0 <= l1 in every resource.
 // Used by the heuristic stages with HeurStage::useNg = false.
 INLINE
-bool checkResourceDominance(const Label &l0, const Label &l1, int numResources)
+bool checkResourceDominance(const Label &l0, const Label &l1, int numResources, LabelingData& lData)
 {
+    FloatType extra = 0.0;
+
+    if(lData.sizeVetRank1Cut > 0)
+    {
+        auto diff = l0.rank1State & ~l1.rank1State;
+        for(int s=0; s < lData.sizeVetRank1Cut; ++s)
+        {
+            if(diff[s])
+                extra += lData.vetRank1Cut[s].penalty;
+        }
+
+    }
+
     for(int r = 0; r < numResources; ++r)
     {
-        if(doubleGreater(l0.vetResources[r], l1.vetResources[r], FloatEp))
+        if(doubleGreater(l0.vetResources[r]+extra, l1.vetResources[r], FloatEp))
             return false;
     }
+
     return true;
 }
 
@@ -257,7 +285,8 @@ bool extendLabelForward(Label*         		label,
                         int                  custI,
                         int                  t,
                         const NgSet         &ngSet,
-                        int                  numResources);
+                        int                  numResources,
+                        LabelingData		&lData);
 
 bool extendLabelBackward(Label*		            label,
                          Label*                 newLabel,
@@ -268,38 +297,6 @@ bool extendLabelBackward(Label*		            label,
                          const NgSet           &ngSet,
                          int                    numResources,
                          const VetBackwardMask &vetBackwardMask);
-
-inline __attribute__((always_inline)) bool extendLabel(Label*                label,
-                                                       Label*                newLabel,
-                                                       const Vet3D_ResCost   &vetMatResCostForward,
-                                                       const Vet3D_ResCost   &vetMatResCostBackward,
-                                                       const MatBoundRes     &vetVetBound,
-                                                       int                    custI,
-                                                       int                    t,
-                                                       const NgSet           &ngSet,
-                                                       int                    numResources,
-                                                       const VetBackwardMask &vetBackwardMask)
-{
-    if(label->typeLabel == Forward)
-        return extendLabelForward(label,
-                                  newLabel,
-                                  vetMatResCostForward,
-                                  vetVetBound,
-                                  custI,
-                                  t,
-                                  ngSet,
-                                  numResources);
-    else
-        return extendLabelBackward(label,
-                                   newLabel,
-                                   vetMatResCostBackward,
-                                   vetVetBound,
-                                   custI,
-                                   t,
-                                   ngSet,
-                                   numResources,
-                                   vetBackwardMask);
-}
 
 inline __attribute__((always_inline)) void
 applyLabelMask(Label *label, int numResorces, const VetBackwardMask &vetBackwardMask)

@@ -502,3 +502,30 @@ void LabelingAlgorithmNS::LabelingData::checkLabels()
         }
     }
 }
+
+void LabelingAlgorithmNS::LabelingData::updateRank1CutsData()
+{
+
+    sizeRank1CutsOfCust.setAll(0);
+
+    for(int cut = 0; cut < sizeVetRank1Cut; ++cut)
+    {
+        Rank1Cut& rank1Cut = vetRank1Cut[cut];
+
+        for(int i=0; i < rank1Cut.sizeVetS; ++i)
+        {
+            int cust = rank1Cut.vetS[i];
+            int next = sizeRank1CutsOfCust[cust];
+            rank1CutsOfCust[cust][next] = cut;
+            sizeRank1CutsOfCust[cust] += 1;
+        }
+    }
+
+}
+
+/// Ret ALL data related with Rank1Cuts (also the cuts)
+void LabelingAlgorithmNS::LabelingData::resetRank1CutsData()
+{
+    sizeRank1CutsOfCust.setAll(0);
+    sizeVetRank1Cut = 0;
+}

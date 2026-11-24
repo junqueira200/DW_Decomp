@@ -105,6 +105,7 @@ target_sources(${PROJECT_NAME}
     src/rand.cpp
     src/Test.cpp
     src/c_api.cpp
+    src/SrCut.cpp
 )
 
 if(SPPRC_PGO_GEN)
@@ -175,6 +176,7 @@ set(public_headers
     include/sefe_array.h
     include/rand.h
     include/c_api.h
+    include/SrCut.h
 )
 
 # where to find our CMake modules

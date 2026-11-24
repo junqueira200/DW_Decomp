@@ -10,6 +10,7 @@
 #include <Eigen/Eigen>
 #include <bitset>
 #include <boost/array.hpp>
+#include "SrCut.h"
 
 namespace LabelingAlgorithmNS
 {
@@ -48,6 +49,7 @@ struct Label
     //boost::array<int, NumMaxRoute>         vetRoute;
     std::bitset<NumMaxCust>                bitSetNg;
     std::array<FloatType, NumMaxResources> vetResources;
+    std::bitset<MaxActiveCuts> 			   rank1State;
     Label*								   ptrLabel = nullptr;
     int64_t                                index 	= -1;
     // Order of label's creation
@@ -213,6 +215,15 @@ class LabelingData
     int numCust;
     int numMaxSteps;
 
+    // reverse index, for Rank 1 cuts
+    Vector<Vector<int>> rank1CutsOfCust;   // cutsOfCust[j] = active cuts with j ∈ S
+    VectorI 			sizeRank1CutsOfCust;
+
+
+    // Active Rank 1 cuts
+    Vector<Rank1Cut> vetRank1Cut;
+    int sizeVetRank1Cut  = 0;
+
     GraphNS::Graph<int> graphBucket;
 
     ArrayResources vetMaxResources;
@@ -280,6 +291,9 @@ class LabelingData
     }
 
     void checkLabels();
+
+    void updateRank1CutsData();
+    void resetRank1CutsData();
 };
 
 //bool        searchLabel(Label *label, Bucket &bucket);
