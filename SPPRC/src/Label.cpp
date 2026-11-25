@@ -512,13 +512,6 @@ void LabelingAlgorithmNS::LabelingData::updateRank1CutsData()
         PRINT_THROW();
     }
 
-    // The backward labeling and the bidirectional merge do not handle the cuts.
-    if(BidirExactBackwardRun && sizeVetRank1Cut > 0)
-    {
-        std::printf("Error, rank-1 cuts are not supported with BidirExactBackwardRun\n");
-        PRINT_THROW();
-    }
-
     sizeRank1CutsOfCust.setAll(0);
 
     for(int cut = 0; cut < sizeVetRank1Cut; ++cut)

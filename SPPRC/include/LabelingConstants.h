@@ -29,7 +29,7 @@ inline bool      PrintIterInfoG = false;
 constexpr int       NumMaxResources 	= 2;
 constexpr int       NumMaxRoute 		= 100;
 constexpr int       NumMaxCust 			= 128; // 100; 128 uses the same 2 words of bitset<>
-constexpr int       MaxActiveCuts 		= 64;
+constexpr int       MaxActiveCuts 		= 256;
 constexpr int       NgSetSize 			= 8;    // 8
 constexpr int       NumBuckets 			= 10;
 constexpr int       vetPtrLabelSize 	= 10;
@@ -106,7 +106,7 @@ constexpr int ExactStopMinCols = 0;
 // labeling on all recorded inputs), but OFF: each half costs 70-90% of a full run, so
 // it is slower than ExactDestKeepAll (E-n76-k7 4-min tree, 2026-11-16: bound 672.85
 // vs 672.92, 47 vs 53 nodes). false = forward-only exact labeling up to Q.
-constexpr bool BidirExactBackwardRun = false;
+constexpr bool BidirExactBackwardRun = true;
 // Split load of the bidirectional labeling, as a fraction of the capacity: labels
 // above it are kept (for the merge) but not extended.
 constexpr double BidirSplitFraction = 0.5;

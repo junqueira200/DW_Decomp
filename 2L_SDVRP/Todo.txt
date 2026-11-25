@@ -1,2 +1,9 @@
 - Test without kandom key position of the chose of extreme point
 - Test solution of Brkga in the CP model
+
+Jornals:
+
+Computers & Industrial Engineering
+OR Spectrum
+
+*EURO Journal on Transportation and Logistics

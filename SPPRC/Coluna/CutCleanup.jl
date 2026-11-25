@@ -100,10 +100,17 @@ function Coluna.Algorithm.run!(algo::CutCleanup, env::Coluna.Env,
         nDualNz  += dualNz
         nMismatch += (dualNz && !binding)       # nonzero dual must imply binding
 
-        age = binding ? 0 : get(cutAge, constrid, 0) + 1
+        # Rank-1 cuts (Rank1Cuts.jl) take slots of the C++ bitset (MaxActiveCuts): they
+        # age when their dual is 0 and are removed after R1CutMinAge calls, so the slots
+        # go to new cuts. Needs the duals of this LP (no dual solution -> no aging).
+        isR1   = constr.custom_data isa R1CutData
+        weak   = isR1 ? (!isnothing(dual) && !dualNz) : !binding
+        minAge = isR1 ? R1CutMinAge : CutMinAge
+
+        age = weak ? get(cutAge, constrid, 0) + 1 : 0
         cutAge[constrid] = age
 
-        if CutCleanupDeactivate && age >= CutMinAge
+        if CutCleanupDeactivate && age >= minAge
             MP.deactivate!(master, constr)
             delete!(cutAge, constrid)
             nRemoved += 1

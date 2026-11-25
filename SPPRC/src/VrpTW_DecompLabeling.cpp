@@ -283,6 +283,7 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::mergeBidirectional(
     LabelingData &lB = labelingDataBackward;
     const int numI = lF.vetNumSteps(0);
     const int numJ = lF.vetNumSteps(1);
+    const int nCuts = lF.sizeVetRank1Cut;
 
     // 1. Backward labels per customer v, sorted by reduced cost, and
     //    bestB(v, r) = best reduced cost of a backward label at v with load <= r.
@@ -456,8 +457,26 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::mergeBidirectional(
                             if(common.any())
                                 continue;
 
+                            // Rank-1 cuts: a cut with an odd counter on both sides
+                            // reaches 2 across the arc (u, v) -> one more penalty
+                            // (bits are already 0 if u or v is outside its memory).
+                            // Penalties >= 0, so bestB / G / the sort stay valid bounds.
+                            double rc = base + b.rc;
+                            if(nCuts > 0)
+                            {
+                                const auto both = F->rank1State & b.label->rank1State;
+                                if(both.any())
+                                {
+                                    for(int c = 0; c < nCuts; ++c)
+                                        if(both[c])
+                                            rc += lF.vetRank1Cut[c].penalty;
+                                    if(rc >= threshold)
+                                        continue;
+                                }
+                            }
+
                             buildRoute(F, b.label);
-                            cands.push_back({base + b.rc, route});
+                            cands.push_back({rc, route});
                             if((int)cands.size() >= 4 * K)
                                 compact();
                         }
@@ -1186,6 +1205,21 @@ int VrpTW_DecompLabelingNS::VrpLabelingSubProb::
 
     // Load Rank1 Cuts ...
     labelingDataForward.updateRank1CutsData();
+
+    // Bidirectional: the backward run (transposed graph, same customer ids) uses the
+    // same cuts. The SR rule with vertex memory is symmetric (coef = sum over the
+    // maximal runs of memory vertices of floor(|S in run| / 2)), so the backward
+    // labels charge their penalties the same way; the merge adds one more penalty for
+    // each cut with the bit set in both labels.
+    if(BidirExactBackwardRun)
+    {
+        LabelingData &lF = labelingDataForward;
+        LabelingData &lB = labelingDataBackward;
+        for(int c = 0; c < lF.sizeVetRank1Cut; ++c)
+            lB.vetRank1Cut[c] = lF.vetRank1Cut[c];
+        lB.sizeVetRank1Cut = lF.sizeVetRank1Cut;
+        lB.updateRank1CutsData();
+    }
 
     // The completion bound is computed only for the exact labeling: it is
     // expensive (O(n^2 * Q)) and the heuristic does not need it.

@@ -26,12 +26,13 @@
 # the real reduced cost of the columns itself (_nonrobust_cuts_contrib).
 
 const UseRank1Cuts      = true
-const R1RootOnly        = true   # separate only at the root (rootDone[] = false)
+const R1RootOnly        = false  # separate only at the root (rootDone[] = false)
 const R1OnlyIfNoCapCuts = false  # separate only in rounds where CVRPSEP found no cut
-const R1MaxCutsPerRound = 10     # cuts added per separation round, most violated first
+const R1MaxCutsPerRound = 25     # cuts added per separation round, most violated first
 const R1MinViolation    = 0.02   # lhs > 1 + R1MinViolation
 const R1DualTol         = 1e-9
 const R1LimitedMemory   = true   # false = full memory (M = all customers)
+const R1CutMinAge       = 2      # CutCleanup: remove a rank-1 cut after this many calls with dual 0
 # At most this many rank-1 cuts are active in the master: the C++ labeling keeps one bit
 # per cut with sigma < 0 (MaxActiveCuts in LabelingConstants.h, read in rank1Reset!).
 const R1MaxActive       = Ref(0)
@@ -224,6 +225,9 @@ function r1Separate(cbdata, model, n::Int)
     fullM     = BitSet(1:(n - 1))
     memoryOf(S) = R1LimitedMemory ? r1Memory(S, routes) : fullM
     added     = 0
+    violEnl   = Float64[]          # true violations (lhs - 1, LP values) of the enlarged cuts
+    violNew   = Float64[]          # true violations of the new cuts
+    nCands    = 0
 
     # Active cuts the LP escapes through the memory (violated with full memory, not with M):
     # replaced by a cut with a larger memory; the old one is deactivated.
@@ -238,6 +242,11 @@ function r1Separate(cbdata, model, n::Int)
             end
             (lhsFull > lim && lhsM <= 1.0 + 1e-6) || continue
             newM = union(M, r1Memory(S, routes))
+            lhsNew = 0.0
+            for c in eachindex(vals)
+                lhsNew += vals[c] * r1Coef(routes[c], S, newM)
+            end
+            push!(violEnl, lhsNew - 1.0)
             MP.deactivate!(master, constr)
             MOI.submit(model, MOI.UserCut(cbdata),
                        JuMP.ScalarConstraint(JuMP.AffExpr(0.0), MOI.LessThan(1.0)),
@@ -251,6 +260,9 @@ function r1Separate(cbdata, model, n::Int)
     room = min(R1MaxCutsPerRound - added, R1MaxActive[] - length(activeConstrs))
     if room <= 0
         r1Stats[3] += 1
+        r1PrintRound(violNew, violEnl, nCands, length(activeConstrs),
+                     added >= R1MaxCutsPerRound ? "per-round limit used by the enlargements"
+                                                : "active-cut limit reached")
         return added
     end
 
@@ -295,12 +307,31 @@ function r1Separate(cbdata, model, n::Int)
                    R1CutData(S, M))
         nNew += 1
         r1Stats[8] += length(M)
+        push!(violNew, lhs - 1.0)
     end
+    nCands = length(cands)
     added += nNew
     r1Stats[3] += 1
     r1Stats[4] += nNew
-    printInfo && println("rank-1 cuts: ", length(cands), " violated, ", added, " added")
+    r1PrintRound(violNew, violEnl, nCands, length(activeConstrs), "")
     return added
+end
+
+# One line per separation round with the true violations (lhs - 1 with the LP values of
+# the columns). Coluna's own "avg. viol." line is wrong for these cuts: it adds the
+# coefficient of every master column without its value.
+function r1PrintRound(violNew, violEnl, nCands, nActive, noRoom::String)
+    st(v) = isempty(v) ? "" :
+        string(" (avg. viol. ", round(sum(v) / length(v), digits = 3),
+               ", max. viol. ", round(maximum(v), digits = 3), ")")
+    # noRoom != "": no room for new cuts, the triples were not enumerated
+    println("Rank-1 separation: ", length(violNew), " new cuts", st(violNew),
+            isempty(noRoom) ? string(" of ", nCands, " violated") : "",
+            "; ", length(violEnl), " memories enlarged", st(violEnl),
+            "; ", nActive, " active before the round",
+            isempty(noRoom) ? "" : string(" (no new cuts: ", noRoom, ")"))
+    flush(stdout)                  # progress visible in the log while the run goes on
+    return
 end
 
 # ---- setup / report --------------------------------------------------------------------
