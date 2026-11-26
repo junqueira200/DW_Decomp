@@ -33,6 +33,16 @@ const R1MinViolation    = 0.02   # lhs > 1 + R1MinViolation
 const R1DualTol         = 1e-9
 const R1LimitedMemory   = true   # false = full memory (M = all customers)
 const R1CutMinAge       = 2      # CutCleanup: remove a rank-1 cut after this many calls with dual 0
+
+# Stop rule for the cut rounds (capacity + rank-1), checked at the start of every cut
+# callback (capacityCutCallback, model.jl). When it fires, no cut is added, so Coluna ends
+# the cut rounds of the node.
+#  - time: the last exact pricing call took more than CutStopExactTime seconds (any node);
+#  - tailing off (root only): over the last CutTailRounds rounds the master LP value closed
+#    less than CutTailGap of the gap (PB - LP) each round on average (VRPSolver: 2%, 3).
+const CutStopExactTime = 5.0
+const CutTailRounds    = 3
+const CutTailGap       = 0.02
 # At most this many rank-1 cuts are active in the master: the C++ labeling keeps one bit
 # per cut with sigma < 0 (MaxActiveCuts in LabelingConstants.h, read in rank1Reset!).
 const R1MaxActive       = Ref(0)
@@ -336,7 +346,42 @@ end
 
 # ---- setup / report --------------------------------------------------------------------
 
+const rootLpHist  = Float64[]   # master LP value at each root cut round
+const cutStopStat = zeros(Int, 2) # times fired: [time, tailing off]
+
+function cutStopRule(cbdata)
+    lp = Coluna.ColunaBase.getvalue(cbdata.orig_sol)
+    if tLastExact[] > CutStopExactTime
+        cutStopStat[1] += 1
+        println("Cut stop: last exact pricing ", round(tLastExact[], digits = 2), " s > ",
+                CutStopExactTime, " s (LP ", round(lp, digits = 4), rootDone[] ? ")" : ", root)")
+        flush(stdout)
+        return true
+    end
+    rootDone[] && return false
+
+    push!(rootLpHist, lp)
+    k = length(rootLpHist)
+    if k > CutTailRounds && isfinite(ubArcFixing[])
+        old  = rootLpHist[k - CutTailRounds]
+        gap0 = ubArcFixing[] - old
+        # average fraction of the gap closed per round over the last CutTailRounds rounds
+        closed = gap0 > 1e-9 ? (lp - old) / gap0 / CutTailRounds : 1.0
+        if closed < CutTailGap
+            cutStopStat[2] += 1
+            println("Cut stop: root tailing off, ", round(100 * closed, digits = 2),
+                    "% of the gap per round over the last ", CutTailRounds,
+                    " rounds (LP ", round(lp, digits = 4), ")")
+            flush(stdout)
+            return true
+        end
+    end
+    return false
+end
+
 function rank1Reset!()
+    empty!(rootLpHist)
+    fill!(cutStopStat, 0)
     r1SepDualSol[] = nothing
     empty!(r1Active)
     fill!(r1Stats, 0)
@@ -346,6 +391,8 @@ function rank1Reset!()
 end
 
 function rank1Print()
+    println("Cut stop rule: ", cutStopStat[1], " stops by pricing time (> ", CutStopExactTime,
+            " s), ", cutStopStat[2], " by root tailing off; root rounds ", length(rootLpHist))
     UseRank1Cuts || return
     println("Rank-1 cuts: ", r1Stats[4], " added in ", r1Stats[3], " separation rounds",
             " (max ", R1MaxCutsPerRound, " per round, ", R1MaxActive[], " active)")

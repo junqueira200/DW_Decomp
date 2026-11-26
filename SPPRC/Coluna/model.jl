@@ -66,6 +66,7 @@ const tSpprc = Ref(0.0)
 # Time and number of calls of solveSpprc, split by heuristic / exact labeling
 const tHeur  = Ref(0.0); const nHeur  = Ref(0)
 const tExact = Ref(0.0); const nExact = Ref(0)
+const tLastExact = Ref(0.0)   # time of the last exact call (cut stop rule, Rank1Cuts.jl)
 
 # Reduced-cost arc fixing at every node (NodeArcFixing.jl, called from CutCleanup after
 # every column generation). An arc is removed in the node's subtree if every route
@@ -329,6 +330,10 @@ end
 # CVRPSEP numbering: depot = 1, customers = 2..n  (ours: depot = 0, customers = 1..n-1).
 function capacityCutCallback(cbdata, model, x, inst)
     n = inst.n
+
+    # Stop rule (Rank1Cuts.jl): no more cuts of any kind at this node when the pricing
+    # got too slow or the root bound tails off -> Coluna ends the cut rounds.
+    cutStopRule(cbdata) && return
 
     # Arc values -> edge values x(i,j) + x(j,i), only positive edges.
     edgeTail = Int[]; edgeHead = Int[]; edgeX = Float64[]
@@ -602,6 +607,7 @@ function pricing_callback_heuristic(cbdata, model, x)
         tSpprc[] += tCall
         tExact[] += tCall
         nExact[] += 1
+        tLastExact[] = tCall
 
         printInfo && println("numGeneratedRoutes: ", numGeneratedRoutes)
 
